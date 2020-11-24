@@ -18,19 +18,17 @@
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && tsc --project tsconfig.types.json",
     "watch": "rollup -cw",
     "test": "jest",
     "clean": "rimraf dist",
     "gen:docs": "typedoc",
-    "prepublish": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
     "@rollup/plugin-typescript": "^6.1.0",
     "@tsconfig/recommended": "^1.0.1",
     "@types/jest": "^26.0.15",
@@ -47,7 +45,6 @@
     "rollup": "^2.33.2",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.29.0",
     "tslib": "^2.0.3",
     "typedoc": "^0.19.2",
     "typescript": "^4.0.5"

@@ -69,11 +69,13 @@ validate({ username: 'hello', age: 15 })
 - Node.js 12+, but may work in older Node.js versions.
 - ES6 compatible browsers.
 
-Older environments may require polyfills for the following:
+Older environments may require polyfill or transpile for the following:
 
 - `Promise`, `Promise.all`
 - `Array.prototype.find`
 - `URL`
+- Rest (`...`) parameters and operators
+- And possibly others
 
 ## License
 

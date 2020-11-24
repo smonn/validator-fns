@@ -1,6 +1,6 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "src/**/*.test.ts"],
   "compilerOptions": {
     "lib": [
@@ -11,10 +11,6 @@
       "ES2020.String"
     ],
     "module": "ESNext",
-    "target": "ES2019",
-    "declaration": true,
-    "declarationDir": "./dist",
-    "outDir": "./dist",
-    "sourceMap": true
+    "target": "ES2019"
   }
 }
