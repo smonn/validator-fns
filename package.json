@@ -55,5 +55,5 @@
     "type": "git",
     "url": "git@github.com:smonn/validator-fns.git"
   },
-  "homepage": "https://github.com/smonn/validator-fns"
+  "homepage": "https://validator-fns.vercel.app"
 }
