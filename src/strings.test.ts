@@ -1,8 +1,8 @@
-import { required } from './shared';
-import { email, maxLength, minLength, string, url } from './strings';
+import { max, min, required } from './shared';
+import { email, string, url } from './strings';
 
-test('minLength', async () => {
-  const validate = minLength(5, 'min:{min}');
+test('min', async () => {
+  const validate = min(5, 'min:{min}');
   expect(await validate('hello')).toMatchObject({ isValid: true });
   expect(await validate('')).toMatchObject({ isValid: true });
   expect(await validate(null)).toMatchObject({ isValid: true });
@@ -13,8 +13,8 @@ test('minLength', async () => {
   });
 });
 
-test('maxLength', async () => {
-  const validate = maxLength(5, 'max:{max}');
+test('max', async () => {
+  const validate = max(5, 'max:{max}');
   expect(await validate('hello')).toMatchObject({ isValid: true });
   expect(await validate('')).toMatchObject({ isValid: true });
   expect(await validate(null)).toMatchObject({ isValid: true });
@@ -59,8 +59,8 @@ test('string', async () => {
   const validate = string(
     { trim: true },
     required('Must enter a value.'),
-    minLength(5, 'At least five characters.'),
-    maxLength(10, 'At most ten characters.')
+    min(5, 'At least five characters.'),
+    max(10, 'At most ten characters.')
   );
 
   expect(await validate('hello')).toEqual({

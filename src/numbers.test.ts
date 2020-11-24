@@ -1,5 +1,5 @@
-import { integer, max, min, number } from './numbers';
-import { required } from './shared';
+import { integer, number } from './numbers';
+import { max, min, required } from './shared';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);

@@ -1,14 +1,14 @@
-import { integer, max, min, number } from './numbers';
+import { integer, number } from './numbers';
 import { object } from './objects';
-import { required } from './shared';
-import { maxLength, minLength, string } from './strings';
+import { max, min, required } from './shared';
+import { string } from './strings';
 
 test('object', async () => {
   const validate = object({
     username: string(
       required('Username is required.'),
-      minLength(5, 'At least five characters.'),
-      maxLength(20, 'At most 20 characters.')
+      min(5, 'At least five characters.'),
+      max(20, 'At most 20 characters.')
     ),
     age: number(
       required('Must enter your age.'),

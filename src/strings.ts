@@ -41,54 +41,6 @@ export function applyStringConfig(
 }
 
 /**
- * Ensures a string value is a certain length
- * @param length Minimum length
- * @param message Error message
- * @category Validation Tests
- */
-export function minLength(
-  length: number,
-  message: ValidatorMessage
-): ValidatorTest<string> {
-  return (value, field) => {
-    if (
-      value === undefined ||
-      value === null ||
-      value === '' ||
-      value.length >= length
-    ) {
-      return Promise.resolve(valid(value, field));
-    }
-
-    return Promise.resolve(invalid(message, value, field, { min: length }));
-  };
-}
-
-/**
- * Ensures a string value is a certain length
- * @param length Maximum length
- * @param message Error message
- * @category Validation Tests
- */
-export function maxLength(
-  length: number,
-  message: ValidatorMessage
-): ValidatorTest<string> {
-  return (value, field) => {
-    if (
-      value === undefined ||
-      value === null ||
-      value === '' ||
-      value.length <= length
-    ) {
-      return Promise.resolve(valid(value, field));
-    }
-
-    return Promise.resolve(invalid(message, value, field, { max: length }));
-  };
-}
-
-/**
  * Ensures a string value matches a pattern
  * @param pattern Pattern to match
  * @param message Error message

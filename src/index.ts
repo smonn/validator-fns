@@ -1,3 +1,11 @@
+export {
+  applyArrayConfig,
+  array,
+  ArrayConfig,
+  ArrayValidator,
+  ArrayValidatorResult,
+  parseArray,
+} from './arrays';
 export { boolean } from './booleans';
 export {
   applyDateConfig,
@@ -11,16 +19,13 @@ export {
 export {
   applyNumberConfig,
   integer,
-  max,
-  min,
-  negative,
   number,
   NumberConfig,
   parseNumber,
-  positive,
 } from './numbers';
 export {
   object,
+  ObjectValidator,
   ObjectValidatorResult,
   ObjectValidatorResults,
   ObjectValidatorTests,
@@ -30,8 +35,11 @@ export {
   createTypeValidatorTest,
   formatMessage,
   invalid,
+  max,
+  min,
   required,
   valid,
+  ValidatorFactory,
   ValidatorMessage,
   ValidatorResult,
   ValidatorTest,
@@ -40,8 +48,6 @@ export {
   applyStringConfig,
   email,
   matches,
-  maxLength,
-  minLength,
   parseString,
   string,
   StringConfig,

@@ -57,17 +57,13 @@ validate({ username: 'hello', age: 15 })
 
 ## Current and planned features
 
-- [x] fully async
-- [x] numbers
-- [x] booleans
-- [x] dates
-- [x] strings
-- [x] email format validation
-- [x] url format validation
-- [x] objects
-- [x] nested objects
-- [ ] enums
-- [ ] arrays
+- async only
+- numbers
+- booleans
+- dates
+- strings + email + url
+- objects + nested objects
+- arrays
 
 ## Supported environments
 

@@ -49,56 +49,6 @@ export function applyNumberConfig(
 }
 
 /**
- * Ensures a number value is at least a certain amount.
- * @param amount Minimum amount
- * @param message Error message
- * @param exclusive Use exclusive comparison instead of inclusive
- * @category Validation Tests
- */
-export function min(
-  amount: number,
-  message: ValidatorMessage,
-  exclusive?: boolean
-): ValidatorTest<number> {
-  return (value, field) => {
-    if (
-      value === undefined ||
-      value === null ||
-      (exclusive ? value > amount : value >= amount)
-    ) {
-      return Promise.resolve(valid(value, field));
-    }
-
-    return Promise.resolve(invalid(message, value, field, { min: amount }));
-  };
-}
-
-/**
- * Ensures a number value is at most a certain amount.
- * @param amount Maximum amount
- * @param message Error message
- * @param exclusive Use exclusive comparison instead of inclusive
- * @category Validation Tests
- */
-export function max(
-  amount: number,
-  message: ValidatorMessage,
-  exclusive?: boolean
-): ValidatorTest<number> {
-  return (value, field) => {
-    if (
-      value === undefined ||
-      value === null ||
-      (exclusive ? value < amount : value <= amount)
-    ) {
-      return Promise.resolve(valid(value, field));
-    }
-
-    return Promise.resolve(invalid(message, value, field, { max: amount }));
-  };
-}
-
-/**
  * Ensures a number value is an integer.
  * @param message Error message
  * @category Validation Tests
@@ -116,24 +66,6 @@ export function integer(message: ValidatorMessage): ValidatorTest<number> {
     }
     return Promise.resolve(invalid(message, value, field));
   };
-}
-
-/**
- * Ensures a number value is greater than zero (0).
- * @param message Error message
- * @category Validation Tests
- */
-export function positive(message: ValidatorMessage): ValidatorTest<number> {
-  return min(0, message, true);
-}
-
-/**
- * Ensures a number value is lesser than zero (0).
- * @param message Error message
- * @category Validation Tests
- */
-export function negative(message: ValidatorMessage): ValidatorTest<number> {
-  return max(0, message, true);
 }
 
 /**

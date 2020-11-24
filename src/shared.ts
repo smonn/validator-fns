@@ -168,3 +168,65 @@ export function invalid<T>(
     field,
   };
 }
+
+/**
+ * Ensures a string, number, or array value is at most a certain amount.
+ * @param limit Size or value limit
+ * @param message Error message
+ * @param exclusive Use exclusive comparison instead of inclusive
+ * @category Validation Tests
+ */
+export function max(
+  limit: number,
+  message: ValidatorMessage,
+  exclusive?: boolean
+): ValidatorTest<string | number | Array<unknown>> {
+  return (value, field) => {
+    const amount =
+      typeof value === 'string' || Array.isArray(value) ? value.length : value;
+
+    if (
+      amount === undefined ||
+      amount === null ||
+      value === '' ||
+      (exclusive ? amount < limit : amount <= limit)
+    ) {
+      return Promise.resolve(valid(value, field));
+    }
+
+    return Promise.resolve(
+      invalid(message, value, field, { max: limit, amount })
+    );
+  };
+}
+
+/**
+ * Ensures a string, number, or array value is at most a certain amount.
+ * @param limit Size or value limit
+ * @param message Error message
+ * @param exclusive Use exclusive comparison instead of inclusive
+ * @category Validation Tests
+ */
+export function min(
+  limit: number,
+  message: ValidatorMessage,
+  exclusive?: boolean
+): ValidatorTest<string | number | Array<unknown>> {
+  return (value, field) => {
+    const amount =
+      typeof value === 'string' || Array.isArray(value) ? value.length : value;
+
+    if (
+      amount === undefined ||
+      amount === null ||
+      value === '' ||
+      (exclusive ? amount > limit : amount >= limit)
+    ) {
+      return Promise.resolve(valid(value, field));
+    }
+
+    return Promise.resolve(
+      invalid(message, value, field, { min: limit, amount })
+    );
+  };
+}
