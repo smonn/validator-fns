@@ -15,6 +15,17 @@ npm install validator-fns
 ## Usage
 
 ```js
+// For CommonJS environments
+// const {
+//   object,
+//   string,
+//   number,
+//   required,
+//   min,
+//   max,
+//   integer,
+// } = require('validator-fns');
+
 import {
   object,
   string,
