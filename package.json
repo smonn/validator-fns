@@ -22,7 +22,8 @@
     "watch": "rollup -cw",
     "test": "jest",
     "clean": "rimraf dist",
-    "gen:docs": "typedoc"
+    "gen:docs": "typedoc",
+    "prepublish": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
