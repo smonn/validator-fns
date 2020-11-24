@@ -2,7 +2,8 @@
 
 > Note that this package is still in alpha stages and the API might change before the final 1.0.0 release.
 
-Minimal async validation library that aims to be below 5 kB minified and with no external dependencies. Does not include localized error messages.
+Minimal async validation library that aims to be as small as possible and with no external dependencies. As a result, it does not include localized error messages.
+API inspired by [yup][yup].
 
 [npm][npm] | [docs][docs] | [github][github]
 
@@ -95,3 +96,4 @@ MIT
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: https://validator-fns.vercel.app/
 [github]: https://github.com/smonn/validator-fns
+[yup]: https://github.com/jquense/yup
