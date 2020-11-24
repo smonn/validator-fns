@@ -4,6 +4,8 @@
 
 Minimal async validation library that aims to be below 5 kB minified and with no external dependencies. Does not include localized error messages.
 
+[npm][npm] | [docs][docs] | [github][github]
+
 ## Install
 
 ```sh
@@ -81,3 +83,7 @@ Older environments may require polyfills for the following:
 ## License
 
 MIT
+
+[npm]: https://www.npmjs.com/package/validator-fns
+[docs]: https://validator-fns.vercel.app/
+[github]: https://github.com/smonn/validator-fns
