@@ -1,5 +1,7 @@
 # validator-fns
 
+> Note that this package is still in alpha stages and the API might change before the final 1.0.0 release.
+
 Minimal async validation library that aims to be below 5 kB minified and with no external dependencies. Does not include localized error messages.
 
 ## Install
