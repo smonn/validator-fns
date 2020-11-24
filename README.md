@@ -20,17 +20,16 @@ import {
   string,
   number,
   required,
-  minLength,
-  maxLength,
   min,
+  max,
   integer,
 } from 'validator-fns';
 
 const validate = object({
   username: string(
     required('Username is required.'),
-    minLength(5, 'Must be at least 5 characters'),
-    maxLength(20, 'Must be at most 20 characters.')
+    min(5, 'Must be at least 5 characters'),
+    max(20, 'Must be at most 20 characters.')
   ),
   age: number(
     required('Age is required.'),
