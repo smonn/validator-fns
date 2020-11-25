@@ -2,8 +2,10 @@
 
 > Note that this package is still in alpha stages and the API might change before the final 1.0.0 release.
 
-Minimal async validation library that aims to be as small as possible and with no external dependencies. As a result, it does not include localized error messages.
-API inspired by [yup][yup].
+Minimal async validation library that aims to be as small as possible and with no
+external dependencies. As a result, it does not include localized error messages.
+API inspired by [yup][yup]. Built using TypeScript and includes definition files.
+Built targeting ES6 (a.k.a. ES2015).
 
 [npm][npm] | [docs][docs] | [github][github]
 
@@ -40,13 +42,13 @@ import {
 const validate = object({
   username: string(
     required('Username is required.'),
-    min(5, 'Must be at least 5 characters'),
-    max(20, 'Must be at most 20 characters.')
+    min(5, 'Must be at least {min} characters.'),
+    max(20, 'Must be at most {max} characters.')
   ),
   age: number(
     required('Age is required.'),
     integer('Must be an integer.'),
-    min(18, 'Must be at least 18.')
+    min(18, ({ min }) => `Must be at least ${min}.`)
   ),
 });
 
@@ -66,20 +68,21 @@ validate({ username: 'hello', age: 15 })
   });
 ```
 
-## Current and planned features
+## Current features
 
 - async only
-- numbers
+- shared: required, min, max
+- numbers: integer
 - booleans
-- dates
-- strings + email + url
-- objects + nested objects
+- dates: minDate, maxDate
+- strings: pattern, email, url
+- objects and nested objects
 - arrays
 
 ## Supported environments
 
 - Node.js 12+, but may work in older Node.js versions.
-- ES6 compatible browsers.
+- [ES6 compatible browsers][compat].
 
 Older environments may require polyfill or transpile for the following:
 
@@ -97,3 +100,4 @@ MIT
 [docs]: https://validator-fns.vercel.app/
 [github]: https://github.com/smonn/validator-fns
 [yup]: https://github.com/jquense/yup
+[compat]: https://kangax.github.io/compat-table/es6/
