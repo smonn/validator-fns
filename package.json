@@ -1,6 +1,6 @@
 {
   "name": "validator-fns",
-  "version": "1.0.0-alpha.9",
+  "version": "1.0.0-alpha.10",
   "description": "Minimal async validation library",
   "license": "MIT",
   "files": [
