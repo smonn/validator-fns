@@ -2,7 +2,7 @@
 
 > Note that this package is still in beta stages and the API might change before the final 1.0.0 release.
 
-Minimal async validation library that aims to be as small as possible and with no external dependencies. Current UMD build is less that 2 kB minified + gzip. As a result, it does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Built targets ES2019.
+Minimal async validation library that aims to be as small as possible and with no external dependencies. Current UMD build is less that 2 kB minified + gzip. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Built targets ES2019.
 
 [npm][npm] | [docs][docs] | [github][github]
 
