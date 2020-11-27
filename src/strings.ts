@@ -98,7 +98,7 @@ export function url(
 
         return Promise.resolve(valid(value, field));
       }
-    } catch (err) {
+    } catch {
       // continue despite error
     }
 

@@ -1,11 +1,8 @@
 # validator-fns
 
-> Note that this package is still in alpha stages and the API might change before the final 1.0.0 release.
+> Note that this package is still in beta stages and the API might change before the final 1.0.0 release.
 
-Minimal async validation library that aims to be as small as possible and with no
-external dependencies. As a result, it does not include localized error messages.
-API inspired by [yup][yup]. Built using TypeScript and includes definition files.
-Built targeting ES6 (a.k.a. ES2015).
+Minimal async validation library that aims to be as small as possible and with no external dependencies. Current UMD build is less that 2 kB minified + gzip. As a result, it does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Built targets ES2019.
 
 [npm][npm] | [docs][docs] | [github][github]
 
@@ -82,14 +79,17 @@ validate({ username: 'hello', age: 15 })
 ## Supported environments
 
 - Node.js 12+, but may work in older Node.js versions.
-- [ES6 compatible browsers][compat].
+- [ES2019 compatible browsers][compat], which essentially is all modern evergreen browsers and Safari 13.1+. If you need to target IE11 for example, ensure you use a compiler such as Babel.js.
 
 Older environments may require polyfill or transpile for the following:
 
 - `Promise`, `Promise.all`
+- `async`, `await`
 - `Array.prototype.find`
 - `URL`
-- Rest (`...`) parameters and operators
+- Rest (`...`) parameters
+- Object spread (`...`) operators
+- Optional catch binding
 - And possibly others
 
 ## License
@@ -100,4 +100,4 @@ MIT
 [docs]: https://validator-fns.vercel.app/
 [github]: https://github.com/smonn/validator-fns
 [yup]: https://github.com/jquense/yup
-[compat]: https://kangax.github.io/compat-table/es6/
+[compat]: https://kangax.github.io/compat-table/es2016plus/

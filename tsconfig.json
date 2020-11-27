@@ -4,7 +4,7 @@
   "exclude": ["node_modules", "src/**/*.test.ts"],
   "compilerOptions": {
     "module": "ESNext",
-    "target": "ES2015",
-    "lib": ["DOM", "DOM.Iterable", "ES2015", "ScriptHost"]
+    "target": "ES2018",
+    "lib": ["DOM", "ES2018"]
   }
 }
