@@ -1,4 +1,4 @@
-import { ValidatorResult, ValidatorTest } from './shared';
+import { ConfigBase, ValidatorResult, ValidatorTest } from './shared';
 
 /**
  * @category Types
@@ -14,6 +14,12 @@ export interface ArrayValidatorResult extends ValidatorResult<unknown> {
   result?: ValidatorResult<unknown>;
   itemResults: ValidatorResult<unknown>[];
 }
+
+/**
+ * Configuration for array validation.
+ * @category Types
+ */
+export type ArrayConfig = ConfigBase<Array<unknown>>;
 
 /**
  * Parses a value into an array.
@@ -33,22 +39,14 @@ export function parseArray(value: unknown): Array<unknown> | null | undefined {
  * @category Helpers
  */
 export function applyArrayConfig(
-  value: Array<unknown> | null | undefined,
-  config: Partial<ArrayConfig>
+  config: ArrayConfig,
+  value: unknown
 ): Array<unknown> | null | undefined {
-  if (value === undefined && config.default !== undefined) {
-    value = config.default;
+  let parsedValue = config.parser(value);
+  if (parsedValue === undefined && config.default !== undefined) {
+    parsedValue = config.default;
   }
-  return value;
-}
-
-/**
- * Configuration for array validation.
- * @category Types
- */
-export interface ArrayConfig {
-  /** Provide a fallback value in case the original value is undefined. */
-  default: Array<unknown>;
+  return parsedValue;
 }
 
 /**
@@ -60,19 +58,26 @@ export function array(
   config?: Partial<ArrayConfig> | ValidatorTest<unknown>,
   ...tests: ValidatorTest<unknown>[]
 ): ArrayValidator {
+  let allTests = tests;
+  let finalConfig: ArrayConfig = {
+    parser: parseArray,
+  };
+
+  if (config !== undefined) {
+    if (typeof config !== 'function') {
+      finalConfig = {
+        ...finalConfig,
+        ...config,
+      };
+    } else {
+      allTests = [config, ...tests];
+    }
+  }
+
   return async (value, field) => {
-    let arrayValue = parseArray(value);
-    let allTests = tests;
+    const arrayValue = applyArrayConfig(finalConfig, value);
     let result: ValidatorResult<unknown> | undefined = undefined;
     let itemResults: ValidatorResult<unknown>[] = [];
-
-    if (config !== undefined) {
-      if (typeof config !== 'function') {
-        arrayValue = applyArrayConfig(arrayValue, config);
-      } else {
-        allTests = [config, ...tests];
-      }
-    }
 
     const [validateItem, ...arrayTests] = allTests;
 

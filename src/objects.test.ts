@@ -145,3 +145,8 @@ test('nested object', async () => {
     },
   });
 });
+
+test('bad values', async () => {
+  expect(() => object(null)).toThrow();
+  expect(() => object({})).toThrow();
+});

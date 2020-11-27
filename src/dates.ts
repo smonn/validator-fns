@@ -1,4 +1,5 @@
 import {
+  ConfigBase,
   createTypeValidatorTest,
   invalid,
   valid,
@@ -92,13 +93,14 @@ export function parseDate(value: unknown): Date | null | undefined {
  * @category Helpers
  */
 export function applyDateConfig(
-  value: Date | null | undefined,
-  config: Partial<DateConfig>
+  value: unknown,
+  config: DateConfig
 ): Date | null | undefined {
-  if (value === undefined && config.default !== undefined) {
-    value = config.default;
+  let parsedValue = config.parser(value);
+  if (parsedValue === undefined && config.default !== undefined) {
+    parsedValue = config.default;
   }
-  return value;
+  return parsedValue;
 }
 
 /**
@@ -119,10 +121,10 @@ export function minDate(
       parsedDate !== undefined &&
       (value === null || value === undefined || value >= parsedDate)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(invalid(message, value, field, { min: parsedDate }));
+    return invalid(message, value, field, { min: parsedDate });
   };
 }
 
@@ -144,10 +146,10 @@ export function maxDate(
       parsedDate !== undefined &&
       (value === null || value === undefined || value <= parsedDate)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(invalid(message, value, field, { max: parsedDate }));
+    return invalid(message, value, field, { max: parsedDate });
   };
 }
 
@@ -155,13 +157,13 @@ export function maxDate(
  * Configuration for date validation.
  * @category Types
  */
-export interface DateConfig {
-  /** Provide a fallback value in case the original value is undefined. */
-  default: Date;
-}
+export type DateConfig = ConfigBase<Date>;
 
 /**
  * Validates a date value.
  * @category Type Validators
  */
-export const date = createTypeValidatorTest(parseDate, applyDateConfig);
+export const date = createTypeValidatorTest(
+  { parser: parseDate },
+  applyDateConfig
+);

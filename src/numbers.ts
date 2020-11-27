@@ -1,4 +1,5 @@
 import {
+  ConfigBase,
   createTypeValidatorTest,
   invalid,
   valid,
@@ -26,26 +27,27 @@ export function parseNumber(value: unknown): number | null | undefined {
  * @category Helpers
  */
 export function applyNumberConfig(
-  value: number | null | undefined,
-  config: Partial<NumberConfig>
+  value: unknown,
+  config: NumberConfig
 ): number | null | undefined {
-  if (config.default !== undefined && value === undefined) {
-    value = config.default;
+  let parsedValue = config.parser(value);
+  if (config.default !== undefined && parsedValue === undefined) {
+    parsedValue = config.default;
   }
-  if (config.round && typeof value === 'number') {
+  if (config.round && typeof parsedValue === 'number') {
     switch (config.round) {
       case 'nearest':
-        value = Math.round(value);
+        parsedValue = Math.round(parsedValue);
         break;
       case 'ceil':
-        value = Math.ceil(value);
+        parsedValue = Math.ceil(parsedValue);
         break;
       case 'floor':
-        value = Math.floor(value);
+        parsedValue = Math.floor(parsedValue);
         break;
     }
   }
-  return value;
+  return parsedValue;
 }
 
 /**
@@ -62,9 +64,9 @@ export function integer(message: ValidatorMessage): ValidatorTest<number> {
         isFinite(value) &&
         Math.floor(value) === value)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
-    return Promise.resolve(invalid(message, value, field));
+    return invalid(message, value, field);
   };
 }
 
@@ -72,15 +74,18 @@ export function integer(message: ValidatorMessage): ValidatorTest<number> {
  * Configuration for number validation.
  * @category Types
  */
-export interface NumberConfig {
-  /** Provide a fallback value in case the original value is undefined. */
-  default: number;
+export interface NumberConfig extends ConfigBase<number> {
   /** Apply rounding mechanism before validation. */
-  round: 'nearest' | 'floor' | 'ceil';
+  round?: 'nearest' | 'floor' | 'ceil';
 }
 
 /**
  * Validates a number value.
  * @category Type Validators
  */
-export const number = createTypeValidatorTest(parseNumber, applyNumberConfig);
+export const number = createTypeValidatorTest(
+  {
+    parser: parseNumber,
+  },
+  applyNumberConfig
+);

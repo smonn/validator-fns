@@ -36,6 +36,18 @@ export interface ValidatorFactory<C> {
 }
 
 /**
+ * Base configuration type.
+ * @typeParam T The target type.
+ * @category Types
+ */
+export interface ConfigBase<T> {
+  /** Parser to convert value into the designated type. */
+  parser: (value: unknown) => T | null | undefined;
+  /** Provide a fallback value in case the original value is undefined. */
+  default?: T;
+}
+
+/**
  * Validation message. May be a plain string or a function that accepts arguments.
  * While using a string, values in squiggly brackets `{}` are replaced.
  * @category Types
@@ -81,10 +93,10 @@ export function required(
         value !== '' &&
         !(typeof value === 'number' && value !== value))
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(invalid(message, value, field, { value, field }));
+    return invalid(message, value, field, { value, field });
   };
 }
 
@@ -92,29 +104,31 @@ export function required(
  * Creates a type validator.
  * @typeParam T The basic type for the final value to be validated.
  * @typeParam C The configuration type.
- * @param parser Parser to convert value into type.
+ * @param defaultParser Parser to convert value into type.
  * @param applyConfig Function that applies configuration to value.
  * @category Helpers
  */
-export function createTypeValidatorTest<T, C>(
-  parser: (value: unknown) => T | null | undefined,
-  applyConfig: (
-    value: T | null | undefined,
-    config: Partial<C>
-  ) => T | null | undefined
+export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
+  defaultConfig: C,
+  applyConfig: (value: unknown, config: C) => T | null | undefined
 ): ValidatorFactory<C> {
   return (config, ...tests) => {
-    return async (value, field) => {
-      let parsedValue = parser(value);
-      let allTests = tests;
+    let finalConfig = defaultConfig;
+    let allTests = tests;
 
-      if (config !== undefined) {
-        if (typeof config !== 'function') {
-          parsedValue = applyConfig(parsedValue, config);
-        } else {
-          allTests = [config, ...tests];
-        }
+    if (config !== undefined) {
+      if (typeof config !== 'function') {
+        finalConfig = {
+          ...defaultConfig,
+          ...config,
+        };
+      } else {
+        allTests = [config, ...tests];
       }
+    }
+
+    return async (value, field) => {
+      const parsedValue = applyConfig(value, finalConfig);
 
       const results = await Promise.all(
         allTests.map((validatorTest) => validatorTest(parsedValue, field))
@@ -139,12 +153,12 @@ export function createTypeValidatorTest<T, C>(
 export function valid<T>(
   value: T | null | undefined,
   field: string | undefined
-): ValidatorResult<T> {
-  return {
+): Promise<ValidatorResult<T>> {
+  return Promise.resolve({
     isValid: true,
     value,
     field,
-  };
+  });
 }
 
 /**
@@ -160,13 +174,13 @@ export function invalid<T>(
   value: T | null | undefined,
   field: string | undefined,
   extras: Record<string, unknown> = {}
-): ValidatorResult<T> {
-  return {
+): Promise<ValidatorResult<T>> {
+  return Promise.resolve({
     isValid: false,
     message: formatMessage(message, { ...extras, value, field }),
     value,
     field,
-  };
+  });
 }
 
 /**
@@ -191,12 +205,10 @@ export function max(
       value === '' ||
       (exclusive ? amount < limit : amount <= limit)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(
-      invalid(message, value, field, { max: limit, amount })
-    );
+    return invalid(message, value, field, { max: limit, amount });
   };
 }
 
@@ -222,11 +234,9 @@ export function min(
       value === '' ||
       (exclusive ? amount > limit : amount >= limit)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(
-      invalid(message, value, field, { min: limit, amount })
-    );
+    return invalid(message, value, field, { min: limit, amount });
   };
 }

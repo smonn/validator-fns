@@ -38,6 +38,7 @@ import {
 
 const validate = object({
   username: string(
+    { trim: true },
     required('Username is required.'),
     min(5, 'Must be at least {min} characters.'),
     max(20, 'Must be at most {max} characters.')

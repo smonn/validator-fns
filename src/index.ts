@@ -32,6 +32,7 @@ export {
   ObjectValidatorValues,
 } from './objects';
 export {
+  ConfigBase,
   createTypeValidatorTest,
   formatMessage,
   invalid,

@@ -1,4 +1,4 @@
-import { createTypeValidatorTest } from './shared';
+import { ConfigBase, createTypeValidatorTest } from './shared';
 
 /**
  * Parses a value into a boolean.
@@ -18,29 +18,27 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  * @category Helpers
  */
 export function applyBooleanConfig(
-  value: boolean | null | undefined,
-  config: Partial<BooleanConfig>
+  value: unknown,
+  config: BooleanConfig
 ): boolean | null | undefined {
-  if (value === undefined && config.default !== undefined) {
-    value = config.default;
+  let parsedValue = config.parser(value);
+  if (parsedValue === undefined && config.default !== undefined) {
+    parsedValue = config.default;
   }
-  return value;
+  return parsedValue;
 }
 
 /**
  * Configuration for boolean validation.
  * @category Types
  */
-export interface BooleanConfig {
-  /** Provide a fallback value in case the original value is undefined. */
-  default: boolean;
-}
+export type BooleanConfig = ConfigBase<boolean>;
 
 /**
  * Validates a boolean value.
  * @category Type Validators
  */
 export const boolean = createTypeValidatorTest(
-  parseBoolean,
+  { parser: parseBoolean },
   applyBooleanConfig
 );

@@ -1,4 +1,5 @@
 import {
+  ConfigBase,
   createTypeValidatorTest,
   invalid,
   valid,
@@ -8,6 +9,15 @@ import {
 
 /** @internal */
 const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+/**
+ * Configuration for string validation.
+ * @category Types
+ */
+export interface StringConfig extends ConfigBase<string> {
+  /** Apply trim to string before validation. */
+  trim?: boolean;
+}
 
 /**
  * Parses a value into a string.
@@ -28,16 +38,17 @@ export function parseString(value: unknown): string | null | undefined {
  * @category Helpers
  */
 export function applyStringConfig(
-  value: string | null | undefined,
-  config: Partial<StringConfig>
+  value: unknown,
+  config: StringConfig
 ): string | null | undefined {
-  if (config.default !== undefined && value === undefined) {
-    value = config.default;
+  let parsedValue = config.parser(value);
+  if (config.default !== undefined && parsedValue === undefined) {
+    parsedValue = config.default;
   }
-  if (config.trim && typeof value === 'string') {
-    value = value.trim();
+  if (config.trim && typeof parsedValue === 'string') {
+    parsedValue = parsedValue.trim();
   }
-  return value;
+  return parsedValue;
 }
 
 /**
@@ -57,10 +68,10 @@ export function matches(
       value === '' ||
       pattern.test(value)
     ) {
-      return Promise.resolve(valid(value, field));
+      return valid(value, field);
     }
 
-    return Promise.resolve(invalid(message, value, field));
+    return invalid(message, value, field);
   };
 }
 
@@ -93,32 +104,26 @@ export function url(
         (url = new URL(value))
       ) {
         if (url && protocols && !protocols.includes(url.protocol)) {
-          return Promise.resolve(invalid(message, value, field, { protocols }));
+          return invalid(message, value, field, { protocols });
         }
 
-        return Promise.resolve(valid(value, field));
+        return valid(value, field);
       }
     } catch {
       // continue despite error
     }
 
-    return Promise.resolve(invalid(message, value, field, { protocols }));
+    return invalid(message, value, field, { protocols });
   };
-}
-
-/**
- * Configuration for string validation.
- * @category Types
- */
-export interface StringConfig {
-  /** Provide a fallback value in case the original value is undefined. */
-  default: string;
-  /** Apply trim to string before validation */
-  trim: boolean;
 }
 
 /**
  * Validates a string value.
  * @category Type Validators
  */
-export const string = createTypeValidatorTest(parseString, applyStringConfig);
+export const string = createTypeValidatorTest(
+  {
+    parser: parseString,
+  },
+  applyStringConfig
+);

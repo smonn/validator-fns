@@ -41,6 +41,14 @@ export interface ObjectValidatorResult
  * @category Type Validators
  */
 export function object(properties: ObjectValidatorTests): ObjectValidator {
+  if (
+    typeof properties !== 'object' ||
+    properties === null ||
+    Object.keys(properties).length === 0
+  ) {
+    throw new TypeError('`properties` must be a configuration object');
+  }
+
   return async (values, field) => {
     const keys = Object.keys(properties);
 
