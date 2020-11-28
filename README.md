@@ -86,9 +86,11 @@ The `invalid` result includes the same as above, with these differences:
 
 `required(message[, nullable])` - Ensures value is not undefined, null, an empty string, `NaN`, or an invalid date. If nullable is set to true, this will consider null values as acceptable.
 
-`min(amount, message)` - Ensures value is of a minimum amount. Amount here refers to string length, array length, and number value.
+`min(amount, message, exclusive)` - Ensures value is of a minimum amount. Amount here refers to string length, array length, and number value. Exclusive makes the amount comparison exclusive instead of inclusive.
 
-`max(amount, message)` - Ensures value is of a maximum amount. Amount here refers to string length, array length, and number value.
+`max(amount, message, exclusive)` - Ensures value is of a maximum amount. Amount here refers to string length, array length, and number value. Exclusive makes the amount comparison exclusive instead of inclusive.
+
+`exact(amount, message)` - Ensures value is of an exact amount. Amount here refers to string length, array length, and number value.
 
 ### Strings
 

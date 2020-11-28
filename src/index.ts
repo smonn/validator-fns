@@ -40,6 +40,7 @@ export {
   BaseValidatorResult,
   ConfigBase,
   createTypeValidatorTest,
+  exact,
   formatMessage,
   invalid,
   InvalidValidatorResult,

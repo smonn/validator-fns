@@ -255,3 +255,29 @@ export function min(
     return invalid(message, value, field, { min: limit, amount });
   };
 }
+
+/**
+ * Ensures a string, number, or array value is exactly a certain amount.
+ * @param limit Size or value limit
+ * @param message Error message
+ * @category Validation Tests
+ */
+export function exact(
+  limit: number,
+  message: ValidatorMessage
+): ValidatorTest<string | number | Array<unknown>> {
+  return (value, field) => {
+    const amount =
+      typeof value === 'string' || Array.isArray(value) ? value.length : value;
+    if (
+      amount === undefined ||
+      amount === null ||
+      value === '' ||
+      amount === limit
+    ) {
+      return valid(value, field);
+    }
+
+    return invalid(message, value, field, { amount, exact: limit });
+  };
+}
