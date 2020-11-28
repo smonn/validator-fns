@@ -1,4 +1,8 @@
-import { ValidatorResult, ValidatorTest } from './shared';
+import {
+  InvalidValidatorResult,
+  ValidatorTest,
+  ValidValidatorResult,
+} from './shared';
 
 /**
  * @category Types
@@ -25,16 +29,30 @@ export interface ObjectValidatorValues {
  * @category Types
  */
 export interface ObjectValidatorResults {
-  [field: string]: ValidatorResult<unknown>;
+  [field: string]: string;
 }
 
 /**
  * @category Types
  */
-export interface ObjectValidatorResult
-  extends ValidatorResult<Record<string, unknown>> {
-  results: ObjectValidatorResults;
+export type ValidObjectValidatorResult = ValidValidatorResult<
+  Record<string, unknown>
+>;
+
+/**
+ * @category Types
+ */
+export interface InvalidObjectValidatorResult
+  extends InvalidValidatorResult<Record<string, unknown>> {
+  errors: ObjectValidatorResults;
 }
+
+/**
+ * @category Types
+ */
+export type ObjectValidatorResult =
+  | ValidObjectValidatorResult
+  | InvalidObjectValidatorResult;
 
 /**
  * Validates an object.
@@ -65,7 +83,7 @@ export function object(properties: ObjectValidatorTests): ObjectValidator {
     let isValid = true;
     const value: Record<string, unknown> = {};
 
-    const results = validationResults.reduce((acc, result) => {
+    const errors = validationResults.reduce((acc, result) => {
       if (!result.field) {
         return acc;
       }
@@ -73,12 +91,16 @@ export function object(properties: ObjectValidatorTests): ObjectValidator {
       isValid = isValid && result.isValid;
       value[result.field] = result.value;
 
+      if (result.isValid) {
+        return acc;
+      }
+
       return {
         ...acc,
-        [result.field]: result,
+        [result.field]: result.message,
       };
     }, {});
 
-    return { results, isValid, field, value };
+    return { errors, isValid, field, value };
   };
 }

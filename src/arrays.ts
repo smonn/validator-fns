@@ -1,4 +1,14 @@
-import { ConfigBase, ValidatorResult, ValidatorTest } from './shared';
+import {
+  InvalidObjectValidatorResult,
+  ObjectValidatorResults,
+} from './objects';
+import {
+  ConfigBase,
+  InvalidValidatorResult,
+  ValidatorResult,
+  ValidatorTest,
+  ValidValidatorResult,
+} from './shared';
 
 /**
  * @category Types
@@ -7,13 +17,28 @@ export interface ArrayValidator {
   (value: unknown, field?: string): Promise<ArrayValidatorResult>;
 }
 
+export interface ArrayItemValidatorResult {
+  index: number;
+  message: string;
+  errors: ObjectValidatorResults | undefined;
+}
+
 /**
  * @category Types
  */
-export interface ArrayValidatorResult extends ValidatorResult<unknown> {
-  result?: ValidatorResult<unknown>;
-  itemResults: ValidatorResult<unknown>[];
+export type ValidArrayValidatorResult = ValidValidatorResult<unknown>;
+
+/**
+ * @category Types
+ */
+export interface InvalidArrayValidatorResult
+  extends InvalidValidatorResult<unknown> {
+  errors: ArrayItemValidatorResult[];
 }
+
+export type ArrayValidatorResult =
+  | ValidArrayValidatorResult
+  | InvalidArrayValidatorResult;
 
 /**
  * Configuration for array validation.
@@ -100,12 +125,39 @@ export function array(
     const firstInvalid = allResults.find((x) => x.isValid === false);
     const isValid = !firstInvalid;
 
+    if (isValid) {
+      return {
+        isValid,
+        value: arrayValue,
+        field,
+      };
+    }
+
     return {
       isValid,
       value: arrayValue,
       field,
-      result,
-      itemResults,
+      message: result && !result.isValid ? result.message : '',
+      errors: itemResults
+        .filter((item) => !item.isValid)
+        .map((item) => {
+          const match = item.field && item.field.match(/\[(\d)+\]$/);
+          let index = -1;
+          let errors: ObjectValidatorResults | undefined = undefined;
+          if (match) {
+            index = parseInt(match[1], 10);
+          }
+
+          if ((item as InvalidObjectValidatorResult).errors) {
+            errors = (item as InvalidObjectValidatorResult).errors;
+          }
+
+          return {
+            index,
+            message: item.isValid ? '' : item.message || '',
+            errors,
+          };
+        }),
     };
   };
 }

@@ -6,37 +6,38 @@ import { string } from './strings';
 test('array', async () => {
   const validate = array(string(min(3, 'min:{min}')), required('required'));
 
-  expect(await validate(['foo', 'bar', 'baz'])).toMatchObject({
+  await expect(validate(['foo', 'bar', 'baz'])).resolves.toEqual({
     isValid: true,
+    value: ['foo', 'bar', 'baz'],
   });
-  expect(await validate(null)).toMatchObject({
+  await expect(validate(null)).resolves.toEqual({
     isValid: false,
-    result: {
-      isValid: false,
-      message: 'required',
-    },
+    field: undefined,
+    value: null,
+    message: 'required',
+    errors: [],
   });
-  expect(await validate(undefined)).toMatchObject({
+  await expect(validate(undefined)).resolves.toEqual({
     isValid: false,
-    result: {
-      isValid: false,
-      message: 'required',
-    },
+    field: undefined,
+    value: undefined,
+    message: 'required',
+    errors: [],
   });
-  expect(await validate([])).toMatchObject({
+  await expect(validate([])).resolves.toEqual({
     isValid: true,
+    value: [],
+    field: undefined,
   });
-  expect(await validate(['foo', 'ba'])).toMatchObject({
+  await expect(validate(['foo', 'ba'])).resolves.toEqual({
     isValid: false,
-    itemResults: [
+    value: ['foo', 'ba'],
+    message: '',
+    field: undefined,
+    errors: [
       {
-        isValid: true,
-        value: 'foo',
-      },
-      {
-        isValid: false,
         message: 'min:3',
-        value: 'ba',
+        index: 1,
       },
     ],
   });
@@ -51,25 +52,56 @@ test('array with object', async () => {
     max(10, 'max:{max}')
   );
 
-  expect(await validate([{}, { username: 'foo' }])).toMatchObject({
+  await expect(
+    validate([{}, { username: 'foo' }, { username: 'ab' }])
+  ).resolves.toEqual({
     isValid: false,
-    itemResults: [
+    field: undefined,
+    value: [{}, { username: 'foo' }, { username: 'ab' }],
+    message: '',
+    errors: [
       {
-        isValid: false,
-        field: '[0]',
-        value: {},
-        results: {
-          username: {
-            isValid: false,
-          },
+        index: 0,
+        message: '',
+        errors: {
+          username: 'required',
         },
       },
       {
-        isValid: true,
-        field: '[1]',
-        value: {
-          username: 'foo',
+        index: 2,
+        message: '',
+        errors: {
+          username: 'min:3',
         },
+      },
+    ],
+  });
+});
+
+test('nested array', async () => {
+  // while this is technically possible, it's not recommended usage as it quickly gets quite complex
+  const validate = array(array(string(required('required'))));
+  await expect(validate([['', 'foo', null]])).resolves.toEqual({
+    isValid: false,
+    message: '',
+    value: [['', 'foo', null]],
+    field: undefined,
+    errors: [
+      {
+        index: 0,
+        message: '',
+        errors: [
+          {
+            errors: undefined,
+            index: 0,
+            message: 'required',
+          },
+          {
+            errors: undefined,
+            index: 2,
+            message: 'required',
+          },
+        ],
       },
     ],
   });

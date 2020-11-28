@@ -29,18 +29,7 @@ test('object', async () => {
       username: 'hello',
       age: 20,
     },
-    results: {
-      username: {
-        isValid: true,
-        value: 'hello',
-        field: 'username',
-      },
-      age: {
-        isValid: true,
-        value: 20,
-        field: 'age',
-      },
-    },
+    errors: {},
   });
 
   expect(
@@ -53,23 +42,14 @@ test('object', async () => {
       username: 'hello',
       age: undefined,
     },
-    results: {
-      username: {
-        isValid: true,
-        value: 'hello',
-        field: 'username',
-      },
-      age: {
-        message: 'Must enter your age.',
-        isValid: false,
-        field: 'age',
-        value: undefined,
-      },
+    errors: {
+      age: 'Must enter your age.',
     },
   });
 });
 
 test('nested object', async () => {
+  // while this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
     person: object({
       firstName: string(required('required')),
@@ -85,7 +65,7 @@ test('nested object', async () => {
         lastName: 'bar',
       },
     })
-  ).toMatchObject({
+  ).toEqual({
     isValid: true,
     value: {
       person: {
@@ -94,21 +74,7 @@ test('nested object', async () => {
         age: undefined,
       },
     },
-    results: {
-      person: {
-        results: {
-          firstName: {
-            value: 'foo',
-          },
-          lastName: {
-            value: 'bar',
-          },
-          age: {
-            value: undefined,
-          },
-        },
-      },
-    },
+    errors: {},
   });
 
   expect(
@@ -118,7 +84,7 @@ test('nested object', async () => {
         age: '22',
       },
     })
-  ).toMatchObject({
+  ).toEqual({
     isValid: false,
     value: {
       person: {
@@ -127,22 +93,7 @@ test('nested object', async () => {
         age: 22,
       },
     },
-    results: {
-      person: {
-        results: {
-          firstName: {
-            value: 'foo',
-          },
-          lastName: {
-            value: undefined,
-            message: 'required',
-          },
-          age: {
-            value: 22,
-          },
-        },
-      },
-    },
+    errors: {},
   });
 });
 

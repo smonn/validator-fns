@@ -3,16 +3,30 @@
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorResult<T> {
+export interface BaseValidatorResult<T> {
   /** True if the original value is valid according to all validation tests */
   isValid: boolean;
   /** The parsed value. Note that may be different than the original value. */
   value: T | null | undefined;
-  /** Error message if `isValid` is false. */
-  message?: string;
   /** Field name if provided. Automatically provided if using object validation. */
   field?: string;
 }
+
+export interface ValidValidatorResult<T> extends BaseValidatorResult<T> {
+  /** True if the original value is valid according to all validation tests */
+  isValid: true;
+}
+
+export interface InvalidValidatorResult<T> extends BaseValidatorResult<T> {
+  /** True if the original value is valid according to all validation tests */
+  isValid: false;
+  /** Error message if `isValid` is false. */
+  message: string;
+}
+
+export type ValidatorResult<T> =
+  | ValidValidatorResult<T>
+  | InvalidValidatorResult<T>;
 
 /**
  * Validation test function.
@@ -76,7 +90,7 @@ export function formatMessage(
 }
 
 /**
- * Ensures a value is not undefined or null.
+ * Ensures a value is not undefined, null, empty string, NaN, nor invalid date.
  * @param message Error message
  * @param nullable Allow null values
  * @category Validation Tests
@@ -91,7 +105,8 @@ export function required(
       (value !== null &&
         value !== undefined &&
         value !== '' &&
-        !(typeof value === 'number' && value !== value))
+        !(typeof value === 'number' && value !== value) &&
+        !(value instanceof Date && Number.isNaN(value.valueOf())))
     ) {
       return valid(value, field);
     }
