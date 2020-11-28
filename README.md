@@ -1,10 +1,10 @@
 # validator-fns
 
-![npm](https://img.shields.io/npm/v/validator-fns) ![npm bundle size](https://img.shields.io/bundlephobia/min/validator-fns) ![node-current](https://img.shields.io/node/v/validator-fns) ![npm type definitions](https://img.shields.io/npm/types/validator-fns) ![NPM](https://img.shields.io/npm/l/validator-fns) ![npm](https://img.shields.io/npm/dw/validator-fns)
+![npm](https://img.shields.io/npm/v/validator-fns) ![npm bundle size](https://img.shields.io/bundlephobia/min/validator-fns) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/validator-fns) ![node-current](https://img.shields.io/node/v/validator-fns) ![npm type definitions](https://img.shields.io/npm/types/validator-fns) ![NPM](https://img.shields.io/npm/l/validator-fns) ![npm](https://img.shields.io/npm/dw/validator-fns)
 
 > Note that this package is still in beta stages and the API might change before the final 1.0.0 release.
 
-Minimal async validation library that aims to be as small as possible and with no external dependencies. Current UMD build is less that 2 kB minified + gzip. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Built targets ES2019.
+Minimal async validation library that aims to be as small as possible and with no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Build targets ES2019.
 
 [npm][npm] | [docs][docs] | [github][github]
 
@@ -66,17 +66,6 @@ validate({ username: 'hello', age: 15 })
     // only throws if there's an uncaught error and it failed to validate
   });
 ```
-
-## Current features
-
-- async only
-- shared: required, min, max
-- numbers: integer
-- booleans
-- dates: minDate, maxDate
-- strings: pattern, email, url
-- objects and nested objects
-- arrays
 
 ## Documentation
 
