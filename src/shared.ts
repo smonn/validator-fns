@@ -1,40 +1,43 @@
+export type ValidResult<T> = {
+  /** True if the original value is valid according to all validation tests */
+  isValid: true;
+  /** This is preferred to use over `isValid` as it works better for type guards. */
+  state: 'valid';
+  /** The parsed value. Note that may be different than the original value. */
+  value: T | null | undefined;
+  /** Field name if provided. Automatically provided if using object validation. */
+  field?: string;
+};
+
+export type InvalidResult<T, E> = {
+  /** True if the original value is valid according to all validation tests */
+  isValid: false;
+  /** This is preferred to use over `isValid` as it works better for type guards. */
+  state: 'invalid';
+  /** The parsed value. Note that may be different than the original value. */
+  value: T | null | undefined;
+  /** Error message if `isValid` is false. */
+  message: string;
+  /** Field name if provided. Automatically provided if using object validation. */
+  field?: string;
+  /** Extra error details */
+  errors: E;
+};
+
 /**
  * The result of a validation.
  * @typeParam T The value type
  * @category Types
  */
-export interface BaseValidatorResult<T> {
-  /** True if the original value is valid according to all validation tests */
-  isValid: boolean;
-  /** The parsed value. Note that may be different than the original value. */
-  value: T | null | undefined;
-  /** Field name if provided. Automatically provided if using object validation. */
-  field?: string;
-}
-
-export interface ValidValidatorResult<T> extends BaseValidatorResult<T> {
-  /** True if the original value is valid according to all validation tests */
-  isValid: true;
-}
-
-export interface InvalidValidatorResult<T> extends BaseValidatorResult<T> {
-  /** True if the original value is valid according to all validation tests */
-  isValid: false;
-  /** Error message if `isValid` is false. */
-  message: string;
-}
-
-export type ValidatorResult<T> =
-  | ValidValidatorResult<T>
-  | InvalidValidatorResult<T>;
+export type ValidatorResult<T, E> = ValidResult<T> | InvalidResult<T, E>;
 
 /**
  * Validation test function.
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorTest<T> {
-  (value: T | null | undefined, field?: string): Promise<ValidatorResult<T>>;
+export interface ValidatorTest<T, E = unknown> {
+  (value: T | null | undefined, field?: string): Promise<ValidatorResult<T, E>>;
 }
 
 /**
@@ -111,7 +114,7 @@ export function required(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { value, field });
+    return invalid(message, value, field, null, { value, field });
   };
 }
 
@@ -165,12 +168,13 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
  * @param field Field name
  * @category Helpers
  */
-export function valid<T>(
+export function valid<T, E = never>(
   value: T | null | undefined,
   field: string | undefined
-): Promise<ValidatorResult<T>> {
+): Promise<ValidatorResult<T, E>> {
   return Promise.resolve({
     isValid: true,
+    state: 'valid',
     value,
     field,
   });
@@ -184,17 +188,20 @@ export function valid<T>(
  * @param extras Extra message params
  * @category Helpers
  */
-export function invalid<T>(
+export function invalid<T, E>(
   message: ValidatorMessage,
   value: T | null | undefined,
   field: string | undefined,
+  errors: E,
   extras: Record<string, unknown> = {}
-): Promise<ValidatorResult<T>> {
+): Promise<ValidatorResult<T, E>> {
   return Promise.resolve({
     isValid: false,
+    state: 'invalid',
     message: formatMessage(message, { ...extras, value, field }),
     value,
     field,
+    errors,
   });
 }
 
@@ -223,7 +230,7 @@ export function max(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { max: limit, amount });
+    return invalid(message, value, field, null, { max: limit, amount });
   };
 }
 
@@ -252,7 +259,7 @@ export function min(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { min: limit, amount });
+    return invalid(message, value, field, null, { min: limit, amount });
   };
 }
 
@@ -278,6 +285,6 @@ export function exact(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { amount, exact: limit });
+    return invalid(message, value, field, null, { amount, exact: limit });
   };
 }

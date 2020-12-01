@@ -3,11 +3,7 @@ export {
   array,
   ArrayConfig,
   ArrayItemValidatorResult,
-  ArrayValidator,
-  ArrayValidatorResult,
-  InvalidArrayValidatorResult,
   parseArray,
-  ValidArrayValidatorResult,
 } from './arrays';
 export { boolean } from './booleans';
 export {
@@ -26,24 +22,14 @@ export {
   NumberConfig,
   parseNumber,
 } from './numbers';
+export { object } from './objects';
 export {
-  InvalidObjectValidatorResult,
-  object,
-  ObjectValidator,
-  ObjectValidatorResult,
-  ObjectValidatorResults,
-  ObjectValidatorTests,
-  ObjectValidatorValues,
-  ValidObjectValidatorResult,
-} from './objects';
-export {
-  BaseValidatorResult,
   ConfigBase,
   createTypeValidatorTest,
   exact,
   formatMessage,
   invalid,
-  InvalidValidatorResult,
+  InvalidResult,
   max,
   min,
   required,
@@ -52,7 +38,7 @@ export {
   ValidatorMessage,
   ValidatorResult,
   ValidatorTest,
-  ValidValidatorResult,
+  ValidResult,
 } from './shared';
 export {
   applyStringConfig,

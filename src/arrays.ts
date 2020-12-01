@@ -1,44 +1,23 @@
 import {
-  InvalidObjectValidatorResult,
-  ObjectValidatorResults,
-} from './objects';
-import {
   ConfigBase,
-  InvalidValidatorResult,
+  invalid,
+  valid,
   ValidatorResult,
   ValidatorTest,
-  ValidValidatorResult,
 } from './shared';
 
 /**
+ * Invalid validation result for an item in the array
  * @category Types
  */
-export interface ArrayValidator {
-  (value: unknown, field?: string): Promise<ArrayValidatorResult>;
-}
-
 export interface ArrayItemValidatorResult {
+  /** The index of the item in the original array */
   index: number;
+  /** The error message if a simple type */
   message: string;
-  errors: ObjectValidatorResults | undefined;
+  /** The errors if an object or array */
+  errors: unknown;
 }
-
-/**
- * @category Types
- */
-export type ValidArrayValidatorResult = ValidValidatorResult<unknown>;
-
-/**
- * @category Types
- */
-export interface InvalidArrayValidatorResult
-  extends InvalidValidatorResult<unknown> {
-  errors: ArrayItemValidatorResult[];
-}
-
-export type ArrayValidatorResult =
-  | ValidArrayValidatorResult
-  | InvalidArrayValidatorResult;
 
 /**
  * Configuration for array validation.
@@ -82,7 +61,7 @@ export function applyArrayConfig(
 export function array(
   config?: Partial<ArrayConfig> | ValidatorTest<unknown>,
   ...tests: ValidatorTest<unknown>[]
-): ArrayValidator {
+): ValidatorTest<Array<unknown>, Array<ArrayItemValidatorResult>> {
   let allTests = tests;
   let finalConfig: ArrayConfig = {
     parser: parseArray,
@@ -101,8 +80,8 @@ export function array(
 
   return async (value, field) => {
     const arrayValue = applyArrayConfig(finalConfig, value);
-    let result: ValidatorResult<unknown> | undefined = undefined;
-    let itemResults: ValidatorResult<unknown>[] = [];
+    let result: ValidatorResult<unknown, unknown> | undefined = undefined;
+    let itemResults: ValidatorResult<unknown, unknown>[] = [];
 
     const [validateItem, ...arrayTests] = allTests;
 
@@ -126,38 +105,35 @@ export function array(
     const isValid = !firstInvalid;
 
     if (isValid) {
-      return {
-        isValid,
-        value: arrayValue,
-        field,
-      };
+      return valid(arrayValue, field);
     }
 
-    return {
-      isValid,
-      value: arrayValue,
+    const errors = itemResults
+      .filter((item) => !item.isValid)
+      .map((item) => {
+        const match = item.field && item.field.match(/\[(\d)+\]$/);
+        let index = -1;
+        let errors: unknown = undefined;
+        if (match) {
+          index = parseInt(match[1], 10);
+        }
+
+        if (item.state === 'invalid') {
+          errors = item.errors;
+        }
+
+        return {
+          index,
+          message: item.isValid ? '' : item.message || '',
+          errors,
+        };
+      });
+
+    return invalid(
+      result && !result.isValid ? result.message : '',
+      arrayValue,
       field,
-      message: result && !result.isValid ? result.message : '',
-      errors: itemResults
-        .filter((item) => !item.isValid)
-        .map((item) => {
-          const match = item.field && item.field.match(/\[(\d)+\]$/);
-          let index = -1;
-          let errors: ObjectValidatorResults | undefined = undefined;
-          if (match) {
-            index = parseInt(match[1], 10);
-          }
-
-          if ((item as InvalidObjectValidatorResult).errors) {
-            errors = (item as InvalidObjectValidatorResult).errors;
-          }
-
-          return {
-            index,
-            message: item.isValid ? '' : item.message || '',
-            errors,
-          };
-        }),
-    };
+      errors
+    );
   };
 }

@@ -124,7 +124,7 @@ export function minDate(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { min: parsedDate });
+    return invalid(message, value, field, null, { min: parsedDate });
   };
 }
 
@@ -149,7 +149,7 @@ export function maxDate(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, { max: parsedDate });
+    return invalid(message, value, field, null, { max: parsedDate });
   };
 }
 

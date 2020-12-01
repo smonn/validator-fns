@@ -9,6 +9,8 @@ test('min', async () => {
   expect(await validate(undefined)).toMatchObject({ isValid: true });
   expect(await validate('foo')).toMatchObject({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'min:5',
   });
 });
@@ -21,6 +23,8 @@ test('max', async () => {
   expect(await validate(undefined)).toMatchObject({ isValid: true });
   expect(await validate('foo bar')).toMatchObject({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'max:5',
   });
 });
@@ -31,6 +35,7 @@ test('email', async () => {
   expect(await validate('name@host')).toMatchObject({ isValid: true });
   expect(await validate('name+tag@example.com')).toMatchObject({
     isValid: true,
+    state: 'valid',
   });
   expect(await validate('')).toMatchObject({ isValid: true });
   expect(await validate(null)).toMatchObject({ isValid: true });
@@ -45,6 +50,7 @@ test('url', async () => {
   expect(await validate('http://example.com')).toMatchObject({ isValid: true });
   expect(await validate('mailto:name@example.com')).toMatchObject({
     isValid: true,
+    state: 'valid',
   });
   expect(await validate('')).toMatchObject({ isValid: true });
   expect(await validate(null)).toMatchObject({ isValid: true });
@@ -52,6 +58,8 @@ test('url', async () => {
   expect(await validate('/foo')).toMatchObject({ isValid: false });
   expect(await validate('javascript:void(0);')).toMatchObject({
     isValid: false,
+    state: 'invalid',
+    errors: null,
   });
 });
 
@@ -65,30 +73,41 @@ test('string', async () => {
 
   expect(await validate('hello')).toEqual({
     isValid: true,
+    state: 'valid',
     value: 'hello',
   });
   expect(await validate('  test  ')).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'At least five characters.',
     value: 'test',
   });
   expect(await validate('hello world')).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'At most ten characters.',
     value: 'hello world',
   });
   expect(await validate('')).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: '',
   });
   expect(await validate(undefined)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: undefined,
   });
   expect(await validate(null)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: null,
   });

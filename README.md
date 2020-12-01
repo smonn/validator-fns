@@ -55,11 +55,15 @@ const validate = object({
 // later...
 
 validate({ username: 'hello', age: 15 })
-  .then(({ isValid, value, errors }) => {
-    if (isValid) {
+  .then(({ state, value, errors }) => {
+    if (state === 'valid') {
       // use valid value
+      value.username; // => 'hello'
+      value.age; // => 15
     } else {
-      // check and display errors, e.g. errors.username might be 'Username is required.'
+      // check and display errors, e.g.
+      errors.username; // => 'Username is required.'
+      errors.age; // => 'Must be at least 18.'
     }
   })
   .catch((err) => {
@@ -74,13 +78,16 @@ All validation tests yield one of two results: `valid` and `invalid`. Both are o
 The `valid` result includes the following properties:
 
 - `isValid` set to true
+- `state` set to `'valid'`
 - `field` if provided at validation time or if using the object validation type
 - `value` as the parsed value
 
 The `invalid` result includes the same as above, with these differences:
 
 - `isValid` set to false
-- `message` containing the validation test's error message
+- `state` set to `'invalid'`
+- `message` containing the validation test's error message unless using `object` or `array`
+- `errors` is null for most invalid results and for `object` and `array` it contains the error messages, see below for more details
 
 ### Shared
 
@@ -141,9 +148,21 @@ The `invalid` result includes the same as above, with these differences:
 - `default` sets the default value in case the parsed array is undefined.
 - `parser` allows you to override the default array parser. Check the source code for the current implementation, validation tests assume this returns an array, null, or undefined.
 
+For invalid results, errors are in the `errors` property. It contains an array of:
+
+```ts
+{
+  error: null | { [key: string]: string };
+  message: string;
+  index: number;
+}
+```
+
 ### Objects
 
 `object(schema)` - The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is a plain object where its properties are validation types such as string, array, number, etc. Nested objects are also allowed, but not recommended due to their complexity.
+
+For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
 Unlike yup, this API does not (yet at least) have a ref option.
 

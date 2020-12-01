@@ -8,10 +8,13 @@ test('array', async () => {
 
   await expect(validate(['foo', 'bar', 'baz'])).resolves.toEqual({
     isValid: true,
+    state: 'valid',
+    field: undefined,
     value: ['foo', 'bar', 'baz'],
   });
   await expect(validate(null)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
     field: undefined,
     value: null,
     message: 'required',
@@ -19,6 +22,7 @@ test('array', async () => {
   });
   await expect(validate(undefined)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
     field: undefined,
     value: undefined,
     message: 'required',
@@ -26,16 +30,19 @@ test('array', async () => {
   });
   await expect(validate([])).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     value: [],
     field: undefined,
   });
   await expect(validate(['foo', 'ba'])).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
     value: ['foo', 'ba'],
     message: '',
     field: undefined,
     errors: [
       {
+        errors: null,
         message: 'min:3',
         index: 1,
       },
@@ -56,6 +63,7 @@ test('array with object', async () => {
     validate([{}, { username: 'foo' }, { username: 'ab' }])
   ).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
     field: undefined,
     value: [{}, { username: 'foo' }, { username: 'ab' }],
     message: '',
@@ -83,6 +91,7 @@ test('nested array', async () => {
   const validate = array(array(string(required('required'))));
   await expect(validate([['', 'foo', null]])).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
     message: '',
     value: [['', 'foo', null]],
     field: undefined,
@@ -92,12 +101,12 @@ test('nested array', async () => {
         message: '',
         errors: [
           {
-            errors: undefined,
+            errors: null,
             index: 0,
             message: 'required',
           },
           {
-            errors: undefined,
+            errors: null,
             index: 2,
             message: 'required',
           },

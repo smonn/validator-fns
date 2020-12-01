@@ -25,22 +25,27 @@ test('object', async () => {
     })
   ).toEqual({
     isValid: true,
+    state: 'valid',
+    field: undefined,
     value: {
       username: 'hello',
       age: 20,
     },
-    errors: {},
   });
 
   expect(
     await validate({
       username: 'hello',
+      age: null,
     })
   ).toEqual({
     isValid: false,
+    state: 'invalid',
+    field: undefined,
+    message: '',
     value: {
       username: 'hello',
-      age: undefined,
+      age: null,
     },
     errors: {
       age: 'Must enter your age.',
@@ -67,6 +72,8 @@ test('nested object', async () => {
     })
   ).toEqual({
     isValid: true,
+    state: 'valid',
+    field: undefined,
     value: {
       person: {
         firstName: 'foo',
@@ -74,7 +81,6 @@ test('nested object', async () => {
         age: undefined,
       },
     },
-    errors: {},
   });
 
   expect(
@@ -86,6 +92,9 @@ test('nested object', async () => {
     })
   ).toEqual({
     isValid: false,
+    state: 'invalid',
+    field: undefined,
+    message: '',
     value: {
       person: {
         firstName: 'foo',
@@ -93,7 +102,11 @@ test('nested object', async () => {
         age: 22,
       },
     },
-    errors: {},
+    errors: {
+      person: {
+        lastName: 'required',
+      },
+    },
   });
 });
 

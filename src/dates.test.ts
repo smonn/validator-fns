@@ -38,6 +38,7 @@ test('minDate', async () => {
   );
   await expect(validate(now)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: now,
   });
@@ -45,6 +46,7 @@ test('minDate', async () => {
   tomorrow.setDate(now.getDate() + 1);
   await expect(validate(tomorrow)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: tomorrow,
   });
@@ -52,6 +54,8 @@ test('minDate', async () => {
   yesterday.setDate(now.getDate() - 1);
   await expect(validate(yesterday)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     field: undefined,
     value: yesterday,
     message: `min:${now.toISOString()}`,
@@ -66,6 +70,7 @@ test('maxDate', async () => {
   );
   await expect(validate(now)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: now,
   });
@@ -73,6 +78,8 @@ test('maxDate', async () => {
   tomorrow.setDate(now.getDate() + 1);
   await expect(validate(tomorrow)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     field: undefined,
     value: tomorrow,
     message: `max:${now.toISOString()}`,
@@ -81,6 +88,7 @@ test('maxDate', async () => {
   yesterday.setDate(now.getDate() - 1);
   await expect(validate(yesterday)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: yesterday,
   });
@@ -99,33 +107,42 @@ test('date', async () => {
   );
   await expect(validate(now)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: now,
   });
   await expect(validate(nextMonth)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: nextMonth,
   });
   await expect(validate(tomorrow)).resolves.toEqual({
     isValid: true,
+    state: 'valid',
     field: undefined,
     value: tomorrow,
   });
   await expect(validate('')).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     field: undefined,
     value: invalidDate,
     message: 'required',
   });
   await expect(validate(null)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     field: undefined,
     value: null,
     message: 'required',
   });
   await expect(validate(undefined)).resolves.toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     field: undefined,
     value: undefined,
     message: 'required',

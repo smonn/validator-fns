@@ -1,64 +1,17 @@
-import {
-  InvalidValidatorResult,
-  ValidatorTest,
-  ValidValidatorResult,
-} from './shared';
+import { invalid, valid, ValidatorTest } from './shared';
 
-/**
- * @category Types
- */
-export interface ObjectValidator {
-  (values: unknown, field?: string): Promise<ObjectValidatorResult>;
-}
-
-/**
- * @category Types
- */
-export interface ObjectValidatorTests {
-  [field: string]: ValidatorTest<unknown>;
-}
-
-/**
- * @category Types
- */
-export interface ObjectValidatorValues {
-  [field: string]: unknown;
-}
-
-/**
- * @category Types
- */
-export interface ObjectValidatorResults {
-  [field: string]: string;
-}
-
-/**
- * @category Types
- */
-export type ValidObjectValidatorResult = ValidValidatorResult<
-  Record<string, unknown>
->;
-
-/**
- * @category Types
- */
-export interface InvalidObjectValidatorResult
-  extends InvalidValidatorResult<Record<string, unknown>> {
-  errors: ObjectValidatorResults;
-}
-
-/**
- * @category Types
- */
-export type ObjectValidatorResult =
-  | ValidObjectValidatorResult
-  | InvalidObjectValidatorResult;
+type ObjectParam = Record<string, ValidatorTest<unknown>>;
 
 /**
  * Validates an object.
  * @category Type Validators
  */
-export function object(properties: ObjectValidatorTests): ObjectValidator {
+export function object<P extends ObjectParam, K extends keyof P>(
+  properties: P
+): ValidatorTest<
+  Record<K, unknown>,
+  Record<K, string | Record<string, string>>
+> {
   if (
     typeof properties !== 'object' ||
     properties === null ||
@@ -73,15 +26,13 @@ export function object(properties: ObjectValidatorTests): ObjectValidator {
     const validationResults = await Promise.all(
       keys.map((key) => {
         const validator = properties[key];
-        const value = values
-          ? (values as ObjectValidatorValues)[key]
-          : undefined;
+        const value = values ? values[key as K] : undefined;
         return validator(value, key);
       })
     );
 
     let isValid = true;
-    const value: Record<string, unknown> = {};
+    const value: Record<K, unknown> = {} as Record<K, unknown>;
 
     const errors = validationResults.reduce((acc, result) => {
       if (!result.field) {
@@ -89,7 +40,7 @@ export function object(properties: ObjectValidatorTests): ObjectValidator {
       }
 
       isValid = isValid && result.isValid;
-      value[result.field] = result.value;
+      value[result.field as K] = result.value;
 
       if (result.isValid) {
         return acc;
@@ -97,10 +48,14 @@ export function object(properties: ObjectValidatorTests): ObjectValidator {
 
       return {
         ...acc,
-        [result.field]: result.message,
+        [result.field]: result.message ? result.message : result.errors,
       };
-    }, {});
+    }, {} as Record<K, string>);
 
-    return { errors, isValid, field, value };
+    if (isValid) {
+      return valid(value, field);
+    }
+
+    return invalid('', value, field, errors);
   };
 }

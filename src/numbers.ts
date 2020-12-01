@@ -66,7 +66,7 @@ export function integer(message: ValidatorMessage): ValidatorTest<number> {
     ) {
       return valid(value, field);
     }
-    return invalid(message, value, field);
+    return invalid(message, value, field, null);
   };
 }
 

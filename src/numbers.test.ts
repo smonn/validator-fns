@@ -40,31 +40,53 @@ test('number', async () => {
     max(10, 'Must be at most 10.')
   );
 
-  expect(await validate(0)).toEqual({ isValid: true, value: 0 });
-  expect(await validate(-10)).toEqual({ isValid: true, value: -10 });
-  expect(await validate(10)).toEqual({ isValid: true, value: 10 });
+  expect(await validate(0)).toEqual({
+    isValid: true,
+    state: 'valid',
+    value: 0,
+  });
+  expect(await validate(-10)).toEqual({
+    isValid: true,
+    state: 'valid',
+    value: -10,
+  });
+  expect(await validate(10)).toEqual({
+    isValid: true,
+    state: 'valid',
+    value: 10,
+  });
   expect(await validate(11)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must be at most 10.',
     value: 11,
   });
   expect(await validate(-11)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must be at least -10.',
     value: -11,
   });
   expect(await validate(NaN)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: NaN,
   });
   expect(await validate(undefined)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: undefined,
   });
   expect(await validate(null)).toEqual({
     isValid: false,
+    state: 'invalid',
+    errors: null,
     message: 'Must enter a value.',
     value: null,
   });

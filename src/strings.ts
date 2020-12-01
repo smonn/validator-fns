@@ -71,7 +71,7 @@ export function matches(
       return valid(value, field);
     }
 
-    return invalid(message, value, field);
+    return invalid(message, value, field, null);
   };
 }
 
@@ -104,7 +104,7 @@ export function url(
         (url = new URL(value))
       ) {
         if (url && protocols && !protocols.includes(url.protocol)) {
-          return invalid(message, value, field, { protocols });
+          return invalid(message, value, field, null, { protocols });
         }
 
         return valid(value, field);
@@ -113,7 +113,7 @@ export function url(
       // continue despite error
     }
 
-    return invalid(message, value, field, { protocols });
+    return invalid(message, value, field, null, { protocols });
   };
 }
 
