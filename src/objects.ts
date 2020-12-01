@@ -12,11 +12,7 @@ export function object<P extends ObjectParam, K extends keyof P>(
   Record<K, unknown>,
   Record<K, string | Record<string, string>>
 > {
-  if (
-    typeof properties !== 'object' ||
-    properties === null ||
-    Object.keys(properties).length === 0
-  ) {
+  if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
 
