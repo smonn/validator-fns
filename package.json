@@ -24,11 +24,13 @@
     "npm": ">=6"
   },
   "scripts": {
+    "clean": "rimraf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint --ext .ts src",
+    "test": "jest",
     "build": "rollup -c && tsc --project tsconfig.types.json",
     "watch": "rollup -cw",
-    "test": "jest",
-    "clean": "rimraf dist",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run type-check && npm run lint && npm test && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
