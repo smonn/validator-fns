@@ -36,7 +36,7 @@ export type ValidatorResult<T, E> = ValidResult<T> | InvalidResult<T, E>;
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorTest<T, E = unknown> {
+export interface ValidatorTest<T = unknown, E = unknown> {
   (value: T | null | undefined, field?: string): Promise<ValidatorResult<T, E>>;
 }
 
@@ -47,9 +47,9 @@ export interface ValidatorTest<T, E = unknown> {
  */
 export interface ValidatorFactory<C> {
   (
-    config?: Partial<C> | ValidatorTest<unknown>,
-    ...tests: ValidatorTest<unknown>[]
-  ): ValidatorTest<unknown>;
+    config?: Partial<C> | ValidatorTest,
+    ...tests: ValidatorTest[]
+  ): ValidatorTest;
 }
 
 /**
@@ -101,7 +101,7 @@ export function formatMessage(
 export function required(
   message: ValidatorMessage,
   nullable?: boolean
-): ValidatorTest<unknown> {
+): ValidatorTest {
   return (value, field) => {
     if (
       (nullable && value === null) ||

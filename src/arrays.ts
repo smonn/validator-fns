@@ -59,8 +59,8 @@ export function applyArrayConfig(
  * @category Type Validators
  */
 export function array(
-  config?: Partial<ArrayConfig> | ValidatorTest<unknown>,
-  ...tests: ValidatorTest<unknown>[]
+  config?: Partial<ArrayConfig> | ValidatorTest,
+  ...tests: ValidatorTest[]
 ): ValidatorTest<Array<unknown>, Array<ArrayItemValidatorResult>> {
   let allTests = tests;
   let finalConfig: ArrayConfig = {

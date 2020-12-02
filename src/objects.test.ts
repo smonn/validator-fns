@@ -53,6 +53,29 @@ test('object', async () => {
   });
 });
 
+test('empty object config is always valid', async () => {
+  const validate = object({});
+
+  await expect(validate({ foo: 'bar' })).resolves.toEqual({
+    isValid: true,
+    field: undefined,
+    state: 'valid',
+    value: {},
+  });
+  await expect(validate(null)).resolves.toEqual({
+    isValid: true,
+    field: undefined,
+    state: 'valid',
+    value: {},
+  });
+  await expect(validate(undefined)).resolves.toEqual({
+    isValid: true,
+    field: undefined,
+    state: 'valid',
+    value: {},
+  });
+});
+
 test('nested object', async () => {
   // while this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
@@ -112,5 +135,4 @@ test('nested object', async () => {
 
 test('bad values', async () => {
   expect(() => object(null)).toThrow();
-  expect(() => object({})).toThrow();
 });
