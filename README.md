@@ -1,15 +1,56 @@
 # validator-fns
 
-![npm](https://img.shields.io/npm/v/validator-fns) ![npm bundle size](https://img.shields.io/bundlephobia/min/validator-fns) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/validator-fns) ![node-current](https://img.shields.io/node/v/validator-fns) ![npm type definitions](https://img.shields.io/npm/types/validator-fns) ![NPM](https://img.shields.io/npm/l/validator-fns) ![npm](https://img.shields.io/npm/dw/validator-fns)
+![current version](https://img.shields.io/npm/v/validator-fns?color=%23369&label=current%20version) ![minified size](https://img.shields.io/bundlephobia/min/validator-fns?color=%23369) ![minified plus gzip size](https://img.shields.io/bundlephobia/minzip/validator-fns?color=%23369&label=minified%20plus%20gzip%20size) ![supported node version](https://img.shields.io/node/v/validator-fns?color=%23369&label=supported%20node%20version) ![included types](https://img.shields.io/npm/types/validator-fns?color=%23369&label=included%20types) ![license](https://img.shields.io/npm/l/validator-fns?color=%23369) ![total downloads](https://img.shields.io/npm/dt/validator-fns?color=%23369&label=total%20downloads)
 
-Minimal async validation library that aims to be as small as possible and with no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Build targets ES2019.
+Small asynchronous validation library. Aims to be as small as possible and use no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. Build targets ES2019.
 
-[npm][npm] | [docs][docs] | [github][github]
+[npm][npm] | [github][github]
+
+<!-- toc -->
+
+- [Install](#install)
+- [Usage](#usage)
+- [API](#api)
+  - [Shared](#shared)
+    - [`required(message[, nullable])`](#requiredmessage-nullable)
+    - [`min(amount, message, exclusive)`](#minamount-message-exclusive)
+    - [`max(amount, message, exclusive)`](#maxamount-message-exclusive)
+    - [`exact(amount, message)`](#exactamount-message)
+  - [Strings](#strings)
+    - [`string([config,] ...tests)`](#stringconfig-tests)
+    - [`matches(pattern, message)`](#matchespattern-message)
+    - [`email(message)`](#emailmessage)
+    - [`url(message[, protocols])`](#urlmessage-protocols)
+  - [Numbers](#numbers)
+    - [`number([config,] ...tests)`](#numberconfig-tests)
+    - [`integer(message)`](#integermessage)
+  - [Booleans](#booleans)
+    - [`boolean([config,] ...tests)`](#booleanconfig-tests)
+  - [Dates](#dates)
+    - [`date([config,] ...tests)`](#dateconfig-tests)
+    - [`minDate(date, message)`](#mindatedate-message)
+    - [`maxDate(date, message)`](#maxdatedate-message)
+  - [Arrays](#arrays)
+    - [`array([config,] ...tests)`](#arrayconfig-tests)
+  - [Objects](#objects)
+    - [`object(schema)`](#objectschema)
+- [Custom validation](#custom-validation)
+  - [`formatMessage(template, params)`](#formatmessagetemplate-params)
+  - [`createTypeValidatorTest(defaultConfig, applyConfig)`](#createtypevalidatortestdefaultconfig-applyconfig)
+  - [`valid(value, field)`](#validvalue-field)
+  - [`invalid(message, value, field, extras)`](#invalidmessage-value-field-extras)
+  * [Requirements for custom validation](#requirements-for-custom-validation)
+- [Supported environments](#supported-environments)
+- [License](#license)
+
+<!-- tocstop -->
 
 ## Install
 
 ```sh
 npm install validator-fns
+# or
+yarn add validator-fns
 ```
 
 ## Usage
@@ -69,82 +110,112 @@ validate({ username: 'hello', age: 15 })
   });
 ```
 
-## Documentation
+## API
 
 All validation tests yield one of two results: `valid` and `invalid`. Both are objects.
 
 The `valid` result includes the following properties:
 
-- `isValid` set to true
 - `state` set to `'valid'`
+- `isValid` set to true (not recommended to use)
 - `field` if provided at validation time or if using the object validation type
 - `value` as the parsed value
 
 The `invalid` result includes the same as above, with these differences:
 
-- `isValid` set to false
 - `state` set to `'invalid'`
+- `isValid` set to false (not recommended to use)
 - `message` containing the validation test's error message unless using `object` or `array`
-- `errors` is null for most invalid results and for `object` and `array` it contains the error messages, see below for more details
+- `errors` is `null` unless using `object` or `array`, then it contains the error messages, see below for more details
 
 ### Shared
 
-`required(message[, nullable])` - Ensures value is not undefined, null, an empty string, `NaN`, or an invalid date. If nullable is set to true, this will consider null values as acceptable.
+#### `required(message[, nullable])`
 
-`min(amount, message, exclusive)` - Ensures value is of a minimum amount. Amount here refers to string length, array length, and number value. Exclusive makes the amount comparison exclusive instead of inclusive.
+Ensures value is not one of `undefined`, `null`, an empty string, `NaN`, or an invalid date. If nullable is set to true, this will consider `null` values as acceptable.
 
-`max(amount, message, exclusive)` - Ensures value is of a maximum amount. Amount here refers to string length, array length, and number value. Exclusive makes the amount comparison exclusive instead of inclusive.
+#### `min(amount, message, exclusive)`
 
-`exact(amount, message)` - Ensures value is of an exact amount. Amount here refers to string length, array length, and number value.
+Ensures value is of at least `amount`. `amount` refers to string length, array length, or number value. Exclusive makes the amount comparison exclusive instead of inclusive.
+
+#### `max(amount, message, exclusive)`
+
+Ensures value is of at most `amount`. `amount` refers to string length, array length, and number value. Exclusive makes the amount comparison exclusive instead of inclusive.
+
+#### `exact(amount, message)`
+
+Ensures value is of an exact `amount`. `amount` refers to string length, array length, and number value.
 
 ### Strings
 
-`string([config,] ...tests)` - Casts value to string, null, or undefined if using the default string parser. `tests` can be all string specific and shared validation tests. `config` is an optional parameter with the following properties:
+#### `string([config,] ...tests)`
+
+Casts value to be a string, `null`, or `undefined` if using the default string parser. `tests` can be all string specific and shared validation tests. `config` is an optional parameter with the following properties:
 
 - `trim` removes whitespace from the parsed string.
-- `default` sets the default value in case the parsed string is undefined.
-- `parser` allows you to override the default string parser. Check the source code for the current implementation, validation tests assume this returns a string, null, or undefined.
+- `default` sets the default value in case the parsed string is `undefined`.
+- `parser` allows you to override the default string parser. Check the source code for the current implementation. Validation tests assume this returns a string, `null`, or `undefined`.
 
-`matches(pattern, message)` - Ensures value matches the specified pattern.
+#### `matches(pattern, message)`
 
-`email(message)` - Ensures the value is formatted like an email address.
+Ensures value matches the specified pattern.
 
-`url(message[, protocols])` - Ensures value is a valid URL. The optional protocols parameter is an allow-list of valid URL protocols, such as `https:`, `mailto:`, etc.
+#### `email(message)`
+
+Ensures the value follows an email address format.
+
+#### `url(message[, protocols])`
+
+Ensures value is a valid URL. The optional `protocols` parameter is an allow-list of valid URL protocols. For example: `https:`, `mailto:`, etc.
 
 ### Numbers
 
-`number([config,] ...tests)` - Casts value to number, null, or undefined if using the default number parser. `tests` can be all number specific and shared validation tests. `config` is an optional parameter with the following properties:
+#### `number([config,] ...tests)`
 
-- `round` can be used to force number to be rounded using a specific method. Valid values are `nearest`, `ceil`, and `floor`.
-- `default` sets the default value in case the parsed number is undefined.
-- `parser` allows you to override the default number parser. Check the source code for the current implementation, validation tests assume this returns a number, null, or undefined.
+Casts value to be a number, `null`, or `undefined` if using the default number parser. `tests` can be all number specific and shared validation tests. `config` is an optional parameter with the following properties:
 
-`integer(message)` - Ensures value is an integer number.
+- `round` forces the value to be rounded using a specific method. Valid values are `nearest`, `ceil`, and `floor`.
+- `default` sets the default value in case the parsed number is `undefined`.
+- `parser` allows you to override the default number parser. Check the source code for the current implementation. Validation tests assume this returns a number, `null`, or `undefined`.
+
+#### `integer(message)`
+
+Ensures value is an integer number.
 
 ### Booleans
 
-`boolean([config,] ...tests)` - Casts value to boolean, null, or undefined if using the default boolean parser. The only supported validation test is `required`, but you may provide custom ones. `config` is an optional parameter with the following properties:
+#### `boolean([config,] ...tests)`
 
-- `default` sets the default value in case the parsed boolean is undefined.
-- `parser` allows you to override the default boolean parser. Check the source code for the current implementation, validation tests assume this returns a boolean, null, or undefined.
+Casts value to be a boolean, `null`, or `undefined` if using the default boolean parser. The only supported validation test is `required`, but you may provide custom ones. `config` is an optional parameter with the following properties:
+
+- `default` sets the default value in case the parsed boolean is `undefined`.
+- `parser` allows you to override the default boolean parser. Check the source code for the current implementation, validation tests assume this returns a boolean, `null`, or `undefined`.
 
 ### Dates
 
-`date([config,] ...tests)` - Casts value to Date, null, or undefined if using the default date parser. `tests` can be all date specific and the required validation tests. `config` is an optional parameter with the following properties:
+#### `date([config,] ...tests)`
 
-- `default` sets the default value in case the parsed date is undefined.
-- `parser` allows you to override the default date parser. Check the source code for the current implementation, validation tests assume this returns a date, null, or undefined. The default parser only accepts `Date`s, numbers, and ISO 8601 formatted strings. If you want to allow other formats it's recommended to use a third-party library such as [date-fns][date-fns].
+Casts value to be a date, `null`, or `undefined` if using the default date parser. `tests` can be all date specific and the required validation tests. `config` is an optional parameter with the following properties:
 
-`minDate(date, message)` - Ensures value is on or after the specified date.
+- `default` sets the default value in case the parsed date is `undefined`.
+- `parser` allows you to override the default date parser. Check the source code for the current implementation, validation tests assume this returns a date`, `null`, or `undefined`. The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
 
-`maxDate(date, message)` - Ensures value is on or before the specified date.
+#### `minDate(date, message)`
+
+Ensures value is on or after the specified date.
+
+#### `maxDate(date, message)`
+
+Ensures value is on or before the specified date.
 
 ### Arrays
 
-`array([config,] ...tests)` - Casts value to array, null, or undefined if using the default date parser. `tests` are all shared validation tests. `config` is an optional parameter with the following properties:
+#### `array([config,] ...tests)`
 
-- `default` sets the default value in case the parsed array is undefined.
-- `parser` allows you to override the default array parser. Check the source code for the current implementation, validation tests assume this returns an array, null, or undefined.
+Casts value to array, `null`, or `undefined` if using the default date parser. `tests` are all shared validation tests. `config` is an optional parameter with the following properties:
+
+- `default` sets the default value in case the parsed array is `undefined`.
+- `parser` allows you to override the default array parser. Check the source code for the current implementation, validation tests assume this returns an array, `null`, or `undefined`.
 
 For invalid results, errors are in the `errors` property. It contains an array of:
 
@@ -158,7 +229,9 @@ For invalid results, errors are in the `errors` property. It contains an array o
 
 ### Objects
 
-`object(schema)` - The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is a plain object where its properties are validation types such as string, array, number, etc. Nested objects are also allowed, but not recommended due to their complexity.
+#### `object(schema)`
+
+The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is a plain object where its properties are validation types such as string, array, number, etc. Nested objects are also allowed, but not recommended due to their complexity.
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
@@ -170,19 +243,27 @@ To use this with a library such as [Formik][formik], you can use the resulting `
 
 Custom validation types and validators can be created and used as needed. There are some helpers that, while used internally, are considered part of the public API.
 
-`formatMessage(template, params)` - Formats a string for use as an error message. `template` can be a plain string with `{keys}` replaced by the `params`, or a function that returns a string and accepts `params` as a parameter.
+#### `formatMessage(template, params)`
 
-`createTypeValidatorTest(defaultConfig, applyConfig)` - Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At minimum this should include a `parser` function.
+Formats a string for use as an error message. `template` can be a plain string with `{keys}` replaced by the `params`, or a function that returns a string and accepts `params` as a parameter.
 
-`valid(value, field)` - Simple helper that formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
+#### `createTypeValidatorTest(defaultConfig, applyConfig)`
 
-`invalid(message, value, field, extras)` - Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` are the same as above, and `extras` are optional extra parameters that can be used in the message.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
+
+#### `valid(value, field)`
+
+Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
+
+#### `invalid(message, value, field, extras)`
+
+Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` are the same as above, and `extras` are optional extra parameters that can be used in the message.
 
 ### Requirements for custom validation
 
-A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string()` validation type ensures the provided value is a string, null, or undefined. Furthermore, it's expected to accept one or more validation tests but it's not required if you don't need to support that. Either way, it must be a function that accepts a value of any type and returns a promise which resolves to a validation result (see above). If configured with validation tests, the test's results should be considered for the final validation result.
+A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string()` validation type ensures the provided value is a string, `null`, or `undefined`. Furthermore, it's expected to accept one or more validation tests but it's not required if you don't need to support that. Either way, it must be a function that accepts a value of any type and returns a promise which resolves to a validation result (see above). If configured with validation tests, the test's results should be considered for the final validation result.
 
-A **validation test** is a simplified version of a validation type. It can simply accept a value of a specific type including null and undefined and then return a promise that resolves to a validation result.
+A **validation test** is a simplified version of a validation type. It can simply accept a value of a specific type including `null` and `undefined` and then return a promise that resolves to a validation result.
 
 ## Supported environments
 
@@ -202,7 +283,13 @@ Older environments may require polyfill or transpile for the following:
 
 ## License
 
-MIT
+Copyright 2020 Simon Ingeson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: #documentation
@@ -211,3 +298,4 @@ MIT
 [compat]: https://kangax.github.io/compat-table/es2016plus/
 [date-fns]: https://date-fns.org
 [formik]: https://formik.org
+[iso8601]: https://en.wikipedia.org/wiki/ISO_8601
