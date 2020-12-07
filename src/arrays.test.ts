@@ -4,18 +4,20 @@ import { max, min, required } from './shared';
 import { string } from './strings';
 
 test('array', async () => {
-  const validate = array(string(min(3, 'min:{min}')), required('required'));
+  const validate = array(
+    string(min(3, 'min:{min}')),
+    required('required'),
+    min(1, 'min:{min}')
+  );
 
   await expect(validate(['foo', 'bar', 'baz'])).resolves.toEqual({
     isValid: true,
     state: 'valid',
-    field: undefined,
     value: ['foo', 'bar', 'baz'],
   });
   await expect(validate(null)).resolves.toEqual({
     isValid: false,
     state: 'invalid',
-    field: undefined,
     value: null,
     message: 'required',
     errors: [],
@@ -23,23 +25,29 @@ test('array', async () => {
   await expect(validate(undefined)).resolves.toEqual({
     isValid: false,
     state: 'invalid',
-    field: undefined,
     value: undefined,
     message: 'required',
     errors: [],
   });
   await expect(validate([])).resolves.toEqual({
-    isValid: true,
-    state: 'valid',
+    isValid: false,
+    state: 'invalid',
     value: [],
-    field: undefined,
+    message: 'min:1',
+    errors: [],
+  });
+  await expect(validate({} as unknown[])).resolves.toEqual({
+    isValid: false,
+    state: 'invalid',
+    value: [],
+    message: 'min:1',
+    errors: [],
   });
   await expect(validate(['foo', 'ba'])).resolves.toEqual({
     isValid: false,
     state: 'invalid',
     value: ['foo', 'ba'],
     message: '',
-    field: undefined,
     errors: [
       {
         errors: null,
@@ -64,7 +72,6 @@ test('array with object', async () => {
   ).resolves.toEqual({
     isValid: false,
     state: 'invalid',
-    field: undefined,
     value: [{}, { username: 'foo' }, { username: 'ab' }],
     message: '',
     errors: [
@@ -94,7 +101,6 @@ test('nested array', async () => {
     state: 'invalid',
     message: '',
     value: [['', 'foo', null]],
-    field: undefined,
     errors: [
       {
         index: 0,

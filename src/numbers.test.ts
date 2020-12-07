@@ -76,6 +76,11 @@ test('number', async () => {
     message: 'Must enter a value.',
     value: NaN,
   });
+  expect(await validate(new Date(0))).toEqual({
+    isValid: true,
+    state: 'valid',
+    value: 0,
+  });
   expect(await validate(undefined)).toEqual({
     isValid: false,
     state: 'invalid',
@@ -89,5 +94,28 @@ test('number', async () => {
     errors: null,
     message: 'Must enter a value.',
     value: null,
+  });
+  expect(await validate({})).toEqual({
+    isValid: false,
+    state: 'invalid',
+    errors: null,
+    message: 'Must enter a value.',
+    value: NaN,
+  });
+});
+
+test('rounding', async () => {
+  const nearest = number({ round: 'nearest' });
+  const floor = number({ round: 'floor' });
+  const ceil = number({ round: 'ceil' });
+
+  await expect(nearest(0.9)).resolves.toMatchObject({
+    value: 1,
+  });
+  await expect(floor(0.9)).resolves.toMatchObject({
+    value: 0,
+  });
+  await expect(ceil(0.1)).resolves.toMatchObject({
+    value: 1,
   });
 });

@@ -76,6 +76,11 @@ test('string', async () => {
     state: 'valid',
     value: 'hello',
   });
+  expect(await validate(12345)).toEqual({
+    isValid: true,
+    state: 'valid',
+    value: '12345',
+  });
   expect(await validate('  test  ')).toEqual({
     isValid: false,
     state: 'invalid',
@@ -96,6 +101,13 @@ test('string', async () => {
     errors: null,
     message: 'Must enter a value.',
     value: '',
+  });
+  expect(await validate(new Date(0))).toEqual({
+    errors: null,
+    isValid: false,
+    message: 'At most ten characters.',
+    state: 'invalid',
+    value: '1970-01-01T00:00:00.000Z',
   });
   expect(await validate(undefined)).toEqual({
     isValid: false,

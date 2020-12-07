@@ -26,7 +26,6 @@ test('object', async () => {
   ).toEqual({
     isValid: true,
     state: 'valid',
-    field: undefined,
     value: {
       username: 'hello',
       age: 20,
@@ -41,7 +40,6 @@ test('object', async () => {
   ).toEqual({
     isValid: false,
     state: 'invalid',
-    field: undefined,
     message: '',
     value: {
       username: 'hello',
@@ -58,19 +56,16 @@ test('empty object config is always valid', async () => {
 
   await expect(validate({ foo: 'bar' })).resolves.toEqual({
     isValid: true,
-    field: undefined,
     state: 'valid',
     value: {},
   });
   await expect(validate(null)).resolves.toEqual({
     isValid: true,
-    field: undefined,
     state: 'valid',
     value: {},
   });
   await expect(validate(undefined)).resolves.toEqual({
     isValid: true,
-    field: undefined,
     state: 'valid',
     value: {},
   });
@@ -96,7 +91,6 @@ test('nested object', async () => {
   ).toEqual({
     isValid: true,
     state: 'valid',
-    field: undefined,
     value: {
       person: {
         firstName: 'foo',
@@ -116,7 +110,6 @@ test('nested object', async () => {
   ).toEqual({
     isValid: false,
     state: 'invalid',
-    field: undefined,
     message: '',
     value: {
       person: {
