@@ -1,7 +1,7 @@
-import { integer, number } from './numbers';
-import { object } from './objects';
-import { max, min, required } from './shared';
-import { string } from './strings';
+import { integer, number } from '../src/numbers';
+import { object } from '../src/objects';
+import { max, min, required } from '../src/shared';
+import { string } from '../src/strings';
 
 test('object', async () => {
   const validate = object({
@@ -124,8 +124,4 @@ test('nested object', async () => {
       },
     },
   });
-});
-
-test('bad values', async () => {
-  expect(() => object(null)).toThrow();
 });

@@ -12,8 +12,11 @@ export {
   DateConfig,
   invalidDate,
   maxDate,
+  MaxDateValidatorMessageParams,
   minDate,
+  MinDateValidatorMessageParams,
   parseDate,
+  SharedDateValueType,
 } from './dates';
 export {
   applyNumberConfig,
@@ -22,20 +25,25 @@ export {
   NumberConfig,
   parseNumber,
 } from './numbers';
-export { object } from './objects';
+export { object, ObjectParam } from './objects';
 export {
   ConfigBase,
   createTypeValidatorTest,
   exact,
+  ExactValidatorMessageParams,
   formatMessage,
   invalid,
   InvalidResult,
   max,
+  MaxValidatorMessageParams,
   min,
+  MinValidatorMessageParams,
   required,
+  SharedValueType,
   valid,
   ValidatorFactory,
   ValidatorMessage,
+  ValidatorMessageParams,
   ValidatorResult,
   ValidatorTest,
   ValidResult,

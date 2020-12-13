@@ -1,6 +1,6 @@
 import { invalid, valid, ValidatorTest } from './shared';
 
-type ObjectParam = Record<string, ValidatorTest<unknown>>;
+export type ObjectParam = Record<string, ValidatorTest<any>>;
 
 /**
  * Validates an object.
@@ -8,10 +8,7 @@ type ObjectParam = Record<string, ValidatorTest<unknown>>;
  */
 export function object<P extends ObjectParam, K extends keyof P>(
   properties: P
-): ValidatorTest<
-  Record<K, unknown>,
-  Record<K, string | Record<string, string>>
-> {
+): ValidatorTest<Record<K, any>, Record<K, string | Record<string, string>>> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
@@ -20,7 +17,7 @@ export function object<P extends ObjectParam, K extends keyof P>(
     const keys = Object.keys(properties);
 
     const validationResults = await Promise.all(
-      keys.map((key) => {
+      keys.map(key => {
         const validator = properties[key];
         const value = values ? values[key as K] : undefined;
         return validator(value, key);

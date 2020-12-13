@@ -36,7 +36,7 @@ export type ValidatorResult<T, E> = ValidResult<T> | InvalidResult<T, E>;
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorTest<T = unknown, E = unknown> {
+export interface ValidatorTest<T = any, E = any> {
   (value: T | null | undefined, field?: string): Promise<ValidatorResult<T, E>>;
 }
 
@@ -64,14 +64,20 @@ export interface ConfigBase<T> {
   default?: T;
 }
 
+export interface ValidatorMessageParams<T> {
+  value: T | null | undefined;
+  field: string | undefined;
+}
+
 /**
  * Validation message. May be a plain string or a function that accepts arguments.
  * While using a string, values in squiggly brackets `{}` are replaced.
  * @category Types
  */
-export type ValidatorMessage =
-  | string
-  | ((params: Record<string, unknown>) => string);
+export type ValidatorMessage<
+  T,
+  P extends ValidatorMessageParams<T> = ValidatorMessageParams<T>
+> = string | ((params: P) => string);
 
 /** @internal */
 const formatPattern = /\{(\w+)\}/g;
@@ -82,12 +88,14 @@ const formatPattern = /\{(\w+)\}/g;
  * @param params Params to inject into template
  * @category Helpers
  */
-export function formatMessage(
-  template: ValidatorMessage,
-  params: Record<string, unknown>
+export function formatMessage<T, P extends ValidatorMessageParams<T>>(
+  template: ValidatorMessage<T, P>,
+  params: P
 ): string {
   if (typeof template === 'string') {
-    return template.replace(formatPattern, (_, key) => String(params[key]));
+    return template.replace(formatPattern, (_, key: string) =>
+      String((params as any)[key])
+    );
   }
   return template(params);
 }
@@ -98,23 +106,23 @@ export function formatMessage(
  * @param nullable Allow null values
  * @category Validation Tests
  */
-export function required(
-  message: ValidatorMessage,
+export function required<T, P extends ValidatorMessageParams<T>>(
+  message: ValidatorMessage<T, P>,
   nullable?: boolean
-): ValidatorTest {
+): ValidatorTest<T> {
   return (value, field) => {
     if (
       (nullable && value === null) ||
       (value !== null &&
         value !== undefined &&
-        value !== '' &&
+        !(typeof value === 'string' && value === '') &&
         !(typeof value === 'number' && value !== value) &&
         !(value instanceof Date && Number.isNaN(value.valueOf())))
     ) {
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { value, field });
+    return invalid(message, value, field, null);
   };
 }
 
@@ -149,10 +157,10 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       const parsedValue = applyConfig(value, finalConfig);
 
       const results = await Promise.all(
-        allTests.map((validatorTest) => validatorTest(parsedValue, field))
+        allTests.map(validatorTest => validatorTest(parsedValue, field))
       );
 
-      const firstInvalid = results.find((result) => result.isValid === false);
+      const firstInvalid = results.find(result => result.isValid === false);
       if (firstInvalid && !firstInvalid.isValid) {
         return firstInvalid;
       }
@@ -188,21 +196,29 @@ export function valid<T, E = never>(
  * @param extras Extra message params
  * @category Helpers
  */
-export function invalid<T, E>(
-  message: ValidatorMessage,
+export function invalid<T, E, P extends ValidatorMessageParams<T>>(
+  message: ValidatorMessage<T, P>,
   value: T | null | undefined,
   field: string | undefined,
   errors: E,
-  extras: Record<string, unknown> = {}
+  extras?: Omit<P, 'field' | 'value'>
 ): Promise<ValidatorResult<T, E>> {
   return Promise.resolve({
     isValid: false,
     state: 'invalid',
-    message: formatMessage(message, { ...extras, value, field }),
+    message: formatMessage(message, { ...(extras || {}), value, field } as P),
     value,
     field,
     errors,
   });
+}
+
+export type SharedValueType = string | number | Array<unknown>;
+
+export interface MaxValidatorMessageParams
+  extends ValidatorMessageParams<SharedValueType> {
+  max: number;
+  amount: number;
 }
 
 /**
@@ -214,9 +230,9 @@ export function invalid<T, E>(
  */
 export function max(
   limit: number,
-  message: ValidatorMessage,
+  message: ValidatorMessage<SharedValueType, MaxValidatorMessageParams>,
   exclusive?: boolean
-): ValidatorTest<string | number | Array<unknown>> {
+): ValidatorTest<SharedValueType> {
   return (value, field) => {
     const amount =
       typeof value === 'string' || Array.isArray(value) ? value.length : value;
@@ -234,6 +250,12 @@ export function max(
   };
 }
 
+export interface MinValidatorMessageParams
+  extends ValidatorMessageParams<SharedValueType> {
+  min: number;
+  amount: number;
+}
+
 /**
  * Ensures a string, number, or array value is at most a certain amount.
  * @param limit Size or value limit
@@ -243,9 +265,9 @@ export function max(
  */
 export function min(
   limit: number,
-  message: ValidatorMessage,
+  message: ValidatorMessage<SharedValueType, MinValidatorMessageParams>,
   exclusive?: boolean
-): ValidatorTest<string | number | Array<unknown>> {
+): ValidatorTest<SharedValueType> {
   return (value, field) => {
     const amount =
       typeof value === 'string' || Array.isArray(value) ? value.length : value;
@@ -263,6 +285,12 @@ export function min(
   };
 }
 
+export interface ExactValidatorMessageParams
+  extends ValidatorMessageParams<SharedValueType> {
+  exact: number;
+  amount: number;
+}
+
 /**
  * Ensures a string, number, or array value is exactly a certain amount.
  * @param limit Size or value limit
@@ -271,8 +299,8 @@ export function min(
  */
 export function exact(
   limit: number,
-  message: ValidatorMessage
-): ValidatorTest<string | number | Array<unknown>> {
+  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParams>
+): ValidatorTest<SharedValueType> {
   return (value, field) => {
     const amount =
       typeof value === 'string' || Array.isArray(value) ? value.length : value;

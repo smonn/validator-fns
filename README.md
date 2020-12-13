@@ -2,7 +2,7 @@
 
 ![current version](https://img.shields.io/npm/v/validator-fns?color=%23369&label=current%20version) ![minified size](https://img.shields.io/bundlephobia/min/validator-fns?color=%23369) ![minified plus gzip size](https://img.shields.io/bundlephobia/minzip/validator-fns?color=%23369&label=minified%20plus%20gzip%20size) ![supported node version](https://img.shields.io/node/v/validator-fns?color=%23369&label=supported%20node%20version) ![included types](https://img.shields.io/npm/types/validator-fns?color=%23369&label=included%20types) ![license](https://img.shields.io/npm/l/validator-fns?color=%23369) ![total downloads](https://img.shields.io/npm/dt/validator-fns?color=%23369&label=total%20downloads)
 
-Small asynchronous validation library. Tries to be as small as possible and use no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. This library targets ES2019--configure your build accordingly.
+Small asynchronous validation library. Tries to be as small as possible and use no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. This library targets modern browsers only--configure your build accordingly.
 
 [npm][npm] | [github][github]
 
@@ -41,7 +41,6 @@ Small asynchronous validation library. Tries to be as small as possible and use 
   - [`invalid(message, value, field, extras)`](#invalidmessage-value-field-extras)
   * [Requirements for custom validation](#requirements-for-custom-validation)
 - [Supported environments](#supported-environments)
-- [License](#license)
 
 <!-- tocstop -->
 
@@ -105,7 +104,7 @@ validate({ username: 'hello', age: 15 })
       errors.age; // => 'Must be at least 18.'
     }
   })
-  .catch((err) => {
+  .catch(err => {
     // only throws if there's an uncaught error and it failed to validate
   });
 ```
@@ -206,7 +205,7 @@ Casts value to a boolean, `null` or `undefined` if using the default boolean par
 Casts value to a date, `null` or `undefined` if using the default date parser. `tests` can be all date specific and the required validation tests. `config` is an optional parameter with the following properties:
 
 - `default` sets the default value in case the parsed date is `undefined`.
-- `parser` allows you to override the default date parser. Check the source code for the current implementation. Validation tests assume this returns a date`, `null`or`undefined`. The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
+- `parser` allows you to override the default date parser. Check the source code for the current implementation. Validation tests assume this returns a date, `null` or `undefined`. The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
 
 #### `minDate(date, message)`
 
@@ -288,16 +287,6 @@ Older environments may require polyfill or transpile for the following:
 - Object spread (`...`) operators
 - Optional catch binding
 - And possibly others
-
-## License
-
-Copyright 2020 Simon Ingeson
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: #documentation

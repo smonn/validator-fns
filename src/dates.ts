@@ -4,6 +4,7 @@ import {
   invalid,
   valid,
   ValidatorMessage,
+  ValidatorMessageParams,
   ValidatorTest,
 } from './shared';
 
@@ -103,6 +104,13 @@ export function applyDateConfig(
   return parsedValue;
 }
 
+export type SharedDateValueType = Date | string | number;
+
+export interface MinDateValidatorMessageParams
+  extends ValidatorMessageParams<Date> {
+  min: Date | null | undefined;
+}
+
 /**
  * Ensures a date value is on or after a date.
  * @param date Minimum date
@@ -110,9 +118,9 @@ export function applyDateConfig(
  * @category Validation Tests
  */
 export function minDate(
-  date: Date | string | number,
-  message: ValidatorMessage
-): ValidatorTest<Date> {
+  date: SharedDateValueType,
+  message: ValidatorMessage<Date, MinDateValidatorMessageParams>
+): ValidatorTest<Date, null> {
   const parsedDate = parseDate(date);
 
   return (value, field) => {
@@ -128,6 +136,11 @@ export function minDate(
   };
 }
 
+export interface MaxDateValidatorMessageParams
+  extends ValidatorMessageParams<Date> {
+  max: Date | null | undefined;
+}
+
 /**
  * Ensures a date value is on or before a date.
  * @param date Maximum date
@@ -135,8 +148,8 @@ export function minDate(
  * @category Validation Tests
  */
 export function maxDate(
-  date: Date | string | number,
-  message: ValidatorMessage
+  date: SharedDateValueType,
+  message: ValidatorMessage<Date, MaxDateValidatorMessageParams>
 ): ValidatorTest<Date> {
   const parsedDate = parseDate(date);
 

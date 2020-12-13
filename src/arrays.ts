@@ -87,9 +87,9 @@ export function array(
 
     if (arrayTests.length > 0) {
       const results = await Promise.all(
-        arrayTests.map((validatorTest) => validatorTest(arrayValue, field))
+        arrayTests.map(validatorTest => validatorTest(arrayValue, field))
       );
-      result = results.find((result) => result.isValid === false);
+      result = results.find(result => result.isValid === false);
     }
 
     if (arrayValue && validateItem) {
@@ -101,7 +101,7 @@ export function array(
     }
 
     const allResults = result ? [result, ...itemResults] : itemResults;
-    const firstInvalid = allResults.find((x) => x.isValid === false);
+    const firstInvalid = allResults.find(x => x.isValid === false);
     const isValid = !firstInvalid;
 
     if (isValid) {
@@ -109,8 +109,8 @@ export function array(
     }
 
     const errors = itemResults
-      .filter((item) => !item.isValid)
-      .map((item) => {
+      .filter(item => !item.isValid)
+      .map(item => {
         const match = item.field && item.field.match(/\[(\d)+\]$/);
         let index = -1;
         let errors: unknown = undefined;

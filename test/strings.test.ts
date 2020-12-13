@@ -1,5 +1,5 @@
-import { max, min, required } from './shared';
-import { email, string, url } from './strings';
+import { max, min, required } from '../src/shared';
+import { email, string, url } from '../src/strings';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');

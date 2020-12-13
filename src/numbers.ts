@@ -55,7 +55,9 @@ export function applyNumberConfig(
  * @param message Error message
  * @category Validation Tests
  */
-export function integer(message: ValidatorMessage): ValidatorTest<number> {
+export function integer(
+  message: ValidatorMessage<number>
+): ValidatorTest<number> {
   return (value, field) => {
     if (
       value === undefined ||

@@ -1,15 +1,23 @@
-import { formatMessage, required, exact } from './shared';
+import { formatMessage, required, exact } from '../src/shared';
 
 test('format string message', () => {
-  expect(formatMessage('Hello {name}!', { name: 'World' })).toBe(
-    'Hello World!'
-  );
+  expect(
+    formatMessage('Hello {name}!', {
+      name: 'World',
+      value: '',
+      field: undefined,
+    })
+  ).toBe('Hello World!');
 });
 
 test('format function message', () => {
-  expect(formatMessage(({ name }) => `Hello ${name}!`, { name: 'World' })).toBe(
-    'Hello World!'
-  );
+  expect(
+    formatMessage(({ name }) => `Hello ${name}!`, {
+      name: 'World',
+      value: '',
+      field: undefined,
+    })
+  ).toBe('Hello World!');
 });
 
 test('required', async () => {

@@ -59,8 +59,8 @@ export function applyStringConfig(
  */
 export function matches(
   pattern: RegExp,
-  message: ValidatorMessage
-): ValidatorTest<string> {
+  message: ValidatorMessage<string>
+): ValidatorTest<string, null> {
   return (value, field) => {
     if (
       value === undefined ||
@@ -80,7 +80,9 @@ export function matches(
  * @param message Error message
  * @category Validation Tests
  */
-export function email(message: ValidatorMessage): ValidatorTest<string> {
+export function email(
+  message: ValidatorMessage<string>
+): ValidatorTest<string> {
   return matches(emailPattern, message);
 }
 
@@ -91,7 +93,7 @@ export function email(message: ValidatorMessage): ValidatorTest<string> {
  * @category Validation Tests
  */
 export function url(
-  message: ValidatorMessage,
+  message: ValidatorMessage<string>,
   protocols?: string[]
 ): ValidatorTest<string> {
   return (value, field) => {

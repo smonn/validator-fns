@@ -1,7 +1,7 @@
-import { array } from './arrays';
-import { object } from './objects';
-import { max, min, required } from './shared';
-import { string } from './strings';
+import { array } from '../src/arrays';
+import { object } from '../src/objects';
+import { max, min, required } from '../src/shared';
+import { string } from '../src/strings';
 
 test('array', async () => {
   const validate = array(

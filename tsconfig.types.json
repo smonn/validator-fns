@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig",
-  "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true,
-    "noEmit": false,
-    "emitDeclarationOnly": true
-  }
-}

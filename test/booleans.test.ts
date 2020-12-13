@@ -1,5 +1,5 @@
-import { boolean } from './booleans';
-import { required } from './shared';
+import { boolean } from '../src/booleans';
+import { required } from '../src/shared';
 
 test('boolean', async () => {
   const validate = boolean(required('required'));

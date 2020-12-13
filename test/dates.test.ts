@@ -1,5 +1,5 @@
-import { parseDate, invalidDate, minDate, maxDate, date } from './dates';
-import { required } from './shared';
+import { parseDate, invalidDate, minDate, maxDate, date } from '../src/dates';
+import { required } from '../src/shared';
 
 test('parseDate', () => {
   const now = new Date();
@@ -34,10 +34,7 @@ test('parseDate', () => {
 
 test('minDate', async () => {
   const now = new Date();
-  const validate = minDate(
-    now,
-    ({ min }: { min: Date }) => `min:${min.toISOString()}`
-  );
+  const validate = minDate(now, ({ min }) => `min:${min?.toISOString()}`);
   await expect(validate(now)).resolves.toEqual({
     isValid: true,
     state: 'valid',
@@ -63,10 +60,7 @@ test('minDate', async () => {
 
 test('maxDate', async () => {
   const now = new Date();
-  const validate = maxDate(
-    now,
-    ({ max }: { max: Date }) => `max:${max.toISOString()}`
-  );
+  const validate = maxDate(now, ({ max }) => `max:${max?.toISOString()}`);
   await expect(validate(now)).resolves.toEqual({
     isValid: true,
     state: 'valid',
