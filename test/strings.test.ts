@@ -56,7 +56,7 @@ test('url', async () => {
   expect(await validate(null)).toMatchObject({ isValid: true });
   expect(await validate(undefined)).toMatchObject({ isValid: true });
   expect(await validate('/foo')).toMatchObject({ isValid: false });
-  expect(await validate('javascript:void(0);')).toMatchObject({
+  expect(await validate('unknown://path')).toMatchObject({
     isValid: false,
     state: 'invalid',
     errors: null,

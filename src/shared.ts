@@ -116,7 +116,7 @@ export function required<T, P extends ValidatorMessageParams<T>>(
       (value !== null &&
         value !== undefined &&
         !(typeof value === 'string' && value === '') &&
-        !(typeof value === 'number' && value !== value) &&
+        !(typeof value === 'number' && Number.isNaN(value)) &&
         !(value instanceof Date && Number.isNaN(value.valueOf())))
     ) {
       return valid(value, field);
