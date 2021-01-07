@@ -127,7 +127,7 @@ test('string', async () => {
     isValid: false,
     state: 'invalid',
     errors: null,
-    message: 'Value is an object.',
+    message: 'Failed to parse value to string.',
     value: { name: 'August' },
   });
 });
