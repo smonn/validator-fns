@@ -59,7 +59,7 @@ export interface ValidatorFactory<C> {
  */
 export interface ConfigBase<T> {
   /** Parser to convert value into the designated type. */
-  parser: (value: unknown) => T | null | undefined | object;
+  parser: (value: unknown) => T | null | undefined;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
 }
@@ -154,26 +154,22 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     }
 
     return async (value, field) => {
-      const parsedValue = applyConfig(value, finalConfig);
+      try {
+        const parsedValue = applyConfig(value, finalConfig);
 
-      if (
-        parsedValue !== null &&
-        typeof parsedValue === 'object' &&
-        !(parsedValue instanceof Date)
-      ) {
-        return invalid('Value is an object.', parsedValue, field, null);
+        const results = await Promise.all(
+          allTests.map(validatorTest => validatorTest(parsedValue, field))
+        );
+
+        const firstInvalid = results.find(result => result.isValid === false);
+        if (firstInvalid && !firstInvalid.isValid) {
+          return firstInvalid;
+        }
+
+        return valid(parsedValue, field);
+      } catch (err) {
+        return invalid(err.message, value, field, null);
       }
-
-      const results = await Promise.all(
-        allTests.map(validatorTest => validatorTest(parsedValue, field))
-      );
-
-      const firstInvalid = results.find(result => result.isValid === false);
-      if (firstInvalid && !firstInvalid.isValid) {
-        return firstInvalid;
-      }
-
-      return valid(parsedValue, field);
     };
   };
 }
@@ -323,4 +319,12 @@ export function exact(
 
     return invalid(message, value, field, null, { amount, exact: limit });
   };
+}
+
+/**
+ * Simple check for objects.
+ * @param value Value to test
+ */
+export function isObject(value: unknown) {
+  return Object.prototype.toString.call(value) === '[object Object]';
 }

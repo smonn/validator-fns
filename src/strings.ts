@@ -2,6 +2,7 @@ import {
   ConfigBase,
   createTypeValidatorTest,
   invalid,
+  isObject,
   valid,
   ValidatorMessage,
   ValidatorTest,
@@ -24,13 +25,11 @@ export interface StringConfig extends ConfigBase<string> {
  * @param value Value to parse
  * @category Parsers
  */
-export function parseString(
-  value: unknown
-): string | null | undefined | object {
+export function parseString(value: unknown): string | null | undefined {
   if (value === null || value === undefined) return value;
   if (typeof value === 'string') return value;
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'object') return value;
+  if (isObject(value)) throw new TypeError('Failed to parse value to string.');
   return String(value);
 }
 
@@ -43,7 +42,7 @@ export function parseString(
 export function applyStringConfig(
   value: unknown,
   config: StringConfig
-): string | null | undefined | object {
+): string | null | undefined {
   let parsedValue = config.parser(value);
   if (config.default !== undefined && parsedValue === undefined) {
     parsedValue = config.default;
