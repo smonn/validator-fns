@@ -24,10 +24,13 @@ export interface StringConfig extends ConfigBase<string> {
  * @param value Value to parse
  * @category Parsers
  */
-export function parseString(value: unknown): string | null | undefined {
+export function parseString(
+  value: unknown
+): string | null | undefined | object {
   if (value === null || value === undefined) return value;
   if (typeof value === 'string') return value;
   if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'object') return value;
   return String(value);
 }
 
@@ -40,7 +43,7 @@ export function parseString(value: unknown): string | null | undefined {
 export function applyStringConfig(
   value: unknown,
   config: StringConfig
-): string | null | undefined {
+): string | null | undefined | object {
   let parsedValue = config.parser(value);
   if (config.default !== undefined && parsedValue === undefined) {
     parsedValue = config.default;
