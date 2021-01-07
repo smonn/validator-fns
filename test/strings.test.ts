@@ -123,4 +123,11 @@ test('string', async () => {
     message: 'Must enter a value.',
     value: null,
   });
+  expect(await validate({ name: 'August' })).toEqual({
+    isValid: false,
+    state: 'invalid',
+    errors: null,
+    message: 'Value is an object.',
+    value: { name: 'August' },
+  });
 });

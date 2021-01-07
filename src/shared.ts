@@ -59,7 +59,7 @@ export interface ValidatorFactory<C> {
  */
 export interface ConfigBase<T> {
   /** Parser to convert value into the designated type. */
-  parser: (value: unknown) => T | null | undefined;
+  parser: (value: unknown) => T | null | undefined | object;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
 }
@@ -155,6 +155,14 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 
     return async (value, field) => {
       const parsedValue = applyConfig(value, finalConfig);
+
+      if (
+        parsedValue !== null &&
+        typeof parsedValue === 'object' &&
+        !(parsedValue instanceof Date)
+      ) {
+        return invalid('Value is an object.', parsedValue, field, null);
+      }
 
       const results = await Promise.all(
         allTests.map(validatorTest => validatorTest(parsedValue, field))
