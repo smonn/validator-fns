@@ -14,41 +14,29 @@ export function object<P extends ObjectParam, K extends keyof P>(
   }
 
   return async (values, field) => {
-    const keys = Object.keys(properties);
-
-    const validationResults = await Promise.all(
-      keys.map(key => {
-        const validator = properties[key];
-        const value = values ? values[key as K] : undefined;
-        return validator(value, key);
-      })
-    );
-
+    const definedValues = values || ({} as Record<K, any>);
+    const errors = {} as Record<K, string>;
+    const resolvedValues: Record<K, unknown> = {} as Record<K, unknown>;
     let isValid = true;
-    const value: Record<K, unknown> = {} as Record<K, unknown>;
 
-    const errors = validationResults.reduce((acc, result) => {
-      if (!result.field) {
-        return acc;
+    for (let key in properties) {
+      const validator = properties[key];
+      const field = (key as unknown) as K;
+      const value = definedValues[field];
+      const result = await validator(value, key);
+
+      resolvedValues[field] = result.value;
+
+      if (result.state === 'invalid') {
+        isValid = false;
+        errors[field] = result.message ? result.message : result.errors;
       }
-
-      isValid = isValid && result.isValid;
-      value[result.field as K] = result.value;
-
-      if (result.isValid) {
-        return acc;
-      }
-
-      return {
-        ...acc,
-        [result.field]: result.message ? result.message : result.errors,
-      };
-    }, {} as Record<K, string>);
-
-    if (isValid) {
-      return valid(value, field);
     }
 
-    return invalid('', value, field, errors);
+    if (isValid) {
+      return valid(resolvedValues, field);
+    }
+
+    return invalid('', resolvedValues, field, errors);
   };
 }

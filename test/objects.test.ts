@@ -23,8 +23,7 @@ test('object', async () => {
       username: 'hello',
       age: '20',
     })
-  ).toEqual({
-    isValid: true,
+  ).toMatchObject({
     state: 'valid',
     value: {
       username: 'hello',
@@ -37,8 +36,7 @@ test('object', async () => {
       username: 'hello',
       age: null,
     })
-  ).toEqual({
-    isValid: false,
+  ).toMatchObject({
     state: 'invalid',
     message: '',
     value: {
@@ -54,18 +52,15 @@ test('object', async () => {
 test('empty object config is always valid', async () => {
   const validate = object({});
 
-  await expect(validate({ foo: 'bar' })).resolves.toEqual({
-    isValid: true,
+  await expect(validate({ foo: 'bar' })).resolves.toMatchObject({
     state: 'valid',
     value: {},
   });
-  await expect(validate(null)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(null)).resolves.toMatchObject({
     state: 'valid',
     value: {},
   });
-  await expect(validate(undefined)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(undefined)).resolves.toMatchObject({
     state: 'valid',
     value: {},
   });
@@ -88,8 +83,7 @@ test('nested object', async () => {
         lastName: 'bar',
       },
     })
-  ).toEqual({
-    isValid: true,
+  ).toMatchObject({
     state: 'valid',
     value: {
       person: {
@@ -107,8 +101,7 @@ test('nested object', async () => {
         age: '22',
       },
     })
-  ).toEqual({
-    isValid: false,
+  ).toMatchObject({
     state: 'invalid',
     message: '',
     value: {

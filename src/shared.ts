@@ -1,5 +1,8 @@
 export type ValidResult<T> = {
-  /** True if the original value is valid according to all validation tests */
+  /**
+   * True if the original value is valid according to all validation tests
+   * @deprecated Use `state` instead.
+   */
   isValid: true;
   /** This is preferred to use over `isValid` as it works better for type guards. */
   state: 'valid';
@@ -10,13 +13,16 @@ export type ValidResult<T> = {
 };
 
 export type InvalidResult<T, E> = {
-  /** True if the original value is valid according to all validation tests */
+  /**
+   * True if the original value is valid according to all validation tests.
+   * @deprecated Use `state` instead.
+   */
   isValid: false;
   /** This is preferred to use over `isValid` as it works better for type guards. */
   state: 'invalid';
   /** The parsed value. Note that may be different than the original value. */
   value: T | null | undefined;
-  /** Error message if `isValid` is false. */
+  /** Error message if `state` is invalid. */
   message: string;
   /** Field name if provided. Automatically provided if using object validation. */
   field?: string;
@@ -157,13 +163,11 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       try {
         const parsedValue = applyConfig(value, finalConfig);
 
-        const results = await Promise.all(
-          allTests.map(validatorTest => validatorTest(parsedValue, field))
-        );
-
-        const firstInvalid = results.find(result => result.isValid === false);
-        if (firstInvalid && !firstInvalid.isValid) {
-          return firstInvalid;
+        for (let validatorTest of allTests) {
+          const result = await validatorTest(parsedValue, field);
+          if (result.state === 'invalid') {
+            return result;
+          }
         }
 
         return valid(parsedValue, field);
@@ -180,16 +184,16 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
  * @param field Field name
  * @category Helpers
  */
-export function valid<T, E = never>(
+export async function valid<T, E = never>(
   value: T | null | undefined,
   field: string | undefined
 ): Promise<ValidatorResult<T, E>> {
-  return Promise.resolve({
+  return {
     isValid: true,
     state: 'valid',
     value,
     field,
-  });
+  };
 }
 
 /**
@@ -200,21 +204,21 @@ export function valid<T, E = never>(
  * @param extras Extra message params
  * @category Helpers
  */
-export function invalid<T, E, P extends ValidatorMessageParams<T>>(
+export async function invalid<T, E, P extends ValidatorMessageParams<T>>(
   message: ValidatorMessage<T, P>,
   value: T | null | undefined,
   field: string | undefined,
   errors: E,
   extras?: Omit<P, 'field' | 'value'>
 ): Promise<ValidatorResult<T, E>> {
-  return Promise.resolve({
+  return {
     isValid: false,
     state: 'invalid',
     message: formatMessage(message, { ...(extras || {}), value, field } as P),
     value,
     field,
     errors,
-  });
+  };
 }
 
 export type SharedValueType = string | number | Array<unknown>;

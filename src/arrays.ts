@@ -80,57 +80,47 @@ export function array(
 
   return async (value, field) => {
     const arrayValue = applyArrayConfig(finalConfig, value);
-    let result: ValidatorResult<unknown, unknown> | undefined = undefined;
-    let itemResults: ValidatorResult<unknown, unknown>[] = [];
-
+    let arrayInvalidResult:
+      | ValidatorResult<unknown, unknown>
+      | undefined = undefined;
+    let isValid = true;
+    const errors: ArrayItemValidatorResult[] = [];
     const [validateItem, ...arrayTests] = allTests;
 
-    if (arrayTests.length > 0) {
-      const results = await Promise.all(
-        arrayTests.map(validatorTest => validatorTest(arrayValue, field))
-      );
-      result = results.find(result => result.isValid === false);
+    for (let validatorTest of arrayTests) {
+      const result = await validatorTest(arrayValue, field);
+      if (result.state === 'invalid') {
+        isValid = false;
+        arrayInvalidResult = result;
+        break;
+      }
     }
 
     if (arrayValue && validateItem) {
-      itemResults = await Promise.all(
-        arrayValue.map((item, index) =>
-          validateItem(item, field ? `${field}[${index}]` : `[${index}]`)
-        )
-      );
-    }
+      for (let index = 0; index < arrayValue.length; index += 1) {
+        const item = arrayValue[index];
+        const result = await validateItem(
+          item,
+          field ? `${field}[${index}]` : `[${index}]`
+        );
 
-    const allResults = result ? [result, ...itemResults] : itemResults;
-    const firstInvalid = allResults.find(x => x.isValid === false);
-    const isValid = !firstInvalid;
+        if (result.state === 'invalid') {
+          isValid = false;
+          errors.push({
+            errors: result.errors,
+            index,
+            message: result.message,
+          });
+        }
+      }
+    }
 
     if (isValid) {
       return valid(arrayValue, field);
     }
 
-    const errors = itemResults
-      .filter(item => !item.isValid)
-      .map(item => {
-        const match = item.field && item.field.match(/\[(\d)+\]$/);
-        let index = -1;
-        let errors: unknown = undefined;
-        if (match) {
-          index = parseInt(match[1], 10);
-        }
-
-        if (item.state === 'invalid') {
-          errors = item.errors;
-        }
-
-        return {
-          index,
-          message: item.isValid ? '' : item.message || '',
-          errors,
-        };
-      });
-
     return invalid(
-      result && !result.isValid ? result.message : '',
+      arrayInvalidResult ? arrayInvalidResult.message : '',
       arrayValue,
       field,
       errors

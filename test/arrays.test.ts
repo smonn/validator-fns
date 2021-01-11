@@ -10,41 +10,35 @@ test('array', async () => {
     min(1, 'min:{min}')
   );
 
-  await expect(validate(['foo', 'bar', 'baz'])).resolves.toEqual({
-    isValid: true,
+  await expect(validate(['foo', 'bar', 'baz'])).resolves.toMatchObject({
     state: 'valid',
     value: ['foo', 'bar', 'baz'],
   });
-  await expect(validate(null)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
     value: null,
     message: 'required',
     errors: [],
   });
-  await expect(validate(undefined)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
     value: undefined,
     message: 'required',
     errors: [],
   });
-  await expect(validate([])).resolves.toEqual({
-    isValid: false,
+  await expect(validate([])).resolves.toMatchObject({
     state: 'invalid',
     value: [],
     message: 'min:1',
     errors: [],
   });
-  await expect(validate({} as unknown[])).resolves.toEqual({
-    isValid: false,
+  await expect(validate({} as unknown[])).resolves.toMatchObject({
     state: 'invalid',
     value: [],
     message: 'min:1',
     errors: [],
   });
-  await expect(validate(['foo', 'ba'])).resolves.toEqual({
-    isValid: false,
+  await expect(validate(['foo', 'ba'])).resolves.toMatchObject({
     state: 'invalid',
     value: ['foo', 'ba'],
     message: '',
@@ -69,8 +63,7 @@ test('array with object', async () => {
 
   await expect(
     validate([{}, { username: 'foo' }, { username: 'ab' }])
-  ).resolves.toEqual({
-    isValid: false,
+  ).resolves.toMatchObject({
     state: 'invalid',
     value: [{}, { username: 'foo' }, { username: 'ab' }],
     message: '',
@@ -96,8 +89,7 @@ test('array with object', async () => {
 test('nested array', async () => {
   // while this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = array(array(string(required('required'))));
-  await expect(validate([['', 'foo', null]])).resolves.toEqual({
-    isValid: false,
+  await expect(validate([['', 'foo', null]])).resolves.toMatchObject({
     state: 'invalid',
     message: '',
     value: [['', 'foo', null]],

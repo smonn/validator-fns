@@ -35,22 +35,19 @@ test('parseDate', () => {
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString()}`);
-  await expect(validate(now)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(now)).resolves.toMatchObject({
     state: 'valid',
     value: now,
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  await expect(validate(tomorrow)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(tomorrow)).resolves.toMatchObject({
     state: 'valid',
     value: tomorrow,
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  await expect(validate(yesterday)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(yesterday)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     value: yesterday,
@@ -61,15 +58,13 @@ test('minDate', async () => {
 test('maxDate', async () => {
   const now = new Date();
   const validate = maxDate(now, ({ max }) => `max:${max?.toISOString()}`);
-  await expect(validate(now)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(now)).resolves.toMatchObject({
     state: 'valid',
     value: now,
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  await expect(validate(tomorrow)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(tomorrow)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     value: tomorrow,
@@ -77,8 +72,7 @@ test('maxDate', async () => {
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  await expect(validate(yesterday)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(yesterday)).resolves.toMatchObject({
     state: 'valid',
     value: yesterday,
   });
@@ -95,37 +89,31 @@ test('date', async () => {
     minDate(now, 'min'),
     maxDate(nextMonth, 'max')
   );
-  await expect(validate(now)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(now)).resolves.toMatchObject({
     state: 'valid',
     value: now,
   });
-  await expect(validate(nextMonth)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(nextMonth)).resolves.toMatchObject({
     state: 'valid',
     value: nextMonth,
   });
-  await expect(validate(tomorrow)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(tomorrow)).resolves.toMatchObject({
     state: 'valid',
     value: tomorrow,
   });
-  await expect(validate('')).resolves.toEqual({
-    isValid: false,
+  await expect(validate('')).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     value: invalidDate,
     message: 'required',
   });
-  await expect(validate(null)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     value: null,
     message: 'required',
   });
-  await expect(validate(undefined)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     value: undefined,

@@ -116,14 +116,14 @@ All validation tests yield one of two results: `valid` and `invalid`. Both are o
 The `valid` result includes the following properties:
 
 - `state` set to `'valid'`
-- `isValid` set to true (not recommended to use)
+- `isValid` set to true (deprecated)
 - `field` if provided at validation time or if using the object validation type
 - `value` as the parsed value
 
 The `invalid` result includes the same as above, with these differences:
 
 - `state` set to `'invalid'`
-- `isValid` set to false (not recommended to use)
+- `isValid` set to false (deprecated)
 - `message` containing the validation test's error message unless using `object` or `array`
 - `errors` is `null` unless using `object` or `array` then it contains the error messages, see below for more details
 
@@ -279,7 +279,7 @@ A **validation test** is a simplified version of a validation type. It accepts a
 
 Older environments may require polyfill or transpile for the following:
 
-- `Promise`, `Promise.all`
+- `Promise`
 - `async`, `await`
 - `Array.prototype.find`
 - `URL`

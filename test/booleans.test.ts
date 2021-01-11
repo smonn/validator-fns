@@ -5,62 +5,51 @@ test('boolean', async () => {
   const validate = boolean(required('required'));
   const validateWithDefault = boolean({ default: true });
 
-  await expect(validate(null)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     message: 'required',
     value: null,
   });
-  await expect(validate(undefined)).resolves.toEqual({
-    isValid: false,
+  await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
     errors: null,
     message: 'required',
     value: undefined,
   });
-  await expect(validate(true)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(true)).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validate(false)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(false)).resolves.toMatchObject({
     state: 'valid',
     value: false,
   });
-  await expect(validate('true')).resolves.toEqual({
-    isValid: true,
+  await expect(validate('true')).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validate('false')).resolves.toEqual({
-    isValid: true,
+  await expect(validate('false')).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validate(1)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(1)).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validate(0)).resolves.toEqual({
-    isValid: true,
+  await expect(validate(0)).resolves.toMatchObject({
     state: 'valid',
     value: false,
   });
-  await expect(validate({})).resolves.toEqual({
-    isValid: true,
+  await expect(validate({})).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validateWithDefault(undefined)).resolves.toEqual({
-    isValid: true,
+  await expect(validateWithDefault(undefined)).resolves.toMatchObject({
     state: 'valid',
     value: true,
   });
-  await expect(validateWithDefault(null)).resolves.toEqual({
-    isValid: true,
+  await expect(validateWithDefault(null)).resolves.toMatchObject({
     state: 'valid',
     value: null,
   });
