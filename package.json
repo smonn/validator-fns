@@ -4,7 +4,8 @@
   "description": "Small asynchronous validation library",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "runkit.js"
   ],
   "keywords": [
     "validation",
@@ -66,5 +67,6 @@
     "type": "git",
     "url": "git@github.com:smonn/validator-fns.git"
   },
-  "homepage": "https://www.npmjs.com/package/validator-fns"
+  "homepage": "https://www.npmjs.com/package/validator-fns",
+  "runkitExampleFilename": "runkit.js"
 }
