@@ -16,6 +16,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
     - [`min(amount, message, exclusive)`](#minamount-message-exclusive)
     - [`max(amount, message, exclusive)`](#maxamount-message-exclusive)
     - [`exact(amount, message)`](#exactamount-message)
+    - [`oneOf(values, message)`](#oneofvalues-message)
   - [Strings](#strings)
     - [`string([config,] ...tests)`](#stringconfig-tests)
     - [`matches(pattern, message)`](#matchespattern-message)
@@ -241,6 +242,10 @@ Ensures value is of at most `amount`. It can be a string length, array length, o
 #### `exact(amount, message)`
 
 Ensures value is of an exact `amount`. It can be a string length, array length, or numeric value.
+
+#### `oneOf(values, message)`
+
+Ensures value is one of the specified values. It can be strings, numbers, booleans, or dates.
 
 ### Strings
 
