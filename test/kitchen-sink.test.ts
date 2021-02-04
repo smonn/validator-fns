@@ -1,6 +1,4 @@
-const Benchmark = require('benchmarkify');
-const benchmark = new Benchmark('Benchmark validator-fns').printHeader();
-const {
+import {
   array,
   boolean,
   date,
@@ -18,49 +16,24 @@ const {
   required,
   string,
   url,
+  ValidatorTest,
   valid,
   invalid,
-} = require('validator-fns');
-
-let suite = benchmark.createSuite('validator-fns');
-
-// SIMPLE
-
-const simpleObject = {
-  name: 'John Doe',
-  email: 'john.doe@company.space',
-  firstName: 'John',
-  phone: '123-4567',
-  age: 33,
-};
-
-const simpleValidate = object({
-  name: string(required('required'), min(4, 'min:4'), max(25, 'max:25')),
-  email: string(required('required'), email('email')),
-  firstName: string(required('required')),
-  phone: string(required('required')),
-  age: number(required('required'), min(18, 'min:18')),
-});
-
-suite.add('simple', done => {
-  simpleValidate(simpleObject).then(() => done());
-});
-
-// COMPLEX
+} from '../src';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TEN_DAYS = ONE_DAY * 10;
 const now = new Date();
 const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
-const customValidator = (value, field) => {
+const customValidator: ValidatorTest<string> = (value, field) => {
   if (value === 'hello') {
     return valid(value, field);
   }
   return invalid('Must be "hello".', value, field, null);
 };
 
-const complexValidate = object({
+const validate = object({
   firstName: string(
     { default: '', trim: true },
     required('First name is required.')
@@ -120,24 +93,35 @@ const complexValidate = object({
   custom: customValidator,
 });
 
-const startDate = new Date(now.getTime() + ONE_DAY);
+test('kitchen sink', async () => {
+  const startDate = new Date(now.getTime() + ONE_DAY);
 
-const complexObject = {
-  age: 20,
-  custom: 'hello',
-  emailAddress: 'foo@example.com',
-  favoriteCarMakers: ['Ferrari', 'Tesla'],
-  firstName: 'Bob',
-  fruit: 'apple',
-  homepage: 'https://www.example.com',
-  notRobot: 42,
-  optIn: false,
-  postalCode: '12345',
-  startDate,
-};
+  const result = await validate({
+    age: 20,
+    custom: 'hello',
+    emailAddress: 'foo@example.com',
+    favoriteCarMakers: ['Ferrari', 'Tesla'],
+    firstName: 'Bob',
+    fruit: 'apple',
+    homepage: 'https://www.example.com',
+    notRobot: 42,
+    optIn: false,
+    postalCode: '12345',
+    startDate,
+  });
 
-suite.add('complex', done => {
-  complexValidate(complexObject).then(() => done());
+  expect(result.state).toBe('valid');
+  expect(result.value).toEqual({
+    age: 20,
+    custom: 'hello',
+    emailAddress: 'foo@example.com',
+    favoriteCarMakers: ['Ferrari', 'Tesla'],
+    firstName: 'Bob',
+    fruit: 'apple',
+    homepage: 'https://www.example.com',
+    notRobot: 42,
+    optIn: false,
+    postalCode: '12345',
+    startDate,
+  });
 });
-
-suite.run();
