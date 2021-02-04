@@ -1,4 +1,4 @@
-import { formatMessage, required, exact } from '../src/shared';
+import { formatMessage, required, exact, oneOf } from '../src/shared';
 
 test('format string message', () => {
   expect(
@@ -107,5 +107,43 @@ test('exact', async () => {
     errors: null,
     value: [undefined, undefined],
     message: 'exact:5',
+  });
+});
+
+enum TestValue {
+  One,
+  Two,
+  Three,
+}
+
+test('enums', async () => {
+  const strings = oneOf(['foo', 'bar', 'baz'], 'oneOf:{values}');
+  await expect(strings(('asdf' as unknown) as 'foo')).resolves.toMatchObject({
+    state: 'invalid',
+    value: 'asdf',
+    message: 'oneOf:foo,bar,baz',
+  });
+  const numbers = oneOf([2, 4, 6], 'oneOf:{values}');
+  await expect(numbers(4)).resolves.toMatchObject({
+    state: 'valid',
+    value: 4,
+  });
+  const booleans = oneOf([false], 'oneOf:{values}');
+  await expect(booleans(false)).resolves.toMatchObject({
+    state: 'valid',
+    value: false,
+  });
+  const tsEnums = oneOf(
+    [TestValue.One, TestValue.Two, TestValue.Three],
+    'oneOf:{values}'
+  );
+  await expect(tsEnums(TestValue.Three)).resolves.toMatchObject({
+    state: 'valid',
+    value: TestValue.Three,
+  });
+  const dates = oneOf([new Date(0), new Date(1)], 'oneOf:{values}');
+  await expect(dates(new Date(0))).resolves.toMatchObject({
+    state: 'valid',
+    value: new Date(0),
   });
 });

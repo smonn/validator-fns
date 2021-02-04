@@ -332,3 +332,26 @@ export function exact(
 export function isObject(value: unknown) {
   return Object.prototype.toString.call(value) === '[object Object]';
 }
+
+export interface OneOfValidatorMessageParams<T>
+  extends ValidatorMessageParams<T> {
+  values: T[];
+}
+
+export function oneOf<T extends string | number | boolean | Date>(
+  values: T[],
+  message: ValidatorMessage<T, OneOfValidatorMessageParams<T>>
+): ValidatorTest<T> {
+  return (value, field) => {
+    if (
+      value === undefined ||
+      value === null ||
+      values.includes(value) ||
+      (value instanceof Date &&
+        values.find(x => x.valueOf() === value.valueOf()))
+    ) {
+      return valid(value, field);
+    }
+    return invalid(message, value, field, null, { values });
+  };
+}
