@@ -113,3 +113,23 @@ test('nested array', async () => {
     ],
   });
 });
+
+test('array default', async () => {
+  const validate = array({ default: ['hello'] }, string(min(5, 'min:{min}')));
+  await expect(validate(undefined)).resolves.toMatchObject({
+    state: 'valid',
+    value: ['hello'],
+  });
+});
+
+test('array without validation', async () => {
+  const validate = array();
+  await expect(validate([])).resolves.toMatchObject({
+    state: 'valid',
+    value: [],
+  });
+  await expect(validate(undefined)).resolves.toMatchObject({
+    state: 'valid',
+    value: undefined,
+  });
+});

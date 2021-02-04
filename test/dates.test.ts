@@ -120,3 +120,11 @@ test('date', async () => {
     message: 'required',
   });
 });
+
+test('date default', async () => {
+  const validate = date({ default: new Date(0) });
+  await expect(validate(undefined)).resolves.toMatchObject({
+    state: 'valid',
+    value: new Date(0),
+  });
+});

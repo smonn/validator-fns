@@ -105,7 +105,7 @@ export function url(
         value === undefined ||
         value === null ||
         value === '' ||
-        (url = new URL(value))
+        (typeof value === 'string' && (url = new URL(value)))
       ) {
         if (url && protocols && !protocols.includes(url.protocol)) {
           return invalid(message, value, field, null, { protocols });

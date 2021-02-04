@@ -53,6 +53,9 @@ test('url', async () => {
   expect(await validate('')).toMatchObject({ state: 'valid' });
   expect(await validate(null)).toMatchObject({ state: 'valid' });
   expect(await validate(undefined)).toMatchObject({ state: 'valid' });
+  expect(await validate((0 as unknown) as string)).toMatchObject({
+    state: 'invalid',
+  });
   expect(await validate('/foo')).toMatchObject({ state: 'invalid' });
   expect(await validate('unknown://path')).toMatchObject({
     state: 'invalid',
@@ -117,5 +120,13 @@ test('string', async () => {
     errors: null,
     message: 'Failed to parse value to string.',
     value: { name: 'August' },
+  });
+});
+
+test('string default', async () => {
+  const validate = string({ default: 'hello' });
+  await expect(validate(undefined)).resolves.toMatchObject({
+    state: 'valid',
+    value: 'hello',
   });
 });

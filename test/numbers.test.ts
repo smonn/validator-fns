@@ -109,3 +109,11 @@ test('rounding', async () => {
     value: 1,
   });
 });
+
+test('number default', async () => {
+  const validate = number({ default: 5 });
+  await expect(validate(undefined)).resolves.toMatchObject({
+    state: 'valid',
+    value: 5,
+  });
+});

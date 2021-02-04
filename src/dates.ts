@@ -23,15 +23,11 @@ const timezonePattern = /^([+-])([012][0-9]):?([0-5][0-9])$/;
  * @internal
  */
 function parseTimezone(timezone: string): number {
-  if (timezone === 'Z') {
+  if (timezone === 'Z' || !timezonePattern.test(timezone)) {
     return 0;
   }
 
-  const parts = timezone.match(timezonePattern);
-  if (parts === null) {
-    return 0;
-  }
-
+  const parts = timezone.match(timezonePattern)!;
   const [, sign, hour, minute] = parts;
   const multiplier = sign === '-' ? -1 : 1;
   const offset = parseInt(hour, 10) * 60 + parseInt(minute, 10);
