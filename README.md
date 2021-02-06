@@ -68,7 +68,11 @@ function customValidator(value, field) {
   if (value === 'hello') {
     return valid({ value, field });
   }
-  return invalid('Must be "hello".', value, field, null);
+  return invalid({
+    message: 'Must be "hello".',
+    value,
+    field,
+  });
 }
 
 const validate = object({
