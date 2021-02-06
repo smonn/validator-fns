@@ -303,9 +303,9 @@ A **validation test** is a simplified version of a validation type. It accepts a
 - [integer(message)](#integermessage)
 - [matches(pattern, message)](#matchespattern-message)
 - [max(limit, message, exclusive?)](#maxlimit-message-exclusive)
-- [maxDate(limit, message)](#maxdatelimit-message)
+- [maxDate(limit, message, exclusive?)](#maxdatelimit-message-exclusive)
 - [min(limit, message, exclusive?)](#minlimit-message-exclusive)
-- [minDate(limit, message)](#mindatelimit-message)
+- [minDate(limit, message, exclusive?)](#mindatelimit-message-exclusive)
 - [oneOf(values, message)](#oneofvalues-message)
 - [required(message, nullable?)](#requiredmessage-nullable)
 - [url(message, protocols?)](#urlmessage-protocols)
@@ -324,7 +324,7 @@ Ensures the value follows an email address format. Wraps the `matches` validatio
 
 #### exact(limit, message)
 
-Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. `limit` (aliased as `exact`) and `amount` (the string length, array length, or numeric value) is provided to the message.
+Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. `limit` (aliased as `exact`) and `amount` (the string length, array length, or numeric value) are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -349,7 +349,7 @@ Ensures value is an integer number. Works with numbers.
 
 #### matches(pattern, message)
 
-Ensures value matches the specified pattern. `pattern` is provided to the message. Works with strings.
+Ensures value matches the specified pattern. Works with strings. `pattern` is provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -362,7 +362,7 @@ Ensures value matches the specified pattern. `pattern` is provided to the messag
 
 #### max(limit, message, exclusive?)
 
-Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` is provided to the message.
+Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -374,22 +374,23 @@ Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `l
 
 </details>
 
-#### maxDate(limit, message)
+#### maxDate(limit, message, exclusive?)
 
-Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) is provided to the message.
+Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) and `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name      | type                    | description                                              |
-| :-------- | :---------------------- | :------------------------------------------------------- |
-| `limit`   | date, number, or string | The maximum date allowed. Uses the internal date parser. |
-| `message` | string or function      | The validation error message.                            |
+| name        | type                    | description                                                                      |
+| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
+| `limit`     | date, number, or string | The maximum date allowed. Uses the internal date parser.                         |
+| `message`   | string or function      | The validation error message.                                                    |
+| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
 
 </details>
 
 #### min(limit, message, exclusive?)
 
-Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` is provided to the message.
+Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -401,16 +402,17 @@ Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `
 
 </details>
 
-#### minDate(limit, message)
+#### minDate(limit, message, exclusive?)
 
-Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) is provided to the message.
+Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) and `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name      | type                    | description                                              |
-| :-------- | :---------------------- | :------------------------------------------------------- |
-| `limit`   | date, number, or string | The minimum date allowed. Uses the internal date parser. |
-| `message` | string or function      | The validation error message.                            |
+| name        | type                    | description                                                                      |
+| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
+| `limit`     | date, number, or string | The minimum date allowed. Uses the internal date parser.                         |
+| `message`   | string or function      | The validation error message.                                                    |
+| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
 
 </details>
 
@@ -442,7 +444,7 @@ Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or
 
 #### url(message, protocols?)
 
-Ensures value is a valid URL. `protocols` is provided to the message. Works with strings.
+Ensures value is a valid URL. Works with strings. `protocols` is provided to the message.
 
 <details><summary>arguments</summary>
 

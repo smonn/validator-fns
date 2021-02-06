@@ -106,17 +106,20 @@ export interface MinDateValidatorMessageParams
   extends ValidatorMessageParams<Date> {
   min: Date | null | undefined;
   limit: Date | null | undefined;
+  exclusive?: boolean;
 }
 
 /**
  * Ensures a date value is on or after a date.
  * @param limit Minimum date
  * @param message Error message
+ * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function minDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<Date, MinDateValidatorMessageParams>
+  message: ValidatorMessage<Date, MinDateValidatorMessageParams>,
+  exclusive?: boolean
 ): ValidatorTest<Date, null> {
   const parsedDate = parseDate(limit);
 
@@ -124,7 +127,9 @@ export function minDate(
     if (
       parsedDate !== null &&
       parsedDate !== undefined &&
-      (value === null || value === undefined || value >= parsedDate)
+      (value === null ||
+        value === undefined ||
+        (exclusive ? value > parsedDate : value >= parsedDate))
     ) {
       return valid({ value, field });
     }
@@ -136,6 +141,7 @@ export function minDate(
       extras: {
         min: parsedDate,
         limit: parsedDate,
+        exclusive,
       },
     });
   };
@@ -145,17 +151,20 @@ export interface MaxDateValidatorMessageParams
   extends ValidatorMessageParams<Date> {
   max: Date | null | undefined;
   limit: Date | null | undefined;
+  exclusive?: boolean;
 }
 
 /**
  * Ensures a date value is on or before a date.
  * @param limit Maximum date
  * @param message Error message
+ * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function maxDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<Date, MaxDateValidatorMessageParams>
+  message: ValidatorMessage<Date, MaxDateValidatorMessageParams>,
+  exclusive?: boolean
 ): ValidatorTest<Date> {
   const parsedDate = parseDate(limit);
 
@@ -163,7 +172,9 @@ export function maxDate(
     if (
       parsedDate !== null &&
       parsedDate !== undefined &&
-      (value === null || value === undefined || value <= parsedDate)
+      (value === null ||
+        value === undefined ||
+        (exclusive ? value < parsedDate : value <= parsedDate))
     ) {
       return valid({ value, field });
     }
@@ -175,6 +186,7 @@ export function maxDate(
       extras: {
         max: parsedDate,
         limit: parsedDate,
+        exclusive,
       },
     });
   };
