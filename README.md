@@ -293,7 +293,7 @@ A **validation test** is a simplified version of a validation type. It accepts a
 
 #### email(message)
 
-Ensures the value follows an email address format. Wraps the `matches` validation test.
+Ensures the value follows an email address format. Wraps the `matches` validation test. Works with strings.
 
 <details><summary>arguments</summary>
 
@@ -318,7 +318,7 @@ Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. 
 
 #### integer(message)
 
-Ensures value is an integer number.
+Ensures value is an integer number. Works with numbers.
 
 <details><summary>arguments</summary>
 
@@ -330,7 +330,7 @@ Ensures value is an integer number.
 
 #### matches(pattern, message)
 
-Ensures value matches the specified pattern. `pattern` is provided to the message.
+Ensures value matches the specified pattern. `pattern` is provided to the message. Works with strings.
 
 <details><summary>arguments</summary>
 
@@ -357,7 +357,7 @@ Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `l
 
 #### maxDate(limit, message)
 
-Ensures value is on or before the specified date. `limit` (aliased as `max`) is provided to the message.
+Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) is provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -384,7 +384,7 @@ Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `
 
 #### minDate(limit, message)
 
-Ensures value is on or after the specified date. `limit` (aliased as `min`) is provided to the message.
+Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) is provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -410,7 +410,7 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 
 #### required(message, nullable?)
 
-Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date.
+Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date. Works with all types.
 
 <details><summary>arguments</summary>
 
@@ -423,7 +423,7 @@ Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or
 
 #### url(message, protocols?)
 
-Ensures value is a valid URL. `protocols` is provided to the message.
+Ensures value is a valid URL. `protocols` is provided to the message. Works with strings.
 
 <details><summary>arguments</summary>
 
