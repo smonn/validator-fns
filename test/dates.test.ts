@@ -49,7 +49,6 @@ test('minDate', async () => {
   yesterday.setDate(now.getDate() - 1);
   await expect(validate(yesterday)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: yesterday,
     message: `min:${now.toISOString()}`,
   });
@@ -66,7 +65,6 @@ test('maxDate', async () => {
   tomorrow.setDate(now.getDate() + 1);
   await expect(validate(tomorrow)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: tomorrow,
     message: `max:${now.toISOString()}`,
   });
@@ -75,6 +73,20 @@ test('maxDate', async () => {
   await expect(validate(yesterday)).resolves.toMatchObject({
     state: 'valid',
     value: yesterday,
+  });
+});
+
+test('exclusive', async () => {
+  const now = new Date();
+  const min = minDate(now, 'must be after now', true);
+  await expect(min(now)).resolves.toMatchObject({
+    state: 'invalid',
+    message: 'must be after now',
+  });
+  const max = maxDate(now, 'must be before now', true);
+  await expect(max(now)).resolves.toMatchObject({
+    state: 'invalid',
+    message: 'must be before now',
   });
 });
 
@@ -103,19 +115,16 @@ test('date', async () => {
   });
   await expect(validate('')).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: invalidDate,
     message: 'required',
   });
   await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: null,
     message: 'required',
   });
   await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: undefined,
     message: 'required',
   });

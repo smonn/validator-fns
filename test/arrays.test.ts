@@ -44,7 +44,6 @@ test('array', async () => {
     message: '',
     errors: [
       {
-        errors: null,
         message: 'min:3',
         index: 1,
       },
@@ -99,12 +98,10 @@ test('nested array', async () => {
         message: '',
         errors: [
           {
-            errors: null,
             index: 0,
             message: 'required',
           },
           {
-            errors: null,
             index: 2,
             message: 'required',
           },

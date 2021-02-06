@@ -9,7 +9,6 @@ test('min', async () => {
   expect(await validate(undefined)).toMatchObject({ state: 'valid' });
   expect(await validate('foo')).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'min:5',
   });
 });
@@ -22,7 +21,6 @@ test('max', async () => {
   expect(await validate(undefined)).toMatchObject({ state: 'valid' });
   expect(await validate('foo bar')).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'max:5',
   });
 });
@@ -59,7 +57,6 @@ test('url', async () => {
   expect(await validate('/foo')).toMatchObject({ state: 'invalid' });
   expect(await validate('unknown://path')).toMatchObject({
     state: 'invalid',
-    errors: null,
   });
 });
 
@@ -81,43 +78,36 @@ test('string', async () => {
   });
   expect(await validate('  test  ')).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'At least five characters.',
     value: 'test',
   });
   expect(await validate('hello world')).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'At most ten characters.',
     value: 'hello world',
   });
   expect(await validate('')).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: '',
   });
   expect(await validate(new Date(0))).toMatchObject({
-    errors: null,
     state: 'invalid',
     message: 'At most ten characters.',
     value: '1970-01-01T00:00:00.000Z',
   });
   expect(await validate(undefined)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: undefined,
   });
   expect(await validate(null)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: null,
   });
   expect(await validate({ name: 'August' })).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Failed to parse value to string.',
     value: { name: 'August' },
   });

@@ -45,26 +45,22 @@ test('required', async () => {
   });
   await expect(validate('')).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: '',
     message: 'required',
   });
   await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: null,
     message: 'required',
   });
   await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: undefined,
     message: 'required',
   });
   const invalidDate = new Date('');
   await expect(validate(invalidDate)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: invalidDate,
     message: 'required',
   });
@@ -84,7 +80,6 @@ test('exact', async () => {
   });
   await expect(validate('foo')).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: 'foo',
     message: 'exact:5',
   });
@@ -94,7 +89,6 @@ test('exact', async () => {
   });
   await expect(validate(4)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: 4,
     message: 'exact:5',
   });
@@ -104,7 +98,6 @@ test('exact', async () => {
   });
   await expect(validate(Array(2))).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     value: [undefined, undefined],
     message: 'exact:5',
   });

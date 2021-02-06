@@ -27,9 +27,13 @@ const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
 const customValidator = (value, field) => {
   if (value === 'hello') {
-    return valid(value, field);
+    return valid({ value, field });
   }
-  return invalid('Must be "hello".', value, field, null);
+  return invalid({
+    message: 'Must be "hello".',
+    value,
+    field,
+  });
 };
 
 const validate = object({
@@ -45,7 +49,7 @@ const validate = object({
     { round: 'floor' },
     required('Age is required.'),
     integer('Age must be a whole number.'),
-    min(18, 'Must be at least 18 years old.')
+    min(18, 'Must be at least {min} years old.')
   ),
   homepage: string(url('Must be a valid URL.', ['http:', 'https:'])),
   fruit: string(

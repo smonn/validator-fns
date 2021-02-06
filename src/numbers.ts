@@ -66,9 +66,13 @@ export function integer(
         isFinite(value) &&
         Math.floor(value) === value)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
-    return invalid(message, value, field, null);
+    return invalid({
+      message,
+      value,
+      field,
+    });
   };
 }
 

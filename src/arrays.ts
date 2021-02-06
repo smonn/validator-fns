@@ -116,14 +116,17 @@ export function array(
     }
 
     if (isValid) {
-      return valid(arrayValue, field);
+      return valid({
+        value: arrayValue,
+        field,
+      });
     }
 
-    return invalid(
-      arrayInvalidResult ? arrayInvalidResult.message : '',
-      arrayValue,
+    return invalid({
+      message: arrayInvalidResult ? arrayInvalidResult.message : '',
+      value: arrayValue,
       field,
-      errors
-    );
+      errors,
+    });
   };
 }
