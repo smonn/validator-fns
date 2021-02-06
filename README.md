@@ -188,6 +188,13 @@ The parsed `value` is always provided. If available, `field` is also provided. D
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
 
+- [array(config?, itemTest, ...tests)](#arrayconfig-itemtest-tests)
+- [boolean(config?, ...tests)](#booleanconfig-tests)
+- [date(config?, ...tests)](#dateconfig-tests)
+- [number(config?, ...tests)](#numberconfig-tests)
+- [object(schema)](#objectschema)
+- [string(config?, ...tests)](#stringconfig-tests)
+
 #### array(config?, itemTest, ...tests)
 
 Casts value to an array, `null` or `undefined` if using the default date parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
@@ -290,6 +297,18 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 ### Validation tests
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
+
+- [email(message)](#emailmessage)
+- [exact(limit, message)](#exactlimit-message)
+- [integer(message)](#integermessage)
+- [matches(pattern, message)](#matchespattern-message)
+- [max(limit, message, exclusive?)](#maxlimit-message-exclusive)
+- [maxDate(limit, message)](#maxdatelimit-message)
+- [min(limit, message, exclusive?)](#minlimit-message-exclusive)
+- [minDate(limit, message)](#mindatelimit-message)
+- [oneOf(values, message)](#oneofvalues-message)
+- [required(message, nullable?)](#requiredmessage-nullable)
+- [url(message, protocols?)](#urlmessage-protocols)
 
 #### email(message)
 
@@ -437,6 +456,11 @@ Ensures value is a valid URL. `protocols` is provided to the message. Works with
 ### Custom validation
 
 Custom validation types and validators can be created and used as needed. There are some helpers that, while used internally, are considered part of the public API.
+
+- [formatMessage(template, params)](#formatmessagetemplate-params)
+- [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
+- [valid(value, field)](#validvalue-field)
+- [invalid(message, value, field, extras)](#invalidmessage-value-field-extras)
 
 #### formatMessage(template, params)
 
