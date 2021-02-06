@@ -472,11 +472,11 @@ Formats a string for use as an error message. `template` can be a plain string w
 
 Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
 
-#### valid(value, field)
+#### valid({ value, field })
 
 Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
 
-#### invalid(message, value, field, errors, extras)
+#### invalid({ message, value, field, errors, extras })
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
 
