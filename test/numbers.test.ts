@@ -54,19 +54,16 @@ test('number', async () => {
   });
   expect(await validate(11)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must be at most 10.',
     value: 11,
   });
   expect(await validate(-11)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must be at least -10.',
     value: -11,
   });
   expect(await validate(NaN)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: NaN,
   });
@@ -76,19 +73,16 @@ test('number', async () => {
   });
   expect(await validate(undefined)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: undefined,
   });
   expect(await validate(null)).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: null,
   });
   expect(await validate({})).toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'Must enter a value.',
     value: NaN,
   });

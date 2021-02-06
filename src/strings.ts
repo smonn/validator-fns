@@ -76,10 +76,15 @@ export function matches(
       value === '' ||
       pattern.test(value)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, { pattern });
+    return invalid({
+      message,
+      value,
+      field,
+      extras: { pattern },
+    });
   };
 }
 
@@ -114,16 +119,26 @@ export function url(
         (typeof value === 'string' && (url = new URL(value)))
       ) {
         if (url && protocols && !protocols.includes(url.protocol)) {
-          return invalid(message, value, field, null, { protocols });
+          return invalid({
+            message,
+            value,
+            field,
+            extras: { protocols },
+          });
         }
 
-        return valid(value, field);
+        return valid({ value, field });
       }
     } catch {
       // continue despite error
     }
 
-    return invalid(message, value, field, null, { protocols });
+    return invalid({
+      message,
+      value,
+      field,
+      extras: { protocols },
+    });
   };
 }
 

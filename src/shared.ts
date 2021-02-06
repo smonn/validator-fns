@@ -27,7 +27,7 @@ export type InvalidResult<T, E> = {
   /** Field name if provided. Automatically provided if using object validation. */
   field?: string;
   /** Extra error details */
-  errors: E;
+  errors?: E;
 };
 
 /**
@@ -125,10 +125,14 @@ export function required<T, P extends ValidatorMessageParams<T>>(
         !(typeof value === 'number' && Number.isNaN(value)) &&
         !(value instanceof Date && Number.isNaN(value.valueOf())))
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null);
+    return invalid({
+      message,
+      value,
+      field,
+    });
   };
 }
 
@@ -170,9 +174,13 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           }
         }
 
-        return valid(parsedValue, field);
+        return valid({ value: parsedValue, field });
       } catch (err) {
-        return invalid(err.message, value, field, null);
+        return invalid({
+          message: err.message,
+          value,
+          field,
+        });
       }
     };
   };
@@ -184,10 +192,13 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
  * @param field Field name
  * @category Helpers
  */
-export async function valid<T, E = never>(
-  value: T | null | undefined,
-  field: string | undefined
-): Promise<ValidatorResult<T, E>> {
+export async function valid<T, E = never>({
+  value,
+  field,
+}: {
+  value: T | null | undefined;
+  field: string | undefined;
+}): Promise<ValidatorResult<T, E>> {
   return {
     isValid: true,
     state: 'valid',
@@ -204,13 +215,19 @@ export async function valid<T, E = never>(
  * @param extras Extra message params
  * @category Helpers
  */
-export async function invalid<T, E, P extends ValidatorMessageParams<T>>(
-  message: ValidatorMessage<T, P>,
-  value: T | null | undefined,
-  field: string | undefined,
-  errors: E,
-  extras?: Omit<P, 'field' | 'value'>
-): Promise<ValidatorResult<T, E>> {
+export async function invalid<T, E, P extends ValidatorMessageParams<T>>({
+  errors,
+  field,
+  message,
+  value,
+  extras,
+}: {
+  message: ValidatorMessage<T, P>;
+  value: T | null | undefined;
+  field: string | undefined;
+  errors?: E;
+  extras?: Omit<P, 'field' | 'value'>;
+}): Promise<ValidatorResult<T, E>> {
   return {
     isValid: false,
     state: 'invalid',
@@ -252,13 +269,18 @@ export function max(
       value === '' ||
       (exclusive ? amount < limit : amount <= limit)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, {
-      max: limit,
-      amount,
-      exclusive,
+    return invalid({
+      message,
+      value,
+      field,
+      extras: {
+        max: limit,
+        amount,
+        exclusive,
+      },
     });
   };
 }
@@ -293,14 +315,19 @@ export function min(
       value === '' ||
       (exclusive ? amount > limit : amount >= limit)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, {
-      min: limit,
-      limit,
-      amount,
-      exclusive,
+    return invalid({
+      message,
+      value,
+      field,
+      extras: {
+        min: limit,
+        limit,
+        amount,
+        exclusive,
+      },
     });
   };
 }
@@ -331,13 +358,18 @@ export function exact(
       value === '' ||
       amount === limit
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, {
-      amount,
-      limit,
-      exact: limit,
+    return invalid({
+      message,
+      value,
+      field,
+      extras: {
+        amount,
+        limit,
+        exact: limit,
+      },
     });
   };
 }
@@ -367,8 +399,13 @@ export function oneOf<T extends string | number | boolean | Date>(
       (value instanceof Date &&
         values.find(x => x.valueOf() === value.valueOf()))
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
-    return invalid(message, value, field, null, { values });
+    return invalid({
+      message,
+      value,
+      field,
+      extras: { values },
+    });
   };
 }

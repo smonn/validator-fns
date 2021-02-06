@@ -7,13 +7,11 @@ test('boolean', async () => {
 
   await expect(validate(null)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'required',
     value: null,
   });
   await expect(validate(undefined)).resolves.toMatchObject({
     state: 'invalid',
-    errors: null,
     message: 'required',
     value: undefined,
   });

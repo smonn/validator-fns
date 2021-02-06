@@ -34,9 +34,14 @@ export function object<P extends ObjectParam, K extends keyof P>(
     }
 
     if (isValid) {
-      return valid(resolvedValues, field);
+      return valid({ value: resolvedValues, field });
     }
 
-    return invalid('', resolvedValues, field, errors);
+    return invalid({
+      message: '',
+      value: resolvedValues,
+      field,
+      errors,
+    });
   };
 }

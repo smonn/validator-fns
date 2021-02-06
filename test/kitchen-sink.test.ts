@@ -28,9 +28,13 @@ const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
 const customValidator: ValidatorTest<string> = (value, field) => {
   if (value === 'hello') {
-    return valid(value, field);
+    return valid({ value, field });
   }
-  return invalid('Must be "hello".', value, field, null);
+  return invalid({
+    message: 'Must be "hello".',
+    value,
+    field,
+  });
 };
 
 const validate = object({

@@ -126,12 +126,17 @@ export function minDate(
       parsedDate !== undefined &&
       (value === null || value === undefined || value >= parsedDate)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, {
-      min: parsedDate,
-      limit: parsedDate,
+    return invalid({
+      message,
+      value,
+      field,
+      extras: {
+        min: parsedDate,
+        limit: parsedDate,
+      },
     });
   };
 }
@@ -160,12 +165,17 @@ export function maxDate(
       parsedDate !== undefined &&
       (value === null || value === undefined || value <= parsedDate)
     ) {
-      return valid(value, field);
+      return valid({ value, field });
     }
 
-    return invalid(message, value, field, null, {
-      max: parsedDate,
-      limit: parsedDate,
+    return invalid({
+      message,
+      value,
+      field,
+      extras: {
+        max: parsedDate,
+        limit: parsedDate,
+      },
     });
   };
 }
