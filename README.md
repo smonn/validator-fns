@@ -188,9 +188,9 @@ For functions, in all cases it will receive the parsed `value`. If available, `f
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
 
-#### array(config?, ...tests)
+#### array(config?, itemTest, ...tests)
 
-Casts value to an array, `null` or `undefined` if using the default date parser.
+Casts value to an array, `null` or `undefined` if using the default date parser. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
 
 Supported validation tests: `max`, `min`, and `required`.
 
