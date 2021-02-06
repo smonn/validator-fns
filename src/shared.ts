@@ -227,6 +227,7 @@ export interface MaxValidatorMessageParams
   extends ValidatorMessageParams<SharedValueType> {
   max: number;
   amount: number;
+  exclusive?: boolean;
 }
 
 /**
@@ -254,14 +255,20 @@ export function max(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { max: limit, amount });
+    return invalid(message, value, field, null, {
+      max: limit,
+      amount,
+      exclusive,
+    });
   };
 }
 
 export interface MinValidatorMessageParams
   extends ValidatorMessageParams<SharedValueType> {
   min: number;
+  limit: number;
   amount: number;
+  exclusive?: boolean;
 }
 
 /**
@@ -289,14 +296,20 @@ export function min(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { min: limit, amount });
+    return invalid(message, value, field, null, {
+      min: limit,
+      limit,
+      amount,
+      exclusive,
+    });
   };
 }
 
 export interface ExactValidatorMessageParams
   extends ValidatorMessageParams<SharedValueType> {
-  exact: number;
+  limit: number;
   amount: number;
+  exact: number;
 }
 
 /**
@@ -321,7 +334,11 @@ export function exact(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { amount, exact: limit });
+    return invalid(message, value, field, null, {
+      amount,
+      limit,
+      exact: limit,
+    });
   };
 }
 

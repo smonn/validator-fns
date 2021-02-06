@@ -105,19 +105,20 @@ export type SharedDateValueType = Date | string | number;
 export interface MinDateValidatorMessageParams
   extends ValidatorMessageParams<Date> {
   min: Date | null | undefined;
+  limit: Date | null | undefined;
 }
 
 /**
  * Ensures a date value is on or after a date.
- * @param date Minimum date
+ * @param limit Minimum date
  * @param message Error message
  * @category Validation Tests
  */
 export function minDate(
-  date: SharedDateValueType,
+  limit: SharedDateValueType,
   message: ValidatorMessage<Date, MinDateValidatorMessageParams>
 ): ValidatorTest<Date, null> {
-  const parsedDate = parseDate(date);
+  const parsedDate = parseDate(limit);
 
   return (value, field) => {
     if (
@@ -128,26 +129,30 @@ export function minDate(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { min: parsedDate });
+    return invalid(message, value, field, null, {
+      min: parsedDate,
+      limit: parsedDate,
+    });
   };
 }
 
 export interface MaxDateValidatorMessageParams
   extends ValidatorMessageParams<Date> {
   max: Date | null | undefined;
+  limit: Date | null | undefined;
 }
 
 /**
  * Ensures a date value is on or before a date.
- * @param date Maximum date
+ * @param limit Maximum date
  * @param message Error message
  * @category Validation Tests
  */
 export function maxDate(
-  date: SharedDateValueType,
+  limit: SharedDateValueType,
   message: ValidatorMessage<Date, MaxDateValidatorMessageParams>
 ): ValidatorTest<Date> {
-  const parsedDate = parseDate(date);
+  const parsedDate = parseDate(limit);
 
   return (value, field) => {
     if (
@@ -158,7 +163,10 @@ export function maxDate(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null, { max: parsedDate });
+    return invalid(message, value, field, null, {
+      max: parsedDate,
+      limit: parsedDate,
+    });
   };
 }
 

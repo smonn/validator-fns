@@ -10,37 +10,12 @@ Small asynchronous validation library. Tries to be as small as possible and use 
 
 - [Install](#install)
 - [Usage](#usage)
-- [API](#api)
-  - [Shared](#shared)
-    - [`required(message[, nullable])`](#requiredmessage-nullable)
-    - [`min(amount, message, exclusive)`](#minamount-message-exclusive)
-    - [`max(amount, message, exclusive)`](#maxamount-message-exclusive)
-    - [`exact(amount, message)`](#exactamount-message)
-    - [`oneOf(values, message)`](#oneofvalues-message)
-  - [Strings](#strings)
-    - [`string([config,] ...tests)`](#stringconfig-tests)
-    - [`matches(pattern, message)`](#matchespattern-message)
-    - [`email(message)`](#emailmessage)
-    - [`url(message[, protocols])`](#urlmessage-protocols)
-  - [Numbers](#numbers)
-    - [`number([config,] ...tests)`](#numberconfig-tests)
-    - [`integer(message)`](#integermessage)
-  - [Booleans](#booleans)
-    - [`boolean([config,] ...tests)`](#booleanconfig-tests)
-  - [Dates](#dates)
-    - [`date([config,] ...tests)`](#dateconfig-tests)
-    - [`minDate(date, message)`](#mindatedate-message)
-    - [`maxDate(date, message)`](#maxdatedate-message)
-  - [Arrays](#arrays)
-    - [`array([config,] ...tests)`](#arrayconfig-tests)
-  - [Objects](#objects)
-    - [`object(schema)`](#objectschema)
-- [Custom validation](#custom-validation)
-  - [`formatMessage(template, params)`](#formatmessagetemplate-params)
-  - [`createTypeValidatorTest(defaultConfig, applyConfig)`](#createtypevalidatortestdefaultconfig-applyconfig)
-  - [`valid(value, field)`](#validvalue-field)
-  - [`invalid(message, value, field, extras)`](#invalidmessage-value-field-extras)
-  * [Requirements for custom validation](#requirements-for-custom-validation)
+- [API Reference](#api-reference)
+  - [Validation result](#validation-result)
+  - [Validation error message](#validation-error-message)
+  - [Validation types](#validation-types)
+  - [Validation tests](#validation-tests)
+  - [Custom validation](#custom-validation)
 - [Supported environments](#supported-environments)
 
 <!-- tocstop -->
@@ -55,31 +30,11 @@ yarn add validator-fns
 
 ## Usage
 
-```typescript
-// For CommonJS environments
-// const {
-//   array,
-//   boolean,
-//   date,
-//   email,
-//   exact,
-//   integer,
-//   matches,
-//   max,
-//   maxDate,
-//   min,
-//   minDate,
-//   number,
-//   object,
-//   oneOf,
-//   required,
-//   string,
-//   url,
-//   ValidatorTest,
-//   valid,
-//   invalid,
-// } = require('validator-fns');
+This is a fairly exhaustive example of what's possible with `validator-fns`.
 
+<details><summary>example</summary>
+
+```js
 import {
   array,
   boolean,
@@ -98,22 +53,23 @@ import {
   required,
   string,
   url,
-  ValidatorTest,
   valid,
   invalid,
 } from 'validator-fns';
+// optionally, you can do
+// import * as validatorFns from 'validator-fns';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TEN_DAYS = ONE_DAY * 10;
 const now = new Date();
 const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
-const customValidator: ValidatorTest<string> = (value, field) => {
+function customValidator(value, field) {
   if (value === 'hello') {
     return valid(value, field);
   }
   return invalid('Must be "hello".', value, field, null);
-};
+}
 
 const validate = object({
   firstName: string(
@@ -199,124 +155,44 @@ if (result.state === 'valid') {
 }
 ```
 
-## API
+</details>
+
+## API Reference
+
+### Validation result
 
 All validation tests yield one of two results: `valid` and `invalid`. Both are objects.
 
-The `valid` result includes the following properties:
+| property      | type    | description                                                                |
+| :------------ | :------ | :------------------------------------------------------------------------- |
+| `state`       | string  | Either `valid` or `invalid`.                                               |
+| `field`       | string  | Either the field name or `undefined`.                                      |
+| `value`       | any     | The parsed value.                                                          |
+| `message`     | string  | The error message unless `state` is `valid`.                               |
+| `errors`      | any     | Only if `state` is `invalid` and using the `object` or `array` validators. |
+| ~~`isValid`~~ | boolean | Deprecated. Use `state` instead.                                           |
 
-- `state` set to `'valid'`
-- `isValid` set to true (deprecated)
-- `field` if provided at validation time or if using the object validation type
-- `value` as the parsed value
+### Validation error message
 
-The `invalid` result includes the same as above, with these differences:
+The `message` argument in the validation tests must be a static string, a template string, or a function returning a string.
 
-- `state` set to `'invalid'`
-- `isValid` set to false (deprecated)
-- `message` containing the validation test's error message unless using `object` or `array`
-- `errors` is `null` unless using `object` or `array` then it contains the error messages, see below for more details
+| type            | example                                                                                |
+| :-------------- | :------------------------------------------------------------------------------------- |
+| static string   | `'Username is required.'`                                                              |
+| template string | `'Password must be at least {min} characters.'`                                        |
+| function        | `` ({ value, field, max }) => `${field} must be less than ${max} but was ${value}.` `` |
 
-### Shared
+For functions, in all cases it will receive the parsed `value`. If available, `field` is also provided. Depending on the validator, additional fields may be available.
 
-#### `required(message[, nullable])`
+### Validation types
 
-Ensures value is not one of:
+A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
 
-- `undefined`
-- `null`
-- `NaN`
-- an empty string
-- an invalid date
+#### array(config?, ...tests)
 
-If nullable is true, this will consider `null` values as acceptable.
+Casts value to an array, `null` or `undefined` if using the default date parser.
 
-#### `min(amount, message, exclusive)`
-
-Ensures value is of at least `amount`. It can be a string length, array length, or numeric value. Exclusive makes the amount comparison exclusive instead of inclusive.
-
-#### `max(amount, message, exclusive)`
-
-Ensures value is of at most `amount`. It can be a string length, array length, or numeric value. Exclusive makes the amount comparison exclusive instead of inclusive.
-
-#### `exact(amount, message)`
-
-Ensures value is of an exact `amount`. It can be a string length, array length, or numeric value.
-
-#### `oneOf(values, message)`
-
-Ensures value is one of the specified values. It can be strings, numbers, booleans, or dates.
-
-### Strings
-
-#### `string([config,] ...tests)`
-
-Casts value to a string, `null` or `undefined` if using the default string parser. `tests` can be all `string` specific and shared validation tests. `config` is an optional parameter with the following properties:
-
-- `trim` removes whitespace from the parsed string.
-- `default` sets the default value in case the parsed string is `undefined`.
-- `parser` allows you to override the default string parser. Check the source code for the current implementation. Validation tests assume this returns a string, `null` or `undefined`.
-
-#### `matches(pattern, message)`
-
-Ensures value matches the specified pattern.
-
-#### `email(message)`
-
-Ensures the value follows an email address format.
-
-#### `url(message[, protocols])`
-
-Ensures value is a valid URL. The optional `protocols` parameter is an allow-list of valid URL protocols. For example: `https:`, `mailto:`, etc.
-
-### Numbers
-
-#### `number([config,] ...tests)`
-
-Casts value to a number, `null` or `undefined` if using the default number parser. `tests` can be all number specific and shared validation tests. `config` is an optional parameter with the following properties:
-
-- `round` forces the value to be rounded using a specific method. Valid values are `nearest`, `ceil` and `floor`.
-- `default` sets the default value in case the parsed number is `undefined`.
-- `parser` allows you to override the default number parser. Check the source code for the current implementation. Validation tests assume this returns a number, `null` or `undefined`.
-
-#### `integer(message)`
-
-Ensures value is an integer number.
-
-### Booleans
-
-#### `boolean([config,] ...tests)`
-
-Casts value to a boolean, `null` or `undefined` if using the default boolean parser. The only supported validation test is `required`, but you may provide custom ones. `config` is an optional parameter with the following properties:
-
-- `default` sets the default value in case the parsed boolean is `undefined`.
-- `parser` allows you to override the default boolean parser. Check the source code for the current implementation. Validation tests assume this returns a boolean, `null` or `undefined`.
-
-### Dates
-
-#### `date([config,] ...tests)`
-
-Casts value to a date, `null` or `undefined` if using the default date parser. `tests` can be all date specific and the required validation tests. `config` is an optional parameter with the following properties:
-
-- `default` sets the default value in case the parsed date is `undefined`.
-- `parser` allows you to override the default date parser. Check the source code for the current implementation. Validation tests assume this returns a date, `null` or `undefined`. The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
-
-#### `minDate(date, message)`
-
-Ensures value is on or after the specified date.
-
-#### `maxDate(date, message)`
-
-Ensures value is on or before the specified date.
-
-### Arrays
-
-#### `array([config,] ...tests)`
-
-Casts value to an array, `null` or `undefined` if using the default date parser. `tests` are all shared validation tests. `config` is an optional parameter with the following properties:
-
-- `default` sets the default value in case the parsed array is `undefined`.
-- `parser` allows you to override the default array parser. Check the source code for the current implementation. Validation tests assume this returns an array, `null` or `undefined`.
+Supported validation tests: `max`, `min`, and `required`.
 
 For invalid results, errors are in the `errors` property. It contains an array of:
 
@@ -328,11 +204,66 @@ For invalid results, errors are in the `errors` property. It contains an array o
 }
 ```
 
-### Objects
+<details><summary>config</summary>
 
-#### `object(schema)`
+| option    | type     | description                                                         |
+| :-------- | :------- | :------------------------------------------------------------------ |
+| `default` | string   | Optional. Value used if the parser returns `undefined`.             |
+| `parser`  | function | Optional. Used to customize how a value is converted into a string. |
 
-The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is an object where its properties are validation types such as string, array, number, etc. Nested `object` validators are allowed, but not recommended due to their complexity.
+</details>
+
+#### boolean(config?, ...tests)
+
+Casts value to a boolean, `null` or `undefined` if using the default boolean parser.
+
+Supported validation tests: `oneOf` and `required`.
+
+<details><summary>config</summary>
+
+| option    | type     | description                                                          |
+| :-------- | :------- | :------------------------------------------------------------------- |
+| `default` | boolean  | Optional. Value used if the parser returns `undefined`.              |
+| `parser`  | function | Optional. Used to customize how a value is converted into a boolean. |
+
+</details>
+
+#### date(config?, ...tests)
+
+Casts value to a date, `null` or `undefined` if using the default date parser.
+
+Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
+
+<details><summary>config</summary>
+
+| option    | type     | description                                                       |
+| :-------- | :------- | :---------------------------------------------------------------- |
+| `default` | date     | Optional. Value used if the parser returns `undefined`.           |
+| `parser`  | function | Optional. Used to customize how a value is converted into a date. |
+
+The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
+
+</details>
+
+#### number(config?, ...tests)
+
+Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional.
+
+Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `required`.
+
+<details><summary>config</summary>
+
+| option    | type     | description                                                         |
+| :-------- | :------- | :------------------------------------------------------------------ |
+| `round`   | string   | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor` |
+| `default` | number   | Optional. Value used if the parser returns `undefined`.             |
+| `parser`  | function | Optional. Used to customize how a value is converted into a number. |
+
+</details>
+
+#### object(schema)
+
+The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
@@ -340,31 +271,188 @@ Unlike yup, this API does not (yet at least) have a ref option.
 
 To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
 
-## Custom validation
+#### string(config?, ...tests)
+
+Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional.
+
+Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, and `url`.
+
+<details><summary>config</summary>
+
+| option    | type     | description                                                                |
+| :-------- | :------- | :------------------------------------------------------------------------- |
+| `trim`    | boolean  | Optional. If true, clears whitespace from the start and end of the string. |
+| `default` | string   | Optional. Value used if the parser returns `undefined`.                    |
+| `parser`  | function | Optional. Used to customize how a value is converted into a string.        |
+
+</details>
+
+### Validation tests
+
+A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
+
+#### email(message)
+
+Ensures the value follows an email address format. Wraps the `matches` validation test.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                   |
+| :-------- | :----------------- | :---------------------------- |
+| `message` | string or function | The validation error message. |
+
+</details>
+
+#### exact(limit, message)
+
+Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. `limit` (aliased as `exact`) and `amount` (the string length, array length, or numeric value) is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                                                      |
+| :-------- | :----------------- | :--------------------------------------------------------------- |
+| `limit`   | number             | The exact string length, array length, or numeric value allowed. |
+| `message` | string or function | The validation error message.                                    |
+
+</details>
+
+#### integer(message)
+
+Ensures value is an integer number.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                   |
+| :-------- | :----------------- | :---------------------------- |
+| `message` | string or function | The validation error message. |
+
+</details>
+
+#### matches(pattern, message)
+
+Ensures value matches the specified pattern. `pattern` is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                              |
+| :-------- | :----------------- | :--------------------------------------- |
+| `pattern` | regular expression | The regular expression to match against. |
+| `message` | string or function | The validation error message.            |
+
+</details>
+
+#### max(limit, message, exclusive?)
+
+Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name        | type               | description                                                                      |
+| :---------- | :----------------- | :------------------------------------------------------------------------------- |
+| `limit`     | number             | The maximum string length, array length, or numeric value allowed.               |
+| `message`   | string or function | The validation error message.                                                    |
+| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+
+</details>
+
+#### maxDate(limit, message)
+
+Ensures value is on or before the specified date. `limit` (aliased as `max`) is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name      | type                    | description                                              |
+| :-------- | :---------------------- | :------------------------------------------------------- |
+| `limit`   | date, number, or string | The maximum date allowed. Uses the internal date parser. |
+| `message` | string or function      | The validation error message.                            |
+
+</details>
+
+#### min(limit, message, exclusive?)
+
+Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name        | type               | description                                                                      |
+| :---------- | :----------------- | :------------------------------------------------------------------------------- |
+| `limit`     | number             | The minimum string length, array length, or numeric value allowed.               |
+| `message`   | string or function | The validation error message.                                                    |
+| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+
+</details>
+
+#### minDate(limit, message)
+
+Ensures value is on or after the specified date. `limit` (aliased as `min`) is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name      | type                    | description                                              |
+| :-------- | :---------------------- | :------------------------------------------------------- |
+| `limit`   | date, number, or string | The minimum date allowed. Uses the internal date parser. |
+| `message` | string or function      | The validation error message.                            |
+
+</details>
+
+#### oneOf(values, message)
+
+Ensures value is one of the specified values. Works with strings, arrays, booleans, and dates. `values` is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                                                          |
+| :-------- | :----------------- | :------------------------------------------------------------------- |
+| `values`  | array              | List of allowed values. May be strings, numbers, booleans, or dates. |
+| `message` | string or function | The validation error message.                                        |
+
+</details>
+
+#### required(message, nullable?)
+
+Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date.
+
+<details><summary>arguments</summary>
+
+| name       | type               | description                       |
+| :--------- | :----------------- | :-------------------------------- |
+| `message`  | string or function | The validation error message.     |
+| `nullable` | boolean            | Optional. If true, allows `null`. |
+
+</details>
+
+#### url(message, protocols?)
+
+Ensures value is a valid URL. `protocols` is provided to the message.
+
+<details><summary>arguments</summary>
+
+| name        | type               | description                                              |
+| :---------- | :----------------- | :------------------------------------------------------- |
+| `message`   | string or function | The validation error message.                            |
+| `protocols` | array              | List of allowed URL protocols, e.g. `https:`, `mailto:`. |
+
+</details>
+
+### Custom validation
 
 Custom validation types and validators can be created and used as needed. There are some helpers that, while used internally, are considered part of the public API.
 
-#### `formatMessage(template, params)`
+#### formatMessage(template, params)
 
 Formats a string for use as an error message. `template` can be a plain string with `{keys}` replaced by the `params` or a function that returns a string and accepts `params` as a parameter.
 
-#### `createTypeValidatorTest(defaultConfig, applyConfig)`
+#### createTypeValidatorTest(defaultConfig, applyConfig)
 
 Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
 
-#### `valid(value, field)`
+#### valid(value, field)
 
 Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
 
-#### `invalid(message, value, field, extras)`
+#### invalid(message, value, field, extras)
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, and `extras` are optional extra parameters that can be used in the message.
-
-### Requirements for custom validation
-
-A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string()` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
-
-A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result.
 
 ## Supported environments
 
