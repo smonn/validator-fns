@@ -182,7 +182,7 @@ The `message` argument in the validation tests must be a static string, a templa
 | template string | `'Password must be at least {min} characters.'`                                        |
 | function        | `` ({ value, field, max }) => `${field} must be less than ${max} but was ${value}.` `` |
 
-For functions, in all cases it will receive the parsed `value`. If available, `field` is also provided. Depending on the validator, additional fields may be available.
+The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available.
 
 ### Validation types
 
