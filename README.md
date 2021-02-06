@@ -190,7 +190,7 @@ A **validation type** is expected to parse and prepare the value for the provide
 
 #### array(config?, itemTest, ...tests)
 
-Casts value to an array, `null` or `undefined` if using the default date parser. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
+Casts value to an array, `null` or `undefined` if using the default date parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
 
 Supported validation tests: `max`, `min`, and `required`.
 
@@ -215,7 +215,7 @@ For invalid results, errors are in the `errors` property. It contains an array o
 
 #### boolean(config?, ...tests)
 
-Casts value to a boolean, `null` or `undefined` if using the default boolean parser.
+Casts value to a boolean, `null` or `undefined` if using the default boolean parser. `config` is optional.
 
 Supported validation tests: `oneOf` and `required`.
 
@@ -230,7 +230,7 @@ Supported validation tests: `oneOf` and `required`.
 
 #### date(config?, ...tests)
 
-Casts value to a date, `null` or `undefined` if using the default date parser.
+Casts value to a date, `null` or `undefined` if using the default date parser. `config` is optional.
 
 Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
 
