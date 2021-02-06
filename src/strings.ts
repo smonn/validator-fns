@@ -5,6 +5,7 @@ import {
   isObject,
   valid,
   ValidatorMessage,
+  ValidatorMessageParams,
   ValidatorTest,
 } from './shared';
 
@@ -53,6 +54,11 @@ export function applyStringConfig(
   return parsedValue;
 }
 
+export interface MatchesValidatorMessageParams
+  extends ValidatorMessageParams<string> {
+  pattern: RegExp;
+}
+
 /**
  * Ensures a string value matches a pattern
  * @param pattern Pattern to match
@@ -61,8 +67,8 @@ export function applyStringConfig(
  */
 export function matches(
   pattern: RegExp,
-  message: ValidatorMessage<string>
-): ValidatorTest<string, null> {
+  message: ValidatorMessage<string, MatchesValidatorMessageParams>
+): ValidatorTest<string> {
   return (value, field) => {
     if (
       value === undefined ||
@@ -73,7 +79,7 @@ export function matches(
       return valid(value, field);
     }
 
-    return invalid(message, value, field, null);
+    return invalid(message, value, field, null, { pattern });
   };
 }
 
