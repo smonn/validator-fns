@@ -20,6 +20,8 @@ import {
   valid,
   invalid,
 } from '../src';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TEN_DAYS = ONE_DAY * 10;
@@ -114,8 +116,8 @@ test('kitchen sink', async () => {
     startDate,
   });
 
-  expect(result.state).toBe('valid');
-  expect(result.value).toEqual({
+  assert.equal(result.state, 'valid');
+  assert.equal(result.value, {
     age: 20,
     custom: 'hello',
     emailAddress: 'foo@example.com',
@@ -129,3 +131,5 @@ test('kitchen sink', async () => {
     startDate,
   });
 });
+
+test.run();

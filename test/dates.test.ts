@@ -1,33 +1,41 @@
 import { parseDate, invalidDate, minDate, maxDate, date } from '../src/dates';
 import { required } from '../src/shared';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 test('parseDate', () => {
   const now = new Date();
-  expect(parseDate(now)).toBe(now);
-  expect(parseDate(0)).toEqual(new Date(0));
-  expect(parseDate({})).toEqual(invalidDate);
-  expect(parseDate('')).toEqual(invalidDate);
-  expect(parseDate('2020')).toEqual(new Date(2020, 0));
-  expect(parseDate('2020-13')).toEqual(new Date(2021, 0));
-  expect(parseDate('2020-01')).toEqual(new Date(2020, 0));
-  expect(parseDate('2020-01-31')).toEqual(new Date(2020, 0, 31));
-  expect(parseDate('2020-01-31 12:45')).toEqual(new Date(2020, 0, 31, 12, 45));
-  expect(parseDate('2020-01-31T12:45:32')).toEqual(
+  assert.equal(parseDate(now), now);
+  assert.equal(parseDate(0), new Date(0));
+  assert.equal(parseDate({}), invalidDate);
+  assert.equal(parseDate(''), invalidDate);
+  assert.equal(parseDate('2020'), new Date(2020, 0));
+  assert.equal(parseDate('2020-13'), new Date(2021, 0));
+  assert.equal(parseDate('2020-01'), new Date(2020, 0));
+  assert.equal(parseDate('2020-01-31'), new Date(2020, 0, 31));
+  assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
+  assert.equal(
+    parseDate('2020-01-31T12:45:32'),
     new Date(2020, 0, 31, 12, 45, 32)
   );
-  expect(parseDate('2020-01-31T12:45:32Z')).toEqual(
+  assert.equal(
+    parseDate('2020-01-31T12:45:32Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32))
   );
-  expect(parseDate('2020-01-31T12:45:32+01:30')).toEqual(
+  assert.equal(
+    parseDate('2020-01-31T12:45:32+01:30'),
     new Date(Date.UTC(2020, 0, 31, 14, 15, 32))
   );
-  expect(parseDate('2020-01-31T12:45:32-0200')).toEqual(
+  assert.equal(
+    parseDate('2020-01-31T12:45:32-0200'),
     new Date(Date.UTC(2020, 0, 31, 10, 45, 32))
   );
-  expect(parseDate('2020-01-31T12:45:32.123')).toEqual(
+  assert.equal(
+    parseDate('2020-01-31T12:45:32.123'),
     new Date(2020, 0, 31, 12, 45, 32, 123)
   );
-  expect(parseDate('2020-01-31T12:45:32.001242Z')).toEqual(
+  assert.equal(
+    parseDate('2020-01-31T12:45:32.001242Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242))
   );
 });
@@ -35,58 +43,80 @@ test('parseDate', () => {
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString()}`);
-  await expect(validate(now)).resolves.toMatchObject({
+  assert.equal(await validate(now), {
     state: 'valid',
     value: now,
+    isValid: true,
+    field: undefined,
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  await expect(validate(tomorrow)).resolves.toMatchObject({
+  assert.equal(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
+    isValid: true,
+    field: undefined,
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  await expect(validate(yesterday)).resolves.toMatchObject({
+  assert.equal(await validate(yesterday), {
     state: 'invalid',
     value: yesterday,
     message: `min:${now.toISOString()}`,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
 });
 
 test('maxDate', async () => {
   const now = new Date();
   const validate = maxDate(now, ({ max }) => `max:${max?.toISOString()}`);
-  await expect(validate(now)).resolves.toMatchObject({
+  assert.equal(await validate(now), {
     state: 'valid',
     value: now,
+    isValid: true,
+    field: undefined,
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  await expect(validate(tomorrow)).resolves.toMatchObject({
+  assert.equal(await validate(tomorrow), {
     state: 'invalid',
     value: tomorrow,
     message: `max:${now.toISOString()}`,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  await expect(validate(yesterday)).resolves.toMatchObject({
+  assert.equal(await validate(yesterday), {
     state: 'valid',
     value: yesterday,
+    isValid: true,
+    field: undefined,
   });
 });
 
 test('exclusive', async () => {
   const now = new Date();
   const min = minDate(now, 'must be after now', true);
-  await expect(min(now)).resolves.toMatchObject({
+  assert.equal(await min(now), {
     state: 'invalid',
+    value: now,
     message: 'must be after now',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
   const max = maxDate(now, 'must be before now', true);
-  await expect(max(now)).resolves.toMatchObject({
+  assert.equal(await max(now), {
     state: 'invalid',
+    value: now,
     message: 'must be before now',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
 });
 
@@ -101,39 +131,58 @@ test('date', async () => {
     minDate(now, 'min'),
     maxDate(nextMonth, 'max')
   );
-  await expect(validate(now)).resolves.toMatchObject({
+  assert.equal(await validate(now), {
     state: 'valid',
     value: now,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(nextMonth)).resolves.toMatchObject({
+  assert.equal(await validate(nextMonth), {
     state: 'valid',
     value: nextMonth,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(tomorrow)).resolves.toMatchObject({
+  assert.equal(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate('')).resolves.toMatchObject({
+  assert.equal(await validate(''), {
     state: 'invalid',
     value: invalidDate,
     message: 'required',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  await expect(validate(null)).resolves.toMatchObject({
+  assert.equal(await validate(null), {
     state: 'invalid',
     value: null,
     message: 'required',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'invalid',
     value: undefined,
     message: 'required',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
 });
 
 test('date default', async () => {
   const validate = date({ default: new Date(0) });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'valid',
     value: new Date(0),
+    isValid: true,
+    field: undefined,
   });
 });
+
+test.run();

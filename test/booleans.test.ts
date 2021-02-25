@@ -1,54 +1,82 @@
 import { boolean } from '../src/booleans';
 import { required } from '../src/shared';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 test('boolean', async () => {
   const validate = boolean(required('required'));
   const validateWithDefault = boolean({ default: true });
 
-  await expect(validate(null)).resolves.toMatchObject({
+  assert.equal(await validate(null), {
     state: 'invalid',
     message: 'required',
     value: null,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'invalid',
     message: 'required',
     value: undefined,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  await expect(validate(true)).resolves.toMatchObject({
+  assert.equal(await validate(true), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(false)).resolves.toMatchObject({
+  assert.equal(await validate(false), {
     state: 'valid',
     value: false,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate('true')).resolves.toMatchObject({
+  assert.equal(await validate('true'), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate('false')).resolves.toMatchObject({
+  assert.equal(await validate('false'), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(1)).resolves.toMatchObject({
+  assert.equal(await validate(1), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(0)).resolves.toMatchObject({
+  assert.equal(await validate(0), {
     state: 'valid',
     value: false,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate({})).resolves.toMatchObject({
+  assert.equal(await validate({}), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validateWithDefault(undefined)).resolves.toMatchObject({
+  assert.equal(await validateWithDefault(undefined), {
     state: 'valid',
     value: true,
+    isValid: true,
+    field: undefined,
   });
-  await expect(validateWithDefault(null)).resolves.toMatchObject({
+  assert.equal(await validateWithDefault(null), {
     state: 'valid',
     value: null,
+    isValid: true,
+    field: undefined,
   });
 });
+
+test.run();
