@@ -1,7 +1,6 @@
-import { integer, number } from '../src/numbers';
-import { max, min, required } from '../src/shared';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { integer, max, min, number, required } from '../src';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);

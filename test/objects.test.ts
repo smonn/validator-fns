@@ -1,9 +1,6 @@
-import { integer, number } from '../src/numbers';
-import { object } from '../src/objects';
-import { max, min, required, ValidatorTest } from '../src/shared';
-import { string } from '../src/strings';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { integer, max, min, number, object, required, string, ValidatorTest } from '../src';
 
 test('object', async () => {
   const validate = object({

@@ -1,7 +1,6 @@
-import { max, min, required } from '../src/shared';
-import { email, string, url } from '../src/strings';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { email, max, min, required, string, url } from '../src';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
