@@ -7,13 +7,21 @@
     "include": ["test/**/*"]
   },
   "compilerOptions": {
-    "outDir": "dist",
-    "target": "ESNext",
-    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
-    "noImplicitAny": true,
     "moduleResolution": "node",
-    "forceConsistentCasingInFileNames": true
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext"
   },
   "include": ["@types/**/*", "src/**/*"],
   "exclude": ["node_modules"]
