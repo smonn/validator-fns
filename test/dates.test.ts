@@ -48,7 +48,7 @@ test('parseDate', () => {
 
 test('minDate', async () => {
   const now = new Date();
-  const validate = minDate(now, ({ min }) => `min:${min?.toISOString()}`);
+  const validate = minDate(now, ({ min }) => `min:${min.toISOString()}`);
   assert.equal(await validate(now), {
     state: 'valid',
     value: now,
@@ -77,7 +77,7 @@ test('minDate', async () => {
 
 test('maxDate', async () => {
   const now = new Date();
-  const validate = maxDate(now, ({ max }) => `max:${max?.toISOString()}`);
+  const validate = maxDate(now, ({ max }) => `max:${max.toISOString()}`);
   assert.equal(await validate(now), {
     state: 'valid',
     value: now,
