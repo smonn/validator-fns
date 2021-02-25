@@ -80,9 +80,7 @@ export function array(
 
   return async (value, field) => {
     const arrayValue = applyArrayConfig(finalConfig, value);
-    let arrayInvalidResult:
-      | ValidatorResult<unknown, unknown>
-      | undefined = undefined;
+    let arrayInvalidResult: ValidatorResult | undefined = undefined;
     let isValid = true;
     const errors: ArrayItemValidatorResult[] = [];
     const [validateItem, ...arrayTests] = allTests;

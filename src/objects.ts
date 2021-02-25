@@ -1,6 +1,6 @@
 import { invalid, valid, ValidatorTest } from './shared';
 
-export type ObjectParam = Record<string, ValidatorTest<unknown>>;
+export type ObjectParam = Record<string, ValidatorTest>;
 
 /**
  * Validates an object.

@@ -35,14 +35,16 @@ export type InvalidResult<T, E> = {
  * @typeParam T The value type
  * @category Types
  */
-export type ValidatorResult<T, E> = ValidResult<T> | InvalidResult<T, E>;
+export type ValidatorResult<T = any, E = any> =
+  | ValidResult<T>
+  | InvalidResult<T, E>;
 
 /**
  * Validation test function.
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorTest<T = unknown, E = unknown> {
+export interface ValidatorTest<T = any, E = any> {
   (value: T | null | undefined, field?: string): Promise<ValidatorResult<T, E>>;
 }
 

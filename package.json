@@ -31,7 +31,7 @@
     "build": "microbundle",
     "dev": "microbundle watch",
     "check": "tsc --noEmit",
-    "lint": "eslint --ext ts src",
+    "lint": "eslint --ext ts .",
     "size": "size-limit",
     "analyze": "size-limit --why",
     "test": "uvu -r ts-node/register test"
@@ -73,6 +73,7 @@
     "rollup": "^2.39.1",
     "size-limit": "^4.9.2",
     "ts-node": "^9.1.1",
+    "tslib": "^2.1.0",
     "typescript": "~4.1.5",
     "uvu": "^0.5.1"
   },
@@ -91,7 +92,10 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
       "prettier"
-    ]
+    ],
+    "rules": {
+      "@typescript-eslint/no-explicit-any": "off"
+    }
   },
   "husky": {
     "hooks": {
