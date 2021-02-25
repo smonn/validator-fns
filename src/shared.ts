@@ -109,6 +109,58 @@ export function formatMessage<T, P extends ValidatorMessageParams<T>>(
 }
 
 /**
+ * Creates a valid result
+ * @param value Parsed value
+ * @param field Field name
+ * @category Helpers
+ */
+export async function valid<T, E = never>({
+  value,
+  field,
+}: {
+  value: T | null | undefined;
+  field: string | undefined;
+}): Promise<ValidatorResult<T, E>> {
+  return {
+    isValid: true,
+    state: 'valid',
+    value,
+    field,
+  };
+}
+
+/**
+ * Creates an invalid result.
+ * @param message Error message
+ * @param value Parsed value
+ * @param field Field name
+ * @param extras Extra message params
+ * @category Helpers
+ */
+export async function invalid<T, E, P extends ValidatorMessageParams<T>>({
+  errors,
+  field,
+  message,
+  value,
+  extras,
+}: {
+  message: ValidatorMessage<T, P>;
+  value: T | null | undefined;
+  field: string | undefined;
+  errors?: E;
+  extras?: Omit<P, 'field' | 'value'>;
+}): Promise<ValidatorResult<T, E>> {
+  return {
+    isValid: false,
+    state: 'invalid',
+    message: formatMessage(message, { ...(extras || {}), value, field } as P),
+    value,
+    field,
+    errors,
+  };
+}
+
+/**
  * Ensures a value is not undefined, null, empty string, NaN, nor invalid date.
  * @param message Error message
  * @param nullable Allow null values
@@ -185,58 +237,6 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         });
       }
     };
-  };
-}
-
-/**
- * Creates a valid result
- * @param value Parsed value
- * @param field Field name
- * @category Helpers
- */
-export async function valid<T, E = never>({
-  value,
-  field,
-}: {
-  value: T | null | undefined;
-  field: string | undefined;
-}): Promise<ValidatorResult<T, E>> {
-  return {
-    isValid: true,
-    state: 'valid',
-    value,
-    field,
-  };
-}
-
-/**
- * Creates an invalid result.
- * @param message Error message
- * @param value Parsed value
- * @param field Field name
- * @param extras Extra message params
- * @category Helpers
- */
-export async function invalid<T, E, P extends ValidatorMessageParams<T>>({
-  errors,
-  field,
-  message,
-  value,
-  extras,
-}: {
-  message: ValidatorMessage<T, P>;
-  value: T | null | undefined;
-  field: string | undefined;
-  errors?: E;
-  extras?: Omit<P, 'field' | 'value'>;
-}): Promise<ValidatorResult<T, E>> {
-  return {
-    isValid: false,
-    state: 'invalid',
-    message: formatMessage(message, { ...(extras || {}), value, field } as P),
-    value,
-    field,
-    errors,
   };
 }
 

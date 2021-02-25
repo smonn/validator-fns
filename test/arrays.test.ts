@@ -1,9 +1,6 @@
-import { array } from '../src/arrays';
-import { object } from '../src/objects';
-import { max, min, required } from '../src/shared';
-import { string } from '../src/strings';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { array, max, min, object, required, string } from '../src';
 
 test('array', async () => {
   const validate = array(

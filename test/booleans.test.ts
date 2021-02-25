@@ -1,7 +1,6 @@
-import { boolean } from '../src/booleans';
-import { required } from '../src/shared';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { boolean, required } from '../src';
 
 test('boolean', async () => {
   const validate = boolean(required('required'));

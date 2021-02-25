@@ -1,7 +1,13 @@
-import { parseDate, invalidDate, minDate, maxDate, date } from '../src/dates';
-import { required } from '../src/shared';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import {
+  date,
+  invalidDate,
+  maxDate,
+  minDate,
+  parseDate,
+  required,
+} from '../src';
 
 test('parseDate', () => {
   const now = new Date();

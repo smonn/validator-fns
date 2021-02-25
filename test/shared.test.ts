@@ -1,6 +1,6 @@
-import { formatMessage, required, exact, oneOf } from '../src/shared';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { exact, formatMessage, oneOf, required } from '../src';
 
 test('format string message', () => {
   assert.equal(

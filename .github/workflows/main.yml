@@ -19,14 +19,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install deps and build (with cache)
+      - name: Install dependencies
         uses: bahmutov/npm-install@v1
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint && npm run check
 
       - name: Test
-        run: npm test -- --ci --coverage --maxWorkers=2
+        run: npm run coverage && npm run report
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
