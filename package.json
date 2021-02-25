@@ -20,15 +20,19 @@
   "source": "src/index.ts",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
-  "exports": "./dist/index.modern.js",
   "unpkg": "dist/index.umd.js",
+  "exports": {
+    "require": "./dist/index.js",
+    "import": "./dist/index.esm.js",
+    "default": "./dist/index.modern.js"
+  },
   "typings": "dist/index.d.ts",
   "engines": {
     "node": ">=12",
     "npm": ">=6"
   },
   "scripts": {
-    "build": "microbundle",
+    "build": "microbundle build --compress --no-sourcemap --name ValidatorFns --target node",
     "dev": "microbundle watch",
     "check": "tsc --noEmit",
     "lint": "eslint --ext ts .",
@@ -45,19 +49,19 @@
   "size-limit": [
     {
       "path": "dist/index.js",
-      "limit": "3.5 KB"
+      "limit": "2.5 KB"
     },
     {
       "path": "dist/index.esm.js",
-      "limit": "3.5 KB"
+      "limit": "2.5 KB"
     },
     {
       "path": "dist/index.modern.js",
-      "limit": "3.5 KB"
+      "limit": "2.5 KB"
     },
     {
       "path": "dist/index.umd.js",
-      "limit": "3.5 KB"
+      "limit": "2.5 KB"
     }
   ],
   "devDependencies": {
