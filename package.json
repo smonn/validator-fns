@@ -19,12 +19,15 @@
   ],
   "source": "src/index.ts",
   "main": "dist/index.js",
-  "module": "dist/index.esm.js",
   "unpkg": "dist/index.umd.js",
+  "module": "dist/index.esm.js",
+  "esmodule": "dist/index.modern.js",
   "exports": {
-    "require": "./dist/index.js",
-    "import": "./dist/index.esm.js",
-    "default": "./dist/index.modern.js"
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.esm.js",
+      "default": "./dist/index.umd.js"
+    }
   },
   "typings": "dist/index.d.ts",
   "engines": {
@@ -32,7 +35,12 @@
     "npm": ">=6"
   },
   "scripts": {
-    "build": "microbundle build --compress --no-sourcemap --name ValidatorFns --target node",
+    "clean": "rimraf dist",
+    "build": "run-p build:*",
+    "build:cjs": "microbundle build --compress --no-sourcemap --target node --format cjs",
+    "build:esm": "microbundle build --compress --no-sourcemap --target node --format es",
+    "build:mod": "microbundle build --compress --no-sourcemap --target node --format modern",
+    "build:umd": "microbundle build --compress --no-sourcemap --name ValidatorFns --target web --format umd",
     "dev": "microbundle watch",
     "check": "tsc --noEmit",
     "lint": "eslint --ext ts .",
@@ -40,7 +48,8 @@
     "analyze": "size-limit --why",
     "test": "uvu -r ts-node/register test",
     "coverage": "c8 --include=src --exclude=src/index.ts npm test",
-    "report": "c8 report --reporter=text-lcov > coverage/lcov.info"
+    "report": "c8 report --reporter=text-lcov > coverage/lcov.info",
+    "prepublishOnly": "run-s clean lint check test build"
   },
   "prettier": {
     "printWidth": 80,
@@ -63,7 +72,7 @@
     },
     {
       "path": "dist/index.umd.js",
-      "limit": "2.5 KB"
+      "limit": "4 KB"
     }
   ],
   "devDependencies": {
@@ -76,7 +85,9 @@
     "husky": "^5.1.1",
     "lint-staged": "^10.5.4",
     "microbundle": "^0.13.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
     "rollup": "^2.39.1",
     "size-limit": "^4.9.2",
     "ts-node": "^9.1.1",
