@@ -87,7 +87,7 @@ export function array(
     const errors: ArrayItemValidatorResult[] = [];
     const [validateItem, ...arrayTests] = allTests;
 
-    for (let validatorTest of arrayTests) {
+    for (const validatorTest of arrayTests) {
       const result = await validatorTest(arrayValue, field);
       if (result.state === 'invalid') {
         isValid = false;

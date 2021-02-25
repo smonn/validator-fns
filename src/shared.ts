@@ -42,7 +42,7 @@ export type ValidatorResult<T, E> = ValidResult<T> | InvalidResult<T, E>;
  * @typeParam T The value type
  * @category Types
  */
-export interface ValidatorTest<T = any, E = any> {
+export interface ValidatorTest<T = unknown, E = unknown> {
   (value: T | null | undefined, field?: string): Promise<ValidatorResult<T, E>>;
 }
 
@@ -100,7 +100,7 @@ export function formatMessage<T, P extends ValidatorMessageParams<T>>(
 ): string {
   if (typeof template === 'string') {
     return template.replace(formatPattern, (_, key: string) =>
-      String((params as any)[key])
+      String((params as Record<string, unknown>)[key])
     );
   }
   return template(params);
@@ -167,7 +167,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       try {
         const parsedValue = applyConfig(value, finalConfig);
 
-        for (let validatorTest of allTests) {
+        for (const validatorTest of allTests) {
           const result = await validatorTest(parsedValue, field);
           if (result.state === 'invalid') {
             return result;
@@ -378,7 +378,7 @@ export function exact(
  * Simple check for objects.
  * @param value Value to test
  */
-export function isObject(value: unknown) {
+export function isObject(value: unknown): boolean {
   return Object.prototype.toString.call(value) === '[object Object]';
 }
 
@@ -397,7 +397,7 @@ export function oneOf<T extends string | number | boolean | Date>(
       value === null ||
       values.includes(value) ||
       (value instanceof Date &&
-        values.find(x => x.valueOf() === value.valueOf()))
+        values.find((x) => x.valueOf() === value.valueOf()))
     ) {
       return valid({ value, field });
     }

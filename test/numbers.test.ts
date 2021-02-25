@@ -1,36 +1,158 @@
 import { integer, number } from '../src/numbers';
 import { max, min, required } from '../src/shared';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);
-  expect(await validate(NaN)).toMatchObject({ state: 'invalid' });
-  expect(await validate(0)).toMatchObject({ state: 'invalid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate(5.01)).toMatchObject({ state: 'valid' });
-  expect(await validate(5)).toMatchObject({ state: 'invalid' });
-  expect(await validate(4.99)).toMatchObject({ state: 'invalid' });
+  assert.equal(await validate(NaN), {
+    state: 'invalid',
+    value: NaN,
+    isValid: false,
+    message: 'min:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(0), {
+    state: 'invalid',
+    value: 0,
+    isValid: false,
+    message: 'min:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    isValid: true,
+    value: null,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    isValid: true,
+    value: undefined,
+    field: undefined,
+  });
+  assert.equal(await validate(5.01), {
+    state: 'valid',
+    isValid: true,
+    value: 5.01,
+    field: undefined,
+  });
+  assert.equal(await validate(5), {
+    state: 'invalid',
+    isValid: false,
+    value: 5,
+    message: 'min:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(4.99), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    message: 'min:5',
+    value: 4.99,
+    errors: undefined,
+  });
 });
 
 test('max', async () => {
   const validate = max(5, 'max:{max}', true);
-  expect(await validate(NaN)).toMatchObject({ state: 'invalid' });
-  expect(await validate(0)).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate(5.01)).toMatchObject({ state: 'invalid' });
-  expect(await validate(5)).toMatchObject({ state: 'invalid' });
-  expect(await validate(4.99)).toMatchObject({ state: 'valid' });
+  assert.equal(await validate(NaN), {
+    state: 'invalid',
+    value: NaN,
+    isValid: false,
+    message: 'max:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(0), {
+    state: 'valid',
+    value: 0,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: null,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(5.01), {
+    state: 'invalid',
+    value: 5.01,
+    isValid: false,
+    message: 'max:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(5), {
+    state: 'invalid',
+    value: 5,
+    isValid: false,
+    message: 'max:5',
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(4.99), {
+    state: 'valid',
+    value: 4.99,
+    isValid: true,
+    field: undefined,
+  });
 });
 
 test('integer', async () => {
   const validate = integer('integer');
-  expect(await validate(NaN)).toMatchObject({ state: 'invalid' });
-  expect(await validate(0)).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate(0.1)).toMatchObject({ state: 'invalid' });
-  expect(await validate(1e-1)).toMatchObject({ state: 'invalid' });
+  assert.equal(await validate(NaN), {
+    state: 'invalid',
+    value: NaN,
+    message: 'integer',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+  });
+  assert.equal(await validate(0), {
+    state: 'valid',
+    value: 0,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: null,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(0.1), {
+    state: 'invalid',
+    value: 0.1,
+    isValid: false,
+    field: undefined,
+    message: 'integer',
+    errors: undefined,
+  });
+  assert.equal(await validate(1e-1), {
+    state: 'invalid',
+    value: 1e-1,
+    isValid: false,
+    field: undefined,
+    message: 'integer',
+    errors: undefined,
+  });
 });
 
 test('number', async () => {
@@ -40,51 +162,77 @@ test('number', async () => {
     max(10, 'Must be at most 10.')
   );
 
-  expect(await validate(0)).toMatchObject({
+  assert.equal(await validate(0), {
     state: 'valid',
     value: 0,
+    isValid: true,
+    field: undefined,
   });
-  expect(await validate(-10)).toMatchObject({
+  assert.equal(await validate(-10), {
     state: 'valid',
     value: -10,
+    isValid: true,
+    field: undefined,
   });
-  expect(await validate(10)).toMatchObject({
+  assert.equal(await validate(10), {
     state: 'valid',
     value: 10,
+    isValid: true,
+    field: undefined,
   });
-  expect(await validate(11)).toMatchObject({
+  assert.equal(await validate(11), {
     state: 'invalid',
     message: 'Must be at most 10.',
     value: 11,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
-  expect(await validate(-11)).toMatchObject({
+  assert.equal(await validate(-11), {
     state: 'invalid',
     message: 'Must be at least -10.',
     value: -11,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
-  expect(await validate(NaN)).toMatchObject({
+  assert.equal(await validate(NaN), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: NaN,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
-  expect(await validate(new Date(0))).toMatchObject({
+  assert.equal(await validate(new Date(0)), {
     state: 'valid',
     value: 0,
+    isValid: true,
+    field: undefined,
   });
-  expect(await validate(undefined)).toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
-  expect(await validate(null)).toMatchObject({
+  assert.equal(await validate(null), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: null,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
-  expect(await validate({})).toMatchObject({
+  assert.equal(await validate({}), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: NaN,
+    isValid: false,
+    errors: undefined,
+    field: undefined,
   });
 });
 
@@ -93,21 +241,34 @@ test('rounding', async () => {
   const floor = number({ round: 'floor' });
   const ceil = number({ round: 'ceil' });
 
-  await expect(nearest(0.9)).resolves.toMatchObject({
+  assert.equal(await nearest(0.9), {
     value: 1,
+    isValid: true,
+    state: 'valid',
+    field: undefined,
   });
-  await expect(floor(0.9)).resolves.toMatchObject({
+  assert.equal(await floor(0.9), {
     value: 0,
+    isValid: true,
+    state: 'valid',
+    field: undefined,
   });
-  await expect(ceil(0.1)).resolves.toMatchObject({
+  assert.equal(await ceil(0.1), {
     value: 1,
+    isValid: true,
+    state: 'valid',
+    field: undefined,
   });
 });
 
 test('number default', async () => {
   const validate = number({ default: 5 });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'valid',
     value: 5,
+    isValid: true,
+    field: undefined,
   });
 });
+
+test.run();

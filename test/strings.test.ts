@@ -1,62 +1,199 @@
 import { max, min, required } from '../src/shared';
 import { email, string, url } from '../src/strings';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
-  expect(await validate('hello')).toMatchObject({ state: 'valid' });
-  expect(await validate('')).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate('foo')).toMatchObject({
+  assert.equal(await validate('hello'), {
+    state: 'valid',
+    value: 'hello',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(''), {
+    state: 'valid',
+    value: '',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: null,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate('foo'), {
     state: 'invalid',
     message: 'min:5',
+    field: undefined,
+    isValid: false,
+    errors: undefined,
+    value: 'foo',
   });
 });
 
 test('max', async () => {
   const validate = max(5, 'max:{max}');
-  expect(await validate('hello')).toMatchObject({ state: 'valid' });
-  expect(await validate('')).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate('foo bar')).toMatchObject({
+  assert.equal(await validate('hello'), {
+    state: 'valid',
+    value: 'hello',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(''), {
+    state: 'valid',
+    value: '',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: null,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate('foo bar'), {
     state: 'invalid',
+    value: 'foo bar',
     message: 'max:5',
+    field: undefined,
+    isValid: false,
+    errors: undefined,
   });
 });
 
 test('email', async () => {
   const validate = email('invalid email');
-  expect(await validate('name@example.com')).toMatchObject({ state: 'valid' });
-  expect(await validate('name@host')).toMatchObject({ state: 'valid' });
-  expect(await validate('name+tag@example.com')).toMatchObject({
+  assert.equal(await validate('name@example.com'), {
     state: 'valid',
+    value: 'name@example.com',
+    isValid: true,
+    field: undefined,
   });
-  expect(await validate('')).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate('@example.com')).toMatchObject({ state: 'invalid' });
-  expect(await validate('name.com')).toMatchObject({ state: 'invalid' });
-  expect(await validate('name@.com')).toMatchObject({ state: 'invalid' });
+  assert.equal(await validate('name@host'), {
+    state: 'valid',
+    value: 'name@host',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate('name+tag@example.com'), {
+    state: 'valid',
+    value: 'name+tag@example.com',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(''), {
+    state: 'valid',
+    value: '',
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: null,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate('@example.com'), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+    value: '@example.com',
+    message: 'invalid email',
+  });
+  assert.equal(await validate('name.com'), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+    value: 'name.com',
+    message: 'invalid email',
+  });
+  assert.equal(await validate('name@.com'), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+    value: 'name@.com',
+    message: 'invalid email',
+  });
 });
 
 test('url', async () => {
   const validate = url('invalid url', ['http:', 'mailto:', 'https:']);
-  expect(await validate('http://example.com')).toMatchObject({
+  assert.equal(await validate('http://example.com'), {
     state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'http://example.com',
   });
-  expect(await validate('mailto:name@example.com')).toMatchObject({
+  assert.equal(await validate('mailto:name@example.com'), {
     state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'mailto:name@example.com',
   });
-  expect(await validate('')).toMatchObject({ state: 'valid' });
-  expect(await validate(null)).toMatchObject({ state: 'valid' });
-  expect(await validate(undefined)).toMatchObject({ state: 'valid' });
-  expect(await validate((0 as unknown) as string)).toMatchObject({
-    state: 'invalid',
+  assert.equal(await validate(''), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: '',
   });
-  expect(await validate('/foo')).toMatchObject({ state: 'invalid' });
-  expect(await validate('unknown://path')).toMatchObject({
+  assert.equal(await validate(null), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: null,
+  });
+  assert.equal(await validate(undefined), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: undefined,
+  });
+  assert.equal(await validate((0 as unknown) as string), {
     state: 'invalid',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+    value: 0,
+    message: 'invalid url',
+  });
+  assert.equal(await validate('/foo'), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
+    value: '/foo',
+    message: 'invalid url',
+  });
+  assert.equal(await validate('unknown://path'), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    value: 'unknown://path',
+    errors: undefined,
+    message: 'invalid url',
   });
 });
 
@@ -68,55 +205,84 @@ test('string', async () => {
     max(10, 'At most ten characters.')
   );
 
-  expect(await validate('hello')).toMatchObject({
+  assert.equal(await validate('hello'), {
     state: 'valid',
+    isValid: true,
+    field: undefined,
     value: 'hello',
   });
-  expect(await validate(12345)).toMatchObject({
+  assert.equal(await validate(12345), {
     state: 'valid',
+    isValid: true,
+    field: undefined,
     value: '12345',
   });
-  expect(await validate('  test  ')).toMatchObject({
+  assert.equal(await validate('  test  '), {
     state: 'invalid',
     message: 'At least five characters.',
     value: 'test',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate('hello world')).toMatchObject({
+  assert.equal(await validate('hello world'), {
     state: 'invalid',
     message: 'At most ten characters.',
     value: 'hello world',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate('')).toMatchObject({
+  assert.equal(await validate(''), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: '',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate(new Date(0))).toMatchObject({
+  assert.equal(await validate(new Date(0)), {
     state: 'invalid',
     message: 'At most ten characters.',
     value: '1970-01-01T00:00:00.000Z',
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate(undefined)).toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate(null)).toMatchObject({
+  assert.equal(await validate(null), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: null,
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
-  expect(await validate({ name: 'August' })).toMatchObject({
+  assert.equal(await validate({ name: 'August' }), {
     state: 'invalid',
     message: 'Failed to parse value to string.',
     value: { name: 'August' },
+    isValid: false,
+    field: undefined,
+    errors: undefined,
   });
 });
 
 test('string default', async () => {
   const validate = string({ default: 'hello' });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'valid',
+    isValid: true,
+    field: undefined,
     value: 'hello',
   });
 });
+
+test.run();

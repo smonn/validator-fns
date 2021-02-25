@@ -2,6 +2,8 @@ import { integer, number } from '../src/numbers';
 import { object } from '../src/objects';
 import { max, min, required, ValidatorTest } from '../src/shared';
 import { string } from '../src/strings';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 
 test('object', async () => {
   const validate = object({
@@ -18,51 +20,63 @@ test('object', async () => {
     ),
   });
 
-  expect(
+  assert.equal(
     await validate({
       username: 'hello',
       age: '20',
-    })
-  ).toMatchObject({
-    state: 'valid',
-    value: {
-      username: 'hello',
-      age: 20,
-    },
-  });
+    }),
+    {
+      state: 'valid',
+      value: {
+        username: 'hello',
+        age: 20,
+      },
+      isValid: true,
+      field: undefined,
+    }
+  );
 
-  expect(
+  assert.equal(
     await validate({
       username: 'hello',
       age: null,
-    })
-  ).toMatchObject({
-    state: 'invalid',
-    message: '',
-    value: {
-      username: 'hello',
-      age: null,
-    },
-    errors: {
-      age: 'Must enter your age.',
-    },
-  });
+    }),
+    {
+      state: 'invalid',
+      isValid: false,
+      field: undefined,
+      message: '',
+      value: {
+        username: 'hello',
+        age: null,
+      },
+      errors: {
+        age: 'Must enter your age.',
+      },
+    }
+  );
 });
 
 test('empty object config is always valid', async () => {
   const validate = object({});
 
-  await expect(validate({ foo: 'bar' })).resolves.toMatchObject({
+  assert.equal(await validate({ foo: 'bar' }), {
     state: 'valid',
     value: {},
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(null)).resolves.toMatchObject({
+  assert.equal(await validate(null), {
     state: 'valid',
     value: {},
+    isValid: true,
+    field: undefined,
   });
-  await expect(validate(undefined)).resolves.toMatchObject({
+  assert.equal(await validate(undefined), {
     state: 'valid',
     value: {},
+    isValid: true,
+    field: undefined,
   });
 });
 
@@ -76,47 +90,53 @@ test('nested object', async () => {
     }),
   });
 
-  expect(
+  assert.equal(
     await validate({
       person: {
         firstName: 'foo',
         lastName: 'bar',
       },
-    })
-  ).toMatchObject({
-    state: 'valid',
-    value: {
-      person: {
-        firstName: 'foo',
-        lastName: 'bar',
-        age: undefined,
+    }),
+    {
+      state: 'valid',
+      value: {
+        person: {
+          firstName: 'foo',
+          lastName: 'bar',
+          age: undefined,
+        },
       },
-    },
-  });
+      isValid: true,
+      field: undefined,
+    }
+  );
 
-  expect(
+  assert.equal(
     await validate({
       person: {
         firstName: 'foo',
         age: '22',
       },
-    })
-  ).toMatchObject({
-    state: 'invalid',
-    message: '',
-    value: {
-      person: {
-        firstName: 'foo',
-        lastName: undefined,
-        age: 22,
+    }),
+    {
+      state: 'invalid',
+      message: '',
+      value: {
+        person: {
+          firstName: 'foo',
+          lastName: undefined,
+          age: 22,
+        },
       },
-    },
-    errors: {
-      person: {
-        lastName: 'required',
+      errors: {
+        person: {
+          lastName: 'required',
+        },
       },
-    },
-  });
+      isValid: false,
+      field: undefined,
+    }
+  );
 });
 
 test('invalid configuration', () => {
@@ -124,5 +144,7 @@ test('invalid configuration', () => {
     string,
     ValidatorTest
   > = ('bad value' as unknown) as Record<string, ValidatorTest>;
-  expect(() => object(config)).toThrow();
+  assert.throws(() => object(config));
 });
+
+test.run();
