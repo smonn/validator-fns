@@ -100,7 +100,10 @@ export function isObject(value: unknown): boolean {
  * @param obj Object to check
  * @param prop Property to look for
  */
-export function hasOwnProperty(obj: unknown, prop: string | number | symbol) {
+export function hasOwnProperty(
+  obj: unknown,
+  prop: string | number | symbol
+): boolean {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
