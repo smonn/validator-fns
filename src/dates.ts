@@ -1,8 +1,7 @@
 import {
   ConfigBase,
   createTypeValidatorTest,
-  invalid,
-  valid,
+  createValidatorTest,
   ValidatorMessage,
   ValidatorMessageParams,
   ValidatorTest,
@@ -123,29 +122,20 @@ export function minDate(
   exclusive?: boolean
 ): ValidatorTest<Date, null> {
   const parsedDate = parseDate(limit);
-
-  return (value, field) => {
-    if (
+  return createValidatorTest(
+    value =>
       parsedDate !== null &&
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (exclusive ? value > parsedDate : value >= parsedDate))
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: {
-        min: parsedDate,
-        limit: parsedDate,
-        exclusive,
-      },
-    });
-  };
+        (exclusive ? value > parsedDate : value >= parsedDate)),
+    message,
+    () => ({
+      min: parsedDate,
+      limit: parsedDate,
+      exclusive,
+    })
+  );
 }
 
 export interface MaxDateValidatorMessageParams
@@ -168,29 +158,20 @@ export function maxDate(
   exclusive?: boolean
 ): ValidatorTest<Date> {
   const parsedDate = parseDate(limit);
-
-  return (value, field) => {
-    if (
+  return createValidatorTest(
+    value =>
       parsedDate !== null &&
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (exclusive ? value < parsedDate : value <= parsedDate))
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: {
-        max: parsedDate,
-        limit: parsedDate,
-        exclusive,
-      },
-    });
-  };
+        (exclusive ? value < parsedDate : value <= parsedDate)),
+    message,
+    () => ({
+      max: parsedDate,
+      limit: parsedDate,
+      exclusive,
+    })
+  );
 }
 
 /**

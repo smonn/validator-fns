@@ -161,36 +161,6 @@ export async function invalid<T, E, P extends ValidatorMessageParams<T>>({
 }
 
 /**
- * Ensures a value is not undefined, null, empty string, NaN, nor invalid date.
- * @param message Error message
- * @param nullable Allow null values
- * @category Validation Tests
- */
-export function required<T, P extends ValidatorMessageParams<T>>(
-  message: ValidatorMessage<T, P>,
-  nullable?: boolean
-): ValidatorTest<T> {
-  return (value, field) => {
-    if (
-      (nullable && value === null) ||
-      (value !== null &&
-        value !== undefined &&
-        !(typeof value === 'string' && value === '') &&
-        !(typeof value === 'number' && Number.isNaN(value)) &&
-        !(value instanceof Date && Number.isNaN(value.valueOf())))
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-    });
-  };
-}
-
-/**
  * Creates a type validator.
  * @typeParam T The basic type for the final value to be validated.
  * @typeParam C The configuration type.
@@ -240,7 +210,68 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   };
 }
 
+/**
+ * Captures basic validator test pattern
+ * @param test Test function
+ * @param message Error message
+ * @param getExtras Optional extra fields for error message
+ */
+export function createValidatorTest<
+  T = any,
+  E = any,
+  P extends ValidatorMessageParams<T> = ValidatorMessageParams<T>
+>(
+  test: (value: T | null | undefined, field?: string) => boolean,
+  message: ValidatorMessage<T, P>,
+  getExtras?: (value: T | null | undefined) => any
+): ValidatorTest<T, E> {
+  return async (value, field) => {
+    if (test(value, field)) {
+      return await valid({ value, field });
+    }
+
+    return await invalid({
+      message,
+      value,
+      field,
+      extras: getExtras ? getExtras(value) : undefined,
+    });
+  };
+}
+
+/**
+ * Ensures a value is not undefined, null, empty string, NaN, nor invalid date.
+ * @param message Error message
+ * @param nullable Allow null values
+ * @category Validation Tests
+ */
+export function required<T, P extends ValidatorMessageParams<T>>(
+  message: ValidatorMessage<T, P>,
+  nullable?: boolean
+): ValidatorTest<T> {
+  return createValidatorTest(
+    value =>
+      (nullable && value === null) ||
+      (value !== null &&
+        value !== undefined &&
+        !(typeof value === 'string' && value === '') &&
+        !(typeof value === 'number' && Number.isNaN(value)) &&
+        !(value instanceof Date && Number.isNaN(value.valueOf()))),
+    message
+  );
+}
+
 export type SharedValueType = string | number | Array<unknown>;
+
+/**
+ * Extracts a numeric amount from value, i.e. string length, array length, or number.
+ * @internal
+ */
+function getAmount(value: SharedValueType | null | undefined) {
+  return typeof value === 'string' || Array.isArray(value)
+    ? value.length
+    : value;
+}
 
 export interface MaxValidatorMessageParams
   extends ValidatorMessageParams<SharedValueType> {
@@ -261,30 +292,24 @@ export function max(
   message: ValidatorMessage<SharedValueType, MaxValidatorMessageParams>,
   exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
-  return (value, field) => {
-    const amount =
-      typeof value === 'string' || Array.isArray(value) ? value.length : value;
-
-    if (
-      amount === undefined ||
-      amount === null ||
-      value === '' ||
-      (exclusive ? amount < limit : amount <= limit)
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: {
-        max: limit,
-        amount,
-        exclusive,
-      },
-    });
-  };
+  return createValidatorTest(
+    value => {
+      const amount = getAmount(value);
+      return (
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        (exclusive ? amount < limit : amount <= limit)
+      );
+    },
+    message,
+    value => ({
+      max: limit,
+      limit,
+      amount: getAmount(value),
+      exclusive,
+    })
+  );
 }
 
 export interface MinValidatorMessageParams
@@ -307,31 +332,24 @@ export function min(
   message: ValidatorMessage<SharedValueType, MinValidatorMessageParams>,
   exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
-  return (value, field) => {
-    const amount =
-      typeof value === 'string' || Array.isArray(value) ? value.length : value;
-
-    if (
-      amount === undefined ||
-      amount === null ||
-      value === '' ||
-      (exclusive ? amount > limit : amount >= limit)
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: {
-        min: limit,
-        limit,
-        amount,
-        exclusive,
-      },
-    });
-  };
+  return createValidatorTest(
+    value => {
+      const amount = getAmount(value);
+      return (
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        (exclusive ? amount > limit : amount >= limit)
+      );
+    },
+    message,
+    value => ({
+      min: limit,
+      limit,
+      amount: getAmount(value),
+      exclusive,
+    })
+  );
 }
 
 export interface ExactValidatorMessageParams
@@ -351,29 +369,23 @@ export function exact(
   limit: number,
   message: ValidatorMessage<SharedValueType, ExactValidatorMessageParams>
 ): ValidatorTest<SharedValueType> {
-  return (value, field) => {
-    const amount =
-      typeof value === 'string' || Array.isArray(value) ? value.length : value;
-    if (
-      amount === undefined ||
-      amount === null ||
-      value === '' ||
-      amount === limit
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: {
-        amount,
-        limit,
-        exact: limit,
-      },
-    });
-  };
+  return createValidatorTest(
+    value => {
+      const amount = getAmount(value);
+      return (
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        amount === limit
+      );
+    },
+    message,
+    value => ({
+      amount: getAmount(value),
+      limit,
+      exact: limit,
+    })
+  );
 }
 
 /**
@@ -389,25 +401,24 @@ export interface OneOfValidatorMessageParams<T>
   values: T[];
 }
 
+/**
+ * Ensures a value is one in a predefined list.
+ * @param values List of allowed values.
+ * @param message Error message
+ * @category Validation Tests
+ */
 export function oneOf<T extends string | number | boolean | Date>(
-  values: T[],
+  values: readonly T[],
   message: ValidatorMessage<T, OneOfValidatorMessageParams<T>>
 ): ValidatorTest<T> {
-  return (value, field) => {
-    if (
+  return createValidatorTest(
+    value =>
       value === undefined ||
       value === null ||
       values.includes(value) ||
       (value instanceof Date &&
-        values.find((x) => x.valueOf() === value.valueOf()))
-    ) {
-      return valid({ value, field });
-    }
-    return invalid({
-      message,
-      value,
-      field,
-      extras: { values },
-    });
-  };
+        !!values.find(x => x.valueOf() === value.valueOf())),
+    message,
+    () => ({ values })
+  );
 }
