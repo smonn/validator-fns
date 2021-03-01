@@ -2,6 +2,9 @@ import { invalid, valid, ValidatorTest } from './shared';
 
 export type ObjectParam = Record<string, ValidatorTest>;
 
+const hasOwnProperty = (obj: any, prop: any) =>
+  Object.prototype.hasOwnProperty.call(obj, prop);
+
 /**
  * Validates an object.
  * @category Type Validators
@@ -22,7 +25,9 @@ export function object<P extends ObjectParam, K extends keyof P>(
     for (const key in properties) {
       const validator = properties[key];
       const field = (key as unknown) as K;
-      const value = definedValues[field];
+      const value = hasOwnProperty(definedValues, field)
+        ? definedValues[field]
+        : undefined;
       const result = await validator(value, key);
 
       resolvedValues[field] = result.value;
