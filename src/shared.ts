@@ -87,6 +87,23 @@ export type ValidatorMessage<
   P extends ValidatorMessageParams<T> = ValidatorMessageParams<T>
 > = string | ((params: P) => string);
 
+/**
+ * Simple check for objects.
+ * @param value Value to test
+ */
+export function isObject(value: unknown): boolean {
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+/**
+ * Safe hasOwnProperty check
+ * @param obj Object to check
+ * @param prop Property to look for
+ */
+export function hasOwnProperty(obj: unknown, prop: string | number | symbol) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
 /** @internal */
 const formatPattern = /\{(\w+)\}/g;
 
@@ -173,6 +190,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   applyConfig: (value: unknown, config: C) => T | null | undefined
 ): ValidatorFactory<C> {
   return (config, ...tests) => {
+    const cache: Record<string, ValidatorResult<T>> = {};
     let finalConfig = defaultConfig;
     let allTests = tests;
 
@@ -190,17 +208,23 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     return async (value, field) => {
       try {
         const parsedValue = applyConfig(value, finalConfig);
+        const parsedValueString = String(parsedValue);
+        if (hasOwnProperty(cache, parsedValueString)) {
+          return cache[parsedValueString];
+        }
 
         for (const validatorTest of allTests) {
           const result = await validatorTest(parsedValue, field);
           if (result.state === 'invalid') {
+            cache[parsedValueString] = result;
             return result;
           }
         }
 
-        return valid({ value: parsedValue, field });
+        cache[parsedValueString] = await valid({ value: parsedValue, field });
+        return cache[parsedValueString];
       } catch (err) {
-        return invalid({
+        return await invalid({
           message: err.message,
           value,
           field,
@@ -386,14 +410,6 @@ export function exact(
       exact: limit,
     })
   );
-}
-
-/**
- * Simple check for objects.
- * @param value Value to test
- */
-export function isObject(value: unknown): boolean {
-  return Object.prototype.toString.call(value) === '[object Object]';
 }
 
 export interface OneOfValidatorMessageParams<T>
