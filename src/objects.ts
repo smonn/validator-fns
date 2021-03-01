@@ -1,9 +1,6 @@
-import { invalid, valid, ValidatorTest } from './shared';
+import { hasOwnProperty, invalid, valid, ValidatorTest } from './shared';
 
 export type ObjectParam = Record<string, ValidatorTest>;
-
-const hasOwnProperty = (obj: any, prop: any) =>
-  Object.prototype.hasOwnProperty.call(obj, prop);
 
 /**
  * Validates an object.
