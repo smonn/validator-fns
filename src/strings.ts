@@ -1,9 +1,8 @@
 import {
   ConfigBase,
   createTypeValidatorTest,
-  invalid,
+  createValidatorTest,
   isObject,
-  valid,
   ValidatorMessage,
   ValidatorMessageParams,
   ValidatorTest,
@@ -69,23 +68,15 @@ export function matches(
   pattern: RegExp,
   message: ValidatorMessage<string, MatchesValidatorMessageParams>
 ): ValidatorTest<string> {
-  return (value, field) => {
-    if (
+  return createValidatorTest(
+    value =>
       value === undefined ||
       value === null ||
       value === '' ||
-      pattern.test(value)
-    ) {
-      return valid({ value, field });
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: { pattern },
-    });
-  };
+      pattern.test(value),
+    message,
+    () => ({ pattern })
+  );
 }
 
 /**
@@ -109,37 +100,26 @@ export function url(
   message: ValidatorMessage<string>,
   protocols?: string[]
 ): ValidatorTest<string> {
-  return (value, field) => {
-    try {
-      let url: URL | undefined = undefined;
-      if (
-        value === undefined ||
-        value === null ||
-        value === '' ||
-        (typeof value === 'string' && (url = new URL(value)))
-      ) {
-        if (url && protocols && !protocols.includes(url.protocol)) {
-          return invalid({
-            message,
-            value,
-            field,
-            extras: { protocols },
-          });
+  return createValidatorTest(
+    value => {
+      try {
+        let url: URL | undefined = undefined;
+        if (
+          value === undefined ||
+          value === null ||
+          value === '' ||
+          (typeof value === 'string' && (url = new URL(value)))
+        ) {
+          return !(url && protocols && !protocols.includes(url.protocol));
         }
-
-        return valid({ value, field });
+      } catch {
+        // do nothing
       }
-    } catch {
-      // continue despite error
-    }
-
-    return invalid({
-      message,
-      value,
-      field,
-      extras: { protocols },
-    });
-  };
+      return false;
+    },
+    message,
+    () => ({ protocols })
+  );
 }
 
 /**

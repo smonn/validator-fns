@@ -6,7 +6,12 @@ export {
   ArrayItemValidatorResult,
   parseArray,
 } from './arrays';
-export { boolean } from './booleans';
+export {
+  applyBooleanConfig,
+  boolean,
+  BooleanConfig,
+  parseBoolean,
+} from './booleans';
 export {
   applyDateConfig,
   date,
@@ -30,6 +35,7 @@ export { object, ObjectParam } from './objects';
 export {
   ConfigBase,
   createTypeValidatorTest,
+  createValidatorTest,
   exact,
   ExactValidatorMessageParams,
   formatMessage,
@@ -56,6 +62,7 @@ export {
   applyStringConfig,
   email,
   matches,
+  MatchesValidatorMessageParams,
   parseString,
   string,
   StringConfig,
