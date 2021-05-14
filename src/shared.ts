@@ -49,6 +49,30 @@ export interface ValidatorTest<T = any, E = any> {
 }
 
 /**
+ * Extracts the generic error type from a ValidatorTest.
+ * @typeParam T a ValidatorTest
+ * @category Types
+ */
+export type ExtractError<T extends ValidatorTest> = T extends ValidatorTest<
+  any,
+  infer E
+>
+  ? E
+  : unknown;
+
+/**
+ * Extracts the generic value type from a ValidatorTest.
+ * @typeParam T a ValidatorTest
+ * @category Types
+ */
+export type ExtractValue<T extends ValidatorTest> = T extends ValidatorTest<
+  infer V,
+  any
+>
+  ? V
+  : unknown;
+
+/**
  * Validation factory function.
  * @typeParam C The configuration type
  * @category Types
@@ -277,7 +301,7 @@ export function required<T, P extends ValidatorMessageParams<T>>(
   nullable?: boolean
 ): ValidatorTest<T> {
   return createValidatorTest(
-    value =>
+    (value) =>
       (nullable && value === null) ||
       (value !== null &&
         value !== undefined &&
@@ -320,7 +344,7 @@ export function max(
   exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value);
       return (
         amount === undefined ||
@@ -330,7 +354,7 @@ export function max(
       );
     },
     message,
-    value => ({
+    (value) => ({
       max: limit,
       limit,
       amount: getAmount(value),
@@ -360,7 +384,7 @@ export function min(
   exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value);
       return (
         amount === undefined ||
@@ -370,7 +394,7 @@ export function min(
       );
     },
     message,
-    value => ({
+    (value) => ({
       min: limit,
       limit,
       amount: getAmount(value),
@@ -397,7 +421,7 @@ export function exact(
   message: ValidatorMessage<SharedValueType, ExactValidatorMessageParams>
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value);
       return (
         amount === undefined ||
@@ -407,7 +431,7 @@ export function exact(
       );
     },
     message,
-    value => ({
+    (value) => ({
       amount: getAmount(value),
       limit,
       exact: limit,
@@ -431,12 +455,12 @@ export function oneOf<T extends string | number | boolean | Date>(
   message: ValidatorMessage<T, OneOfValidatorMessageParams<T>>
 ): ValidatorTest<T> {
   return createValidatorTest(
-    value =>
+    (value) =>
       value === undefined ||
       value === null ||
       values.includes(value) ||
       (value instanceof Date &&
-        !!values.find(x => x.valueOf() === value.valueOf())),
+        !!values.find((x) => x.valueOf() === value.valueOf())),
     message,
     () => ({ values })
   );
