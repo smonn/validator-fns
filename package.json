@@ -8,14 +8,21 @@
     "runkit.js"
   ],
   "keywords": [
-    "validation",
-    "validate",
-    "simple",
+    "async",
+    "browser",
+    "browsers",
     "function",
     "functional",
-    "async",
+    "functions",
+    "isomorphic",
+    "node",
     "promise",
-    "typescript"
+    "ssr",
+    "typescript",
+    "universal",
+    "validate",
+    "validation",
+    "validator"
   ],
   "source": "src/index.ts",
   "main": "dist/index.js",
