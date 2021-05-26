@@ -35,7 +35,6 @@
 		"import": "./dist/esm/index.js"
 	},
 	"types": "dist/types/index.d.ts",
-	"type": "module",
 	"engines": {
 		"node": ">=12",
 		"npm": ">=6"
