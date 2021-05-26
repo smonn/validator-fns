@@ -28,9 +28,13 @@
 		"validation",
 		"validator"
 	],
-	"main": "dist/index.js",
-	"exports": "./dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/cjs/index.js",
+	"module": "./dist/esm/index.js",
+	"exports": {
+		"require": "./dist/cjs/index.js",
+		"import": "./dist/esm/index.js"
+	},
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": ">=12",
@@ -39,7 +43,10 @@
 	"scripts": {
 		"clean": "rimraf dist",
 		"check": "tsc --noEmit",
-		"build": "tsc --project tsconfig.dist.json",
+		"build": "run-p build:*",
+		"build:esm": "tsc --project tsconfig.dist-esm.json",
+		"build:cjs": "tsc --project tsconfig.dist-cjs.json",
+		"build:types": "tsc --project tsconfig.dist-types.json",
 		"lint": "xo",
 		"size": "size-limit",
 		"analyze": "size-limit --why",
@@ -50,13 +57,18 @@
 	},
 	"size-limit": [
 		{
-			"path": "dist/index.js",
+			"path": "dist/cjs/index.js",
+			"limit": "3 KB"
+		},
+		{
+			"path": "dist/esm/index.js",
 			"limit": "2.5 KB"
 		}
 	],
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.1",
 		"@size-limit/preset-small-lib": "4.11.0",
+		"@skypack/package-check": "^0.2.2",
 		"ava": "^3.15.0",
 		"c8": "^7.7.2",
 		"husky": "6.0.0",
