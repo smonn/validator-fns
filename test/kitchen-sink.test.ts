@@ -1,4 +1,5 @@
-import test from 'ava';
+import {test} from 'uvu';
+import * as assert from 'uvu/assert';
 import {
 	array,
 	boolean,
@@ -99,7 +100,7 @@ const validate = object({
 	custom: customValidator
 });
 
-test('kitchen sink', async t => {
+test('kitchen sink', async () => {
 	const startDate = new Date(now.getTime() + ONE_DAY);
 
 	const result = await validate({
@@ -116,8 +117,8 @@ test('kitchen sink', async t => {
 		startDate
 	});
 
-	t.is(result.state, 'valid');
-	t.deepEqual(result.value, {
+	assert.is(result.state, 'valid');
+	assert.equal(result.value, {
 		age: 20,
 		custom: 'hello',
 		emailAddress: 'foo@example.com',

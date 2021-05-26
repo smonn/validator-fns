@@ -1,33 +1,34 @@
-import test from 'ava';
+import {test} from 'uvu';
+import * as assert from 'uvu/assert';
 import {email, max, min, required, string, url} from '../src/index';
 
-test('min', async t => {
+test('min', async () => {
 	const validate = min(5, 'min:{min}');
-	t.deepEqual(await validate('hello'), {
+	assert.equal(await validate('hello'), {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate('foo'), {
+	assert.equal(await validate('foo'), {
 		state: 'invalid',
 		message: 'min:5',
 		field: undefined,
@@ -37,33 +38,33 @@ test('min', async t => {
 	});
 });
 
-test('max', async t => {
+test('max', async () => {
 	const validate = max(5, 'max:{max}');
-	t.deepEqual(await validate('hello'), {
+	assert.equal(await validate('hello'), {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate('foo bar'), {
+	assert.equal(await validate('foo bar'), {
 		state: 'invalid',
 		value: 'foo bar',
 		message: 'max:5',
@@ -73,45 +74,45 @@ test('max', async t => {
 	});
 });
 
-test('email', async t => {
+test('email', async () => {
 	const validate = email('invalid email');
-	t.deepEqual(await validate('name@example.com'), {
+	assert.equal(await validate('name@example.com'), {
 		state: 'valid',
 		value: 'name@example.com',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate('name@host'), {
+	assert.equal(await validate('name@host'), {
 		state: 'valid',
 		value: 'name@host',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate('name+tag@example.com'), {
+	assert.equal(await validate('name+tag@example.com'), {
 		state: 'valid',
 		value: 'name+tag@example.com',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate('@example.com'), {
+	assert.equal(await validate('@example.com'), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -119,7 +120,7 @@ test('email', async t => {
 		value: '@example.com',
 		message: 'invalid email'
 	});
-	t.deepEqual(await validate('name.com'), {
+	assert.equal(await validate('name.com'), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -127,7 +128,7 @@ test('email', async t => {
 		value: 'name.com',
 		message: 'invalid email'
 	});
-	t.deepEqual(await validate('name@.com'), {
+	assert.equal(await validate('name@.com'), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -137,39 +138,39 @@ test('email', async t => {
 	});
 });
 
-test('url', async t => {
+test('url', async () => {
 	const validate = url('invalid url', ['http:', 'mailto:', 'https:']);
-	t.deepEqual(await validate('http://example.com'), {
+	assert.equal(await validate('http://example.com'), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: 'http://example.com'
 	});
-	t.deepEqual(await validate('mailto:name@example.com'), {
+	assert.equal(await validate('mailto:name@example.com'), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: 'mailto:name@example.com'
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: ''
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: null
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: undefined
 	});
-	t.deepEqual(await validate(0), {
+	assert.equal(await validate(0), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -177,7 +178,7 @@ test('url', async t => {
 		value: 0 as unknown as string,
 		message: 'invalid url'
 	});
-	t.deepEqual(await validate('/foo'), {
+	assert.equal(await validate('/foo'), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -185,7 +186,7 @@ test('url', async t => {
 		value: '/foo',
 		message: 'invalid url'
 	});
-	t.deepEqual(await validate('unknown://path'), {
+	assert.equal(await validate('unknown://path'), {
 		state: 'invalid',
 		isValid: false,
 		field: undefined,
@@ -195,7 +196,7 @@ test('url', async t => {
 	});
 });
 
-test('string', async t => {
+test('string', async () => {
 	const validate = string(
 		{trim: true},
 		required('Must enter a value.'),
@@ -203,19 +204,19 @@ test('string', async t => {
 		max(10, 'At most ten characters.')
 	);
 
-	t.deepEqual(await validate('hello'), {
+	assert.equal(await validate('hello'), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: 'hello'
 	});
-	t.deepEqual(await validate(12_345), {
+	assert.equal(await validate(12_345), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: '12345'
 	});
-	t.deepEqual(await validate('  test  '), {
+	assert.equal(await validate('  test  '), {
 		state: 'invalid',
 		message: 'At least five characters.',
 		value: 'test',
@@ -223,7 +224,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate('hello world'), {
+	assert.equal(await validate('hello world'), {
 		state: 'invalid',
 		message: 'At most ten characters.',
 		value: 'hello world',
@@ -231,7 +232,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'invalid',
 		message: 'Must enter a value.',
 		value: '',
@@ -239,7 +240,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(new Date(0)), {
+	assert.equal(await validate(new Date(0)), {
 		state: 'invalid',
 		message: 'At most ten characters.',
 		value: '1970-01-01T00:00:00.000Z',
@@ -247,7 +248,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'invalid',
 		message: 'Must enter a value.',
 		value: undefined,
@@ -255,7 +256,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'invalid',
 		message: 'Must enter a value.',
 		value: null,
@@ -263,7 +264,7 @@ test('string', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate({name: 'August'}), {
+	assert.equal(await validate({name: 'August'}), {
 		state: 'invalid',
 		message: 'Failed to parse value to string.',
 		value: {name: 'August'} as unknown as string,
@@ -273,12 +274,14 @@ test('string', async t => {
 	});
 });
 
-test('string default', async t => {
+test('string default', async () => {
 	const validate = string({default: 'hello'});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
 		value: 'hello'
 	});
 });
+
+test.run();

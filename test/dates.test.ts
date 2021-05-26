@@ -1,4 +1,5 @@
-import test from 'ava';
+import {test} from 'uvu';
+import * as assert from 'uvu/assert';
 import {
 	date,
 	invalidDate,
@@ -8,47 +9,47 @@ import {
 	required
 } from '../src/index';
 
-test('parseDate', t => {
+test('parseDate', () => {
 	const now = new Date();
-	t.deepEqual(parseDate(now), now);
-	t.deepEqual(parseDate(0), new Date(0));
-	t.deepEqual(parseDate({}), invalidDate);
-	t.deepEqual(parseDate(''), invalidDate);
-	t.deepEqual(parseDate('2020'), new Date(2020, 0));
-	t.deepEqual(parseDate('2020-13'), new Date(2021, 0));
-	t.deepEqual(parseDate('2020-01'), new Date(2020, 0));
-	t.deepEqual(parseDate('2020-01-31'), new Date(2020, 0, 31));
-	t.deepEqual(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
-	t.deepEqual(
+	assert.equal(parseDate(now), now);
+	assert.equal(parseDate(0), new Date(0));
+	assert.equal(parseDate({}), invalidDate);
+	assert.equal(parseDate(''), invalidDate);
+	assert.equal(parseDate('2020'), new Date(2020, 0));
+	assert.equal(parseDate('2020-13'), new Date(2021, 0));
+	assert.equal(parseDate('2020-01'), new Date(2020, 0));
+	assert.equal(parseDate('2020-01-31'), new Date(2020, 0, 31));
+	assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
+	assert.equal(
 		parseDate('2020-01-31T12:45:32'),
 		new Date(2020, 0, 31, 12, 45, 32)
 	);
-	t.deepEqual(
+	assert.equal(
 		parseDate('2020-01-31T12:45:32Z'),
 		new Date(Date.UTC(2020, 0, 31, 12, 45, 32))
 	);
-	t.deepEqual(
+	assert.equal(
 		parseDate('2020-01-31T12:45:32+01:30'),
 		new Date(Date.UTC(2020, 0, 31, 14, 15, 32))
 	);
-	t.deepEqual(
+	assert.equal(
 		parseDate('2020-01-31T12:45:32-0200'),
 		new Date(Date.UTC(2020, 0, 31, 10, 45, 32))
 	);
-	t.deepEqual(
+	assert.equal(
 		parseDate('2020-01-31T12:45:32.123'),
 		new Date(2020, 0, 31, 12, 45, 32, 123)
 	);
-	t.deepEqual(
+	assert.equal(
 		parseDate('2020-01-31T12:45:32.001242Z'),
 		new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242))
 	);
 });
 
-test('minDate', async t => {
+test('minDate', async () => {
 	const now = new Date();
 	const validate = minDate(now, ({min}) => `min:${min?.toISOString() ?? ''}`);
-	t.deepEqual(await validate(now), {
+	assert.equal(await validate(now), {
 		state: 'valid',
 		value: now,
 		isValid: true,
@@ -56,7 +57,7 @@ test('minDate', async t => {
 	});
 	const tomorrow = new Date(now);
 	tomorrow.setDate(now.getDate() + 1);
-	t.deepEqual(await validate(tomorrow), {
+	assert.equal(await validate(tomorrow), {
 		state: 'valid',
 		value: tomorrow,
 		isValid: true,
@@ -64,7 +65,7 @@ test('minDate', async t => {
 	});
 	const yesterday = new Date(now);
 	yesterday.setDate(now.getDate() - 1);
-	t.deepEqual(await validate(yesterday), {
+	assert.equal(await validate(yesterday), {
 		state: 'invalid',
 		value: yesterday,
 		message: `min:${now.toISOString()}`,
@@ -74,10 +75,10 @@ test('minDate', async t => {
 	});
 });
 
-test('maxDate', async t => {
+test('maxDate', async () => {
 	const now = new Date();
 	const validate = maxDate(now, ({max}) => `max:${max?.toISOString() ?? ''}`);
-	t.deepEqual(await validate(now), {
+	assert.equal(await validate(now), {
 		state: 'valid',
 		value: now,
 		isValid: true,
@@ -85,7 +86,7 @@ test('maxDate', async t => {
 	});
 	const tomorrow = new Date(now);
 	tomorrow.setDate(now.getDate() + 1);
-	t.deepEqual(await validate(tomorrow), {
+	assert.equal(await validate(tomorrow), {
 		state: 'invalid',
 		value: tomorrow,
 		message: `max:${now.toISOString()}`,
@@ -95,7 +96,7 @@ test('maxDate', async t => {
 	});
 	const yesterday = new Date(now);
 	yesterday.setDate(now.getDate() - 1);
-	t.deepEqual(await validate(yesterday), {
+	assert.equal(await validate(yesterday), {
 		state: 'valid',
 		value: yesterday,
 		isValid: true,
@@ -103,10 +104,10 @@ test('maxDate', async t => {
 	});
 });
 
-test('exclusive', async t => {
+test('exclusive', async () => {
 	const now = new Date();
 	const min = minDate(now, 'must be after now', true);
-	t.deepEqual(await min(now), {
+	assert.equal(await min(now), {
 		state: 'invalid',
 		value: now,
 		message: 'must be after now',
@@ -115,7 +116,7 @@ test('exclusive', async t => {
 		errors: undefined
 	});
 	const max = maxDate(now, 'must be before now', true);
-	t.deepEqual(await max(now), {
+	assert.equal(await max(now), {
 		state: 'invalid',
 		value: now,
 		message: 'must be before now',
@@ -125,7 +126,7 @@ test('exclusive', async t => {
 	});
 });
 
-test('date', async t => {
+test('date', async () => {
 	const now = new Date();
 	const nextMonth = new Date(now);
 	nextMonth.setMonth(now.getMonth() + 1);
@@ -136,25 +137,25 @@ test('date', async t => {
 		minDate(now, 'min'),
 		maxDate(nextMonth, 'max')
 	);
-	t.deepEqual(await validate(now), {
+	assert.equal(await validate(now), {
 		state: 'valid',
 		value: now,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(nextMonth), {
+	assert.equal(await validate(nextMonth), {
 		state: 'valid',
 		value: nextMonth,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(tomorrow), {
+	assert.equal(await validate(tomorrow), {
 		state: 'valid',
 		value: tomorrow,
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(''), {
+	assert.equal(await validate(''), {
 		state: 'invalid',
 		value: invalidDate,
 		message: 'required',
@@ -162,7 +163,7 @@ test('date', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'invalid',
 		value: null,
 		message: 'required',
@@ -170,7 +171,7 @@ test('date', async t => {
 		field: undefined,
 		errors: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'invalid',
 		value: undefined,
 		message: 'required',
@@ -180,12 +181,14 @@ test('date', async t => {
 	});
 });
 
-test('date default', async t => {
+test('date default', async () => {
 	const validate = date({default: new Date(0)});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: new Date(0),
 		isValid: true,
 		field: undefined
 	});
 });
+
+test.run();

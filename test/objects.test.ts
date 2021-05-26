@@ -1,4 +1,5 @@
-import test from 'ava';
+import {test} from 'uvu';
+import * as assert from 'uvu/assert';
 import {
 	integer,
 	max,
@@ -10,7 +11,7 @@ import {
 	ValidatorTest
 } from '../src/index';
 
-test('object', async t => {
+test('object', async () => {
 	const validate = object({
 		username: string(
 			required('Username is required.'),
@@ -25,7 +26,7 @@ test('object', async t => {
 		)
 	});
 
-	t.deepEqual(
+	assert.equal(
 		await validate({
 			username: 'hello',
 			age: '20'
@@ -41,7 +42,7 @@ test('object', async t => {
 		}
 	);
 
-	t.deepEqual(
+	assert.equal(
 		await validate({
 			username: 'hello',
 			age: null
@@ -62,22 +63,22 @@ test('object', async t => {
 	);
 });
 
-test('empty object config is always valid', async t => {
+test('empty object config is always valid', async () => {
 	const validate = object({});
 
-	t.deepEqual(await validate({foo: 'bar'}), {
+	assert.equal(await validate({foo: 'bar'}), {
 		state: 'valid',
 		value: {},
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(null), {
+	assert.equal(await validate(null), {
 		state: 'valid',
 		value: {},
 		isValid: true,
 		field: undefined
 	});
-	t.deepEqual(await validate(undefined), {
+	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: {},
 		isValid: true,
@@ -85,7 +86,7 @@ test('empty object config is always valid', async t => {
 	});
 });
 
-test('nested object', async t => {
+test('nested object', async () => {
 	// While this is technically possible, it's not recommended usage as it quickly gets quite complex
 	const validate = object({
 		person: object({
@@ -95,7 +96,7 @@ test('nested object', async t => {
 		})
 	});
 
-	t.deepEqual(
+	assert.equal(
 		await validate({
 			person: {
 				firstName: 'foo',
@@ -116,7 +117,7 @@ test('nested object', async t => {
 		}
 	);
 
-	t.deepEqual(
+	assert.equal(
 		await validate({
 			person: {
 				firstName: 'foo',
@@ -143,13 +144,15 @@ test('nested object', async t => {
 	);
 });
 
-test('invalid configuration', async t => {
+test('invalid configuration', async () => {
 	const config: Record<string, ValidatorTest> = 'bad value' as any as Record<
 	string,
 	ValidatorTest
 	>;
-	t.throws(() => object(config));
+	assert.throws(() => object(config));
 
 	const validate = object({test: 'test'} as any);
 	await validate(null);
 });
+
+test.run();
