@@ -1,5 +1,5 @@
 import test from 'ava';
-import {exact, formatMessage, oneOf, required} from '../src/index.js';
+import {exact, formatMessage, oneOf, required} from '../src/index';
 
 test('format string message', t => {
 	t.is(

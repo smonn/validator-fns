@@ -4,7 +4,7 @@ import {
 	valid,
 	ValidatorResult,
 	ValidatorTest
-} from './shared.js';
+} from './shared';
 
 /**
  * Invalid validation result for an item in the array

@@ -6,7 +6,7 @@ import {
 	ValidatorMessage,
 	ValidatorMessageParameters,
 	ValidatorTest
-} from './shared.js';
+} from './shared';
 
 /** @internal */
 const emailPattern =

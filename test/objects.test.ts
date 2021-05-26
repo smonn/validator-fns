@@ -8,7 +8,7 @@ import {
 	required,
 	string,
 	ValidatorTest
-} from '../src/index.js';
+} from '../src/index';
 
 test('object', async t => {
 	const validate = object({

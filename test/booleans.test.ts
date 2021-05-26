@@ -1,5 +1,5 @@
 import test from 'ava';
-import {boolean, required} from '../src/index.js';
+import {boolean, required} from '../src/index';
 
 test('boolean', async t => {
 	const validate = boolean(required('required'));

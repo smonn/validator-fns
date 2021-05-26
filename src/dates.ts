@@ -5,7 +5,7 @@ import {
 	ValidatorMessage,
 	ValidatorMessageParameters,
 	ValidatorTest
-} from './shared.js';
+} from './shared';
 
 /** @internal */
 export const invalidDate = new Date('');
@@ -31,7 +31,8 @@ function parseTimezone(timezone: string): number {
 
 	const [, sign, hour, minute] = parts;
 	const multiplier = sign === '-' ? -1 : 1;
-	const offset = (Number.parseInt(hour ?? '0', 10) * 60) + Number.parseInt(minute ?? '0', 10);
+	const hoursInMinutes = Number.parseInt(hour ?? '0', 10) * 60;
+	const offset = hoursInMinutes + Number.parseInt(minute ?? '0', 10);
 
 	return multiplier * offset;
 }
@@ -85,7 +86,9 @@ export function parseDate(value: unknown): Date | null | undefined {
 		return invalidDate;
 	}
 
-	const [,year, month, day, hour, minute, second, millisecond] = dateParts.map((parse, i) => parse(parts[i]));
+	const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
+		(parse, i) => parse(parts[i])
+	);
 
 	const timezone = parts[8];
 
@@ -146,7 +149,8 @@ export function minDate(
 			parsedDate !== undefined &&
 			(value === null ||
 				value === undefined ||
-				(value instanceof Date && (exclusive ? value > parsedDate : value >= parsedDate))),
+				(value instanceof Date &&
+					(exclusive ? value > parsedDate : value >= parsedDate))),
 		message,
 		() => ({
 			min: parsedDate,
@@ -182,7 +186,8 @@ export function maxDate(
 			parsedDate !== undefined &&
 			(value === null ||
 				value === undefined ||
-				(value instanceof Date && (exclusive ? value < parsedDate : value <= parsedDate))),
+				(value instanceof Date &&
+					(exclusive ? value < parsedDate : value <= parsedDate))),
 		message,
 		() => ({
 			max: parsedDate,

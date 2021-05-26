@@ -1,5 +1,5 @@
 import test from 'ava';
-import {integer, max, min, number, required} from '../src/index.js';
+import {integer, max, min, number, required} from '../src/index';
 
 test('min', async t => {
 	const validate = min(5, 'min:{min}', true);

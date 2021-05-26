@@ -1,4 +1,4 @@
-import {ConfigBase, createTypeValidatorTest} from './shared.js';
+import {ConfigBase, createTypeValidatorTest} from './shared';
 
 /**
  * Parses a value into a boolean.

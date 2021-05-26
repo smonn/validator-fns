@@ -20,7 +20,7 @@ import {
 	ValidatorTest,
 	valid,
 	invalid
-} from '../src/index.js';
+} from '../src/index';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TEN_DAYS = ONE_DAY * 10;

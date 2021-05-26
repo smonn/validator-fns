@@ -6,7 +6,7 @@ import {
 	minDate,
 	parseDate,
 	required
-} from '../src/index.js';
+} from '../src/index';
 
 test('parseDate', t => {
 	const now = new Date();

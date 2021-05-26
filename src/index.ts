@@ -5,13 +5,13 @@ export {
 	ArrayConfig,
 	ArrayItemValidatorResult,
 	parseArray
-} from './arrays.js';
+} from './arrays';
 export {
 	applyBooleanConfig,
 	boolean,
 	BooleanConfig,
 	parseBoolean
-} from './booleans.js';
+} from './booleans';
 export {
 	applyDateConfig,
 	date,
@@ -23,15 +23,15 @@ export {
 	MinDateValidatorMessageParameters,
 	parseDate,
 	SharedDateValueType
-} from './dates.js';
+} from './dates';
 export {
 	applyNumberConfig,
 	integer,
 	number,
 	NumberConfig,
 	parseNumber
-} from './numbers.js';
-export {object, ObjectParameter as ObjectParam} from './objects.js';
+} from './numbers';
+export {object, ObjectParameter as ObjectParam} from './objects';
 export {
 	ConfigBase,
 	createTypeValidatorTest,
@@ -61,7 +61,7 @@ export {
 	ValidatorResult,
 	ValidatorTest,
 	ValidResult
-} from './shared.js';
+} from './shared';
 export {
 	applyStringConfig,
 	email,
@@ -71,4 +71,4 @@ export {
 	string,
 	StringConfig,
 	url
-} from './strings.js';
+} from './strings';

@@ -5,7 +5,7 @@ import {
 	valid,
 	ValidatorMessage,
 	ValidatorTest
-} from './shared.js';
+} from './shared';
 
 /**
  * Parses a value into a number.

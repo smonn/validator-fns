@@ -107,15 +107,11 @@
 		"files": [
 			"test/**/*"
 		],
-		"nonSemVerExperiments": {
-			"configurableModuleFormat": true,
-			"nextGenConfig": true
-		},
-		"extensions": {
-			"ts": "module"
-		},
-		"nodeArguments": [
-			"--loader=ts-node/esm"
+		"extensions": [
+			"ts"
+		],
+		"require": [
+			"ts-node/register"
 		]
 	}
 }

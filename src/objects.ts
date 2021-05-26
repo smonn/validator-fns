@@ -6,7 +6,7 @@ import {
 	invalid,
 	valid,
 	ValidatorTest
-} from './shared.js';
+} from './shared';
 
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 

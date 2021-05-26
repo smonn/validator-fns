@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist/esm",
+		"module": "ES2020",
 		"sourceMap": false
 	},
 	"include": ["src"]

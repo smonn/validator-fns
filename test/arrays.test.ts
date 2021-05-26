@@ -1,5 +1,5 @@
 import test from 'ava';
-import {array, max, min, object, required, string} from '../src/index.js';
+import {array, max, min, object, required, string} from '../src/index';
 
 test('array', async t => {
 	const validate = array(
