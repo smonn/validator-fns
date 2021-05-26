@@ -5,8 +5,8 @@ import {
 	hasOwnProperty,
 	invalid,
 	valid,
-	ValidatorTest
-} from './shared.js';
+	ValidatorTest,
+} from "./shared.js";
 
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 
@@ -17,17 +17,18 @@ export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 export function object<P extends ObjectParameter, K extends keyof P>(
 	properties: P
 ): ValidatorTest<
-	DeepPartial<{[K in keyof P]?: ExtractValue<P[K]>}>,
-	DeepPartial<{[K in keyof P]?: ExtractError<P[K]>}>
-	> {
-	if (typeof properties !== 'object' || properties === null) {
-		throw new TypeError('`properties` must be a configuration object');
+	DeepPartial<{ [K in keyof P]?: ExtractValue<P[K]> }>,
+	DeepPartial<{ [K in keyof P]?: ExtractError<P[K]> }>
+> {
+	if (typeof properties !== "object" || properties === null) {
+		throw new TypeError("`properties` must be a configuration object");
 	}
 
 	return async (values, field) => {
-		const definedValues: {[K in keyof P]?: ExtractValue<P[K]>} = values as {[K in keyof P]?: ExtractValue<P[K]>} ?? {};
-		const errors: {[K in keyof P]?: ExtractError<P[K]>} = {};
-		const resolvedValues: {[K in keyof P]?: ExtractValue<P[K]>} = {};
+		const definedValues: { [K in keyof P]?: ExtractValue<P[K]> } =
+			(values as { [K in keyof P]?: ExtractValue<P[K]> }) ?? {};
+		const errors: { [K in keyof P]?: ExtractError<P[K]> } = {};
+		const resolvedValues: { [K in keyof P]?: ExtractValue<P[K]> } = {};
 		let isValid = true;
 
 		for (const key in properties) {
@@ -35,26 +36,31 @@ export function object<P extends ObjectParameter, K extends keyof P>(
 				const validator = properties[key];
 				const value = definedValues[key];
 				// eslint-disable-next-line no-await-in-loop
-				const result = validator ? await validator(value, key) : await invalid({field: key, message: 'No validator set', value});
+				const result =
+					typeof validator === "function"
+						? await validator(value, key)
+						: await invalid({ field: key, message: "No validator set", value });
 
 				resolvedValues[key] = result.value as ExtractValue<P[K]>;
 
-				if (result.state === 'invalid') {
+				if (result.state === "invalid") {
 					isValid = false;
-					errors[key] = (result.message ? result.message : result.errors) as ExtractError<P[K]>;
+					errors[key] = (
+						result.message ? result.message : result.errors
+					) as ExtractError<P[K]>;
 				}
 			}
 		}
 
 		if (isValid) {
-			return valid({value: resolvedValues, field});
+			return valid({ value: resolvedValues, field });
 		}
 
 		return invalid({
-			message: '',
+			message: "",
 			value: values,
 			field,
-			errors
+			errors,
 		});
 	};
 }
