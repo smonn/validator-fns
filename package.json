@@ -1,140 +1,121 @@
 {
-  "name": "validator-fns",
-  "version": "1.5.4",
-  "description": "Small asynchronous validation library",
-  "license": "MIT",
-  "files": [
-    "dist",
-    "runkit.js"
-  ],
-  "keywords": [
-    "async",
-    "browser",
-    "browsers",
-    "function",
-    "functional",
-    "functions",
-    "isomorphic",
-    "node",
-    "promise",
-    "ssr",
-    "typescript",
-    "universal",
-    "validate",
-    "validation",
-    "validator"
-  ],
-  "source": "src/index.ts",
-  "main": "dist/index.js",
-  "unpkg": "dist/index.umd.js",
-  "module": "dist/index.esm.js",
-  "esmodule": "dist/index.modern.js",
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.esm.js",
-      "default": "./dist/index.umd.js"
-    }
-  },
-  "typings": "dist/index.d.ts",
-  "engines": {
-    "node": ">=12",
-    "npm": ">=6"
-  },
-  "scripts": {
-    "clean": "rimraf dist",
-    "build": "run-p build:*",
-    "build:cjs": "microbundle build --compress --no-sourcemap --target node --format cjs",
-    "build:esm": "microbundle build --compress --no-sourcemap --target node --format es",
-    "build:mod": "microbundle build --compress --no-sourcemap --target node --format modern",
-    "build:umd": "microbundle build --compress --no-sourcemap --name ValidatorFns --target web --format umd",
-    "dev": "microbundle watch",
-    "check": "tsc --noEmit",
-    "lint": "eslint --ext ts .",
-    "size": "size-limit",
-    "analyze": "size-limit --why",
-    "test": "uvu -r ts-node/register test",
-    "coverage": "c8 --include=src --exclude=src/index.ts npm test",
-    "report": "c8 report --reporter=text-lcov > coverage/lcov.info",
-    "prepublishOnly": "run-s clean lint check test build"
-  },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "size-limit": [
-    {
-      "path": "dist/index.js",
-      "limit": "2.5 KB"
-    },
-    {
-      "path": "dist/index.esm.js",
-      "limit": "2.5 KB"
-    },
-    {
-      "path": "dist/index.modern.js",
-      "limit": "2.5 KB"
-    },
-    {
-      "path": "dist/index.umd.js",
-      "limit": "4 KB"
-    }
-  ],
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "4.11.0",
-    "@typescript-eslint/eslint-plugin": "4.25.0",
-    "@typescript-eslint/parser": "4.25.0",
-    "c8": "7.7.2",
-    "eslint": "7.27.0",
-    "eslint-config-prettier": "8.3.0",
-    "husky": "6.0.0",
-    "lint-staged": "11.0.0",
-    "microbundle": "0.13.0",
-    "npm-run-all": "4.1.5",
-    "prettier": "2.3.0",
-    "rimraf": "3.0.2",
-    "rollup": "2.50.0",
-    "size-limit": "4.11.0",
-    "ts-node": "10.0.0",
-    "tslib": "2.2.0",
-    "typescript": "4.2.4",
-    "uvu": "0.5.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:smonn/validator-fns.git"
-  },
-  "homepage": "https://www.npmjs.com/package/validator-fns",
-  "runkitExampleFilename": "runkit.js",
-  "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "prettier"
-    ],
-    "rules": {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/explicit-function-return-type": "off"
-    },
-    "env": {
-      "browser": true,
-      "node": true,
-      "es6": true
-    }
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.ts": "eslint --cache --fix",
-    "*.{ts,md}": "prettier --write"
-  }
+	"name": "validator-fns",
+	"version": "1.5.4",
+	"description": "Small asynchronous validation library",
+	"license": "MIT",
+	"files": [
+		"dist",
+		"runkit.js"
+	],
+	"author": {
+		"name": "Simon Ingeson",
+		"url": "https://smonn.se"
+	},
+	"keywords": [
+		"async",
+		"browser",
+		"browsers",
+		"function",
+		"functional",
+		"functions",
+		"isomorphic",
+		"node",
+		"promise",
+		"ssr",
+		"typescript",
+		"universal",
+		"validate",
+		"validation",
+		"validator"
+	],
+	"main": "dist/index.js",
+	"exports": "./dist/index.js",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"engines": {
+		"node": ">=12",
+		"npm": ">=6"
+	},
+	"scripts": {
+		"clean": "rimraf dist",
+		"check": "tsc --noEmit",
+		"build": "tsc --project tsconfig.dist.json",
+		"lint": "xo",
+		"size": "size-limit",
+		"analyze": "size-limit --why",
+		"test": "ava",
+		"coverage": "nyc npm test",
+		"prepublishOnly": "run-s clean lint check test build"
+	},
+	"size-limit": [
+		{
+			"path": "dist/index.js",
+			"limit": "2.5 KB"
+		}
+	],
+	"devDependencies": {
+		"@size-limit/preset-small-lib": "4.11.0",
+		"ava": "^3.15.0",
+		"husky": "6.0.0",
+		"lint-staged": "11.0.0",
+		"npm-run-all": "4.1.5",
+		"nyc": "^15.1.0",
+		"rimraf": "3.0.2",
+		"size-limit": "4.11.0",
+		"ts-node": "10.0.0",
+		"tslib": "2.2.0",
+		"type-fest": "^1.1.3",
+		"typescript": "4.2.4",
+		"xo": "^0.40.1"
+	},
+	"repository": "github:smonn/validator-fns",
+	"homepage": "https://npm.im/validator-fns",
+	"runkitExampleFilename": "runkit.js",
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged"
+		}
+	},
+	"lint-staged": {
+		"*.ts": "xo --fix"
+	},
+	"xo": {
+		"envs": [
+			"browser",
+			"node"
+		],
+		"ignores": [
+			"runkit.js",
+			"benchmark/"
+		]
+	},
+	"ava": {
+		"files": [
+			"test/**/*"
+		],
+		"nonSemVerExperiments": {
+			"configurableModuleFormat": true,
+			"nextGenConfig": true
+		},
+		"extensions": {
+			"ts": "module"
+		},
+		"nodeArguments": [
+			"--loader=ts-node/esm"
+		]
+	},
+	"nyc": {
+		"reporter": [
+			"text",
+			"html",
+			"lcov"
+		],
+		"extension": [
+			".ts"
+		],
+		"exclude": [
+			"**/test/**",
+			"src/index.ts"
+		]
+	}
 }

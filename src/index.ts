@@ -1,73 +1,74 @@
 /* istanbul ignore file */
 export {
-  applyArrayConfig,
-  array,
-  ArrayConfig,
-  ArrayItemValidatorResult,
-  parseArray,
-} from './arrays';
+	applyArrayConfig,
+	array,
+	ArrayConfig,
+	ArrayItemValidatorResult,
+	parseArray
+} from './arrays.js';
 export {
-  applyBooleanConfig,
-  boolean,
-  BooleanConfig,
-  parseBoolean,
-} from './booleans';
+	applyBooleanConfig,
+	boolean,
+	BooleanConfig,
+	parseBoolean
+} from './booleans.js';
 export {
-  applyDateConfig,
-  date,
-  DateConfig,
-  invalidDate,
-  maxDate,
-  MaxDateValidatorMessageParams,
-  minDate,
-  MinDateValidatorMessageParams,
-  parseDate,
-  SharedDateValueType,
-} from './dates';
+	applyDateConfig,
+	date,
+	DateConfig,
+	invalidDate,
+	maxDate,
+	MaxDateValidatorMessageParameters,
+	minDate,
+	MinDateValidatorMessageParameters,
+	parseDate,
+	SharedDateValueType
+} from './dates.js';
 export {
-  applyNumberConfig,
-  integer,
-  number,
-  NumberConfig,
-  parseNumber,
-} from './numbers';
-export { object, ObjectParam } from './objects';
+	applyNumberConfig,
+	integer,
+	number,
+	NumberConfig,
+	parseNumber
+} from './numbers.js';
+export {object, ObjectParameter as ObjectParam} from './objects.js';
 export {
-  ConfigBase,
-  createTypeValidatorTest,
-  createValidatorTest,
-  exact,
-  ExactValidatorMessageParams,
-  ExtractError,
-  ExtractValue,
-  formatMessage,
-  hasOwnProperty,
-  invalid,
-  InvalidResult,
-  isObject,
-  max,
-  MaxValidatorMessageParams,
-  min,
-  MinValidatorMessageParams,
-  oneOf,
-  OneOfValidatorMessageParams,
-  required,
-  SharedValueType,
-  valid,
-  ValidatorFactory,
-  ValidatorMessage,
-  ValidatorMessageParams,
-  ValidatorResult,
-  ValidatorTest,
-  ValidResult,
-} from './shared';
+	ConfigBase,
+	createTypeValidatorTest,
+	createValidatorTest,
+	DeepPartial,
+	exact,
+	ExactValidatorMessageParameters,
+	ExtractError,
+	ExtractValue,
+	formatMessage,
+	hasOwnProperty,
+	invalid,
+	InvalidResult,
+	isObject,
+	max,
+	MaxValidatorMessageParameters,
+	min,
+	MinValidatorMessageParameters,
+	oneOf,
+	OneOfValidatorMessageParameters,
+	required,
+	SharedValueType,
+	valid,
+	ValidatorFactory,
+	ValidatorMessage,
+	ValidatorMessageParameters,
+	ValidatorResult,
+	ValidatorTest,
+	ValidResult
+} from './shared.js';
 export {
-  applyStringConfig,
-  email,
-  matches,
-  MatchesValidatorMessageParams,
-  parseString,
-  string,
-  StringConfig,
-  url,
-} from './strings';
+	applyStringConfig,
+	email,
+	matches,
+	MatchesValidatorMessageParameters,
+	parseString,
+	string,
+	StringConfig,
+	url
+} from './strings.js';
