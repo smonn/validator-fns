@@ -1,23 +1,24 @@
 import {
-  ConfigBase,
-  createTypeValidatorTest,
-  createValidatorTest,
-  isObject,
-  ValidatorMessage,
-  ValidatorMessageParams,
-  ValidatorTest,
-} from './shared';
+	ConfigBase,
+	createTypeValidatorTest,
+	createValidatorTest,
+	isObject,
+	ValidatorMessage,
+	ValidatorMessageParameters,
+	ValidatorTest
+} from './shared.js';
 
 /** @internal */
-const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+const emailPattern =
+	/^[\w.!#$%&'*+/=?^`{|}~-]+@[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?(?:\.[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?)*$/;
 
 /**
  * Configuration for string validation.
  * @category Types
  */
 export interface StringConfig extends ConfigBase<string> {
-  /** Apply trim to string before validation. */
-  trim?: boolean;
+	/** Apply trim to string before validation. */
+	trim?: boolean;
 }
 
 /**
@@ -26,11 +27,23 @@ export interface StringConfig extends ConfigBase<string> {
  * @category Parsers
  */
 export function parseString(value: unknown): string | null | undefined {
-  if (value === null || value === undefined) return value;
-  if (typeof value === 'string') return value;
-  if (value instanceof Date) return value.toISOString();
-  if (isObject(value)) throw new TypeError('Failed to parse value to string.');
-  return String(value);
+	if (value === null || value === undefined) {
+		return value;
+	}
+
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+
+	if (isObject(value)) {
+		throw new TypeError('Failed to parse value to string.');
+	}
+
+	return String(value);
 }
 
 /**
@@ -40,22 +53,24 @@ export function parseString(value: unknown): string | null | undefined {
  * @category Helpers
  */
 export function applyStringConfig(
-  value: unknown,
-  config: StringConfig
+	value: unknown,
+	config: StringConfig
 ): string | null | undefined {
-  let parsedValue = config.parser(value);
-  if (config.default !== undefined && parsedValue === undefined) {
-    parsedValue = config.default;
-  }
-  if (config.trim && typeof parsedValue === 'string') {
-    parsedValue = parsedValue.trim();
-  }
-  return parsedValue;
+	let parsedValue = config.parser(value);
+	if (config.default !== undefined && parsedValue === undefined) {
+		parsedValue = config.default;
+	}
+
+	if (config.trim && typeof parsedValue === 'string') {
+		parsedValue = parsedValue.trim();
+	}
+
+	return parsedValue;
 }
 
-export interface MatchesValidatorMessageParams
-  extends ValidatorMessageParams<string> {
-  pattern: RegExp;
+export interface MatchesValidatorMessageParameters
+	extends ValidatorMessageParameters<string> {
+	pattern: RegExp;
 }
 
 /**
@@ -65,18 +80,18 @@ export interface MatchesValidatorMessageParams
  * @category Validation Tests
  */
 export function matches(
-  pattern: RegExp,
-  message: ValidatorMessage<string, MatchesValidatorMessageParams>
+	pattern: RegExp,
+	message: ValidatorMessage<string, MatchesValidatorMessageParameters>
 ): ValidatorTest<string> {
-  return createValidatorTest(
-    value =>
-      value === undefined ||
-      value === null ||
-      value === '' ||
-      pattern.test(value),
-    message,
-    () => ({ pattern })
-  );
+	return createValidatorTest(
+		value =>
+			value === undefined ||
+			value === null ||
+			value === '' ||
+			(typeof value === 'string' && pattern.test(value)),
+		message,
+		() => ({pattern})
+	);
 }
 
 /**
@@ -85,9 +100,9 @@ export function matches(
  * @category Validation Tests
  */
 export function email(
-  message: ValidatorMessage<string>
+	message: ValidatorMessage<string>
 ): ValidatorTest<string> {
-  return matches(emailPattern, message);
+	return matches(emailPattern, message);
 }
 
 /**
@@ -97,29 +112,30 @@ export function email(
  * @category Validation Tests
  */
 export function url(
-  message: ValidatorMessage<string>,
-  protocols?: string[]
+	message: ValidatorMessage<string>,
+	protocols?: string[]
 ): ValidatorTest<string> {
-  return createValidatorTest(
-    value => {
-      try {
-        let url: URL | undefined = undefined;
-        if (
-          value === undefined ||
-          value === null ||
-          value === '' ||
-          (typeof value === 'string' && (url = new URL(value)))
-        ) {
-          return !(url && protocols && !protocols.includes(url.protocol));
-        }
-      } catch {
-        // do nothing
-      }
-      return false;
-    },
-    message,
-    () => ({ protocols })
-  );
+	return createValidatorTest(
+		value => {
+			try {
+				let url: URL | undefined;
+				if (
+					value === undefined ||
+					value === null ||
+					value === '' ||
+					(typeof value === 'string' && (url = new URL(value)))
+				) {
+					return !(url && protocols && !protocols.includes(url.protocol));
+				}
+			} catch {
+				// Do nothing
+			}
+
+			return false;
+		},
+		message,
+		() => ({protocols})
+	);
 }
 
 /**
@@ -127,8 +143,8 @@ export function url(
  * @category Type Validators
  */
 export const string = createTypeValidatorTest(
-  {
-    parser: parseString,
-  },
-  applyStringConfig
+	{
+		parser: parseString
+	},
+	applyStringConfig
 );
