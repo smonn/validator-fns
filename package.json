@@ -54,6 +54,7 @@
 		}
 	],
 	"devDependencies": {
+		"@istanbuljs/nyc-config-typescript": "^1.0.1",
 		"@size-limit/preset-small-lib": "4.11.0",
 		"ava": "^3.15.0",
 		"husky": "6.0.0",
@@ -105,16 +106,17 @@
 		]
 	},
 	"nyc": {
+		"extends": "@istanbuljs/nyc-config-typescript",
+		"all": true,
 		"reporter": [
 			"text",
 			"html",
 			"lcov"
 		],
-		"extension": [
-			".ts"
+		"include": [
+			"src/**/*.ts"
 		],
 		"exclude": [
-			"**/test/**",
 			"src/index.ts"
 		]
 	}
