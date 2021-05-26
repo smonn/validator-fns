@@ -26,7 +26,7 @@ jobs:
         run: npm run lint && npm run check
 
       - name: Test
-        run: npm run coverage
+        run: npm run coverage && npm run report
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
