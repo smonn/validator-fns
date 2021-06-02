@@ -78,7 +78,7 @@
 		"type-fest": "1.2.0",
 		"typescript": "4.3.2",
 		"uvu": "0.5.1",
-		"xo": "0.40.1"
+		"xo": "0.40.2"
 	},
 	"repository": "github:smonn/validator-fns",
 	"homepage": "https://npm.im/validator-fns",
