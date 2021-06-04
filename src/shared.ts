@@ -418,7 +418,7 @@ export function min(
 export interface ExactValidatorMessageParameters
 	extends ValidatorMessageParameters<SharedValueType> {
 	limit: number;
-	amount: number| null | undefined;
+	amount: number | null | undefined;
 	exact: number;
 }
 
