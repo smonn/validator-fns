@@ -4,13 +4,13 @@ export {
 	array,
 	ArrayConfig,
 	ArrayItemValidatorResult,
-	parseArray
+	parseArray,
 } from './arrays';
 export {
 	applyBooleanConfig,
 	boolean,
 	BooleanConfig,
-	parseBoolean
+	parseBoolean,
 } from './booleans';
 export {
 	applyDateConfig,
@@ -22,14 +22,14 @@ export {
 	minDate,
 	MinDateValidatorMessageParameters,
 	parseDate,
-	SharedDateValueType
+	SharedDateValueType,
 } from './dates';
 export {
 	applyNumberConfig,
 	integer,
 	number,
 	NumberConfig,
-	parseNumber
+	parseNumber,
 } from './numbers';
 export {object, ObjectParameter as ObjectParam} from './objects';
 export {
@@ -60,7 +60,7 @@ export {
 	ValidatorMessageParameters,
 	ValidatorResult,
 	ValidatorTest,
-	ValidResult
+	ValidResult,
 } from './shared';
 export {
 	applyStringConfig,
@@ -70,5 +70,5 @@ export {
 	parseString,
 	string,
 	StringConfig,
-	url
+	url,
 } from './strings';

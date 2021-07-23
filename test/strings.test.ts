@@ -8,25 +8,25 @@ test('min', async () => {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('foo'), {
 		state: 'invalid',
@@ -34,7 +34,7 @@ test('min', async () => {
 		field: undefined,
 		isValid: false,
 		errors: undefined,
-		value: 'foo'
+		value: 'foo',
 	});
 });
 
@@ -44,25 +44,25 @@ test('max', async () => {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('foo bar'), {
 		state: 'invalid',
@@ -70,7 +70,7 @@ test('max', async () => {
 		message: 'max:5',
 		field: undefined,
 		isValid: false,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -80,37 +80,37 @@ test('email', async () => {
 		state: 'valid',
 		value: 'name@example.com',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('name@host'), {
 		state: 'valid',
 		value: 'name@host',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('name+tag@example.com'), {
 		state: 'valid',
 		value: 'name+tag@example.com',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'valid',
 		value: '',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('@example.com'), {
 		state: 'invalid',
@@ -118,7 +118,7 @@ test('email', async () => {
 		field: undefined,
 		errors: undefined,
 		value: '@example.com',
-		message: 'invalid email'
+		message: 'invalid email',
 	});
 	assert.equal(await validate('name.com'), {
 		state: 'invalid',
@@ -126,7 +126,7 @@ test('email', async () => {
 		field: undefined,
 		errors: undefined,
 		value: 'name.com',
-		message: 'invalid email'
+		message: 'invalid email',
 	});
 	assert.equal(await validate('name@.com'), {
 		state: 'invalid',
@@ -134,7 +134,7 @@ test('email', async () => {
 		field: undefined,
 		errors: undefined,
 		value: 'name@.com',
-		message: 'invalid email'
+		message: 'invalid email',
 	});
 });
 
@@ -144,31 +144,31 @@ test('url', async () => {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: 'http://example.com'
+		value: 'http://example.com',
 	});
 	assert.equal(await validate('mailto:name@example.com'), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: 'mailto:name@example.com'
+		value: 'mailto:name@example.com',
 	});
 	assert.equal(await validate(''), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: ''
+		value: '',
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: null
+		value: null,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: undefined
+		value: undefined,
 	});
 	assert.equal(await validate(0), {
 		state: 'invalid',
@@ -176,7 +176,7 @@ test('url', async () => {
 		field: undefined,
 		errors: undefined,
 		value: 0 as unknown as string,
-		message: 'invalid url'
+		message: 'invalid url',
 	});
 	assert.equal(await validate('/foo'), {
 		state: 'invalid',
@@ -184,7 +184,7 @@ test('url', async () => {
 		field: undefined,
 		errors: undefined,
 		value: '/foo',
-		message: 'invalid url'
+		message: 'invalid url',
 	});
 	assert.equal(await validate('unknown://path'), {
 		state: 'invalid',
@@ -192,7 +192,7 @@ test('url', async () => {
 		field: undefined,
 		value: 'unknown://path',
 		errors: undefined,
-		message: 'invalid url'
+		message: 'invalid url',
 	});
 });
 
@@ -201,20 +201,20 @@ test('string', async () => {
 		{trim: true},
 		required('Must enter a value.'),
 		min(5, 'At least five characters.'),
-		max(10, 'At most ten characters.')
+		max(10, 'At most ten characters.'),
 	);
 
 	assert.equal(await validate('hello'), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: 'hello'
+		value: 'hello',
 	});
 	assert.equal(await validate(12_345), {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: '12345'
+		value: '12345',
 	});
 	assert.equal(await validate('  test  '), {
 		state: 'invalid',
@@ -222,7 +222,7 @@ test('string', async () => {
 		value: 'test',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate('hello world'), {
 		state: 'invalid',
@@ -230,7 +230,7 @@ test('string', async () => {
 		value: 'hello world',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'invalid',
@@ -238,7 +238,7 @@ test('string', async () => {
 		value: '',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(new Date(0)), {
 		state: 'invalid',
@@ -246,7 +246,7 @@ test('string', async () => {
 		value: '1970-01-01T00:00:00.000Z',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'invalid',
@@ -254,7 +254,7 @@ test('string', async () => {
 		value: undefined,
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'invalid',
@@ -262,7 +262,7 @@ test('string', async () => {
 		value: null,
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate({name: 'August'}), {
 		state: 'invalid',
@@ -270,7 +270,7 @@ test('string', async () => {
 		value: {name: 'August'} as unknown as string,
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -280,7 +280,7 @@ test('string default', async () => {
 		state: 'valid',
 		isValid: true,
 		field: undefined,
-		value: 'hello'
+		value: 'hello',
 	});
 });
 

@@ -3,7 +3,7 @@ import {
 	invalid,
 	valid,
 	ValidatorResult,
-	ValidatorTest
+	ValidatorTest,
 } from './shared';
 
 /**
@@ -56,7 +56,7 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  */
 export function applyArrayConfig<T>(
 	config: ArrayConfig,
-	value: unknown
+	value: unknown,
 ): T[] | null | undefined {
 	let parsedValue = config.parser(value);
 	if (parsedValue === undefined && config.default !== undefined) {
@@ -77,7 +77,7 @@ export function array<T>(
 ): ValidatorTest<T[], ArrayItemValidatorResult[]> {
 	let allTests = tests;
 	let finalConfig: ArrayConfig = {
-		parser: parseArray
+		parser: parseArray,
 	};
 
 	if (config !== undefined) {
@@ -86,7 +86,7 @@ export function array<T>(
 		} else {
 			finalConfig = {
 				...finalConfig,
-				...config
+				...config,
 			};
 		}
 	}
@@ -113,7 +113,7 @@ export function array<T>(
 				// eslint-disable-next-line no-await-in-loop
 				const result = await validateItem(
 					item,
-					field ? `${field}[${index}]` : `[${index}]`
+					field ? `${field}[${index}]` : `[${index}]`,
 				);
 
 				if (result.state === 'invalid') {
@@ -121,7 +121,7 @@ export function array<T>(
 					errors.push({
 						errors: result.errors,
 						index,
-						message: result.message
+						message: result.message,
 					});
 				}
 			}
@@ -130,18 +130,18 @@ export function array<T>(
 		if (isValid) {
 			return valid({
 				value: arrayValue,
-				field
+				field,
 			});
 		}
 
 		return invalid({
 			message:
-				arrayInvalidResult?.state === 'invalid' ?
-					arrayInvalidResult.message :
-					'',
+				arrayInvalidResult?.state === 'invalid'
+					? arrayInvalidResult.message
+					: '',
 			value,
 			field,
-			errors
+			errors,
 		});
 	};
 }

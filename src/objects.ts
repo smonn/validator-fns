@@ -5,7 +5,7 @@ import {
 	hasOwnProperty,
 	invalid,
 	valid,
-	ValidatorTest
+	ValidatorTest,
 } from './shared';
 
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
@@ -15,7 +15,7 @@ export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
  * @category Type Validators
  */
 export function object<P extends ObjectParameter, K extends keyof P>(
-	properties: P
+	properties: P,
 ): ValidatorTest<
 	DeepPartial<{[K in keyof P]?: ExtractValue<P[K]>}>,
 	DeepPartial<{[K in keyof P]?: ExtractError<P[K]>}>
@@ -25,8 +25,8 @@ export function object<P extends ObjectParameter, K extends keyof P>(
 	}
 
 	return async (values, field) => {
-		const definedValues: {[K in keyof P]?: ExtractValue<P[K]>} =
-			(values as {[K in keyof P]?: ExtractValue<P[K]>}) ?? {};
+		const definedValues: {[K in keyof P]?: ExtractValue<P[K]>}
+			= (values as {[K in keyof P]?: ExtractValue<P[K]>}) ?? {};
 		const errors: {[K in keyof P]?: ExtractError<P[K]>} = {};
 		const resolvedValues: {[K in keyof P]?: ExtractValue<P[K]>} = {};
 		let isValid = true;
@@ -36,10 +36,10 @@ export function object<P extends ObjectParameter, K extends keyof P>(
 				const validator = properties[key];
 				const value = definedValues[key];
 				/* eslint-disable no-await-in-loop */
-				const result =
-					typeof validator === 'function' ?
-						await validator(value, key) :
-						await invalid({field: key, message: 'No validator set', value});
+				const result
+					= typeof validator === 'function'
+						? await validator(value, key)
+						: await invalid({field: key, message: 'No validator set', value});
 				/* eslint-enable no-await-in-loop */
 
 				resolvedValues[key] = result.value as ExtractValue<P[K]>;
@@ -61,7 +61,7 @@ export function object<P extends ObjectParameter, K extends keyof P>(
 			message: '',
 			value: values,
 			field,
-			errors
+			errors,
 		});
 	};
 }

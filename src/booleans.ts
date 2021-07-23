@@ -25,7 +25,7 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  */
 export function applyBooleanConfig(
 	value: unknown,
-	config: BooleanConfig
+	config: BooleanConfig,
 ): boolean | null | undefined {
 	let parsedValue = config.parser(value);
 	if (parsedValue === undefined && config.default !== undefined) {
@@ -47,5 +47,5 @@ export type BooleanConfig = ConfigBase<boolean>;
  */
 export const boolean = createTypeValidatorTest(
 	{parser: parseBoolean},
-	applyBooleanConfig
+	applyBooleanConfig,
 );

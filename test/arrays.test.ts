@@ -6,13 +6,13 @@ test('array', async () => {
 	const validate = array(
 		string(min(3, 'min:{min}')),
 		required('required'),
-		min(1, 'min:{min}')
+		min(1, 'min:{min}'),
 	);
 	assert.equal(await validate(['foo', 'bar', 'baz']), {
 		state: 'valid',
 		value: ['foo', 'bar', 'baz'],
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'invalid',
@@ -20,7 +20,7 @@ test('array', async () => {
 		message: 'required',
 		errors: [],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'invalid',
@@ -28,7 +28,7 @@ test('array', async () => {
 		message: 'required',
 		errors: [],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate([]), {
 		state: 'invalid',
@@ -36,7 +36,7 @@ test('array', async () => {
 		message: 'min:1',
 		errors: [],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'invalid',
@@ -44,7 +44,7 @@ test('array', async () => {
 		message: 'min:1',
 		errors: [],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate({}), {
 		state: 'invalid',
@@ -52,7 +52,7 @@ test('array', async () => {
 		message: 'min:1',
 		errors: [],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(['foo', 'ba']), {
 		state: 'invalid',
@@ -62,21 +62,21 @@ test('array', async () => {
 			{
 				message: 'min:3',
 				index: 1,
-				errors: undefined
-			}
+				errors: undefined,
+			},
 		],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 });
 
 test('array with object', async () => {
 	const validate = array(
 		object({
-			username: string(required('required'), min(3, 'min:{min}'))
+			username: string(required('required'), min(3, 'min:{min}')),
 		}),
 		min(2, 'min:{min}'),
-		max(10, 'max:{max}')
+		max(10, 'max:{max}'),
 	);
 	assert.equal(await validate([{}, {username: 'foo'}, {username: 'ab'}]), {
 		state: 'invalid',
@@ -87,19 +87,19 @@ test('array with object', async () => {
 				index: 0,
 				message: '',
 				errors: {
-					username: 'required'
-				}
+					username: 'required',
+				},
 			},
 			{
 				index: 2,
 				message: '',
 				errors: {
-					username: 'min:3'
-				}
-			}
+					username: 'min:3',
+				},
+			},
 		],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -118,18 +118,18 @@ test('nested array', async () => {
 					{
 						index: 0,
 						message: 'required',
-						errors: undefined
+						errors: undefined,
 					},
 					{
 						index: 2,
 						message: 'required',
-						errors: undefined
-					}
-				]
-			}
+						errors: undefined,
+					},
+				],
+			},
 		],
 		isValid: false,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -139,7 +139,7 @@ test('array default', async () => {
 		state: 'valid',
 		value: ['hello'],
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -149,13 +149,13 @@ test('array without validation', async () => {
 		state: 'valid',
 		value: [],
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 

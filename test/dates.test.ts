@@ -6,7 +6,7 @@ import {
 	maxDate,
 	minDate,
 	parseDate,
-	required
+	required,
 } from '../src/index';
 
 test('parseDate', () => {
@@ -22,27 +22,27 @@ test('parseDate', () => {
 	assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
 	assert.equal(
 		parseDate('2020-01-31T12:45:32'),
-		new Date(2020, 0, 31, 12, 45, 32)
+		new Date(2020, 0, 31, 12, 45, 32),
 	);
 	assert.equal(
 		parseDate('2020-01-31T12:45:32Z'),
-		new Date(Date.UTC(2020, 0, 31, 12, 45, 32))
+		new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
 	);
 	assert.equal(
 		parseDate('2020-01-31T12:45:32+01:30'),
-		new Date(Date.UTC(2020, 0, 31, 14, 15, 32))
+		new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
 	);
 	assert.equal(
 		parseDate('2020-01-31T12:45:32-0200'),
-		new Date(Date.UTC(2020, 0, 31, 10, 45, 32))
+		new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
 	);
 	assert.equal(
 		parseDate('2020-01-31T12:45:32.123'),
-		new Date(2020, 0, 31, 12, 45, 32, 123)
+		new Date(2020, 0, 31, 12, 45, 32, 123),
 	);
 	assert.equal(
 		parseDate('2020-01-31T12:45:32.001242Z'),
-		new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242))
+		new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
 	);
 });
 
@@ -53,7 +53,7 @@ test('minDate', async () => {
 		state: 'valid',
 		value: now,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const tomorrow = new Date(now);
 	tomorrow.setDate(now.getDate() + 1);
@@ -61,7 +61,7 @@ test('minDate', async () => {
 		state: 'valid',
 		value: tomorrow,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const yesterday = new Date(now);
 	yesterday.setDate(now.getDate() - 1);
@@ -71,7 +71,7 @@ test('minDate', async () => {
 		message: `min:${now.toISOString()}`,
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -82,7 +82,7 @@ test('maxDate', async () => {
 		state: 'valid',
 		value: now,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const tomorrow = new Date(now);
 	tomorrow.setDate(now.getDate() + 1);
@@ -92,7 +92,7 @@ test('maxDate', async () => {
 		message: `max:${now.toISOString()}`,
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	const yesterday = new Date(now);
 	yesterday.setDate(now.getDate() - 1);
@@ -100,7 +100,7 @@ test('maxDate', async () => {
 		state: 'valid',
 		value: yesterday,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -113,7 +113,7 @@ test('exclusive', async () => {
 		message: 'must be after now',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	const max = maxDate(now, 'must be before now', true);
 	assert.equal(await max(now), {
@@ -122,7 +122,7 @@ test('exclusive', async () => {
 		message: 'must be before now',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -135,25 +135,25 @@ test('date', async () => {
 	const validate = date(
 		required('required'),
 		minDate(now, 'min'),
-		maxDate(nextMonth, 'max')
+		maxDate(nextMonth, 'max'),
 	);
 	assert.equal(await validate(now), {
 		state: 'valid',
 		value: now,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(nextMonth), {
 		state: 'valid',
 		value: nextMonth,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(tomorrow), {
 		state: 'valid',
 		value: tomorrow,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'invalid',
@@ -161,7 +161,7 @@ test('date', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'invalid',
@@ -169,7 +169,7 @@ test('date', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'invalid',
@@ -177,7 +177,7 @@ test('date', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -187,7 +187,7 @@ test('date default', async () => {
 		state: 'valid',
 		value: new Date(0),
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 

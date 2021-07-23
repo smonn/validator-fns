@@ -7,9 +7,9 @@ test('format string message', () => {
 		formatMessage('Hello {name}!', {
 			name: 'World',
 			value: '',
-			field: undefined
+			field: undefined,
 		}),
-		'Hello World!'
+		'Hello World!',
 	);
 });
 
@@ -18,9 +18,9 @@ test('format function message', () => {
 		formatMessage(({name}) => `Hello ${name}!`, {
 			name: 'World',
 			value: '',
-			field: undefined
+			field: undefined,
 		}),
-		'Hello World!'
+		'Hello World!',
 	);
 });
 
@@ -30,32 +30,32 @@ test('required', async () => {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(true), {
 		state: 'valid',
 		value: true,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(false), {
 		state: 'valid',
 		value: false,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(0), {
 		state: 'valid',
 		value: 0,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const now = new Date();
 	assert.equal(await validate(now), {
 		state: 'valid',
 		value: now,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(''), {
 		state: 'invalid',
@@ -63,7 +63,7 @@ test('required', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'invalid',
@@ -71,7 +71,7 @@ test('required', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'invalid',
@@ -79,7 +79,7 @@ test('required', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	const invalidDate = new Date('');
 	assert.equal(await validate(invalidDate), {
@@ -88,7 +88,7 @@ test('required', async () => {
 		message: 'required',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 
 	const nullableValidate = required('required', true);
@@ -96,7 +96,7 @@ test('required', async () => {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -106,7 +106,7 @@ test('exact', async () => {
 		state: 'valid',
 		value: 'hello',
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate('foo'), {
 		state: 'invalid',
@@ -114,13 +114,13 @@ test('exact', async () => {
 		message: 'exact:5',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(5), {
 		state: 'valid',
 		value: 5,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(4), {
 		state: 'invalid',
@@ -128,13 +128,13 @@ test('exact', async () => {
 		message: 'exact:5',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(Array.from({length: 5})), {
 		state: 'valid',
 		value: [undefined, undefined, undefined, undefined, undefined],
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(Array.from({length: 2})), {
 		state: 'invalid',
@@ -142,14 +142,14 @@ test('exact', async () => {
 		message: 'exact:5',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
 enum TestValue {
 	One,
 	Two,
-	Three
+	Three,
 }
 
 test('enums', async () => {
@@ -160,38 +160,38 @@ test('enums', async () => {
 		message: 'oneOf:foo,bar,baz',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	const numbers = oneOf([2, 4, 6], 'oneOf:{values}');
 	assert.equal(await numbers(4), {
 		state: 'valid',
 		value: 4,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const booleans = oneOf([false], 'oneOf:{values}');
 	assert.equal(await booleans(false), {
 		state: 'valid',
 		value: false,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const tsEnums = oneOf(
 		[TestValue.One, TestValue.Two, TestValue.Three],
-		'oneOf:{values}'
+		'oneOf:{values}',
 	);
 	assert.equal(await tsEnums(TestValue.Three), {
 		state: 'valid',
 		value: TestValue.Three,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	const dates = oneOf([new Date(0), new Date(1)], 'oneOf:{values}');
 	assert.equal(await dates(new Date(0)), {
 		state: 'valid',
 		value: new Date(0),
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 

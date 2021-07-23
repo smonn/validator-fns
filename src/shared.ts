@@ -117,7 +117,7 @@ export interface ValidatorMessageParameters<T> {
  */
 export type ValidatorMessage<
 	T,
-	P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+	P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 > = string | ((parameters: P) => string);
 
 /**
@@ -135,7 +135,7 @@ export function isObject(value: unknown): boolean {
  */
 export function hasOwnProperty(
 	object: unknown,
-	prop: string | number | symbol
+	prop: string | number | symbol,
 ): boolean {
 	return Object.prototype.hasOwnProperty.call(object, prop);
 }
@@ -151,11 +151,11 @@ const formatPattern = /{(\w+)}/g;
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
 	template: ValidatorMessage<T, P>,
-	parameters: P
+	parameters: P,
 ): string {
 	if (typeof template === 'string') {
 		return template.replace(formatPattern, (_, key: string) =>
-			String((parameters as Record<string, unknown>)[key])
+			String((parameters as Record<string, unknown>)[key]),
 		);
 	}
 
@@ -170,7 +170,7 @@ export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
  */
 export async function valid<T, E = never>({
 	value,
-	field
+	field,
 }: {
 	value: T | null | undefined;
 	field: string | undefined;
@@ -179,7 +179,7 @@ export async function valid<T, E = never>({
 		isValid: true,
 		state: 'valid',
 		value,
-		field
+		field,
 	};
 }
 
@@ -196,7 +196,7 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
 	field,
 	message,
 	value,
-	extras
+	extras,
 }: {
 	message: ValidatorMessage<T, P>;
 	value: unknown;
@@ -210,7 +210,7 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
 		message: formatMessage(message, {...(extras ?? {}), value, field} as P),
 		value,
 		field,
-		errors
+		errors,
 	};
 }
 
@@ -224,7 +224,7 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 	defaultConfig: C,
-	applyConfig: (value: unknown, config: C) => T | null | undefined
+	applyConfig: (value: unknown, config: C) => T | null | undefined,
 ): ValidatorFactory<C, T, E> {
 	return (config, ...tests) => {
 		const cache: Record<string, ValidatorResult<T>> = {};
@@ -237,7 +237,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 			} else {
 				finalConfig = {
 					...defaultConfig,
-					...config
+					...config,
 				};
 			}
 		}
@@ -265,7 +265,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 				return invalid({
 					message: (error as Error)?.message,
 					value,
-					field
+					field,
 				});
 			}
 		};
@@ -281,11 +281,11 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 export function createValidatorTest<
 	T = any,
 	E = any,
-	P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+	P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >(
 	test: (value: unknown, field?: string) => boolean,
 	message: ValidatorMessage<T, P>,
-	getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>
+	getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>,
 ): ValidatorTest<T, E> {
 	return async (value, field) => {
 		if (test(value, field)) {
@@ -296,7 +296,7 @@ export function createValidatorTest<
 			message,
 			value,
 			field,
-			extras: getExtras ? getExtras(value as T) : undefined
+			extras: getExtras ? getExtras(value as T) : undefined,
 		});
 	};
 }
@@ -309,17 +309,17 @@ export function createValidatorTest<
  */
 export function required<T, P extends ValidatorMessageParameters<T>>(
 	message: ValidatorMessage<T, P>,
-	nullable?: boolean
+	nullable?: boolean,
 ): ValidatorTest<T> {
 	return createValidatorTest(
 		value =>
-			(nullable && value === null) ||
-			(value !== null &&
-				value !== undefined &&
-				!(typeof value === 'string' && value === '') &&
-				!(typeof value === 'number' && Number.isNaN(value)) &&
-				!(value instanceof Date && Number.isNaN(value.valueOf()))),
-		message
+			(nullable && value === null)
+			|| (value !== null
+				&& value !== undefined
+				&& !(typeof value === 'string' && value === '')
+				&& !(typeof value === 'number' && Number.isNaN(value))
+				&& !(value instanceof Date && Number.isNaN(value.valueOf()))),
+		message,
 	);
 }
 
@@ -330,9 +330,9 @@ export type SharedValueType = string | number | unknown[];
  * @internal
  */
 function getAmount(value: SharedValueType | null | undefined) {
-	return typeof value === 'string' || Array.isArray(value) ?
-		value.length :
-		value;
+	return typeof value === 'string' || Array.isArray(value)
+		? value.length
+		: value;
 }
 
 export interface MaxValidatorMessageParameters
@@ -353,16 +353,16 @@ export interface MaxValidatorMessageParameters
 export function max(
 	limit: number,
 	message: ValidatorMessage<SharedValueType, MaxValidatorMessageParameters>,
-	exclusive?: boolean
+	exclusive?: boolean,
 ): ValidatorTest<SharedValueType> {
 	return createValidatorTest(
 		value => {
 			const amount = getAmount(value as SharedValueType);
 			return (
-				amount === undefined ||
-				amount === null ||
-				value === '' ||
-				(exclusive ? amount < limit : amount <= limit)
+				amount === undefined
+				|| amount === null
+				|| value === ''
+				|| (exclusive ? amount < limit : amount <= limit)
 			);
 		},
 		message,
@@ -370,8 +370,8 @@ export function max(
 			max: limit,
 			limit,
 			amount: getAmount(value),
-			exclusive
-		})
+			exclusive,
+		}),
 	);
 }
 
@@ -393,16 +393,16 @@ export interface MinValidatorMessageParameters
 export function min(
 	limit: number,
 	message: ValidatorMessage<SharedValueType, MinValidatorMessageParameters>,
-	exclusive?: boolean
+	exclusive?: boolean,
 ): ValidatorTest<SharedValueType> {
 	return createValidatorTest(
 		value => {
 			const amount = getAmount(value as SharedValueType);
 			return (
-				amount === undefined ||
-				amount === null ||
-				value === '' ||
-				(exclusive ? amount > limit : amount >= limit)
+				amount === undefined
+				|| amount === null
+				|| value === ''
+				|| (exclusive ? amount > limit : amount >= limit)
 			);
 		},
 		message,
@@ -410,8 +410,8 @@ export function min(
 			min: limit,
 			limit,
 			amount: getAmount(value),
-			exclusive
-		})
+			exclusive,
+		}),
 	);
 }
 
@@ -430,24 +430,24 @@ export interface ExactValidatorMessageParameters
  */
 export function exact(
 	limit: number,
-	message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>
+	message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>,
 ): ValidatorTest<SharedValueType> {
 	return createValidatorTest(
 		value => {
 			const amount = getAmount(value as SharedValueType);
 			return (
-				amount === undefined ||
-				amount === null ||
-				value === '' ||
-				amount === limit
+				amount === undefined
+				|| amount === null
+				|| value === ''
+				|| amount === limit
 			);
 		},
 		message,
 		value => ({
 			amount: getAmount(value),
 			limit,
-			exact: limit
-		})
+			exact: limit,
+		}),
 	);
 }
 
@@ -464,16 +464,16 @@ export interface OneOfValidatorMessageParameters<T>
  */
 export function oneOf<T extends string | number | boolean | Date>(
 	values: readonly T[],
-	message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>
+	message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
 ): ValidatorTest<T> {
 	return createValidatorTest(
 		value =>
-			value === undefined ||
-			value === null ||
-			values.includes(value as T) ||
-			(value instanceof Date &&
-				values.some(x => x.valueOf() === value.valueOf())),
+			value === undefined
+			|| value === null
+			|| values.includes(value as T)
+			|| (value instanceof Date
+				&& values.some(x => x.valueOf() === value.valueOf())),
 		message,
-		() => ({values})
+		() => ({values}),
 	);
 }
