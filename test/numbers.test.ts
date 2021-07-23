@@ -10,7 +10,7 @@ test('min', async () => {
 		isValid: false,
 		message: 'min:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(0), {
 		state: 'invalid',
@@ -18,25 +18,25 @@ test('min', async () => {
 		isValid: false,
 		message: 'min:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		isValid: true,
 		value: null,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		isValid: true,
 		value: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(5.01), {
 		state: 'valid',
 		isValid: true,
 		value: 5.01,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(5), {
 		state: 'invalid',
@@ -44,7 +44,7 @@ test('min', async () => {
 		value: 5,
 		message: 'min:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(4.99), {
 		state: 'invalid',
@@ -52,7 +52,7 @@ test('min', async () => {
 		field: undefined,
 		message: 'min:5',
 		value: 4.99,
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -64,25 +64,25 @@ test('max', async () => {
 		isValid: false,
 		message: 'max:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(0), {
 		state: 'valid',
 		value: 0,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(5.01), {
 		state: 'invalid',
@@ -90,7 +90,7 @@ test('max', async () => {
 		isValid: false,
 		message: 'max:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(5), {
 		state: 'invalid',
@@ -98,13 +98,13 @@ test('max', async () => {
 		isValid: false,
 		message: 'max:5',
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(4.99), {
 		state: 'valid',
 		value: 4.99,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -116,25 +116,25 @@ test('integer', async () => {
 		message: 'integer',
 		isValid: false,
 		field: undefined,
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(0), {
 		state: 'valid',
 		value: 0,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'valid',
 		value: null,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'valid',
 		value: undefined,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(0.1), {
 		state: 'invalid',
@@ -142,7 +142,7 @@ test('integer', async () => {
 		isValid: false,
 		field: undefined,
 		message: 'integer',
-		errors: undefined
+		errors: undefined,
 	});
 	assert.equal(await validate(1e-1), {
 		state: 'invalid',
@@ -150,7 +150,7 @@ test('integer', async () => {
 		isValid: false,
 		field: undefined,
 		message: 'integer',
-		errors: undefined
+		errors: undefined,
 	});
 });
 
@@ -158,26 +158,26 @@ test('number', async () => {
 	const validate = number(
 		required('Must enter a value.'),
 		min(-10, 'Must be at least -10.'),
-		max(10, 'Must be at most 10.')
+		max(10, 'Must be at most 10.'),
 	);
 
 	assert.equal(await validate(0), {
 		state: 'valid',
 		value: 0,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(-10), {
 		state: 'valid',
 		value: -10,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(10), {
 		state: 'valid',
 		value: 10,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(11), {
 		state: 'invalid',
@@ -185,7 +185,7 @@ test('number', async () => {
 		value: 11,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(-11), {
 		state: 'invalid',
@@ -193,7 +193,7 @@ test('number', async () => {
 		value: -11,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(Number.NaN), {
 		state: 'invalid',
@@ -201,13 +201,13 @@ test('number', async () => {
 		value: Number.NaN,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(new Date(0)), {
 		state: 'valid',
 		value: 0,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(undefined), {
 		state: 'invalid',
@@ -215,7 +215,7 @@ test('number', async () => {
 		value: undefined,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate(null), {
 		state: 'invalid',
@@ -223,7 +223,7 @@ test('number', async () => {
 		value: null,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await validate({}), {
 		state: 'invalid',
@@ -231,7 +231,7 @@ test('number', async () => {
 		value: Number.NaN,
 		isValid: false,
 		errors: undefined,
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -245,19 +245,19 @@ test('rounding', async () => {
 		value: 1,
 		isValid: true,
 		state: 'valid',
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await floor(0.9), {
 		value: 0,
 		isValid: true,
 		state: 'valid',
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await ceil(0.1), {
 		value: 1,
 		isValid: true,
 		state: 'valid',
-		field: undefined
+		field: undefined,
 	});
 	assert.equal(await badRounding(1), {
 		errors: undefined,
@@ -265,7 +265,7 @@ test('rounding', async () => {
 		isValid: false,
 		state: 'invalid',
 		message: 'Unknown round type: bad',
-		field: undefined
+		field: undefined,
 	});
 });
 
@@ -275,7 +275,7 @@ test('number default', async () => {
 		state: 'valid',
 		value: 5,
 		isValid: true,
-		field: undefined
+		field: undefined,
 	});
 });
 

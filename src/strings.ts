@@ -5,12 +5,12 @@ import {
 	isObject,
 	ValidatorMessage,
 	ValidatorMessageParameters,
-	ValidatorTest
+	ValidatorTest,
 } from './shared';
 
 /** @internal */
-const emailPattern =
-	/^[\w.!#$%&'*+/=?^`{|}~-]+@[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?(?:\.[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?)*$/;
+const emailPattern
+	= /^[\w.!#$%&'*+/=?^`{|}~-]+@[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?(?:\.[a-zA-Z\d](?:[a-zA-Z\d-]{0,61}[a-zA-Z\d])?)*$/;
 
 /**
  * Configuration for string validation.
@@ -54,7 +54,7 @@ export function parseString(value: unknown): string | null | undefined {
  */
 export function applyStringConfig(
 	value: unknown,
-	config: StringConfig
+	config: StringConfig,
 ): string | null | undefined {
 	let parsedValue = config.parser(value);
 	if (config.default !== undefined && parsedValue === undefined) {
@@ -81,16 +81,16 @@ export interface MatchesValidatorMessageParameters
  */
 export function matches(
 	pattern: RegExp,
-	message: ValidatorMessage<string, MatchesValidatorMessageParameters>
+	message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
 ): ValidatorTest<string> {
 	return createValidatorTest(
 		value =>
-			value === undefined ||
-			value === null ||
-			value === '' ||
-			(typeof value === 'string' && pattern.test(value)),
+			value === undefined
+			|| value === null
+			|| value === ''
+			|| (typeof value === 'string' && pattern.test(value)),
 		message,
-		() => ({pattern})
+		() => ({pattern}),
 	);
 }
 
@@ -100,7 +100,7 @@ export function matches(
  * @category Validation Tests
  */
 export function email(
-	message: ValidatorMessage<string>
+	message: ValidatorMessage<string>,
 ): ValidatorTest<string> {
 	return matches(emailPattern, message);
 }
@@ -113,17 +113,17 @@ export function email(
  */
 export function url(
 	message: ValidatorMessage<string>,
-	protocols?: string[]
+	protocols?: string[],
 ): ValidatorTest<string> {
 	return createValidatorTest(
 		value => {
 			try {
 				let url: URL | undefined;
 				if (
-					value === undefined ||
-					value === null ||
-					value === '' ||
-					(typeof value === 'string' && (url = new URL(value)))
+					value === undefined
+					|| value === null
+					|| value === ''
+					|| (typeof value === 'string' && (url = new URL(value)))
 				) {
 					return !(url && protocols && !protocols.includes(url.protocol));
 				}
@@ -134,7 +134,7 @@ export function url(
 			return false;
 		},
 		message,
-		() => ({protocols})
+		() => ({protocols}),
 	);
 }
 
@@ -144,7 +144,7 @@ export function url(
  */
 export const string = createTypeValidatorTest(
 	{
-		parser: parseString
+		parser: parseString,
 	},
-	applyStringConfig
+	applyStringConfig,
 );
