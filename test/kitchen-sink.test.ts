@@ -20,7 +20,7 @@ import {
 	url,
 	ValidatorTest,
 	valid,
-	invalid
+	invalid,
 } from '../src/index';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -36,32 +36,32 @@ const customValidator: ValidatorTest<string> = async (value, field) => {
 	return invalid({
 		message: 'Must be "hello".',
 		value,
-		field
+		field,
 	});
 };
 
 const validate = object({
 	firstName: string(
 		{default: '', trim: true},
-		required('First name is required.')
+		required('First name is required.'),
 	),
 	emailAddress: string(
 		required('Email address is required.'),
-		email('Must be a valid email address.')
+		email('Must be a valid email address.'),
 	),
 	age: number(
 		{round: 'floor'},
 		required('Age is required.'),
 		integer('Age must be a whole number.'),
-		min(18, 'Must be at least 18 years old.')
+		min(18, 'Must be at least 18 years old.'),
 	),
 	homepage: string(url('Must be a valid URL.', ['http:', 'https:'])),
 	fruit: string(
 		{default: 'apple'},
 		oneOf(
 			['apple', 'orange', 'banana'],
-			({values}) => `Must be ${values[0]}, ${values[1]} or ${values[2]}.`
-		)
+			({values}) => `Must be ${values[0]}, ${values[1]} or ${values[2]}.`,
+		),
 	),
 	favoriteCarMakers: array<string>(
 		{default: []},
@@ -79,25 +79,25 @@ const validate = object({
 					'Subaru',
 					'Tesla',
 					'Toyota',
-					'Volvo'
+					'Volvo',
 				],
-				'Must be a known car brand.'
-			)
+				'Must be a known car brand.',
+			),
 		),
 		min(2, 'Must pick at least two.'),
-		max(4, 'Must pick at most four.')
+		max(4, 'Must pick at most four.'),
 	),
 	startDate: date(
 		minDate(now, 'Must be on or after today.'),
-		maxDate(tenDaysFromNow, 'Must be at most ten days from now.')
+		maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
 	),
 	optIn: boolean(required('Must decide to opt in or out.')),
 	notRobot: number(
 		required('Must enter the correct answer.'),
-		exact(42, 'This is the answer.')
+		exact(42, 'This is the answer.'),
 	),
 	postalCode: string(matches(/^\d{5}$/, 'Must be a five-digit number.')),
-	custom: customValidator
+	custom: customValidator,
 });
 
 test('kitchen sink', async () => {
@@ -114,7 +114,7 @@ test('kitchen sink', async () => {
 		notRobot: 42,
 		optIn: false,
 		postalCode: '12345',
-		startDate
+		startDate,
 	});
 
 	assert.is(result.state, 'valid');
@@ -129,6 +129,6 @@ test('kitchen sink', async () => {
 		notRobot: 42,
 		optIn: false,
 		postalCode: '12345',
-		startDate
+		startDate,
 	});
 });
