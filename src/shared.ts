@@ -1,4 +1,8 @@
-import type {Except} from 'type-fest';
+/**
+ * From type-fest: https://github.com/sindresorhus/type-fest/blob/HEAD/source/except.d.ts
+ * @internal
+ */
+type Except<ObjectType, KeysType extends keyof ObjectType> = Pick<ObjectType, Exclude<keyof ObjectType, KeysType>>;
 
 export type ValidResult<T> = {
 	/**

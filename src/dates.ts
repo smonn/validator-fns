@@ -7,7 +7,7 @@ import {
 	ValidatorTest,
 } from './shared';
 
-/** @internal */
+/** Badly formatted date for internal use. */
 export const invalidDate = new Date('');
 
 /** @internal */
