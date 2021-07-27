@@ -34,7 +34,7 @@
 		"require": "./dist/cjs/index.js",
 		"import": "./dist/esm/index.js"
 	},
-	"types": "dist/types/index.d.ts",
+	"typings": "dist/types/index.d.ts",
 	"engines": {
 		"node": ">=12",
 		"npm": ">=6"
@@ -42,40 +42,25 @@
 	"scripts": {
 		"clean": "rimraf dist",
 		"check": "tsc --noEmit",
-		"build": "run-p build:*",
-		"build:esm": "tsc --project tsconfig.dist-esm.json",
-		"build:cjs": "tsc --project tsconfig.dist-cjs.json",
-		"build:types": "tsc --project tsconfig.dist-types.json",
+		"build": "rollup -c",
 		"lint": "xo",
-		"size": "size-limit",
-		"analyze": "size-limit --why",
 		"test": "uvu -r ts-node/register test",
 		"coverage": "c8 --include=src --exclude=src/index.ts npm test",
 		"report": "c8 report --reporter=text-lcov > coverage/lcov.info",
 		"prepublishOnly": "run-s clean lint check test build"
 	},
-	"size-limit": [
-		{
-			"path": "dist/cjs/index.js",
-			"limit": "3 KB"
-		},
-		{
-			"path": "dist/esm/index.js",
-			"limit": "2.5 KB"
-		}
-	],
 	"devDependencies": {
-		"@size-limit/preset-small-lib": "5.0.2",
 		"c8": "7.7.3",
+		"esbuild": "0.12.16",
 		"husky": "7.0.1",
 		"lint-staged": "11.1.1",
 		"npm-run-all": "4.1.5",
 		"rimraf": "3.0.2",
-		"size-limit": "5.0.2",
-		"source-map-support": "0.5.19",
+		"rollup": "2.54.0",
+		"rollup-plugin-dts": "3.0.2",
+		"rollup-plugin-esbuild": "4.5.0",
+		"rollup-plugin-filesize": "9.1.1",
 		"ts-node": "10.1.0",
-		"tslib": "2.3.0",
-		"type-fest": "1.2.2",
 		"typescript": "4.3.5",
 		"uvu": "0.5.1",
 		"xo": "0.42.0"

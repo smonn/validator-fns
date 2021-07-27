@@ -2,73 +2,84 @@
 export {
 	applyArrayConfig,
 	array,
+	parseArray,
+} from './arrays';
+export type {
 	ArrayConfig,
 	ArrayItemValidatorResult,
-	parseArray,
 } from './arrays';
 export {
 	applyBooleanConfig,
 	boolean,
-	BooleanConfig,
 	parseBoolean,
+} from './booleans';
+export type {
+	BooleanConfig,
 } from './booleans';
 export {
 	applyDateConfig,
 	date,
-	DateConfig,
 	invalidDate,
 	maxDate,
-	MaxDateValidatorMessageParameters,
 	minDate,
-	MinDateValidatorMessageParameters,
 	parseDate,
+} from './dates';
+export type {
+	DateConfig,
+	MaxDateValidatorMessageParameters,
+	MinDateValidatorMessageParameters,
 	SharedDateValueType,
 } from './dates';
 export {
 	applyNumberConfig,
 	integer,
 	number,
-	NumberConfig,
 	parseNumber,
 } from './numbers';
-export {object, ObjectParameter as ObjectParam} from './objects';
+export type {
+	NumberConfig,
+} from './numbers';
+export {object} from './objects';
+export type {ObjectParameter as ObjectParam} from './objects';
 export {
-	ConfigBase,
 	createTypeValidatorTest,
 	createValidatorTest,
-	DeepPartial,
 	exact,
-	ExactValidatorMessageParameters,
-	ExtractError,
-	ExtractValue,
 	formatMessage,
 	hasOwnProperty,
 	invalid,
-	InvalidResult,
 	isObject,
 	max,
-	MaxValidatorMessageParameters,
 	min,
-	MinValidatorMessageParameters,
 	oneOf,
-	OneOfValidatorMessageParameters,
 	required,
-	SharedValueType,
 	valid,
-	ValidatorFactory,
+} from './shared';
+export type {
+	ConfigBase,
+	DeepPartial,
+	ExactValidatorMessageParameters,
+	ExtractError,
+	ExtractValue,
+	InvalidResult,
+	MaxValidatorMessageParameters,
+	MinValidatorMessageParameters,
+	OneOfValidatorMessageParameters,
+	SharedValueType, ValidatorFactory,
 	ValidatorMessage,
 	ValidatorMessageParameters,
 	ValidatorResult,
-	ValidatorTest,
-	ValidResult,
+	ValidatorTest, ValidResult,
 } from './shared';
 export {
 	applyStringConfig,
 	email,
 	matches,
-	MatchesValidatorMessageParameters,
 	parseString,
 	string,
-	StringConfig,
 	url,
+} from './strings';
+export type {
+	MatchesValidatorMessageParameters,
+	StringConfig,
 } from './strings';
