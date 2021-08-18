@@ -22,7 +22,7 @@ jobs:
       - run: git config --global user.name "GitHub CD bot"
       - run: git config --global user.email "44818+smonn@users.noreply.github.com"
       # upgrade npm version in package.json to the tag used in the release.
-      - run: npm version ${{ github.event.release.tag_name }}
+      - run: npm version ${{ github.event.release.tag_name }} --allow-same-version
       # configure npm client
       - run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
       # publish to NPM -> there is one caveat, continue reading for the fix
