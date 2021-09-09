@@ -67,7 +67,7 @@
 		"xo": "0.44.0"
 	},
 	"repository": "github:smonn/validator-fns",
-	"homepage": "https://npm.im/validator-fns",
+	"homepage": "https://validator-fns.smonn.se/",
 	"runkitExampleFilename": "runkit.js",
 	"husky": {
 		"hooks": {
