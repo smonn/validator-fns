@@ -6,15 +6,15 @@ import {ConfigBase, createTypeValidatorTest} from './shared';
  * @category Parsers
  */
 export function parseBoolean(value: unknown): boolean | null | undefined {
-	if (value === undefined || value === null) {
-		return value;
-	}
+  if (value === undefined || value === null) {
+    return value;
+  }
 
-	if (typeof value === 'boolean') {
-		return value;
-	}
+  if (typeof value === 'boolean') {
+    return value;
+  }
 
-	return Boolean(value);
+  return Boolean(value);
 }
 
 /**
@@ -24,15 +24,15 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  * @category Helpers
  */
 export function applyBooleanConfig(
-	value: unknown,
-	config: BooleanConfig,
+  value: unknown,
+  config: BooleanConfig,
 ): boolean | null | undefined {
-	let parsedValue = config.parser(value);
-	if (parsedValue === undefined && config.default !== undefined) {
-		parsedValue = config.default;
-	}
+  let parsedValue = config.parser(value);
+  if (parsedValue === undefined && config.default !== undefined) {
+    parsedValue = config.default;
+  }
 
-	return parsedValue;
+  return parsedValue;
 }
 
 /**
@@ -46,6 +46,6 @@ export type BooleanConfig = ConfigBase<boolean>;
  * @category Type Validators
  */
 export const boolean = createTypeValidatorTest(
-	{parser: parseBoolean},
-	applyBooleanConfig,
+  {parser: parseBoolean},
+  applyBooleanConfig,
 );

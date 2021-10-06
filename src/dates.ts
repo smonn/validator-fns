@@ -1,10 +1,10 @@
 import {
-	ConfigBase,
-	createTypeValidatorTest,
-	createValidatorTest,
-	ValidatorMessage,
-	ValidatorMessageParameters,
-	ValidatorTest,
+  ConfigBase,
+  createTypeValidatorTest,
+  createValidatorTest,
+  ValidatorMessage,
+  ValidatorMessageParameters,
+  ValidatorTest,
 } from './shared';
 
 /** Badly formatted date for internal use. */
@@ -23,39 +23,39 @@ const timezonePattern = /^([+-])([012]\d):?([0-5]\d)$/;
  * @internal
  */
 function parseTimezone(timezone: string): number {
-	const parts = timezonePattern.exec(timezone);
+  const parts = timezonePattern.exec(timezone);
 
-	if (timezone === 'Z' || !parts) {
-		return 0;
-	}
+  if (timezone === 'Z' || !parts) {
+    return 0;
+  }
 
-	const [, sign, hour, minute] = parts;
-	const multiplier = sign === '-' ? -1 : 1;
-	const hoursInMinutes = Number.parseInt(hour ?? '0', 10) * 60;
-	const offset = hoursInMinutes + Number.parseInt(minute ?? '0', 10);
+  const [, sign, hour, minute] = parts;
+  const multiplier = sign === '-' ? -1 : 1;
+  const hoursInMinutes = Number.parseInt(hour ?? '0', 10) * 60;
+  const offset = hoursInMinutes + Number.parseInt(minute ?? '0', 10);
 
-	return multiplier * offset;
+  return multiplier * offset;
 }
 
 const BASE = 10;
 
 const dateParts = [
-	// Skip
-	() => 0,
-	// Year
-	(part = '0') => Number.parseInt(part, BASE),
-	// Month
-	(part = '1') => Number.parseInt(part, BASE) - 1,
-	// Day
-	(part = '1') => Number.parseInt(part, BASE),
-	// Hour
-	(part = '0') => Number.parseInt(part, BASE),
-	// Minute
-	(part = '0') => Number.parseInt(part, BASE),
-	// Second
-	(part = '0') => Number.parseInt(part, BASE),
-	// Millisecond
-	(part = '0') => Number.parseFloat(part) * 1e3,
+  // Skip
+  () => 0,
+  // Year
+  (part = '0') => Number.parseInt(part, BASE),
+  // Month
+  (part = '1') => Number.parseInt(part, BASE) - 1,
+  // Day
+  (part = '1') => Number.parseInt(part, BASE),
+  // Hour
+  (part = '0') => Number.parseInt(part, BASE),
+  // Minute
+  (part = '0') => Number.parseInt(part, BASE),
+  // Second
+  (part = '0') => Number.parseInt(part, BASE),
+  // Millisecond
+  (part = '0') => Number.parseFloat(part) * 1e3,
 ];
 
 /**
@@ -64,43 +64,43 @@ const dateParts = [
  * @category Parsers
  */
 export function parseDate(value: unknown): Date | null | undefined {
-	if (value === null || value === undefined) {
-		return value;
-	}
+  if (value === null || value === undefined) {
+    return value;
+  }
 
-	if (value instanceof Date) {
-		return value;
-	}
+  if (value instanceof Date) {
+    return value;
+  }
 
-	if (typeof value === 'number') {
-		return new Date(value);
-	}
+  if (typeof value === 'number') {
+    return new Date(value);
+  }
 
-	if (typeof value !== 'string') {
-		return invalidDate;
-	}
+  if (typeof value !== 'string') {
+    return invalidDate;
+  }
 
-	const parts = isoDatePattern.exec(value);
+  const parts = isoDatePattern.exec(value);
 
-	if (parts === null) {
-		return invalidDate;
-	}
+  if (parts === null) {
+    return invalidDate;
+  }
 
-	const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
-		(parse, i) => parse(parts[i]),
-	);
+  const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
+    (parse, i) => parse(parts[i]),
+  );
 
-	const timezone = parts[8];
+  const timezone = parts[8];
 
-	if (!timezone) {
-		return new Date(year, month, day, hour, minute, second, millisecond);
-	}
+  if (!timezone) {
+    return new Date(year, month, day, hour, minute, second, millisecond);
+  }
 
-	const minuteOffset = parseTimezone(timezone);
+  const minuteOffset = parseTimezone(timezone);
 
-	return new Date(
-		Date.UTC(year, month, day, hour, minute + minuteOffset, second, millisecond),
-	);
+  return new Date(
+    Date.UTC(year, month, day, hour, minute + minuteOffset, second, millisecond),
+  );
 }
 
 /**
@@ -110,24 +110,24 @@ export function parseDate(value: unknown): Date | null | undefined {
  * @category Helpers
  */
 export function applyDateConfig(
-	value: unknown,
-	config: DateConfig,
+  value: unknown,
+  config: DateConfig,
 ): Date | null | undefined {
-	let parsedValue = config.parser(value);
-	if (parsedValue === undefined && config.default !== undefined) {
-		parsedValue = config.default;
-	}
+  let parsedValue = config.parser(value);
+  if (parsedValue === undefined && config.default !== undefined) {
+    parsedValue = config.default;
+  }
 
-	return parsedValue;
+  return parsedValue;
 }
 
 export type SharedDateValueType = Date | string | number;
 
 export interface MinDateValidatorMessageParameters
-	extends ValidatorMessageParameters<Date> {
-	min: Date | null | undefined;
-	limit: Date | null | undefined;
-	exclusive?: boolean;
+  extends ValidatorMessageParameters<Date> {
+  min: Date | null | undefined;
+  limit: Date | null | undefined;
+  exclusive?: boolean;
 }
 
 /**
@@ -138,33 +138,33 @@ export interface MinDateValidatorMessageParameters
  * @category Validation Tests
  */
 export function minDate(
-	limit: SharedDateValueType,
-	message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
-	exclusive?: boolean,
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
+  exclusive?: boolean,
 ): ValidatorTest<Date, null> {
-	const parsedDate = parseDate(limit);
-	return createValidatorTest(
-		value =>
-			parsedDate !== null
+  const parsedDate = parseDate(limit);
+  return createValidatorTest(
+    value =>
+      parsedDate !== null
 			&& parsedDate !== undefined
 			&& (value === null
 				|| value === undefined
 				|| (value instanceof Date
 					&& (exclusive ? value > parsedDate : value >= parsedDate))),
-		message,
-		() => ({
-			min: parsedDate,
-			limit: parsedDate,
-			exclusive,
-		}),
-	);
+    message,
+    () => ({
+      min: parsedDate,
+      limit: parsedDate,
+      exclusive,
+    }),
+  );
 }
 
 export interface MaxDateValidatorMessageParameters
-	extends ValidatorMessageParameters<Date> {
-	max: Date | null | undefined;
-	limit: Date | null | undefined;
-	exclusive?: boolean;
+  extends ValidatorMessageParameters<Date> {
+  max: Date | null | undefined;
+  limit: Date | null | undefined;
+  exclusive?: boolean;
 }
 
 /**
@@ -175,26 +175,26 @@ export interface MaxDateValidatorMessageParameters
  * @category Validation Tests
  */
 export function maxDate(
-	limit: SharedDateValueType,
-	message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
-	exclusive?: boolean,
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
+  exclusive?: boolean,
 ): ValidatorTest<Date> {
-	const parsedDate = parseDate(limit);
-	return createValidatorTest(
-		value =>
-			parsedDate !== null
+  const parsedDate = parseDate(limit);
+  return createValidatorTest(
+    value =>
+      parsedDate !== null
 			&& parsedDate !== undefined
 			&& (value === null
 				|| value === undefined
 				|| (value instanceof Date
 					&& (exclusive ? value < parsedDate : value <= parsedDate))),
-		message,
-		() => ({
-			max: parsedDate,
-			limit: parsedDate,
-			exclusive,
-		}),
-	);
+    message,
+    () => ({
+      max: parsedDate,
+      limit: parsedDate,
+      exclusive,
+    }),
+  );
 }
 
 /**
@@ -208,6 +208,6 @@ export type DateConfig = ConfigBase<Date>;
  * @category Type Validators
  */
 export const date = createTypeValidatorTest(
-	{parser: parseDate},
-	applyDateConfig,
+  {parser: parseDate},
+  applyDateConfig,
 );
