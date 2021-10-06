@@ -3,7 +3,7 @@ name: Continuous Deployment
 on:
   release:
     types:
-			- published
+      - published
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-				uses: actions/checkout@v2
+        uses: actions/checkout@v2
         with:
           ref: ${{ github.event.release.target_commitish }}
 
@@ -24,23 +24,23 @@ jobs:
         uses: bahmutov/npm-install@v1
 
       - name: Configure git
-				run: |
-					git config --global user.name "GitHub CD bot"
-					git config --global user.email "44818+smonn@users.noreply.github.com"
+        run: |
+          git config --global user.name "GitHub CD bot"
+          git config --global user.email "44818+smonn@users.noreply.github.com"
 
       - name: Update version in package.json
-				run: npm version ${{ github.event.release.tag_name }} --allow-same-version
+        run: npm version ${{ github.event.release.tag_name }} --allow-same-version
 
       - name: Configure npm client for publish
-				run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish package to npmjs.com
-				run: npm publish
+        run: npm publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Push updates to repo
-				run: git push
+        run: git push
         env:
           # The secret is passed automatically. Nothing to configure.
           github-token: ${{ secrets.GITHUB_TOKEN }}
