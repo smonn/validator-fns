@@ -1,4 +1,4 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import {
   integer,
@@ -16,13 +16,13 @@ test('object', async () => {
     username: string(
       required('Username is required.'),
       min(5, 'At least five characters.'),
-      max(20, 'At most 20 characters.'),
+      max(20, 'At most 20 characters.')
     ),
     age: number(
       required('Must enter your age.'),
       min(18, 'At least 18 years old'),
       max(150, 'Are you really over 150 years old?'),
-      integer('Half-years do not count.'),
+      integer('Half-years do not count.')
     ),
   });
 
@@ -39,7 +39,7 @@ test('object', async () => {
       },
       isValid: true,
       field: undefined,
-    },
+    }
   );
 
   assert.equal(
@@ -59,14 +59,14 @@ test('object', async () => {
       errors: {
         age: 'Must enter your age.',
       },
-    },
+    }
   );
 });
 
 test('empty object config is always valid', async () => {
   const validate = object({});
 
-  assert.equal(await validate({foo: 'bar'}), {
+  assert.equal(await validate({ foo: 'bar' }), {
     state: 'valid',
     value: {},
     isValid: true,
@@ -78,7 +78,7 @@ test('empty object config is always valid', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: {},
     isValid: true,
@@ -114,7 +114,7 @@ test('nested object', async () => {
       },
       isValid: true,
       field: undefined,
-    },
+    }
   );
 
   assert.equal(
@@ -140,18 +140,18 @@ test('nested object', async () => {
       },
       isValid: false,
       field: undefined,
-    },
+    }
   );
 });
 
 test('invalid configuration', async () => {
   const config: Record<string, ValidatorTest> = 'bad value' as any as Record<
-  string,
-  ValidatorTest
+    string,
+    ValidatorTest
   >;
   assert.throws(() => object(config));
 
-  const validate = object({test: 'test'} as any);
+  const validate = object({ test: 'test' } as any);
   await validate(null);
 });
 

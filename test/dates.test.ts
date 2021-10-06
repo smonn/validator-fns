@@ -1,4 +1,4 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import {
   date,
@@ -22,33 +22,33 @@ test('parseDate', () => {
   assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
   assert.equal(
     parseDate('2020-01-31T12:45:32'),
-    new Date(2020, 0, 31, 12, 45, 32),
+    new Date(2020, 0, 31, 12, 45, 32)
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32Z'),
-    new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
+    new Date(Date.UTC(2020, 0, 31, 12, 45, 32))
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32+01:30'),
-    new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
+    new Date(Date.UTC(2020, 0, 31, 14, 15, 32))
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32-0200'),
-    new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
+    new Date(Date.UTC(2020, 0, 31, 10, 45, 32))
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32.123'),
-    new Date(2020, 0, 31, 12, 45, 32, 123),
+    new Date(2020, 0, 31, 12, 45, 32, 123)
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32.001242Z'),
-    new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
+    new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242))
   );
 });
 
 test('minDate', async () => {
   const now = new Date();
-  const validate = minDate(now, ({min}) => `min:${min?.toISOString() ?? ''}`);
+  const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);
   assert.equal(await validate(now), {
     state: 'valid',
     value: now,
@@ -77,7 +77,7 @@ test('minDate', async () => {
 
 test('maxDate', async () => {
   const now = new Date();
-  const validate = maxDate(now, ({max}) => `max:${max?.toISOString() ?? ''}`);
+  const validate = maxDate(now, ({ max }) => `max:${max?.toISOString() ?? ''}`);
   assert.equal(await validate(now), {
     state: 'valid',
     value: now,
@@ -135,7 +135,7 @@ test('date', async () => {
   const validate = date(
     required('required'),
     minDate(now, 'min'),
-    maxDate(nextMonth, 'max'),
+    maxDate(nextMonth, 'max')
   );
   assert.equal(await validate(now), {
     state: 'valid',
@@ -171,7 +171,7 @@ test('date', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     value: undefined,
     message: 'required',
@@ -182,8 +182,8 @@ test('date', async () => {
 });
 
 test('date default', async () => {
-  const validate = date({default: new Date(0)});
-  assert.equal(await validate(undefined), {
+  const validate = date({ default: new Date(0) });
+  assert.equal(await validate(), {
     state: 'valid',
     value: new Date(0),
     isValid: true,

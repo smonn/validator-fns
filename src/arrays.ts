@@ -56,7 +56,7 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  */
 export function applyArrayConfig<T>(
   config: ArrayConfig,
-  value: unknown,
+  value: unknown
 ): T[] | null | undefined {
   let parsedValue = config.parser(value);
   if (parsedValue === undefined && config.default !== undefined) {
@@ -113,7 +113,7 @@ export function array<T>(
         // eslint-disable-next-line no-await-in-loop
         const result = await validateItem(
           item,
-          field ? `${field}[${index}]` : `[${index}]`,
+          field ? `${field}[${index}]` : `[${index}]`
         );
 
         if (result.state === 'invalid') {

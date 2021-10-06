@@ -2,13 +2,16 @@
  * From type-fest: https://github.com/sindresorhus/type-fest/blob/HEAD/source/except.d.ts
  * @internal
  */
-type Except<ObjectType, KeysType extends keyof ObjectType> = Pick<ObjectType, Exclude<keyof ObjectType, KeysType>>;
+type Except<ObjectType, KeysType extends keyof ObjectType> = Pick<
+  ObjectType,
+  Exclude<keyof ObjectType, KeysType>
+>;
 
 export type ValidResult<T> = {
   /**
-	 * True if the original value is valid according to all validation tests
-	 * @deprecated Use `state` instead.
-	 */
+   * True if the original value is valid according to all validation tests
+   * @deprecated Use `state` instead.
+   */
   isValid: true;
   /** This is preferred to use over `isValid` as it works better for type guards. */
   state: 'valid';
@@ -20,9 +23,9 @@ export type ValidResult<T> = {
 
 export type InvalidResult<E> = {
   /**
-	 * True if the original value is valid according to all validation tests.
-	 * @deprecated Use `state` instead.
-	 */
+   * True if the original value is valid according to all validation tests.
+   * @deprecated Use `state` instead.
+   */
   isValid: false;
   /** This is preferred to use over `isValid` as it works better for type guards. */
   state: 'invalid';
@@ -42,8 +45,8 @@ export type InvalidResult<E> = {
  * @category Types
  */
 export type ValidatorResult<T = any, E = any> =
-	| ValidResult<T>
-	| InvalidResult<E>;
+  | ValidResult<T>
+  | InvalidResult<E>;
 
 /**
  * Validation test function.
@@ -51,7 +54,7 @@ export type ValidatorResult<T = any, E = any> =
  * @category Types
  */
 export type ValidatorTest<T = any, E = any> = (
-  value: unknown,
+  value?: unknown,
   field?: string
 ) => Promise<ValidatorResult<T, E>>;
 
@@ -61,8 +64,8 @@ export type ValidatorTest<T = any, E = any> = (
  * @category Types
  */
 export type ExtractError<T extends ValidatorTest> = T extends ValidatorTest<
-any,
-infer E
+  any,
+  infer E
 >
   ? E
   : unknown;
@@ -73,7 +76,7 @@ infer E
  * @category Types
  */
 export type ExtractValue<T extends ValidatorTest> = T extends ValidatorTest<
-infer V
+  infer V
 >
   ? V
   : unknown;
@@ -121,7 +124,7 @@ export interface ValidatorMessageParameters<T> {
  */
 export type ValidatorMessage<
   T,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
 > = string | ((parameters: P) => string);
 
 /**
@@ -139,9 +142,9 @@ export function isObject(value: unknown): boolean {
  */
 export function hasOwnProperty(
   object: unknown,
-  prop: string | number | symbol,
+  property: string | number | symbol
 ): boolean {
-  return Object.prototype.hasOwnProperty.call(object, prop);
+  return Object.prototype.hasOwnProperty.call(object, property);
 }
 
 /** @internal */
@@ -155,11 +158,11 @@ const formatPattern = /{(\w+)}/g;
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
   template: ValidatorMessage<T, P>,
-  parameters: P,
+  parameters: P
 ): string {
   if (typeof template === 'string') {
     return template.replace(formatPattern, (_, key: string) =>
-      String((parameters as Record<string, unknown>)[key]),
+      String((parameters as Record<string, unknown>)[key])
     );
   }
 
@@ -211,7 +214,7 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
   return {
     isValid: false,
     state: 'invalid',
-    message: formatMessage(message, {...(extras ?? {}), value, field} as P),
+    message: formatMessage(message, { ...extras, value, field } as P),
     value,
     field,
     errors,
@@ -228,7 +231,7 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
   defaultConfig: C,
-  applyConfig: (value: unknown, config: C) => T | null | undefined,
+  applyConfig: (value: unknown, config: C) => T | null | undefined
 ): ValidatorFactory<C, T, E> {
   return (config, ...tests) => {
     const cache: Record<string, ValidatorResult<T>> = {};
@@ -263,7 +266,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
           }
         }
 
-        cache[parsedValueString] = await valid({value: parsedValue, field});
+        cache[parsedValueString] = await valid({ value: parsedValue, field });
         return cache[parsedValueString];
       } catch (error: unknown) {
         return invalid({
@@ -285,15 +288,15 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 export function createValidatorTest<
   T = any,
   E = any,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
 >(
   test: (value: unknown, field?: string) => boolean,
   message: ValidatorMessage<T, P>,
-  getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>,
+  getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>
 ): ValidatorTest<T, E> {
   return async (value, field) => {
     if (test(value, field)) {
-      return valid({value: value as T, field});
+      return valid({ value: value as T, field });
     }
 
     return invalid({
@@ -313,17 +316,17 @@ export function createValidatorTest<
  */
 export function required<T, P extends ValidatorMessageParameters<T>>(
   message: ValidatorMessage<T, P>,
-  nullable?: boolean,
+  nullable?: boolean
 ): ValidatorTest<T> {
   return createValidatorTest(
-    value =>
-      (nullable && value === null)
-			|| (value !== null
-				&& value !== undefined
-				&& !(typeof value === 'string' && value === '')
-				&& !(typeof value === 'number' && Number.isNaN(value))
-				&& !(value instanceof Date && Number.isNaN(value.valueOf()))),
-    message,
+    (value) =>
+      (nullable && value === null) ||
+      (value !== null &&
+        value !== undefined &&
+        !(typeof value === 'string' && value === '') &&
+        !(typeof value === 'number' && Number.isNaN(value)) &&
+        !(value instanceof Date && Number.isNaN(value.valueOf()))),
+    message
   );
 }
 
@@ -357,25 +360,25 @@ export interface MaxValidatorMessageParameters
 export function max(
   limit: number,
   message: ValidatorMessage<SharedValueType, MaxValidatorMessageParameters>,
-  exclusive?: boolean,
+  exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value as SharedValueType);
       return (
-        amount === undefined
-				|| amount === null
-				|| value === ''
-				|| (exclusive ? amount < limit : amount <= limit)
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        (exclusive ? amount < limit : amount <= limit)
       );
     },
     message,
-    value => ({
+    (value) => ({
       max: limit,
       limit,
       amount: getAmount(value),
       exclusive,
-    }),
+    })
   );
 }
 
@@ -397,25 +400,25 @@ export interface MinValidatorMessageParameters
 export function min(
   limit: number,
   message: ValidatorMessage<SharedValueType, MinValidatorMessageParameters>,
-  exclusive?: boolean,
+  exclusive?: boolean
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value as SharedValueType);
       return (
-        amount === undefined
-				|| amount === null
-				|| value === ''
-				|| (exclusive ? amount > limit : amount >= limit)
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        (exclusive ? amount > limit : amount >= limit)
       );
     },
     message,
-    value => ({
+    (value) => ({
       min: limit,
       limit,
       amount: getAmount(value),
       exclusive,
-    }),
+    })
   );
 }
 
@@ -434,24 +437,24 @@ export interface ExactValidatorMessageParameters
  */
 export function exact(
   limit: number,
-  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>,
+  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
-    value => {
+    (value) => {
       const amount = getAmount(value as SharedValueType);
       return (
-        amount === undefined
-				|| amount === null
-				|| value === ''
-				|| amount === limit
+        amount === undefined ||
+        amount === null ||
+        value === '' ||
+        amount === limit
       );
     },
     message,
-    value => ({
+    (value) => ({
       amount: getAmount(value),
       limit,
       exact: limit,
-    }),
+    })
   );
 }
 
@@ -468,16 +471,16 @@ export interface OneOfValidatorMessageParameters<T>
  */
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
-  message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
+  message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>
 ): ValidatorTest<T> {
   return createValidatorTest(
-    value =>
-      value === undefined
-			|| value === null
-			|| values.includes(value as T)
-			|| (value instanceof Date
-				&& values.some(x => x.valueOf() === value.valueOf())),
+    (value) =>
+      value === undefined ||
+      value === null ||
+      values.includes(value as T) ||
+      (value instanceof Date &&
+        values.some((x) => x.valueOf() === value.valueOf())),
     message,
-    () => ({values}),
+    () => ({ values })
   );
 }

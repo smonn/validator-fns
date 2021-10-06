@@ -1,4 +1,4 @@
-import {ConfigBase, createTypeValidatorTest} from './shared';
+import { ConfigBase, createTypeValidatorTest } from './shared';
 
 /**
  * Parses a value into a boolean.
@@ -25,7 +25,7 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  */
 export function applyBooleanConfig(
   value: unknown,
-  config: BooleanConfig,
+  config: BooleanConfig
 ): boolean | null | undefined {
   let parsedValue = config.parser(value);
   if (parsedValue === undefined && config.default !== undefined) {
@@ -46,6 +46,6 @@ export type BooleanConfig = ConfigBase<boolean>;
  * @category Type Validators
  */
 export const boolean = createTypeValidatorTest(
-  {parser: parseBoolean},
-  applyBooleanConfig,
+  { parser: parseBoolean },
+  applyBooleanConfig
 );

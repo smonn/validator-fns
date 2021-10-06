@@ -1,10 +1,10 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import {boolean, required} from '../src/index';
+import { boolean, required } from '../src/index';
 
 test('boolean', async () => {
   const validate = boolean(required('required'));
-  const validateWithDefault = boolean({default: true});
+  const validateWithDefault = boolean({ default: true });
 
   assert.equal(await validate(null), {
     state: 'invalid',
@@ -14,7 +14,7 @@ test('boolean', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     message: 'required',
     value: undefined,
@@ -64,7 +64,7 @@ test('boolean', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validateWithDefault(undefined), {
+  assert.equal(await validateWithDefault(), {
     state: 'valid',
     value: true,
     isValid: true,

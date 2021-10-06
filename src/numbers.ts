@@ -40,7 +40,7 @@ export function parseNumber(value: unknown): number | null | undefined {
  */
 export function applyNumberConfig(
   value: unknown,
-  config: NumberConfig,
+  config: NumberConfig
 ): number | null | undefined {
   let parsedValue = config.parser(value);
   if (config.default !== undefined && parsedValue === undefined) {
@@ -72,17 +72,17 @@ export function applyNumberConfig(
  * @category Validation Tests
  */
 export function integer(
-  message: ValidatorMessage<number>,
+  message: ValidatorMessage<number>
 ): ValidatorTest<number> {
   return async (value, field) => {
     if (
-      value === undefined
-			|| value === null
-			|| (typeof value === 'number'
-				&& Number.isFinite(value)
-				&& Math.floor(value) === value)
+      value === undefined ||
+      value === null ||
+      (typeof value === 'number' &&
+        Number.isFinite(value) &&
+        Math.floor(value) === value)
     ) {
-      return valid({value, field});
+      return valid({ value, field });
     }
 
     return invalid({
@@ -110,5 +110,5 @@ export const number = createTypeValidatorTest(
   {
     parser: parseNumber,
   },
-  applyNumberConfig,
+  applyNumberConfig
 );

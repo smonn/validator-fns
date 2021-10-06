@@ -1,6 +1,6 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import {exact, formatMessage, oneOf, required} from '../src/index';
+import { exact, formatMessage, oneOf, required } from '../src/index';
 
 test('format string message', () => {
   assert.is(
@@ -9,18 +9,18 @@ test('format string message', () => {
       value: '',
       field: undefined,
     }),
-    'Hello World!',
+    'Hello World!'
   );
 });
 
 test('format function message', () => {
   assert.is(
-    formatMessage(({name}) => `Hello ${name}!`, {
+    formatMessage(({ name }) => `Hello ${name}!`, {
       name: 'World',
       value: '',
       field: undefined,
     }),
-    'Hello World!',
+    'Hello World!'
   );
 });
 
@@ -73,7 +73,7 @@ test('required', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     value: undefined,
     message: 'required',
@@ -130,13 +130,13 @@ test('exact', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(Array.from({length: 5})), {
+  assert.equal(await validate(Array.from({ length: 5 })), {
     state: 'valid',
     value: [undefined, undefined, undefined, undefined, undefined],
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(Array.from({length: 2})), {
+  assert.equal(await validate(Array.from({ length: 2 })), {
     state: 'invalid',
     value: [undefined, undefined],
     message: 'exact:5',
@@ -178,7 +178,7 @@ test('enums', async () => {
   });
   const tsEnums = oneOf(
     [TestValue.One, TestValue.Two, TestValue.Three],
-    'oneOf:{values}',
+    'oneOf:{values}'
   );
   assert.equal(await tsEnums(TestValue.Three), {
     state: 'valid',

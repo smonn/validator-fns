@@ -11,11 +11,11 @@ import {
 export const invalidDate = new Date('');
 
 /** @internal */
-const isoDatePattern
-	= /^(\d{4})(?:-([012]\d)(?:-([0123]\d)(?:[T ]([012]\d):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-][012]\d:?[0-5]\d)?)?)?)?)?$/;
+const isoDatePattern =
+  /^(\d{4})(?:-([0-2]\d)(?:-([0-3]\d)(?:[ T]([0-2]\d):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-][0-2]\d:?[0-5]\d)?)?)?)?)?$/;
 
 /** @internal */
-const timezonePattern = /^([+-])([012]\d):?([0-5]\d)$/;
+const timezonePattern = /^([+-])([0-2]\d):?([0-5]\d)$/;
 
 /**
  * Parses a timezone string.
@@ -87,7 +87,7 @@ export function parseDate(value: unknown): Date | null | undefined {
   }
 
   const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
-    (parse, i) => parse(parts[i]),
+    (parse, index) => parse(parts[index])
   );
 
   const timezone = parts[8];
@@ -99,7 +99,7 @@ export function parseDate(value: unknown): Date | null | undefined {
   const minuteOffset = parseTimezone(timezone);
 
   return new Date(
-    Date.UTC(year, month, day, hour, minute + minuteOffset, second, millisecond),
+    Date.UTC(year, month, day, hour, minute + minuteOffset, second, millisecond)
   );
 }
 
@@ -111,7 +111,7 @@ export function parseDate(value: unknown): Date | null | undefined {
  */
 export function applyDateConfig(
   value: unknown,
-  config: DateConfig,
+  config: DateConfig
 ): Date | null | undefined {
   let parsedValue = config.parser(value);
   if (parsedValue === undefined && config.default !== undefined) {
@@ -140,23 +140,23 @@ export interface MinDateValidatorMessageParameters
 export function minDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
-  exclusive?: boolean,
+  exclusive?: boolean
 ): ValidatorTest<Date, null> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
-    value =>
-      parsedDate !== null
-			&& parsedDate !== undefined
-			&& (value === null
-				|| value === undefined
-				|| (value instanceof Date
-					&& (exclusive ? value > parsedDate : value >= parsedDate))),
+    (value) =>
+      parsedDate !== null &&
+      parsedDate !== undefined &&
+      (value === null ||
+        value === undefined ||
+        (value instanceof Date &&
+          (exclusive ? value > parsedDate : value >= parsedDate))),
     message,
     () => ({
       min: parsedDate,
       limit: parsedDate,
       exclusive,
-    }),
+    })
   );
 }
 
@@ -177,23 +177,23 @@ export interface MaxDateValidatorMessageParameters
 export function maxDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
-  exclusive?: boolean,
+  exclusive?: boolean
 ): ValidatorTest<Date> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
-    value =>
-      parsedDate !== null
-			&& parsedDate !== undefined
-			&& (value === null
-				|| value === undefined
-				|| (value instanceof Date
-					&& (exclusive ? value < parsedDate : value <= parsedDate))),
+    (value) =>
+      parsedDate !== null &&
+      parsedDate !== undefined &&
+      (value === null ||
+        value === undefined ||
+        (value instanceof Date &&
+          (exclusive ? value < parsedDate : value <= parsedDate))),
     message,
     () => ({
       max: parsedDate,
       limit: parsedDate,
       exclusive,
-    }),
+    })
   );
 }
 
@@ -208,6 +208,6 @@ export type DateConfig = ConfigBase<Date>;
  * @category Type Validators
  */
 export const date = createTypeValidatorTest(
-  {parser: parseDate},
-  applyDateConfig,
+  { parser: parseDate },
+  applyDateConfig
 );

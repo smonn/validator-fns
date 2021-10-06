@@ -1,6 +1,6 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import {email, max, min, required, string, url} from '../src/index';
+import { email, max, min, required, string, url } from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -16,13 +16,13 @@ test('min', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.equal(await validate(), {
     state: 'valid',
-    value: null,
+    value: undefined,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
@@ -52,13 +52,13 @@ test('max', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.equal(await validate(), {
     state: 'valid',
-    value: null,
+    value: undefined,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
@@ -100,13 +100,13 @@ test('email', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.equal(await validate(), {
     state: 'valid',
-    value: null,
+    value: undefined,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
@@ -158,13 +158,13 @@ test('url', async () => {
     field: undefined,
     value: '',
   });
-  assert.equal(await validate(null), {
+  assert.equal(await validate(), {
     state: 'valid',
     isValid: true,
     field: undefined,
-    value: null,
+    value: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     isValid: true,
     field: undefined,
@@ -198,10 +198,10 @@ test('url', async () => {
 
 test('string', async () => {
   const validate = string(
-    {trim: true},
+    { trim: true },
     required('Must enter a value.'),
     min(5, 'At least five characters.'),
-    max(10, 'At most ten characters.'),
+    max(10, 'At most ten characters.')
   );
 
   assert.equal(await validate('hello'), {
@@ -248,7 +248,7 @@ test('string', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
@@ -256,18 +256,18 @@ test('string', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.equal(await validate(), {
     state: 'invalid',
     message: 'Must enter a value.',
-    value: null,
+    value: undefined,
     isValid: false,
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate({name: 'August'}), {
+  assert.equal(await validate({ name: 'August' }), {
     state: 'invalid',
     message: 'Failed to parse value to string.',
-    value: {name: 'August'} as unknown as string,
+    value: { name: 'August' } as unknown as string,
     isValid: false,
     field: undefined,
     errors: undefined,
@@ -275,8 +275,8 @@ test('string', async () => {
 });
 
 test('string default', async () => {
-  const validate = string({default: 'hello'});
-  assert.equal(await validate(undefined), {
+  const validate = string({ default: 'hello' });
+  assert.equal(await validate(), {
     state: 'valid',
     isValid: true,
     field: undefined,

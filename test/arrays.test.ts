@@ -1,12 +1,12 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import {array, max, min, object, required, string} from '../src/index';
+import { array, max, min, object, required, string } from '../src/index';
 
 test('array', async () => {
   const validate = array(
     string(min(3, 'min:{min}')),
     required('required'),
-    min(1, 'min:{min}'),
+    min(1, 'min:{min}')
   );
   assert.equal(await validate(['foo', 'bar', 'baz']), {
     state: 'valid',
@@ -22,7 +22,7 @@ test('array', async () => {
     isValid: false,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     value: undefined,
     message: 'required',
@@ -76,11 +76,11 @@ test('array with object', async () => {
       username: string(required('required'), min(3, 'min:{min}')),
     }),
     min(2, 'min:{min}'),
-    max(10, 'max:{max}'),
+    max(10, 'max:{max}')
   );
-  assert.equal(await validate([{}, {username: 'foo'}, {username: 'ab'}]), {
+  assert.equal(await validate([{}, { username: 'foo' }, { username: 'ab' }]), {
     state: 'invalid',
-    value: [{}, {username: 'foo'}, {username: 'ab'}],
+    value: [{}, { username: 'foo' }, { username: 'ab' }],
     message: '',
     errors: [
       {
@@ -134,8 +134,8 @@ test('nested array', async () => {
 });
 
 test('array default', async () => {
-  const validate = array({default: ['hello']}, string(min(5, 'min:{min}')));
-  assert.equal(await validate(undefined), {
+  const validate = array({ default: ['hello'] }, string(min(5, 'min:{min}')));
+  assert.equal(await validate(), {
     state: 'valid',
     value: ['hello'],
     isValid: true,
@@ -151,7 +151,7 @@ test('array without validation', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,

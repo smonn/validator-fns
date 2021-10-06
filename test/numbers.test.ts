@@ -1,6 +1,6 @@
-import {test} from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import {integer, max, min, number, required} from '../src/index';
+import { integer, max, min, number, required } from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);
@@ -26,7 +26,7 @@ test('min', async () => {
     value: null,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     isValid: true,
     value: undefined,
@@ -78,7 +78,7 @@ test('max', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
@@ -130,7 +130,7 @@ test('integer', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
@@ -158,7 +158,7 @@ test('number', async () => {
   const validate = number(
     required('Must enter a value.'),
     min(-10, 'Must be at least -10.'),
-    max(10, 'Must be at most 10.'),
+    max(10, 'Must be at most 10.')
   );
 
   assert.equal(await validate(0), {
@@ -209,7 +209,7 @@ test('number', async () => {
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(undefined), {
+  assert.equal(await validate(), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
@@ -236,10 +236,10 @@ test('number', async () => {
 });
 
 test('rounding', async () => {
-  const nearest = number({round: 'nearest'});
-  const floor = number({round: 'floor'});
-  const ceil = number({round: 'ceil'});
-  const badRounding = number({round: 'bad' as 'nearest'});
+  const nearest = number({ round: 'nearest' });
+  const floor = number({ round: 'floor' });
+  const ceil = number({ round: 'ceil' });
+  const badRounding = number({ round: 'bad' as 'nearest' });
 
   assert.equal(await nearest(0.9), {
     value: 1,
@@ -270,8 +270,8 @@ test('rounding', async () => {
 });
 
 test('number default', async () => {
-  const validate = number({default: 5});
-  assert.equal(await validate(undefined), {
+  const validate = number({ default: 5 });
+  assert.equal(await validate(), {
     state: 'valid',
     value: 5,
     isValid: true,

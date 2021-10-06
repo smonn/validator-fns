@@ -1,21 +1,8 @@
 /* istanbul ignore file */
-export {
-  applyArrayConfig,
-  array,
-  parseArray,
-} from './arrays';
-export type {
-  ArrayConfig,
-  ArrayItemValidatorResult,
-} from './arrays';
-export {
-  applyBooleanConfig,
-  boolean,
-  parseBoolean,
-} from './booleans';
-export type {
-  BooleanConfig,
-} from './booleans';
+export { applyArrayConfig, array, parseArray } from './arrays';
+export type { ArrayConfig, ArrayItemValidatorResult } from './arrays';
+export { applyBooleanConfig, boolean, parseBoolean } from './booleans';
+export type { BooleanConfig } from './booleans';
 export {
   applyDateConfig,
   date,
@@ -30,17 +17,10 @@ export type {
   MinDateValidatorMessageParameters,
   SharedDateValueType,
 } from './dates';
-export {
-  applyNumberConfig,
-  integer,
-  number,
-  parseNumber,
-} from './numbers';
-export type {
-  NumberConfig,
-} from './numbers';
-export {object} from './objects';
-export type {ObjectParameter as ObjectParam} from './objects';
+export { applyNumberConfig, integer, number, parseNumber } from './numbers';
+export type { NumberConfig } from './numbers';
+export { object } from './objects';
+export type { ObjectParameter as ObjectParam } from './objects';
 export {
   createTypeValidatorTest,
   createValidatorTest,
@@ -65,11 +45,13 @@ export type {
   MaxValidatorMessageParameters,
   MinValidatorMessageParameters,
   OneOfValidatorMessageParameters,
-  SharedValueType, ValidatorFactory,
+  SharedValueType,
+  ValidatorFactory,
   ValidatorMessage,
   ValidatorMessageParameters,
   ValidatorResult,
-  ValidatorTest, ValidResult,
+  ValidatorTest,
+  ValidResult,
 } from './shared';
 export {
   applyStringConfig,
