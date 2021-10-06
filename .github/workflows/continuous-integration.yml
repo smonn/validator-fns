@@ -1,5 +1,13 @@
-name: CI
-on: [push]
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   build:
     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
@@ -7,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ["12.x", "14.x"]
+        node: ["12.x", "14.x", "16.x"]
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
@@ -28,7 +36,7 @@ jobs:
       - name: Test
         run: npm run coverage && npm run report
 
-      - name: Coveralls
+      - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
