@@ -268,9 +268,9 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
 
         cache[parsedValueString] = await valid({ value: parsedValue, field });
         return cache[parsedValueString];
-      } catch (error: unknown) {
+      } catch (error) {
         return invalid({
-          message: (error as Error)?.message,
+          message: error instanceof Error ? error.message : String(error),
           value,
           field,
         });

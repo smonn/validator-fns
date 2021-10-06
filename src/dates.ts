@@ -31,8 +31,8 @@ function parseTimezone(timezone: string): number {
 
   const [, sign, hour, minute] = parts;
   const multiplier = sign === '-' ? -1 : 1;
-  const hoursInMinutes = Number.parseInt(hour ?? '0', 10) * 60;
-  const offset = hoursInMinutes + Number.parseInt(minute ?? '0', 10);
+  const hoursInMinutes = Number.parseInt(hour, 10) * 60;
+  const offset = hoursInMinutes + Number.parseInt(minute, 10);
 
   return multiplier * offset;
 }

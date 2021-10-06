@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { exact, formatMessage, oneOf, required } from '../src/index';
+import { exact, formatMessage, oneOf, required, string } from '../src/index';
 
 test('format string message', () => {
   assert.is(
@@ -192,6 +192,22 @@ test('enums', async () => {
     value: new Date(0),
     isValid: true,
     field: undefined,
+  });
+});
+
+test('custom test that throws an atypical error', async () => {
+  const validate = string(() => {
+    throw 'some error';
+  });
+
+  const result = await validate('hello');
+  assert.equal(result, {
+    state: 'invalid',
+    isValid: false,
+    message: 'some error',
+    value: 'hello',
+    field: undefined,
+    errors: undefined,
   });
 });
 
