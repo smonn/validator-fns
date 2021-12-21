@@ -70,7 +70,7 @@
     "rollup-plugin-esbuild": "4.7.2",
     "rollup-plugin-filesize": "9.1.1",
     "ts-node": "10.4.0",
-    "typescript": "4.5.2",
+    "typescript": "4.5.4",
     "uvu": "0.5.2"
   },
   "repository": "github:smonn/validator-fns",
