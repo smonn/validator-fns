@@ -282,6 +282,45 @@ test('string default', async () => {
     field: undefined,
     value: 'hello',
   });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'hello',
+  });
+  assert.equal(await validate(''), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'hello',
+  });
+  assert.equal(await validate('other'), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'other',
+  });
+  // Will cast 123 to '123'
+  assert.equal(await validate(123), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: '123',
+  });
+  // Will cast 0 to '0'
+  assert.equal(await validate(0), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: '0',
+  });
+  // Will cast false to 'false'
+  assert.equal(await validate(false), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: 'false',
+  });
 });
 
 test.run();

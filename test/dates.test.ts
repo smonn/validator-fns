@@ -189,6 +189,25 @@ test('date default', async () => {
     isValid: true,
     field: undefined,
   });
+  const now = new Date();
+  assert.equal(await validate(now), {
+    state: 'valid',
+    value: now,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: new Date(0),
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(new Date(Number.NaN)), {
+    state: 'valid',
+    value: new Date(0),
+    isValid: true,
+    field: undefined,
+  });
 });
 
 test.run();

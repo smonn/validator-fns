@@ -57,7 +57,10 @@ export function applyStringConfig(
   config: StringConfig
 ): string | null | undefined {
   let parsedValue = config.parser(value);
-  if (config.default !== undefined && parsedValue === undefined) {
+  if (
+    config.default !== undefined &&
+    (parsedValue === undefined || parsedValue === null || parsedValue === '')
+  ) {
     parsedValue = config.default;
   }
 

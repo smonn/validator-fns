@@ -141,6 +141,24 @@ test('array default', async () => {
     isValid: true,
     field: undefined,
   });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: ['hello'],
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate([]), {
+    state: 'valid',
+    value: ['hello'],
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(['other']), {
+    state: 'valid',
+    value: ['other'],
+    isValid: true,
+    field: undefined,
+  });
 });
 
 test('array without validation', async () => {

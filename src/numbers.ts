@@ -43,7 +43,10 @@ export function applyNumberConfig(
   config: NumberConfig
 ): number | null | undefined {
   let parsedValue = config.parser(value);
-  if (config.default !== undefined && parsedValue === undefined) {
+  if (
+    config.default !== undefined &&
+    (parsedValue === undefined || parsedValue === null)
+  ) {
     parsedValue = config.default;
   }
 

@@ -72,7 +72,13 @@ test('boolean', async () => {
   });
   assert.equal(await validateWithDefault(null), {
     state: 'valid',
-    value: null,
+    value: true,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validateWithDefault(false), {
+    state: 'valid',
+    value: false,
     isValid: true,
     field: undefined,
   });

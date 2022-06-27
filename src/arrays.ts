@@ -59,7 +59,12 @@ export function applyArrayConfig<T>(
   value: unknown
 ): T[] | null | undefined {
   let parsedValue = config.parser(value);
-  if (parsedValue === undefined && config.default !== undefined) {
+  if (
+    config.default !== undefined &&
+    (parsedValue === undefined ||
+      parsedValue === null ||
+      parsedValue.length === 0)
+  ) {
     parsedValue = config.default;
   }
 
