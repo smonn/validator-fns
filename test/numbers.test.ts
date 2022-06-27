@@ -277,6 +277,24 @@ test('number default', async () => {
     isValid: true,
     field: undefined,
   });
+  assert.equal(await validate(null), {
+    state: 'valid',
+    value: 5,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(Number.NaN), {
+    state: 'valid',
+    value: 5,
+    isValid: true,
+    field: undefined,
+  });
+  assert.equal(await validate(123), {
+    state: 'valid',
+    value: 123,
+    isValid: true,
+    field: undefined,
+  });
 });
 
 test.run();

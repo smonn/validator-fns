@@ -45,7 +45,9 @@ export function applyNumberConfig(
   let parsedValue = config.parser(value);
   if (
     config.default !== undefined &&
-    (parsedValue === undefined || parsedValue === null)
+    (parsedValue === undefined ||
+      parsedValue === null ||
+      Number.isNaN(parsedValue))
   ) {
     parsedValue = config.default;
   }
