@@ -217,10 +217,10 @@ For invalid results, errors are in the `errors` property. It contains an array o
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                         |
-| :-------- | :------- | :------------------------------------------------------------------ |
-| `default` | string   | Optional. Value used if the parser returns `undefined`.             |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string. |
+| option    | type     | description                                                                             |
+| :-------- | :------- | :-------------------------------------------------------------------------------------- |
+| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
+| `parser`  | function | Optional. Used to customize how a value is converted into a string.                     |
 
 </details>
 
@@ -234,7 +234,7 @@ Supported validation tests: `oneOf` and `required`.
 
 | option    | type     | description                                                          |
 | :-------- | :------- | :------------------------------------------------------------------- |
-| `default` | boolean  | Optional. Value used if the parser returns `undefined`.              |
+| `default` | boolean  | Optional. Value used if the parser returns `undefined` or `null`.    |
 | `parser`  | function | Optional. Used to customize how a value is converted into a boolean. |
 
 </details>
@@ -247,10 +247,10 @@ Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                       |
-| :-------- | :------- | :---------------------------------------------------------------- |
-| `default` | date     | Optional. Value used if the parser returns `undefined`.           |
-| `parser`  | function | Optional. Used to customize how a value is converted into a date. |
+| option    | type     | description                                                                         |
+| :-------- | :------- | :---------------------------------------------------------------------------------- |
+| `default` | date     | Optional. Value used if the parser returns `undefined`, `null`, or an invalid date. |
+| `parser`  | function | Optional. Used to customize how a value is converted into a date.                   |
 
 The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
 
@@ -264,11 +264,11 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `requ
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                         |
-| :-------- | :------- | :------------------------------------------------------------------ |
-| `round`   | string   | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor` |
-| `default` | number   | Optional. Value used if the parser returns `undefined`.             |
-| `parser`  | function | Optional. Used to customize how a value is converted into a number. |
+| option    | type     | description                                                                                |
+| :-------- | :------- | :----------------------------------------------------------------------------------------- |
+| `round`   | string   | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor`                        |
+| `default` | number   | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`. |
+| `parser`  | function | Optional. Used to customize how a value is converted into a number.                        |
 
 </details>
 
@@ -290,11 +290,11 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                |
-| :-------- | :------- | :------------------------------------------------------------------------- |
-| `trim`    | boolean  | Optional. If true, clears whitespace from the start and end of the string. |
-| `default` | string   | Optional. Value used if the parser returns `undefined`.                    |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string.        |
+| option    | type     | description                                                                              |
+| :-------- | :------- | :--------------------------------------------------------------------------------------- |
+| `trim`    | boolean  | Optional. If true, clears whitespace from the start and end of the string.               |
+| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty string `''`. |
+| `parser`  | function | Optional. Used to customize how a value is converted into a string.                      |
 
 </details>
 
