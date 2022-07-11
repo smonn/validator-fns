@@ -1,5 +1,4 @@
 import {
-  DeepPartial,
   ExtractError,
   ExtractValue,
   hasOwnProperty,
@@ -14,21 +13,19 @@ export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
  * Validates an object.
  * @category Type Validators
  */
-export function object<P extends ObjectParameter, K extends keyof P>(
-  properties: P
-): ValidatorTest<
-  DeepPartial<{ [K in keyof P]?: ExtractValue<P[K]> }>,
-  DeepPartial<{ [K in keyof P]?: ExtractError<P[K]> }>
-> {
+export function object<
+  P extends ObjectParameter,
+  V extends { [K in keyof P]?: ExtractValue<P[K]> },
+  E extends { [K in keyof P]?: ExtractError<P[K]> }
+>(properties: P): ValidatorTest<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
 
   return async (values, field) => {
-    const definedValues: { [K in keyof P]?: ExtractValue<P[K]> } =
-      (values as { [K in keyof P]?: ExtractValue<P[K]> }) ?? {};
-    const errors: { [K in keyof P]?: ExtractError<P[K]> } = {};
-    const resolvedValues: { [K in keyof P]?: ExtractValue<P[K]> } = {};
+    const definedValues = (values ?? {}) as V;
+    const errors = {} as E;
+    const resolvedValues = {} as V;
     let isValid = true;
 
     for (const key in properties) {
@@ -42,11 +39,14 @@ export function object<P extends ObjectParameter, K extends keyof P>(
             : await invalid({ field: key, message: 'No validator set', value });
         /* eslint-enable no-await-in-loop */
 
-        resolvedValues[key] = result.value as ExtractValue<P[K]>;
+        resolvedValues[key] = result.value as V[Extract<keyof P, string>];
 
         if (result.state === 'invalid') {
           isValid = false;
-          errors[key] = (result.message || result.errors) as ExtractError<P[K]>;
+          errors[key] = (result.message || result.errors) as E[Extract<
+            keyof P,
+            string
+          >];
         }
       }
     }

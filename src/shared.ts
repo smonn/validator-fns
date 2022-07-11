@@ -137,8 +137,8 @@ export function isObject(value: unknown): boolean {
 
 /**
  * Safe hasOwnProperty check
- * @param obj Object to check
- * @param prop Property to look for
+ * @param object Object to check
+ * @param property Property to look for
  */
 export function hasOwnProperty(
   object: unknown,
@@ -153,7 +153,7 @@ const formatPattern = /{(\w+)}/g;
 /**
  * Formats a message using a squiggly bracket `{}` template.
  * @param template Message template as string or function
- * @param params Params to inject into template
+ * @param parameters Params to inject into template
  * @category Helpers
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
@@ -198,7 +198,11 @@ export async function valid<T, E = never>({
  * @param extras Extra message params
  * @category Helpers
  */
-export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
+export async function invalid<
+  T,
+  E,
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+>({
   errors,
   field,
   message,
@@ -229,10 +233,10 @@ export async function invalid<T, E, P extends ValidatorMessageParameters<T>>({
  * @param applyConfig Function that applies configuration to value.
  * @category Helpers
  */
-export function createTypeValidatorTest<T, C extends ConfigBase<T>, E>(
+export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   defaultConfig: C,
   applyConfig: (value: unknown, config: C) => T | null | undefined
-): ValidatorFactory<C, T, E> {
+): ValidatorFactory<C, T, string> {
   return (config, ...tests) => {
     const cache: Record<string, ValidatorResult<T>> = {};
     let finalConfig = defaultConfig;
