@@ -46,9 +46,7 @@ export function object<P extends ObjectParameter, K extends keyof P>(
 
         if (result.state === 'invalid') {
           isValid = false;
-          errors[key] = (
-            result.message ? result.message : result.errors
-          ) as ExtractError<P[K]>;
+          errors[key] = (result.message || result.errors) as ExtractError<P[K]>;
         }
       }
     }
