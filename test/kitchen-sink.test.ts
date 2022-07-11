@@ -6,7 +6,10 @@ import {
   date,
   email,
   exact,
+  ExtractError,
   integer,
+  invalid,
+  InvalidResult,
   matches,
   max,
   maxDate,
@@ -18,9 +21,8 @@ import {
   required,
   string,
   url,
-  ValidatorTest,
   valid,
-  invalid,
+  ValidatorTest,
 } from '../src/index';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -28,7 +30,7 @@ const TEN_DAYS = ONE_DAY * 10;
 const now = new Date();
 const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
-const customValidator: ValidatorTest<string> = async (value, field) => {
+const customValidator: ValidatorTest<string, string> = async (value, field) => {
   if (value === 'hello') {
     return valid({ value, field });
   }
@@ -63,7 +65,7 @@ const validate = object({
       ({ values }) => `Must be ${values[0]}, ${values[1]} or ${values[2]}.`
     )
   ),
-  favoriteCarMakers: array<string>(
+  favoriteCarMakers: array(
     { default: [] },
     string(
       required('Car brand is required.'),
@@ -100,7 +102,7 @@ const validate = object({
   custom: customValidator,
 });
 
-test('kitchen sink', async () => {
+test('kitchen sink valid', async () => {
   const startDate = new Date(now.getTime() + ONE_DAY);
 
   const result = await validate({
@@ -130,5 +132,51 @@ test('kitchen sink', async () => {
     optIn: false,
     postalCode: '12345',
     startDate,
+  });
+});
+
+test('kitchen sink invalid', async () => {
+  const startDate = new Date(now.getTime() - ONE_DAY);
+
+  const result = await validate({
+    age: 10,
+    custom: 'goodbye',
+    emailAddress: 'invalid-email',
+    favoriteCarMakers: ['Nissan', 'Volvo'],
+    firstName: '',
+    fruit: 'strawberry',
+    homepage: 'invalid-url',
+    notRobot: 10,
+    postalCode: '1234',
+    startDate,
+  });
+
+  assert.is(result.state, 'invalid');
+  assert.equal(result.value, {
+    age: 10,
+    custom: 'goodbye',
+    emailAddress: 'invalid-email',
+    favoriteCarMakers: ['Nissan', 'Volvo'],
+    firstName: '',
+    fruit: 'strawberry',
+    homepage: 'invalid-url',
+    notRobot: 10,
+    postalCode: '1234',
+    startDate,
+  });
+  const invalidResult = result as InvalidResult<ExtractError<typeof validate>>;
+  assert.equal(invalidResult.errors, {
+    firstName: 'First name is required.',
+    emailAddress: 'Must be a valid email address.',
+    age: 'Must be at least 18 years old.',
+    homepage: 'Must be a valid URL.',
+    fruit: 'Must be apple, orange or banana.',
+    // Note that this would be a string if the error is from the array validator.
+    favoriteCarMakers: ['Must be a known car brand.', null],
+    startDate: 'Must be on or after today.',
+    notRobot: 'This is the answer.',
+    optIn: 'Must decide to opt in or out.',
+    postalCode: 'Must be a five-digit number.',
+    custom: 'Must be "hello".',
   });
 });

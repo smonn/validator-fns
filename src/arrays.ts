@@ -10,14 +10,7 @@ import {
  * Invalid validation result for an item in the array
  * @category Types
  */
-export interface ArrayItemValidatorResult {
-  /** The index of the item in the original array */
-  index: number;
-  /** The error message if a simple type */
-  message: string;
-  /** The errors if an object or array */
-  errors: unknown;
-}
+export type ArrayItemValidatorResult<E = unknown> = null | string | E;
 
 /**
  * Configuration for array validation.
@@ -76,10 +69,10 @@ export function applyArrayConfig<T>(
  * items. The remaining validators target the array itself.
  * @category Type Validators
  */
-export function array<T>(
-  config?: Partial<ArrayConfig> | ValidatorTest<T>,
+export function array<T, E>(
+  config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
   ...tests: ValidatorTest[]
-): ValidatorTest<T[], ArrayItemValidatorResult[]> {
+): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
   let allTests = tests;
   let finalConfig: ArrayConfig = {
     parser: parseArray,
@@ -123,11 +116,9 @@ export function array<T>(
 
         if (result.state === 'invalid') {
           isValid = false;
-          errors.push({
-            errors: result.errors,
-            index,
-            message: result.message,
-          });
+          errors.push(result.message || result.errors);
+        } else {
+          errors.push(null);
         }
       }
     }
@@ -139,14 +130,14 @@ export function array<T>(
       });
     }
 
-    return invalid({
+    return invalid<T[], ArrayItemValidatorResult<E>[]>({
       message:
         arrayInvalidResult?.state === 'invalid'
           ? arrayInvalidResult.message
           : '',
       value,
       field,
-      errors,
+      errors: errors as ArrayItemValidatorResult<E>[],
     });
   };
 }

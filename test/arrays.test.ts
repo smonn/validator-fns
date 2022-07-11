@@ -58,13 +58,7 @@ test('array', async () => {
     state: 'invalid',
     value: ['foo', 'ba'],
     message: '',
-    errors: [
-      {
-        message: 'min:3',
-        index: 1,
-        errors: undefined,
-      },
-    ],
+    errors: [null, 'min:3'],
     isValid: false,
     field: undefined,
   });
@@ -84,18 +78,11 @@ test('array with object', async () => {
     message: '',
     errors: [
       {
-        index: 0,
-        message: '',
-        errors: {
-          username: 'required',
-        },
+        username: 'required',
       },
+      null,
       {
-        index: 2,
-        message: '',
-        errors: {
-          username: 'min:3',
-        },
+        username: 'min:3',
       },
     ],
     isValid: false,
@@ -110,24 +97,7 @@ test('nested array', async () => {
     state: 'invalid',
     message: '',
     value: [['', 'foo', null]],
-    errors: [
-      {
-        index: 0,
-        message: '',
-        errors: [
-          {
-            index: 0,
-            message: 'required',
-            errors: undefined,
-          },
-          {
-            index: 2,
-            message: 'required',
-            errors: undefined,
-          },
-        ],
-      },
-    ],
+    errors: [['required', null, 'required']],
     isValid: false,
     field: undefined,
   });
