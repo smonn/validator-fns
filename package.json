@@ -1,6 +1,6 @@
 {
   "name": "validator-fns",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Small asynchronous validation library",
   "license": "MIT",
   "files": [
