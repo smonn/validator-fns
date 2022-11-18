@@ -54,17 +54,21 @@ export function applyNumberConfig(
 
   if (config.round && typeof parsedValue === 'number') {
     switch (config.round) {
-      case 'nearest':
+      case 'nearest': {
         parsedValue = Math.round(parsedValue);
         break;
-      case 'ceil':
+      }
+      case 'ceil': {
         parsedValue = Math.ceil(parsedValue);
         break;
-      case 'floor':
+      }
+      case 'floor': {
         parsedValue = Math.floor(parsedValue);
         break;
-      default:
+      }
+      default: {
         throw new Error(`Unknown round type: ${String(config.round)}`);
+      }
     }
   }
 
