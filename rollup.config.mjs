@@ -1,7 +1,7 @@
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import filesize from 'rollup-plugin-filesize';
-import { main, module, typings } from './package.json';
+import packageJSON from './package.json' assert { type: 'json' };
 
 const bundle = (config) => ({
   ...config,
@@ -14,12 +14,12 @@ const config = [
     plugins: [esbuild(), filesize()],
     output: [
       {
-        file: main,
+        file: packageJSON.main,
         format: 'cjs',
         sourcemap: true,
       },
       {
-        file: module,
+        file: packageJSON.module,
         format: 'es',
         sourcemap: true,
       },
@@ -28,7 +28,7 @@ const config = [
   bundle({
     plugins: [dts()],
     output: {
-      file: typings,
+      file: packageJSON.typings,
       format: 'es',
     },
   }),
