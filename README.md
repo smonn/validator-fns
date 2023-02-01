@@ -205,15 +205,13 @@ Casts value to an array, `null` or `undefined` if using the default date parser.
 
 Supported validation tests: `max`, `min`, and `required`.
 
-For invalid results, errors are in the `errors` property. It contains an array of:
+For invalid results, errors are in the `errors` property. It is an array of type:
 
 ```ts
-{
-  error: null | { [key: string]: string };
-  message: string;
-  index: number;
-}
+type ArrayErrors = Array<string | null>;
 ```
+
+Where valid entries are represented as `null` and invalid entries with the error message as a string.
 
 <details><summary>config</summary>
 
