@@ -15,13 +15,19 @@ jobs:
         with:
           ref: ${{ github.event.release.target_commitish }}
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: Setup Node.js 16
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'pnpm'
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm install --frozen-lockfile
 
       - name: Configure git
         run: |
@@ -29,13 +35,13 @@ jobs:
           git config --global user.email "44818+smonn@users.noreply.github.com"
 
       - name: Update version in package.json
-        run: npm version ${{ github.event.release.tag_name }} --allow-same-version
+        run: pnpm version ${{ github.event.release.tag_name }} --allow-same-version
 
       - name: Configure npm client for publish
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+        run: pnpm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish package to npmjs.com
-        run: npm publish
+        run: pnpm publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

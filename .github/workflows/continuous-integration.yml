@@ -18,19 +18,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: Use Node 16
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'pnpm'
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint && npm run check
+        run: pnpm lint && pnpm check
 
       - name: Test
-        run: npm run coverage && npm run report
+        run: pnpm coverage && pnpm report
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@master
@@ -38,4 +44,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
-        run: npm run build
+        run: pnpm build
