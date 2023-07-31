@@ -16,7 +16,7 @@ export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 export function object<
   P extends ObjectParameter,
   V extends { [K in keyof P]?: ExtractValue<P[K]> },
-  E extends { [K in keyof P]?: ExtractError<P[K]> }
+  E extends { [K in keyof P]?: ExtractError<P[K]> },
 >(properties: P): ValidatorTest<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');

@@ -13,12 +13,13 @@
     "importHelpers": true,
     "lib": [
       "DOM",
-      "ES2019",
-      "ES2020.BigInt",
-      "ES2020.Promise",
-      "ES2020.String"
+      "ES2021",
+      "ES2021.Intl",
+      "ES2021.Promise",
+      "ES2021.String",
+      "ES2021.WeakRef"
     ],
-    "module": "ES2020",
+    "module": "Node16",
     "moduleResolution": "Node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,

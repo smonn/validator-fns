@@ -6,7 +6,7 @@ test('array', async () => {
   const validate = array(
     string(min(3, 'min:{min}')),
     required('required'),
-    min(1, 'min:{min}')
+    min(1, 'min:{min}'),
   );
   assert.equal(await validate(['foo', 'bar', 'baz']), {
     state: 'valid',
@@ -70,7 +70,7 @@ test('array with object', async () => {
       username: string(required('required'), min(3, 'min:{min}')),
     }),
     min(2, 'min:{min}'),
-    max(10, 'max:{max}')
+    max(10, 'max:{max}'),
   );
   assert.equal(await validate([{}, { username: 'foo' }, { username: 'ab' }]), {
     state: 'invalid',

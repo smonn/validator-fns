@@ -158,7 +158,7 @@ test('number', async () => {
   const validate = number(
     required('Must enter a value.'),
     min(-10, 'Must be at least -10.'),
-    max(10, 'Must be at most 10.')
+    max(10, 'Must be at most 10.'),
   );
 
   assert.equal(await validate(0), {

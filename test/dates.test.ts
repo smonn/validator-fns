@@ -22,27 +22,27 @@ test('parseDate', () => {
   assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
   assert.equal(
     parseDate('2020-01-31T12:45:32'),
-    new Date(2020, 0, 31, 12, 45, 32)
+    new Date(2020, 0, 31, 12, 45, 32),
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32Z'),
-    new Date(Date.UTC(2020, 0, 31, 12, 45, 32))
+    new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32+01:30'),
-    new Date(Date.UTC(2020, 0, 31, 14, 15, 32))
+    new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32-0200'),
-    new Date(Date.UTC(2020, 0, 31, 10, 45, 32))
+    new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32.123'),
-    new Date(2020, 0, 31, 12, 45, 32, 123)
+    new Date(2020, 0, 31, 12, 45, 32, 123),
   );
   assert.equal(
     parseDate('2020-01-31T12:45:32.001242Z'),
-    new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242))
+    new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
   );
 });
 
@@ -135,7 +135,7 @@ test('date', async () => {
   const validate = date(
     required('required'),
     minDate(now, 'min'),
-    maxDate(nextMonth, 'max')
+    maxDate(nextMonth, 'max'),
   );
   assert.equal(await validate(now), {
     state: 'valid',

@@ -87,7 +87,7 @@ export function parseDate(value: unknown): Date | null | undefined {
   }
 
   const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
-    (parse, index) => parse(parts[index])
+    (parse, index) => parse(parts[index]),
   );
 
   const timezone = parts[8];
@@ -99,7 +99,15 @@ export function parseDate(value: unknown): Date | null | undefined {
   const minuteOffset = parseTimezone(timezone);
 
   return new Date(
-    Date.UTC(year, month, day, hour, minute + minuteOffset, second, millisecond)
+    Date.UTC(
+      year,
+      month,
+      day,
+      hour,
+      minute + minuteOffset,
+      second,
+      millisecond,
+    ),
   );
 }
 
@@ -111,7 +119,7 @@ export function parseDate(value: unknown): Date | null | undefined {
  */
 export function applyDateConfig(
   value: unknown,
-  config: DateConfig
+  config: DateConfig,
 ): Date | null | undefined {
   let parsedValue = config.parser(value);
   if (
@@ -145,7 +153,7 @@ export interface MinDateValidatorMessageParameters
 export function minDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
-  exclusive?: boolean
+  exclusive?: boolean,
 ): ValidatorTest<Date, null> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
@@ -161,7 +169,7 @@ export function minDate(
       min: parsedDate,
       limit: parsedDate,
       exclusive,
-    })
+    }),
   );
 }
 
@@ -182,7 +190,7 @@ export interface MaxDateValidatorMessageParameters
 export function maxDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
-  exclusive?: boolean
+  exclusive?: boolean,
 ): ValidatorTest<Date> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
@@ -198,7 +206,7 @@ export function maxDate(
       max: parsedDate,
       limit: parsedDate,
       exclusive,
-    })
+    }),
   );
 }
 
@@ -214,5 +222,5 @@ export type DateConfig = ConfigBase<Date>;
  */
 export const date = createTypeValidatorTest(
   { parser: parseDate },
-  applyDateConfig
+  applyDateConfig,
 );
