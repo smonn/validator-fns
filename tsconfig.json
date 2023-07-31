@@ -20,7 +20,7 @@
       "ES2021.WeakRef"
     ],
     "module": "Node16",
-    "moduleResolution": "Node",
+    "moduleResolution": "Node16",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
