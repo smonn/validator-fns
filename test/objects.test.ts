@@ -16,13 +16,13 @@ test('object', async () => {
     username: string(
       required('Username is required.'),
       min(5, 'At least five characters.'),
-      max(20, 'At most 20 characters.')
+      max(20, 'At most 20 characters.'),
     ),
     age: number(
       required('Must enter your age.'),
       min(18, 'At least 18 years old'),
       max(150, 'Are you really over 150 years old?'),
-      integer('Half-years do not count.')
+      integer('Half-years do not count.'),
     ),
   });
 
@@ -39,7 +39,7 @@ test('object', async () => {
       },
       isValid: true,
       field: undefined,
-    }
+    },
   );
 
   assert.equal(
@@ -59,7 +59,7 @@ test('object', async () => {
       errors: {
         age: 'Must enter your age.',
       },
-    }
+    },
   );
 });
 
@@ -114,7 +114,7 @@ test('nested object', async () => {
       },
       isValid: true,
       field: undefined,
-    }
+    },
   );
 
   assert.equal(
@@ -140,7 +140,7 @@ test('nested object', async () => {
       },
       isValid: false,
       field: undefined,
-    }
+    },
   );
 });
 

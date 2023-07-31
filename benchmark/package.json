@@ -1,9 +1,10 @@
 {
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.mjs"
   },
   "dependencies": {
     "benchmarkify": "3.0.0",
-    "validator-fns": ".."
+    "validator-fns": "../"
   }
 }

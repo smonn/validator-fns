@@ -201,7 +201,7 @@ test('string', async () => {
     { trim: true },
     required('Must enter a value.'),
     min(5, 'At least five characters.'),
-    max(10, 'At most ten characters.')
+    max(10, 'At most ten characters.'),
   );
 
   assert.equal(await validate('hello'), {

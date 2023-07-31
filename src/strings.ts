@@ -54,7 +54,7 @@ export function parseString(value: unknown): string | null | undefined {
  */
 export function applyStringConfig(
   value: unknown,
-  config: StringConfig
+  config: StringConfig,
 ): string | null | undefined {
   let parsedValue = config.parser(value);
   if (
@@ -84,7 +84,7 @@ export interface MatchesValidatorMessageParameters
  */
 export function matches(
   pattern: RegExp,
-  message: ValidatorMessage<string, MatchesValidatorMessageParameters>
+  message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
 ): ValidatorTest<string> {
   return createValidatorTest(
     (value) =>
@@ -93,7 +93,7 @@ export function matches(
       value === '' ||
       (typeof value === 'string' && pattern.test(value)),
     message,
-    () => ({ pattern })
+    () => ({ pattern }),
   );
 }
 
@@ -103,7 +103,7 @@ export function matches(
  * @category Validation Tests
  */
 export function email(
-  message: ValidatorMessage<string>
+  message: ValidatorMessage<string>,
 ): ValidatorTest<string> {
   return matches(emailPattern, message);
 }
@@ -116,7 +116,7 @@ export function email(
  */
 export function url(
   message: ValidatorMessage<string>,
-  protocols?: string[]
+  protocols?: string[],
 ): ValidatorTest<string> {
   return createValidatorTest(
     (value) => {
@@ -137,7 +137,7 @@ export function url(
       return false;
     },
     message,
-    () => ({ protocols })
+    () => ({ protocols }),
   );
 }
 
@@ -149,5 +149,5 @@ export const string = createTypeValidatorTest(
   {
     parser: parseString,
   },
-  applyStringConfig
+  applyStringConfig,
 );

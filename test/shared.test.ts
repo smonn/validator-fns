@@ -9,7 +9,7 @@ test('format string message', () => {
       value: '',
       field: undefined,
     }),
-    'Hello World!'
+    'Hello World!',
   );
 });
 
@@ -20,7 +20,7 @@ test('format function message', () => {
       value: '',
       field: undefined,
     }),
-    'Hello World!'
+    'Hello World!',
   );
 });
 
@@ -178,7 +178,7 @@ test('enums', async () => {
   });
   const tsEnums = oneOf(
     [TestValue.One, TestValue.Two, TestValue.Three],
-    'oneOf:{values}'
+    'oneOf:{values}',
   );
   assert.equal(await tsEnums(TestValue.Three), {
     state: 'valid',
