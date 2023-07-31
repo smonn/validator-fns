@@ -55,7 +55,7 @@ export type ValidatorResult<T = any, E = any> =
  */
 export type ValidatorTest<T = any, E = any> = (
   value?: unknown,
-  field?: string
+  field?: string,
 ) => Promise<ValidatorResult<T, E>>;
 
 /**
@@ -124,7 +124,7 @@ export interface ValidatorMessageParameters<T> {
  */
 export type ValidatorMessage<
   T,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 > = string | ((parameters: P) => string);
 
 /**
@@ -142,7 +142,7 @@ export function isObject(value: unknown): boolean {
  */
 export function hasOwnProperty(
   object: unknown,
-  property: string | number | symbol
+  property: string | number | symbol,
 ): boolean {
   return Object.prototype.hasOwnProperty.call(object, property);
 }
@@ -158,11 +158,11 @@ const formatPattern = /{(\w+)}/g;
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
   template: ValidatorMessage<T, P>,
-  parameters: P
+  parameters: P,
 ): string {
   if (typeof template === 'string') {
-    return template.replace(formatPattern, (_, key: string) =>
-      String((parameters as Record<string, unknown>)[key])
+    return template.replaceAll(formatPattern, (_, key: string) =>
+      String((parameters as Record<string, unknown>)[key]),
     );
   }
 
@@ -201,7 +201,7 @@ export async function valid<T, E = never>({
 export async function invalid<
   T,
   E,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >({
   errors,
   field,
@@ -235,7 +235,7 @@ export async function invalid<
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   defaultConfig: C,
-  applyConfig: (value: unknown, config: C) => T | null | undefined
+  applyConfig: (value: unknown, config: C) => T | null | undefined,
 ): ValidatorFactory<C, T, string> {
   return (config, ...tests) => {
     const cache: Record<string, ValidatorResult<T>> = {};
@@ -292,11 +292,11 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 export function createValidatorTest<
   T = any,
   E = any,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >(
   test: (value: unknown, field?: string) => boolean,
   message: ValidatorMessage<T, P>,
-  getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>
+  getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>,
 ): ValidatorTest<T, E> {
   return async (value, field) => {
     if (test(value, field)) {
@@ -320,7 +320,7 @@ export function createValidatorTest<
  */
 export function required<T, P extends ValidatorMessageParameters<T>>(
   message: ValidatorMessage<T, P>,
-  nullable?: boolean
+  nullable?: boolean,
 ): ValidatorTest<T> {
   return createValidatorTest(
     (value) =>
@@ -330,7 +330,7 @@ export function required<T, P extends ValidatorMessageParameters<T>>(
         !(typeof value === 'string' && value === '') &&
         !(typeof value === 'number' && Number.isNaN(value)) &&
         !(value instanceof Date && Number.isNaN(value.valueOf()))),
-    message
+    message,
   );
 }
 
@@ -364,7 +364,7 @@ export interface MaxValidatorMessageParameters
 export function max(
   limit: number,
   message: ValidatorMessage<SharedValueType, MaxValidatorMessageParameters>,
-  exclusive?: boolean
+  exclusive?: boolean,
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
     (value) => {
@@ -382,7 +382,7 @@ export function max(
       limit,
       amount: getAmount(value),
       exclusive,
-    })
+    }),
   );
 }
 
@@ -404,7 +404,7 @@ export interface MinValidatorMessageParameters
 export function min(
   limit: number,
   message: ValidatorMessage<SharedValueType, MinValidatorMessageParameters>,
-  exclusive?: boolean
+  exclusive?: boolean,
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
     (value) => {
@@ -422,7 +422,7 @@ export function min(
       limit,
       amount: getAmount(value),
       exclusive,
-    })
+    }),
   );
 }
 
@@ -441,7 +441,7 @@ export interface ExactValidatorMessageParameters
  */
 export function exact(
   limit: number,
-  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>
+  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>,
 ): ValidatorTest<SharedValueType> {
   return createValidatorTest(
     (value) => {
@@ -458,7 +458,7 @@ export function exact(
       amount: getAmount(value),
       limit,
       exact: limit,
-    })
+    }),
   );
 }
 
@@ -475,7 +475,7 @@ export interface OneOfValidatorMessageParameters<T>
  */
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
-  message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>
+  message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
 ): ValidatorTest<T> {
   return createValidatorTest(
     (value) =>
@@ -485,6 +485,6 @@ export function oneOf<T extends string | number | boolean | Date>(
       (value instanceof Date &&
         values.some((x) => x.valueOf() === value.valueOf())),
     message,
-    () => ({ values })
+    () => ({ values }),
   );
 }
