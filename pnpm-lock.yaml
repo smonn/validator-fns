@@ -39,8 +39,8 @@ devDependencies:
     specifier: 4.1.5
     version: 4.1.5
   prettier:
-    specifier: 3.0.0
-    version: 3.0.0
+    specifier: 3.0.3
+    version: 3.0.3
   rimraf:
     specifier: 5.0.1
     version: 5.0.1
@@ -91,6 +91,7 @@ packages:
   /@babel/highlight@7.22.5:
     resolution: {integrity: sha512-BSKlD1hgnedS5XRnGOljZawtag7H1yPfQp0tdNJCHoH6AZ+Pcm9VvkrK59/Yy593Ypg0zMxH2BxD1VPYUQ7UIw==}
     engines: {node: '>=6.9.0'}
+    requiresBuild: true
     dependencies:
       '@babel/helper-validator-identifier': 7.22.5
       chalk: 2.4.2
@@ -1895,6 +1896,7 @@ packages:
   /iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       safer-buffer: 2.1.2
     dev: true
@@ -2151,6 +2153,7 @@ packages:
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+    requiresBuild: true
     dev: true
 
   /js-yaml@4.1.0:
@@ -2893,8 +2896,8 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prettier@3.0.0:
-    resolution: {integrity: sha512-zBf5eHpwHOGPC47h0zrPyNn+eAEIdEzfywMoYn2XPi0P44Zp0tSq64rq0xAREh4auw2cJZHo9QUob+NqCQky4g==}
+  /prettier@3.0.3:
+    resolution: {integrity: sha512-L/4pUDMxcNa8R/EthV08Zt42WBO4h1rarVtK0K+QJG0X187OLo7l699jWw0GKuwzkPQ//jMFA/8Xm6Fh3J/DAg==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
@@ -3156,6 +3159,7 @@ packages:
 
   /safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
+    requiresBuild: true
     dev: true
     optional: true
 
