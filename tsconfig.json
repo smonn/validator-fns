@@ -34,7 +34,8 @@
   "include": ["src", "test"],
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS"
+      "module": "CommonJS",
+      "moduleResolution": "Node"
     }
   }
 }
