@@ -51,8 +51,8 @@ devDependencies:
     specifier: 6.1.0
     version: 6.1.0(rollup@4.2.0)(typescript@5.2.2)
   rollup-plugin-esbuild:
-    specifier: 6.1.0
-    version: 6.1.0(esbuild@0.19.5)(rollup@4.2.0)
+    specifier: 6.1.1
+    version: 6.1.1(esbuild@0.19.5)(rollup@4.2.0)
   rollup-plugin-filesize:
     specifier: 10.0.0
     version: 10.0.0
@@ -3174,8 +3174,8 @@ packages:
       '@babel/code-frame': 7.22.13
     dev: true
 
-  /rollup-plugin-esbuild@6.1.0(esbuild@0.19.5)(rollup@4.2.0):
-    resolution: {integrity: sha512-HPpXU65V8bSpW8eSYPahtUJaJHmbxJGybuf/M8B3bz/6i11YaYHlNNJIQ38gSEV0FyohQOgVxJ2YMEEZtEmwvA==}
+  /rollup-plugin-esbuild@6.1.1(esbuild@0.19.5)(rollup@4.2.0):
+    resolution: {integrity: sha512-CehMY9FAqJD5OUaE/Mi1r5z0kNeYxItmRO2zG4Qnv2qWKF09J2lTy5GUzjJR354ZPrLkCj4fiBN41lo8PzBUhw==}
     engines: {node: '>=14.18.0'}
     peerDependencies:
       esbuild: '>=0.18.0'
