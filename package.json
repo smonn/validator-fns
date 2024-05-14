@@ -47,7 +47,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "prepublishOnly": "run-s clean lint test build",
+    "prepublishOnly": "run-s lint test build",
     "prepare": "husky"
   },
   "devDependencies": {
