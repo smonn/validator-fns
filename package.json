@@ -46,15 +46,14 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest",
-    "coverage": "c8 --include=src --exclude=src/index.ts npm test",
-    "report": "c8 report --reporter=text-lcov > coverage/lcov.info",
+    "coverage": "vitest run --coverage",
     "prepublishOnly": "run-s clean lint test build",
     "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "9.2.0",
     "@types/node": "20.12.12",
-    "c8": "9.1.0",
+    "@vitest/coverage-v8": "1.6.0",
     "eslint": "9.2.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-unicorn": "53.0.0",
