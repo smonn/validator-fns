@@ -1,10 +1,9 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
-import { integer, max, min, number, required } from '../src/index';
+import { assert, test } from 'vitest';
+import { integer, max, min, number, required } from '../src/index.js';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);
-  assert.equal(await validate(Number.NaN), {
+  assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
     isValid: false,
@@ -12,7 +11,7 @@ test('min', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(0), {
+  assert.deepEqual(await validate(0), {
     state: 'invalid',
     value: 0,
     isValid: false,
@@ -20,25 +19,25 @@ test('min', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     isValid: true,
     value: null,
     field: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     isValid: true,
     value: undefined,
     field: undefined,
   });
-  assert.equal(await validate(5.01), {
+  assert.deepEqual(await validate(5.01), {
     state: 'valid',
     isValid: true,
     value: 5.01,
     field: undefined,
   });
-  assert.equal(await validate(5), {
+  assert.deepEqual(await validate(5), {
     state: 'invalid',
     isValid: false,
     value: 5,
@@ -46,7 +45,7 @@ test('min', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(4.99), {
+  assert.deepEqual(await validate(4.99), {
     state: 'invalid',
     isValid: false,
     field: undefined,
@@ -58,7 +57,7 @@ test('min', async () => {
 
 test('max', async () => {
   const validate = max(5, 'max:{max}', true);
-  assert.equal(await validate(Number.NaN), {
+  assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
     isValid: false,
@@ -66,25 +65,25 @@ test('max', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(0), {
+  assert.deepEqual(await validate(0), {
     state: 'valid',
     value: 0,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     value: null,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(5.01), {
+  assert.deepEqual(await validate(5.01), {
     state: 'invalid',
     value: 5.01,
     isValid: false,
@@ -92,7 +91,7 @@ test('max', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(5), {
+  assert.deepEqual(await validate(5), {
     state: 'invalid',
     value: 5,
     isValid: false,
@@ -100,7 +99,7 @@ test('max', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(4.99), {
+  assert.deepEqual(await validate(4.99), {
     state: 'valid',
     value: 4.99,
     isValid: true,
@@ -110,7 +109,7 @@ test('max', async () => {
 
 test('integer', async () => {
   const validate = integer('integer');
-  assert.equal(await validate(Number.NaN), {
+  assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
     message: 'integer',
@@ -118,25 +117,25 @@ test('integer', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(0), {
+  assert.deepEqual(await validate(0), {
     state: 'valid',
     value: 0,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     value: null,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(0.1), {
+  assert.deepEqual(await validate(0.1), {
     state: 'invalid',
     value: 0.1,
     isValid: false,
@@ -144,7 +143,7 @@ test('integer', async () => {
     message: 'integer',
     errors: undefined,
   });
-  assert.equal(await validate(1e-1), {
+  assert.deepEqual(await validate(1e-1), {
     state: 'invalid',
     value: 1e-1,
     isValid: false,
@@ -161,25 +160,25 @@ test('number', async () => {
     max(10, 'Must be at most 10.'),
   );
 
-  assert.equal(await validate(0), {
+  assert.deepEqual(await validate(0), {
     state: 'valid',
     value: 0,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(-10), {
+  assert.deepEqual(await validate(-10), {
     state: 'valid',
     value: -10,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(10), {
+  assert.deepEqual(await validate(10), {
     state: 'valid',
     value: 10,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(11), {
+  assert.deepEqual(await validate(11), {
     state: 'invalid',
     message: 'Must be at most 10.',
     value: 11,
@@ -187,7 +186,7 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.equal(await validate(-11), {
+  assert.deepEqual(await validate(-11), {
     state: 'invalid',
     message: 'Must be at least -10.',
     value: -11,
@@ -195,7 +194,7 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.equal(await validate(Number.NaN), {
+  assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: Number.NaN,
@@ -203,13 +202,13 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.equal(await validate(new Date(0)), {
+  assert.deepEqual(await validate(new Date(0)), {
     state: 'valid',
     value: 0,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
@@ -217,7 +216,7 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: null,
@@ -225,7 +224,7 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.equal(await validate({}), {
+  assert.deepEqual(await validate({}), {
     state: 'invalid',
     message: 'Must enter a value.',
     value: Number.NaN,
@@ -241,25 +240,25 @@ test('rounding', async () => {
   const ceil = number({ round: 'ceil' });
   const badRounding = number({ round: 'bad' as 'nearest' });
 
-  assert.equal(await nearest(0.9), {
+  assert.deepEqual(await nearest(0.9), {
     value: 1,
     isValid: true,
     state: 'valid',
     field: undefined,
   });
-  assert.equal(await floor(0.9), {
+  assert.deepEqual(await floor(0.9), {
     value: 0,
     isValid: true,
     state: 'valid',
     field: undefined,
   });
-  assert.equal(await ceil(0.1), {
+  assert.deepEqual(await ceil(0.1), {
     value: 1,
     isValid: true,
     state: 'valid',
     field: undefined,
   });
-  assert.equal(await badRounding(1), {
+  assert.deepEqual(await badRounding(1), {
     errors: undefined,
     value: 1,
     isValid: false,
@@ -271,30 +270,28 @@ test('rounding', async () => {
 
 test('number default', async () => {
   const validate = number({ default: 5 });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     value: 5,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     value: 5,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(Number.NaN), {
+  assert.deepEqual(await validate(Number.NaN), {
     state: 'valid',
     value: 5,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(123), {
+  assert.deepEqual(await validate(123), {
     state: 'valid',
     value: 123,
     isValid: true,
     field: undefined,
   });
 });
-
-test.run();

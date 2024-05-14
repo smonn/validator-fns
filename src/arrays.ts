@@ -1,10 +1,10 @@
 import {
-  ConfigBase,
   invalid,
   valid,
-  ValidatorResult,
-  ValidatorTest,
-} from './shared';
+  type ConfigBase,
+  type ValidatorResult,
+  type ValidatorTest,
+} from './shared.js';
 
 /**
  * Invalid validation result for an item in the array
@@ -97,7 +97,6 @@ export function array<T, E>(
     const [validateItem, ...arrayTests] = allTests;
 
     for (const validatorTest of arrayTests) {
-      // eslint-disable-next-line no-await-in-loop
       const result = await validatorTest(arrayValue, field);
       if (result.state === 'invalid') {
         isValid = false;
@@ -108,7 +107,6 @@ export function array<T, E>(
 
     if (arrayValue && validateItem) {
       for (const [index, item] of arrayValue.entries()) {
-        // eslint-disable-next-line no-await-in-loop
         const result = await validateItem(
           item,
           field ? `${field}[${index}]` : `[${index}]`,

@@ -1,15 +1,12 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import {
   array,
   boolean,
   date,
   email,
   exact,
-  ExtractError,
   integer,
   invalid,
-  InvalidResult,
   matches,
   max,
   maxDate,
@@ -22,8 +19,10 @@ import {
   string,
   url,
   valid,
-  ValidatorTest,
-} from '../src/index';
+  type ExtractError,
+  type InvalidResult,
+  type ValidatorTest,
+} from '../src/index.js';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TEN_DAYS = ONE_DAY * 10;
@@ -119,8 +118,8 @@ test('kitchen sink valid', async () => {
     startDate,
   });
 
-  assert.is(result.state, 'valid');
-  assert.equal(result.value, {
+  assert.strictEqual(result.state, 'valid');
+  assert.deepEqual(result.value, {
     age: 20,
     custom: 'hello',
     emailAddress: 'foo@example.com',
@@ -151,8 +150,8 @@ test('kitchen sink invalid', async () => {
     startDate,
   });
 
-  assert.is(result.state, 'invalid');
-  assert.equal(result.value, {
+  assert.strictEqual(result.state, 'invalid');
+  assert.deepEqual(result.value, {
     age: 10,
     custom: 'goodbye',
     emailAddress: 'invalid-email',
@@ -165,7 +164,7 @@ test('kitchen sink invalid', async () => {
     startDate,
   });
   const invalidResult = result as InvalidResult<ExtractError<typeof validate>>;
-  assert.equal(invalidResult.errors, {
+  assert.deepEqual(invalidResult.errors, {
     firstName: 'First name is required.',
     emailAddress: 'Must be a valid email address.',
     age: 'Must be at least 18 years old.',

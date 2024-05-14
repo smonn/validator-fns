@@ -15,7 +15,11 @@ const simpleObject = {
 };
 
 const simpleValidate = V.object({
-  name: V.string(V.required('required'), V.min(4, 'min:4'), V.max(25, 'max:25')),
+  name: V.string(
+    V.required('required'),
+    V.min(4, 'min:4'),
+    V.max(25, 'max:25'),
+  ),
   email: V.string(V.required('required'), V.email('email')),
   firstName: V.string(V.required('required')),
   phone: V.string(V.required('required')),
