@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import {
   integer,
   max,
@@ -8,8 +7,8 @@ import {
   object,
   required,
   string,
-  ValidatorTest,
-} from '../src/index';
+  type ValidatorTest,
+} from '../src/index.js';
 
 test('object', async () => {
   const validate = object({
@@ -26,7 +25,7 @@ test('object', async () => {
     ),
   });
 
-  assert.equal(
+  assert.deepEqual(
     await validate({
       username: 'hello',
       age: '20',
@@ -42,7 +41,7 @@ test('object', async () => {
     },
   );
 
-  assert.equal(
+  assert.deepEqual(
     await validate({
       username: 'hello',
       age: null,
@@ -66,19 +65,19 @@ test('object', async () => {
 test('empty object config is always valid', async () => {
   const validate = object({});
 
-  assert.equal(await validate({ foo: 'bar' }), {
+  assert.deepEqual(await validate({ foo: 'bar' }), {
     state: 'valid',
     value: {},
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     value: {},
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     value: {},
     isValid: true,
@@ -96,7 +95,7 @@ test('nested object', async () => {
     }),
   });
 
-  assert.equal(
+  assert.deepEqual(
     await validate({
       person: {
         firstName: 'foo',
@@ -109,7 +108,7 @@ test('nested object', async () => {
         person: {
           firstName: 'foo',
           lastName: 'bar',
-          age: undefined,
+          age: undefined as unknown as number,
         },
       },
       isValid: true,
@@ -117,7 +116,7 @@ test('nested object', async () => {
     },
   );
 
-  assert.equal(
+  assert.deepEqual(
     await validate({
       person: {
         firstName: 'foo',
@@ -154,5 +153,3 @@ test('invalid configuration', async () => {
   const validate = object({ test: 'test' } as any);
   await validate(null);
 });
-
-test.run();

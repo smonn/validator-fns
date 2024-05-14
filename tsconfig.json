@@ -1,41 +1,26 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "newLine": "lf",
-    "noEmitOnError": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": false,
-    "pretty": true,
-    "resolveJsonModule": false,
-    "stripInternal": true,
-    "useDefineForClassFields": false,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
-    "lib": [
-      "DOM",
-      "ES2021",
-      "ES2021.Intl",
-      "ES2021.Promise",
-      "ES2021.String",
-      "ES2021.WeakRef"
-    ],
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "isolatedModules": true,
+    "lib": ["es2023"],
+    "module": "es2022",
+    "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "sourceMap": true,
     "strict": true,
-    "target": "ES2019"
+    "target": "es2022",
+    "verbatimModuleSyntax": true
   },
-  "include": ["src", "test"],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS",
-      "moduleResolution": "Node"
-    }
-  }
+  "include": ["src", "test"]
 }

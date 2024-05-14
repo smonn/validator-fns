@@ -1,12 +1,12 @@
 import {
-  ConfigBase,
+  type ConfigBase,
   createTypeValidatorTest,
   createValidatorTest,
   isObject,
-  ValidatorMessage,
-  ValidatorMessageParameters,
-  ValidatorTest,
-} from './shared';
+  type ValidatorMessage,
+  type ValidatorMessageParameters,
+  type ValidatorTest,
+} from './shared.js';
 
 /** @internal */
 const emailPattern =

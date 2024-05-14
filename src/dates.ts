@@ -1,11 +1,11 @@
 import {
-  ConfigBase,
   createTypeValidatorTest,
   createValidatorTest,
-  ValidatorMessage,
-  ValidatorMessageParameters,
-  ValidatorTest,
-} from './shared';
+  type ConfigBase,
+  type ValidatorMessage,
+  type ValidatorMessageParameters,
+  type ValidatorTest,
+} from './shared.js';
 
 /** Badly formatted date for internal use. */
 export const invalidDate = new Date('');
@@ -29,7 +29,7 @@ function parseTimezone(timezone: string): number {
     return 0;
   }
 
-  const [, sign, hour, minute] = parts;
+  const [, sign, hour = '0', minute = '0'] = parts;
   const multiplier = sign === '-' ? -1 : 1;
   const hoursInMinutes = Number.parseInt(hour, 10) * 60;
   const offset = hoursInMinutes + Number.parseInt(minute, 10);
@@ -86,9 +86,16 @@ export function parseDate(value: unknown): Date | null | undefined {
     return invalidDate;
   }
 
-  const [, year, month, day, hour, minute, second, millisecond] = dateParts.map(
-    (parse, index) => parse(parts[index]),
-  );
+  const [
+    ,
+    year = 0,
+    month = 0,
+    day = 0,
+    hour = 0,
+    minute = 0,
+    second = 0,
+    millisecond = 0,
+  ] = dateParts.map((parse, index) => parse(parts[index]));
 
   const timezone = parts[8];
 
@@ -140,7 +147,7 @@ export interface MinDateValidatorMessageParameters
   extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
   limit: Date | null | undefined;
-  exclusive?: boolean;
+  exclusive?: boolean | undefined;
 }
 
 /**
@@ -177,7 +184,7 @@ export interface MaxDateValidatorMessageParameters
   extends ValidatorMessageParameters<Date> {
   max: Date | null | undefined;
   limit: Date | null | undefined;
-  exclusive?: boolean;
+  exclusive?: boolean | undefined;
 }
 
 /**

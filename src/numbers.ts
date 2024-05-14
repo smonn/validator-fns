@@ -1,11 +1,11 @@
 import {
-  ConfigBase,
+  type ConfigBase,
   createTypeValidatorTest,
   invalid,
   valid,
-  ValidatorMessage,
-  ValidatorTest,
-} from './shared';
+  type ValidatorMessage,
+  type ValidatorTest,
+} from './shared.js';
 
 /**
  * Parses a value into a number.

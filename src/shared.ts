@@ -1,12 +1,3 @@
-/**
- * From type-fest: https://github.com/sindresorhus/type-fest/blob/HEAD/source/except.d.ts
- * @internal
- */
-type Except<ObjectType, KeysType extends keyof ObjectType> = Pick<
-  ObjectType,
-  Exclude<keyof ObjectType, KeysType>
->;
-
 export type ValidResult<T> = {
   /**
    * True if the original value is valid according to all validation tests
@@ -18,7 +9,7 @@ export type ValidResult<T> = {
   /** The parsed value. Note that may be different than the original value. */
   value: T | null | undefined;
   /** Field name if provided. Automatically provided if using object validation. */
-  field?: string;
+  field?: string | undefined;
 };
 
 export type InvalidResult<E> = {
@@ -34,9 +25,9 @@ export type InvalidResult<E> = {
   /** Error message if `state` is invalid. */
   message: string;
   /** Field name if provided. Automatically provided if using object validation. */
-  field?: string;
+  field?: string | undefined;
   /** Extra error details */
-  errors?: E;
+  errors?: E | undefined;
 };
 
 /**
@@ -63,23 +54,16 @@ export type ValidatorTest<T = any, E = any> = (
  * @typeParam T a ValidatorTest
  * @category Types
  */
-export type ExtractError<T extends ValidatorTest> = T extends ValidatorTest<
-  any,
-  infer E
->
-  ? E
-  : unknown;
+export type ExtractError<T extends ValidatorTest> =
+  T extends ValidatorTest<any, infer E> ? E : unknown;
 
 /**
  * Extracts the generic value type from a ValidatorTest.
  * @typeParam T a ValidatorTest
  * @category Types
  */
-export type ExtractValue<T extends ValidatorTest> = T extends ValidatorTest<
-  infer V
->
-  ? V
-  : unknown;
+export type ExtractValue<T extends ValidatorTest> =
+  T extends ValidatorTest<infer V> ? V : unknown;
 
 /**
  * Make a deep partial type.
@@ -212,8 +196,8 @@ export async function invalid<
   message: ValidatorMessage<T, P>;
   value: unknown;
   field: string | undefined;
-  errors?: E;
-  extras?: Except<P, 'field' | 'value'>;
+  errors?: E | undefined;
+  extras?: Omit<P, 'field' | 'value'> | undefined;
 }): Promise<ValidatorResult<T, E>> {
   return {
     isValid: false,
@@ -258,11 +242,10 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         const parsedValue = applyConfig(value, finalConfig);
         const parsedValueString = String(parsedValue);
         if (hasOwnProperty(cache, parsedValueString)) {
-          return cache[parsedValueString];
+          return cache[parsedValueString] as ValidatorResult<T, any>;
         }
 
         for (const validatorTest of allTests) {
-          // eslint-disable-next-line no-await-in-loop
           const result = await validatorTest(parsedValue, field);
           if (result.state === 'invalid') {
             cache[parsedValueString] = result;
@@ -271,7 +254,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         }
 
         cache[parsedValueString] = await valid({ value: parsedValue, field });
-        return cache[parsedValueString];
+        return cache[parsedValueString] as ValidatorResult<T, any>;
       } catch (error) {
         return invalid({
           message: error instanceof Error ? error.message : String(error),
@@ -296,7 +279,7 @@ export function createValidatorTest<
 >(
   test: (value: unknown, field?: string) => boolean,
   message: ValidatorMessage<T, P>,
-  getExtras?: (value: T | null | undefined) => Except<P, 'value' | 'field'>,
+  getExtras?: (value: T | null | undefined) => Omit<P, 'value' | 'field'>,
 ): ValidatorTest<T, E> {
   return async (value, field) => {
     if (test(value, field)) {
@@ -351,7 +334,7 @@ export interface MaxValidatorMessageParameters
   max: number;
   amount: number | null | undefined;
   limit: number;
-  exclusive?: boolean;
+  exclusive?: boolean | undefined;
 }
 
 /**
@@ -391,7 +374,7 @@ export interface MinValidatorMessageParameters
   min: number;
   limit: number;
   amount: number | null | undefined;
-  exclusive?: boolean;
+  exclusive?: boolean | undefined;
 }
 
 /**

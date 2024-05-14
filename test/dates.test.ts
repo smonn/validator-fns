@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import {
   date,
   invalidDate,
@@ -7,40 +6,43 @@ import {
   minDate,
   parseDate,
   required,
-} from '../src/index';
+} from '../src/index.js';
 
 test('parseDate', () => {
   const now = new Date();
-  assert.equal(parseDate(now), now);
-  assert.equal(parseDate(0), new Date(0));
-  assert.equal(parseDate({}), invalidDate);
-  assert.equal(parseDate(''), invalidDate);
-  assert.equal(parseDate('2020'), new Date(2020, 0));
-  assert.equal(parseDate('2020-13'), new Date(2021, 0));
-  assert.equal(parseDate('2020-01'), new Date(2020, 0));
-  assert.equal(parseDate('2020-01-31'), new Date(2020, 0, 31));
-  assert.equal(parseDate('2020-01-31 12:45'), new Date(2020, 0, 31, 12, 45));
-  assert.equal(
+  assert.deepEqual(parseDate(now), now);
+  assert.deepEqual(parseDate(0), new Date(0));
+  assert.deepEqual(parseDate({}), invalidDate);
+  assert.deepEqual(parseDate(''), invalidDate);
+  assert.deepEqual(parseDate('2020'), new Date(2020, 0));
+  assert.deepEqual(parseDate('2020-13'), new Date(2021, 0));
+  assert.deepEqual(parseDate('2020-01'), new Date(2020, 0));
+  assert.deepEqual(parseDate('2020-01-31'), new Date(2020, 0, 31));
+  assert.deepEqual(
+    parseDate('2020-01-31 12:45'),
+    new Date(2020, 0, 31, 12, 45),
+  );
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32'),
     new Date(2020, 0, 31, 12, 45, 32),
   );
-  assert.equal(
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
   );
-  assert.equal(
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32+01:30'),
     new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
   );
-  assert.equal(
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32-0200'),
     new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
   );
-  assert.equal(
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32.123'),
     new Date(2020, 0, 31, 12, 45, 32, 123),
   );
-  assert.equal(
+  assert.deepEqual(
     parseDate('2020-01-31T12:45:32.001242Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
   );
@@ -49,7 +51,7 @@ test('parseDate', () => {
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);
-  assert.equal(await validate(now), {
+  assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
     isValid: true,
@@ -57,7 +59,7 @@ test('minDate', async () => {
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  assert.equal(await validate(tomorrow), {
+  assert.deepEqual(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
     isValid: true,
@@ -65,7 +67,7 @@ test('minDate', async () => {
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  assert.equal(await validate(yesterday), {
+  assert.deepEqual(await validate(yesterday), {
     state: 'invalid',
     value: yesterday,
     message: `min:${now.toISOString()}`,
@@ -78,7 +80,7 @@ test('minDate', async () => {
 test('maxDate', async () => {
   const now = new Date();
   const validate = maxDate(now, ({ max }) => `max:${max?.toISOString() ?? ''}`);
-  assert.equal(await validate(now), {
+  assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
     isValid: true,
@@ -86,7 +88,7 @@ test('maxDate', async () => {
   });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  assert.equal(await validate(tomorrow), {
+  assert.deepEqual(await validate(tomorrow), {
     state: 'invalid',
     value: tomorrow,
     message: `max:${now.toISOString()}`,
@@ -96,7 +98,7 @@ test('maxDate', async () => {
   });
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  assert.equal(await validate(yesterday), {
+  assert.deepEqual(await validate(yesterday), {
     state: 'valid',
     value: yesterday,
     isValid: true,
@@ -107,7 +109,7 @@ test('maxDate', async () => {
 test('exclusive', async () => {
   const now = new Date();
   const min = minDate(now, 'must be after now', true);
-  assert.equal(await min(now), {
+  assert.deepEqual(await min(now), {
     state: 'invalid',
     value: now,
     message: 'must be after now',
@@ -116,7 +118,7 @@ test('exclusive', async () => {
     errors: undefined,
   });
   const max = maxDate(now, 'must be before now', true);
-  assert.equal(await max(now), {
+  assert.deepEqual(await max(now), {
     state: 'invalid',
     value: now,
     message: 'must be before now',
@@ -137,25 +139,25 @@ test('date', async () => {
     minDate(now, 'min'),
     maxDate(nextMonth, 'max'),
   );
-  assert.equal(await validate(now), {
+  assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(nextMonth), {
+  assert.deepEqual(await validate(nextMonth), {
     state: 'valid',
     value: nextMonth,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(tomorrow), {
+  assert.deepEqual(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(''), {
+  assert.deepEqual(await validate(''), {
     state: 'invalid',
     value: invalidDate,
     message: 'required',
@@ -163,7 +165,7 @@ test('date', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'invalid',
     value: null,
     message: 'required',
@@ -171,7 +173,7 @@ test('date', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'invalid',
     value: undefined,
     message: 'required',
@@ -183,31 +185,29 @@ test('date', async () => {
 
 test('date default', async () => {
   const validate = date({ default: new Date(0) });
-  assert.equal(await validate(), {
+  assert.deepEqual(await validate(), {
     state: 'valid',
     value: new Date(0),
     isValid: true,
     field: undefined,
   });
   const now = new Date();
-  assert.equal(await validate(now), {
+  assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(null), {
+  assert.deepEqual(await validate(null), {
     state: 'valid',
     value: new Date(0),
     isValid: true,
     field: undefined,
   });
-  assert.equal(await validate(new Date(Number.NaN)), {
+  assert.deepEqual(await validate(new Date(Number.NaN)), {
     state: 'valid',
     value: new Date(0),
     isValid: true,
     field: undefined,
   });
 });
-
-test.run();

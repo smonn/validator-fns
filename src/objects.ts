@@ -1,11 +1,11 @@
 import {
-  ExtractError,
-  ExtractValue,
+  type ExtractError,
+  type ExtractValue,
   hasOwnProperty,
   invalid,
   valid,
-  ValidatorTest,
-} from './shared';
+  type ValidatorTest,
+} from './shared.js';
 
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 
@@ -32,12 +32,10 @@ export function object<
       if (hasOwnProperty(properties, key)) {
         const validator = properties[key];
         const value = definedValues[key];
-        /* eslint-disable no-await-in-loop */
         const result =
           typeof validator === 'function'
             ? await validator(value, key)
             : await invalid({ field: key, message: 'No validator set', value });
-        /* eslint-enable no-await-in-loop */
 
         resolvedValues[key] = result.value as V[Extract<keyof P, string>];
 
