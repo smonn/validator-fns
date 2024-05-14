@@ -8,4 +8,5 @@ export default defineConfig({
   sourcemap: true,
   minify: true,
   clean: true,
+  dts: true,
 });

@@ -29,13 +29,21 @@
     "validator"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "exports": {
-    "require": "./dist/index.cjs",
-    "import": "./dist/index.js"
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
+    }
   },
-  "typings": "dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "sideEffects": false,
   "engines": {
     "node": ">=18",
