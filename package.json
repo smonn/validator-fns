@@ -1,85 +1,12 @@
 {
   "name": "validator-fns",
-  "version": "2.0.1",
-  "description": "Small asynchronous validation library",
-  "license": "MIT",
-  "files": [
-    "dist",
-    "runkit.js"
-  ],
-  "author": {
-    "name": "Simon Ingeson",
-    "url": "https://smonn.se"
-  },
-  "keywords": [
-    "async",
-    "browser",
-    "browsers",
-    "function",
-    "functional",
-    "functions",
-    "isomorphic",
-    "node",
-    "promise",
-    "ssr",
-    "typescript",
-    "universal",
-    "validate",
-    "validation",
-    "validator"
-  ],
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./index.d.cts",
-        "default": "./index.cjs"
-      }
-    }
-  },
-  "typings": "./dist/index.d.ts",
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=9"
-  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "build": "tsup",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "prepublishOnly": "run-s lint test build",
-    "prepare": "husky"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "@eslint/js": "9.2.0",
-    "@types/node": "20.12.12",
-    "@vitest/coverage-v8": "1.6.0",
-    "eslint": "9.2.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-unicorn": "53.0.0",
-    "husky": "9.0.11",
-    "lint-staged": "15.2.2",
-    "npm-run-all": "4.1.5",
-    "prettier": "3.2.5",
-    "tslib": "2.6.2",
-    "tsup": "8.0.2",
-    "typescript": "5.4.5",
-    "typescript-eslint": "7.9.0",
-    "vitest": "1.6.0"
-  },
-  "repository": "github:smonn/validator-fns",
-  "homepage": "https://validator-fns.smonn.se/",
-  "runkitExampleFilename": "runkit.js",
-  "lint-staged": {
-    "*.ts": "eslint --cache --fix",
-    "*.{ts,js,css,md}": "prettier --write"
-  }
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
