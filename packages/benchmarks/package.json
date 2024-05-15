@@ -1,0 +1,16 @@
+{
+  "name": "benchmarks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "benchmark": "node benchmark.js"
+  },
+  "dependencies": {
+    "benchmarkify": "4.0.0",
+    "superstruct": "1.0.4",
+    "validator-fns-v2": "npm:validator-fns@2.0.1",
+    "validator-fns-v1": "npm:validator-fns@1.10.1",
+    "validator-fns": "workspace:*",
+    "zod": "3.23.8"
+  }
+}
