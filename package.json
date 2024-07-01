@@ -59,7 +59,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@eslint/js": "9.2.0",
+    "@eslint/js": "9.6.0",
     "@types/node": "20.12.12",
     "@vitest/coverage-v8": "1.6.0",
     "eslint": "9.2.0",
