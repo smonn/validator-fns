@@ -1,8 +1,11 @@
 /** @type {import('lint-staged').Configuration} */
 export default {
-  '*.ts': 'oxlint --fix --deny-warnings',
-  // oxfmt exits 2 when every file it's given is ignored, as CODING_STANDARDS.md
-  // is in a standards sync commit. The flag makes that case exit 0; oxfmt still
-  // checks every staged file it doesn't ignore.
-  '*.{ts,js,json,jsonc,md,yml,yaml}': 'oxfmt --no-error-on-unmatched-pattern',
+  // Every staged file goes to both tools, which skip the files they don't
+  // support or ignore, so the hook covers the same files as `pnpm lint` and
+  // `pnpm format:check`. The flag makes a commit with no such file exit 0, as
+  // in a standards sync commit, where oxfmt ignores CODING_STANDARDS.md.
+  '*': [
+    'oxlint --fix --deny-warnings --no-error-on-unmatched-pattern',
+    'oxfmt --no-error-on-unmatched-pattern',
+  ],
 };
