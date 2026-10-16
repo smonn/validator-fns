@@ -4,6 +4,7 @@ import {
   matches,
   max,
   min,
+  parseString,
   required,
   string,
   url,
@@ -417,5 +418,51 @@ test('uuid', async () => {
       },
       String(value),
     );
+  }
+});
+
+// Pins today's coercion of non-primitive input. #579 changes it in v3 to
+// return an invalid result instead.
+test('string coerces non-primitive input other than plain objects', async () => {
+  const coerced: [unknown, string][] = [
+    [[1], '1'],
+    [[], ''],
+    [['a', 'b'], 'a,b'],
+    [new Map(), '[object Map]'],
+    [new Set([1]), '[object Set]'],
+    [Symbol('s'), 'Symbol(s)'],
+    [1n, '1'],
+    [true, 'true'],
+    [() => 1, '() => 1'],
+    [new String('x'), 'x'],
+    [/re/, '/re/'],
+  ];
+  const validate = string();
+  for (const [value, expected] of coerced) {
+    assert.equal(parseString(value), expected, expected);
+    assert.deepEqual(
+      await validate(value),
+      { state: 'valid', isValid: true, field: undefined, value: expected },
+      expected,
+    );
+  }
+
+  class Point {
+    x = 1;
+  }
+  for (const value of [{}, Object.create(null), new Point()]) {
+    assert.throws(
+      () => parseString(value),
+      TypeError,
+      'Failed to parse value to string.',
+    );
+    assert.deepEqual(await validate(value), {
+      state: 'invalid',
+      isValid: false,
+      field: undefined,
+      value: value as string,
+      message: 'Failed to parse value to string.',
+      errors: undefined,
+    });
   }
 });
