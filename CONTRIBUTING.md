@@ -58,6 +58,8 @@ If `pnpm check` fails in that release run, `main` has the version bump but nothi
 
 We've written tests and you can run them to assure the stability of the code, just try `npm test`. If you're adding a new functionality please write a test for it.
 
+`test/properties.test.ts` holds property-based tests written with [fast-check](https://fast-check.dev). They run with the rest of the suite in `pnpm check`. A failing property prints the smallest input that breaks it and the seed that reproduces it.
+
 ### Documentation
 
 Every chunk of code that may be hard to understand has some comments above it. If you write some new code or change some part of the existing code in a way that it would not be functional without changing it's usages, it needs to be documented.

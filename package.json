@@ -84,6 +84,7 @@
     "@changesets/cli": "3.0.3",
     "@types/node": "26.6.5",
     "@vitest/coverage-v8": "5.0.5",
+    "fast-check": "4.10.2",
     "fta-cli": "3.0.1",
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
