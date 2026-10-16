@@ -1,5 +1,11 @@
 # validator-fns
 
+## 2.0.4
+
+### Patch Changes
+
+- f152ed5: Remove `engines.pnpm` from the published `package.json`. It applied to everyone installing validator-fns, so pnpm 8 and older failed to install it with `engine-strict` on. The library never needed a particular package manager. `engines.node` is unchanged.
+
 ## 2.0.3
 
 ### Patch Changes
