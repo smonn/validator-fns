@@ -1,24 +1,28 @@
 # AGENTS.md
 
-This library follows CODING_STANDARDS.md (from github.com/smonn/coding-standards). Read the sections relevant to your task before writing code. Where they conflict with this file, this file wins.
+This library follows docs/CODING_STANDARDS.md (from github.com/smonn/coding-standards). Read the sections relevant to your task before writing code. Where they conflict with this file, this file wins.
 
 ## Project facts
 
 - Small async validation library, TypeScript, published to npm as validator-fns.
-- Zero runtime dependencies. Never add one; dev dependencies need approval.
-- The exported API is a public contract: changing or removing it is a semver-major change and needs approval first.
-- Package manager: pnpm. Tests: Vitest.
+- Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint).
+- The public contract is the exported API plus the package's published shape (`package.json` `exports`, `types`, `engines`). Get approval before changing it.
+- Package manager: pnpm. Tests: Vitest. Contributor tooling needs Node 20.19+.
 
 ## Done means
 
-- `pnpm check` passes (format, lint, typecheck, tests, coverage).
+- `pnpm check` exits 0. It covers format, lint, typecheck, tests, coverage, build, and publint.
 - New behavior has tests written first.
+- Changes to the published shape are verified by packing the library and loading it with both `require` and `import` from a separate project.
 - README API docs are updated when public behavior changes.
 
 ## Agent rules
 
-- Do not commit or push unless asked. Commit and push are separate requests.
-- Never add a suppression, coverage waiver, or check-config change to get a failing check to pass. Stop and ask instead.
+- Judge every command by its exit code rather than its output.
+- Report a check as passing only after running it in this session, after your last change.
+- Keep each PR to one concern. File an issue for any bug you find along the way.
+- Commit and push only when asked, as separate requests.
+- Leave npm publishing, releases, and tags to me. Propose them when they're due.
+- When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and check-config changes need my approval first.
 - When a requirement is ambiguous, ask with numbered options before building.
-- Do not read, print, or store secrets from any source.
-- Judge every command by its exit code, never by grepping its output.
+- Keep secrets out of reach: when a secret's value is needed, write a script I can run myself.
