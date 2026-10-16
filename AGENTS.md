@@ -5,7 +5,7 @@ This library follows CODING_STANDARDS.md in the repo root, a verbatim copy of gi
 ## Project facts
 
 - Small async validation library, TypeScript, published to npm as validator-fns.
-- Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint).
+- Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint). An issue I ask you to implement that names a dependency approves that dependency. The PR still records its evaluation. Anything else it pulls in as a direct dependency still needs asking.
 - The public contract is the exported API plus the package's published shape (`package.json` `exports`, `types`, `engines`). Get approval before changing it.
 - Package manager: pnpm. Tests: Vitest. Contributor Node version: `.nvmrc`.
 - Dependabot and Version Packages PRs skip the changeset check (a standing scope, with its reasons in the CI workflow). Revisit it if the library gains a runtime dependency.
@@ -16,7 +16,7 @@ This library follows CODING_STANDARDS.md in the repo root, a verbatim copy of gi
 - New behavior has tests written first.
 - Changes to the published shape are verified by packing the library and loading it with both `require` and `import` from a separate project.
 - README API docs are updated when public behavior changes.
-- The PR has a changeset. Bump by contract impact: patch for fixes, minor for additions, major for breaking changes. Tooling and docs-only changes, README included, get an empty changeset. Security warnings get a patch so they reach npm now.
+- The PR has a changeset. Bump by contract impact: patch for fixes, minor for additions, major for breaking changes. Tooling and docs-only changes, README included, get an empty changeset. Security warnings get a patch so they reach npm now. AGENTS.md's changeset rules win over a bump named in my decision. Use the rule and point out the difference in the PR.
 - Versions come from changesets; the Version Packages PR owns `version` in package.json and `CHANGELOG.md`.
 
 ## Working on issues
@@ -29,7 +29,7 @@ When I ask you to implement a set of issues:
 4. Commit as you go, in small Conventional Commits, keeping structural and behavioral changes in separate commits. Tidy unpushed commits before pushing when it helps the reader.
 5. Before pushing, review your full diff as a reviewer would, per the Review section of CODING_STANDARDS.md: read the surrounding code, confirm the tests fail when the code breaks, and refactor under green tests. Then run `pnpm check` per the rule below. Your review does not count as approval.
 6. Push the branch and open the PR as a draft. Mark it ready for review once CI passes. CI passes when every required check has reported success, including checks posted by external apps. A PR with a "Decisions needed" section stays a draft until I answer, even when CI passes.
-7. After pushing, add commits rather than rewriting history, unless I ask. To resolve conflicts, rebase onto the base branch and push with --force-with-lease. That is the only history rewrite allowed without asking. During it, change commits only as far as resolving the conflict needs (amend, drop, or move a hunk), and list what changed in the PR. `.claude/settings.json` denies other force pushes for Claude Code.
+7. After pushing, add commits rather than rewriting history, unless I ask. To resolve conflicts, rebase onto the base branch and push with --force-with-lease. During it, change commits only as far as resolving the conflict needs (amend, drop, or move a hunk), and list what changed in the PR. Also rebase, with the same scope limits, to pick up a newly required check or to move a stacked PR onto `main` after its base merges. These rebases are the only history rewrites allowed without asking. `.claude/settings.json` denies other force pushes for Claude Code.
 8. Stop an issue and report when a failing check needs a fix outside its scope, or the issue turns out much larger than described.
 9. Finish with one summary: for each issue, its PR or the question it's waiting on.
 
@@ -40,11 +40,12 @@ Push only to branches you created. Merging is mine. Work only the issues I named
 - Judge every command by its exit code; in pipes and chains, use set -o pipefail or capture the status before the pipe.
 - Report a check as passing only after running it in this session, after your last change, on the branch the PR comes from, on the Node version in `.nvmrc`. State that version in the PR's Tested section.
 - Keep each PR to one concern. File an issue for anything you find along the way, one issue per independent finding.
-- Outside Working on issues, commit, push, and open PRs only when asked. A request to open a PR includes the push it needs. Rewriting unpushed commits counts as committing; rewriting pushed commits needs its own request, except the conflict rebase in Working on issues step 7.
-- Without asking, you may file issues and comment on your own PRs, issues you filed, and issues you're working on. Ask before closing, labeling, setting milestones, deleting, or commenting elsewhere.
+- Outside Working on issues, commit, push, and open PRs only when asked. A request to open a PR includes the push it needs. Rewriting unpushed commits counts as committing; rewriting pushed commits needs its own request, except the rebases in Working on issues step 7.
+- Without asking, you may file issues and comment on your own PRs, issues you filed, and issues you're working on. Ask before closing, labeling, setting milestones, deleting, or commenting elsewhere. You may set the next-major milestone on issues you file for a breaking change I've decided goes in a major release.
 - To fix a failing Dependabot PR, open a replacement from your own branch, link it, and leave closing the bot PR to me.
 - A question about an action reserved to me ("can we close X?") gets an answer, not the action.
 - Before rebasing, writing a merge order, or reporting mergeability, fetch and re-check the base.
+- A PR that adds a check meant to be required lists the open PRs that predate it.
 - Leave npm publishing, releases, tags, and merging, the Version Packages PR included, to me. Mention any open Version Packages PR in your summary.
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and standing scopes need my approval first. Tightening a check (removing an ignore, raising a threshold) is fine; loosening needs my approval.
 - When a requirement is ambiguous, ask with numbered options before building.
