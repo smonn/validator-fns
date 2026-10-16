@@ -46,6 +46,7 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  * @param config Configuration to apply
  * @category Helpers
  */
+// oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- removing T breaks callers that pass a type argument; #588 removes it in v3
 export function applyArrayConfig<T>(
   config: ArrayConfig,
   value: unknown,
