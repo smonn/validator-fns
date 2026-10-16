@@ -76,11 +76,7 @@ export function parseDate(value: unknown): Date | null | undefined {
     return new Date(value);
   }
 
-  if (typeof value === 'string') {
-    return parseIsoDate(value);
-  }
-
-  return invalidDate;
+  return typeof value === 'string' ? parseIsoDate(value) : invalidDate;
 }
 
 /**
@@ -112,15 +108,13 @@ function parseIsoDate(value: string): Date {
     return new Date(year, month, day, hour, minute, second, millisecond);
   }
 
-  const minuteOffset = parseTimezone(timezone);
-
   return new Date(
     Date.UTC(
       year,
       month,
       day,
       hour,
-      minute + minuteOffset,
+      minute + parseTimezone(timezone),
       second,
       millisecond,
     ),
