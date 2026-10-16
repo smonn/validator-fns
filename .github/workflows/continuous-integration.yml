@@ -14,6 +14,17 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # Standing scope: two kinds of PR skip the changeset check.
+      # - Dependabot PRs. The library has no runtime dependencies, so their
+      #   changeset would always be empty, and pushing one onto the branch stops
+      #   Dependabot from rebasing it. Keyed on the PR author, which nobody else
+      #   can use. Revisit if the library takes a runtime dependency.
+      # - The Version Packages PR. It consumes the changesets it releases, so the
+      #   check always fails on it. Keyed on a changeset-release/* branch in this
+      #   repository, which only maintainers can push.
+      CHANGESET_SCOPE: ${{ github.event.pull_request.user.login == 'dependabot[bot]' || (github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'changeset-release/')) }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -36,20 +47,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Standing scope: Dependabot PRs skip the changeset check. The library has
-      # no runtime dependencies, so their changeset would always be empty, and
-      # pushing one onto the branch stops Dependabot from rebasing it. Keyed on
-      # the PR author because anyone can name a branch dependabot/*. Revisit if
-      # the library takes a runtime dependency.
-      #
-      # The Version Packages PR (branch changeset-release/main) bumps the version
-      # with no changeset, so it would fail this check. CI doesn't run on it today
-      # because the GITHUB_TOKEN opens it; if that changes, skip changeset-release/* here.
-      - name: Changeset
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm changeset:status
-
       - name: Check
+        if: env.CHANGESET_SCOPE != 'true'
+        run: pnpm check
+
+      - name: Check without the changeset (standing scope)
+        if: env.CHANGESET_SCOPE == 'true'
         run: pnpm check:code
 
       - name: Build
