@@ -146,14 +146,14 @@ export function url(
   return createValidatorTest(
     (value) => {
       try {
-        let url: URL | undefined;
+        let parsed: URL | undefined;
         if (
           value === undefined ||
           value === null ||
           value === '' ||
-          (typeof value === 'string' && (url = new URL(value)))
+          (typeof value === 'string' && (parsed = new URL(value)))
         ) {
-          return !(url && protocols && !protocols.includes(url.protocol));
+          return !(parsed && protocols && !protocols.includes(parsed.protocol));
         }
       } catch {
         // Do nothing
