@@ -1,6 +1,7 @@
 // Installs the packed package into an empty project and loads it the way
 // consumers do, through both the require and the import conditions. This
-// catches export map paths that point at files missing from the tarball.
+// catches export map paths that point at files missing from the tarball. It
+// also runs the published RunKit example (`runkitExampleFilename`).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
@@ -74,8 +75,16 @@ try {
     imported,
     'require and import expose different exports',
   );
+
+  const runkit = run(
+    process.execPath,
+    [join('node_modules', 'validator-fns', 'runkit.cjs')],
+    consumer,
+  );
+  assert.match(runkit, /firstName: 'Bob'/, 'runkit.cjs logged no valid result');
+
   console.log(
-    `Smoke test passed on Node.js ${process.version}: ${required.length} exports via require and import`,
+    `Smoke test passed on Node.js ${process.version}: ${required.length} exports via require and import, and runkit.cjs`,
   );
 } finally {
   rmSync(workDir, { recursive: true, force: true });

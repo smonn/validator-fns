@@ -5,7 +5,7 @@
   "license": "MIT",
   "files": [
     "dist",
-    "runkit.js"
+    "runkit.cjs"
   ],
   "author": {
     "name": "Simon Ingeson",
@@ -88,7 +88,7 @@
   },
   "repository": "github:smonn/validator-fns",
   "homepage": "https://validator-fns.smonn.se/",
-  "runkitExampleFilename": "runkit.js",
+  "runkitExampleFilename": "runkit.cjs",
   "lint-staged": {
     "*.ts": "oxlint --fix --deny-warnings",
     "*.{ts,js,json,jsonc,md,yml,yaml}": "oxfmt --no-error-on-unmatched-pattern"
