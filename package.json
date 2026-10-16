@@ -52,7 +52,7 @@
   "scripts": {
     "build": "tsup",
     "check": "run-s changeset:status check:code",
-    "check:code": "run-s format:check lint typecheck deps fta coverage build publint attw smoke",
+    "check:code": "run-s format:check lint typecheck deps fta coverage build publint attw smoke bench:smoke",
     "changeset:status": "node scripts/changeset-status.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -63,6 +63,7 @@
     "publint": "publint --strict",
     "attw": "attw --pack .",
     "smoke": "node scripts/smoke-test.mjs",
+    "bench:smoke": "pnpm --dir benchmark install --frozen-lockfile && node benchmark/index.mjs --smoke",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm check",
