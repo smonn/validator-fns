@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 export { applyArrayConfig, array, parseArray } from './arrays';
 export type { ArrayConfig, ArrayItemValidatorResult } from './arrays';
 export { applyBooleanConfig, boolean, parseBoolean } from './booleans';
