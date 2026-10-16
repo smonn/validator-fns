@@ -38,9 +38,9 @@ Applies to design docs, PR descriptions, reviews, and agent output alike.
 
 - You **should** separate reasoning into phases: observe, evaluate, analyze, synthesize, communicate. Scale the rigor to the decision's reversibility and impact.
 - You **must** separate observation from interpretation. "The handler calls the DB three times" is an observation; "the handler is slow" is an interpretation until measured.
-- You **should** state confidence levels, tradeoffs, and knowledge gaps explicitly. Prefer precise, falsifiable claims over vague generalizations. Avoid absolutist claims.
+- You **should** state confidence levels, tradeoffs, and knowledge gaps explicitly. Prefer precise, falsifiable claims over vague generalizations. Avoid absolutist claims. Claims about tool behavior **should** name the version observed and whether they were reproduced.
 - When a tradeoff exists, you **must** name both sides. Do not silently pick one.
-- When a requirement is ambiguous, you **should** present numbered options rather than guess and build. When the choice hinges on a measurable fact, measure first and present the data with the options.
+- When a requirement is ambiguous, you **should** present numbered options rather than guess and build, in conversation, issues, and PR bodies alike. When the choice hinges on a measurable fact, measure first and present the data with the options.
 - Written output **should** be dry and plain, moderate-to-high detail, with no recap of what was just said.
 
 ## Design principles
@@ -59,7 +59,6 @@ Simple over easy (in Rich Hickey's sense): fewer things braided together, even w
 - **Parse, don't validate.** At boundaries you **must** transform untyped input into narrowed types once, rather than checking and passing the raw value along.
 - **Make illegal states unrepresentable.** You **should** use the type system (sum types, branded or newtype IDs, required fields) so invalid combinations cannot be constructed.
 - **Deep modules.** You **should** prefer a small interface over a large hidden implementation (Ousterhout). A module whose interface is as complex as its body adds cost without hiding anything.
-- **Define errors out of existence.** You **should** do this where the semantics allow; Errors lists the techniques.
 
 ## Architecture
 
@@ -85,8 +84,7 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 
 *Why:* other people's code depends on these shapes, and breaking them breaks systems you cannot see.
 
-- Public contracts (HTTP APIs, library exports, package metadata such as entry points, types, and supported runtime versions, event and message schemas, persisted file formats, CLI flags and output) **must** stay backward compatible or be versioned.
-- Breaking changes **must** be versioned and announced. Where consumers live outside the repository, they **should** get a deprecation period.
+- Public contracts (HTTP APIs, library exports, package metadata such as entry points, types, and supported runtime versions, event and message schemas, persisted file formats, CLI flags and output) **must** stay backward compatible. Breaking changes **must** be versioned and announced, and consumers outside the repository **should** get a deprecation period.
 - Libraries **should** follow Semantic Versioning. Dropping a supported runtime version is a breaking change. The lowest supported runtime version **should** run in CI.
 - Database migrations **should** follow expand, migrate, contract: add the new shape, move data and readers, then remove the old shape in a later deploy. Running code **must** keep working at every step.
 - Migrations **should** be plain SQL files run by a language-agnostic tool (for example [dbmate](https://github.com/amacneil/dbmate)), not ORM-generated code. The schema then outlives any one language, framework, or ORM.
@@ -144,9 +142,8 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 
 - Each user-facing change **should** carry its release note in the PR that makes it (for example a changeset). A check **should** fail a PR without one. A PR with no user-facing change records that explicitly (for example an empty changeset).
 - Version numbers and changelogs **should** be generated from those notes, not edited by hand.
-- Releases **should** be published by CI from a known commit, after the full check command passes. Publishing credentials follow Supply chain (A03).
+- Releases **should** be published by CI from a known commit after the full check command passes, using the exact artifact that passed the checks, with no rebuild in between. Publishing credentials follow Supply chain (A03).
 - A library **should** be tested as published: pack it, then load it from a separate project the way consumers do (for example with both require and import). The Package shape check covers the rest.
-- The artifact that passes the checks **should** be the one published, with no rebuild in between.
 - The release process **should** document how to recover when publishing fails after the version is bumped.
 
 ## Code organization
@@ -189,7 +186,7 @@ These are defaults. Project rules and language idioms **must** take precedence, 
 
 - Comments **should** explain WHY, not WHAT. If code needs a WHAT comment, rewrite the code first.
 - Genuinely opaque syntax (a complex regex, bit manipulation, an obscure API workaround) **may** get a brief WHAT comment.
-- Workarounds, non-obvious type assertions, and external constraints **must** carry a comment stating the reason.
+- Workarounds and external constraints **must** carry a comment stating the reason. Casts follow Types.
 - Doc comments (JSDoc, rustdoc, godoc) **should not** be added to self-documenting signatures. When one parameter is ambiguous (is `rate` 0.07 or 7?), document that parameter only.
 - Obvious operations **should not** get inline comments.
 - TODO comments **must** say what is left, why it was deferred, and reference a tracking issue: `TODO(#456): handle timezone edge case after #123 lands`.
@@ -201,12 +198,11 @@ These are defaults. Project rules and language idioms **must** take precedence, 
 Language specifics are under Language notes. The general rules:
 
 - The strictest practical compiler or checker settings **should** be on.
-- Escape hatches that switch off checking (TypeScript `any`, Rust `unsafe` without need) **must not** be used to silence the compiler. Use the top type (`unknown` in TypeScript) and narrow. Go's top type is `any`; it **should not** appear in domain code and **should** be narrowed with type switches at boundaries.
+- Escape hatches that switch off checking (TypeScript `any`, Rust `unsafe` without need) **must not** be used to silence the compiler. Use the top type (`unknown` in TypeScript) and narrow. Go's `any` follows its language notes.
 - Type assertions and casts are a last resort. Each one **must** carry a comment on why inference or narrowing fails. Prefer type guards or assertion functions.
 - Suppression directives (`@ts-ignore`, `#[allow(...)]`, `//nolint`) **must** say why and what would remove the need.
 - Non-null assertions or unwraps **must not** be used on values that can legitimately be absent at runtime. Handle the absent case explicitly.
-- Exhaustiveness checking **must** be on for matches over sum types: a `never` check in TypeScript, `match` in Rust, the `exhaustive` linter in Go.
-- Where adding a variant must force callers to change, matches **must** name every variant. A catch-all arm (`_ =>` in Rust, `default` in Go) silently accepts new variants. In TypeScript, the `default` branch holds only the `never` check. Enums from other crates marked `#[non_exhaustive]` require a wildcard, so this rule does not apply to them.
+- Exhaustiveness checking **must** be on for matches over sum types: a `never` check in TypeScript, `match` in Rust, the `exhaustive` linter in Go. Where adding a variant must force callers to change, matches **must** name every variant: a catch-all arm (`_ =>` in Rust, `default` in Go) silently accepts new variants, and in TypeScript the `default` branch holds only the `never` check. Enums from other crates marked `#[non_exhaustive]` require a wildcard, so this does not apply to them.
 - Domain values with rules **should** be value objects where reasonable: a dedicated, immutable type that can only be constructed through a parser enforcing the rule. Examples: entity IDs, strings with a format (email, slug, currency code), numbers with a range (percentage, quantity). Use a brand or tag in structurally typed languages (a cast can still forge one, which the cast rule above keeps visible), a struct with an unexported field in Go, and a newtype with a private field in Rust. A value with no rule beyond its primitive type stays primitive.
 - Pitfall defaults (**may** be overridden with a reason): times stored and passed in UTC, converted only at the edges; money as integer minor units or a decimal type, never binary floating point.
 
@@ -234,8 +230,8 @@ Language specifics are under Language notes. The general rules:
 - **Structure.** Tests **should** follow arrange, act, assert, with one concept per test.
 - **Names** **should** read as `should <expected behavior> when <condition>`.
 - **Isolation.** Tests, including end-to-end tests, **must not** depend on execution order or shared mutable state.
+- **Code that runs nowhere.** Every executable file (benchmarks, examples, scripts) **should** run in some check, if only once with minimal input. Code nothing runs **should** be deleted.
 - **Property-based tests** **may** cover pure core logic with clear invariants: roundtrips, idempotence, monotonicity.
-- **Mutation testing** **should** run on a schedule against pure core and library code to check that tests catch real changes.
 
 ## Static analysis and deterministic checks
 
@@ -246,9 +242,11 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 **How checks run**
 
 - The same checks **must** run locally and in CI, from one command (for example `check`).
+- A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
+- A check's result **should** depend only on tracked files, including lockfiles, and the pinned toolchain, not on local state such as a sub-project's installed dependencies or caches. CI **should** set up every sub-project the checks read.
+- A new check **should** be shown to fail once: break what it guards on purpose, and record the result in the PR.
 - The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. Local checks **should** fail on a toolchain version other than the pinned one. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
 - When a tool's default conflicts with a project rule, the repository **should** configure the tool, including AI agent settings.
-- A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
 - Checks **should** be fast enough to run on every iteration, including every agent loop. Slow checks (mutation testing, full-repo analysis) **may** run on a schedule instead.
 - Findings **should** be errors or off. Warnings that never fail the build become noise.
 - New code **must** meet every Must-level threshold from day one and **should** meet every Should-level one. The coverage target applies to the project as a whole; per-PR coverage follows the changed-lines rule in the table.
@@ -302,8 +300,7 @@ A fully covered function scores its complexity. An untested one scores roughly i
 - Every PR **must** leave the main branch working, including each PR in a stack of dependent changes.
 - A new API **should** ship with at least one usage in the same PR. Reviewers then see how it is used, and no unused API lands.
 - Tech debt **must** link its tracking issue (see Exceptions) from a code comment. It **should** be paid off soon, since unpaid debt compounds quickly.
-- A PR **should** do one self-contained thing, small enough to review in one sitting.
-- Around 100 changed lines is usually fine, and around 1,000 is usually too large. File spread counts too: 200 lines across 50 files is too large. Deleted files and trusted automated refactors count for less.
+- A PR **should** do one self-contained thing, small enough to review in one sitting. Around 100 changed lines is usually fine, and around 1,000 is usually too large. File spread counts too: 200 lines across 50 files is too large. Deleted files and trusted automated refactors count for less.
 - A PR that is too large **should** be split, for example into stacked PRs. Reviewers **may** reject a change for size alone.
 - Before adding a utility, you **should** check whether one already exists.
 
@@ -320,22 +317,24 @@ A fully covered function scores its complexity. An untested one scores roughly i
 **Issues and PRs**
 
 - Issues and PRs **must** follow the project's established template, so each one covers the same aspects. A project without templates **should** add them.
+- CI **may** check PR descriptions against the template's rules (required sections, banned content).
+- PR titles **should** use the Conventional Commits format: `feat(billing): add proration`. The title **should** be imperative and stand alone in history.
+- The description body **should** say why the change is made and note its shortcomings, with enough context that it still reads if linked pages disappear. Authors **should** re-check it before merge, since changes drift during review.
 - Description length **should** scale with the change's impact and risk, not its line count. A one-line change to a security config warrants a thorough explanation. A large mechanical change, such as an automated rename, needs only a few sentences.
 - A description **should** cite a standard only where the change deviates from it. Following a standard needs no citation.
 - Each fact **should** appear once in a description.
 - Notes about other work **should** go on that work's issue, not in the PR.
+- PRs **should** open as drafts.
 - Independent findings **should** get one issue each, or a tracking issue with a checklist.
 - When several PRs share an issue, the last one to merge **should** close it.
 - Negative results (checked, nothing found) **should** be recorded on the issue.
-- CI **may** check PR descriptions against the template's rules (required sections, banned content).
-- PR titles **should** use the Conventional Commits format: `feat(billing): add proration`. The title **should** be imperative and stand alone in history.
-- The description body **should** say why the change is made and note its shortcomings, with enough context that it still reads if linked pages disappear. Authors **should** re-check it before merge, since changes drift during review.
-- PRs **should** open as drafts.
 
 **Merge gates**
 
 - The main branch **must** be protected against direct pushes.
 - Required checks **must** pass before merge, including on PRs opened by bots or automation. Where the platform does not run checks on automation-opened PRs, a documented manual step that runs them before merge satisfies this.
+- A new CI check **should** be made required in the same change, or run inside a job that already is.
+- CI **should** run on PRs into any branch, so each PR in a stack is checked before it is retargeted.
 - At least one review approval **should** be required.
 
 **Review**
