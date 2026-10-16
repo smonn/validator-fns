@@ -5,7 +5,7 @@
     "resolutionType": "entry-package",
     "includeDevDepsFromRoot": false,
   },
-  "ignoreFiles": ["benchmark/**", "runkit.js"],
+  "ignoreFiles": ["benchmark/**", "runkit.cjs"],
   "workspaces": [
     {
       "path": ".",

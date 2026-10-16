@@ -120,4 +120,7 @@ const validate = object({
     // Handle and display errors
     console.error(result.errors);
   }
-})();
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
