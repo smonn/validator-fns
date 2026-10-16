@@ -79,6 +79,8 @@ We've written tests and you can run them to assure the stability of the code, ju
 
 `test/properties.test.ts` holds property-based tests written with [fast-check](https://fast-check.dev). They run with the rest of the suite in `pnpm check`. A failing property prints the smallest input that breaks it and the seed that reproduces it.
 
+Mutation testing with [StrykerJS](https://stryker-mutator.io) runs every Monday in the Mutation Testing workflow, and on pull requests that change `stryker.config.mjs` or the workflow. Run it locally with `pnpm mutation`. It fails when the mutation score drops below `thresholds.break` in `stryker.config.mjs`. Raise that threshold as the score improves; lowering it loosens the check and needs the maintainer's approval.
+
 ### Documentation
 
 Every chunk of code that may be hard to understand has some comments above it. If you write some new code or change some part of the existing code in a way that it would not be functional without changing it's usages, it needs to be documented.
