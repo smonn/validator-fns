@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This library follows docs/CODING_STANDARDS.md (from github.com/smonn/coding-standards). Read the sections relevant to your task before writing code. Where they conflict with this file, this file wins.
+This library follows CODING_STANDARDS.md (from github.com/smonn/coding-standards). Read the sections relevant to your task before writing code. Where they conflict with this file, this file wins.
 
 ## Project facts
 
