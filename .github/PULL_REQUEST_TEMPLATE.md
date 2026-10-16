@@ -23,3 +23,7 @@
 ## Limitations
 
 <!-- Only what a reviewer must know before merging. Delete if none. -->
+
+## Decisions needed
+
+<!-- Questions for the reviewer, as numbered options. Delete if none. -->
