@@ -351,7 +351,7 @@ Ensures value is an integer number. Works with numbers.
 
 #### matches(pattern, message)
 
-Ensures value matches the specified pattern. Works with strings. `pattern` is provided to the message.
+Ensures value matches the specified pattern. Works with strings. `pattern` is provided to the message. The `g` and `y` flags carry no state between values: each test starts at index 0, and `pattern.lastIndex` is left unchanged.
 
 <details><summary>arguments</summary>
 

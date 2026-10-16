@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { email, max, min, required, string, url } from '../src/index';
+import { email, matches, max, min, required, string, url } from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -320,4 +320,28 @@ test('string default', async () => {
     field: undefined,
     value: 'false',
   });
+});
+
+test('should pass each matching value when the pattern has the global flag', async () => {
+  const validate = matches(/a/g, 'invalid');
+  assert.equal((await validate('ab')).state, 'valid');
+  assert.equal((await validate('a')).state, 'valid');
+});
+
+test('should pass each matching value when the pattern has the sticky flag', async () => {
+  const validate = matches(/a/y, 'invalid');
+  assert.equal((await validate('a')).state, 'valid');
+  assert.equal((await validate('a')).state, 'valid');
+});
+
+test('should match from the start when the pattern has the sticky flag', async () => {
+  const validate = matches(/a/y, 'invalid');
+  assert.equal((await validate('ba')).state, 'invalid');
+});
+
+test('should leave lastIndex unchanged when testing the caller pattern', async () => {
+  const pattern = /a/g;
+  const validate = matches(pattern, 'invalid');
+  await validate('ab');
+  assert.equal(pattern.lastIndex, 0);
 });

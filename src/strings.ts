@@ -86,12 +86,19 @@ export function matches(
   pattern: RegExp,
   message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
 ): ValidatorTest<string> {
+  // A g or y pattern advances lastIndex on each test(), so a shared one would
+  // fail matching values after a match. Test a private copy from index 0.
+  const ownPattern = new RegExp(pattern);
   return createValidatorTest(
-    (value) =>
-      value === undefined ||
-      value === null ||
-      value === '' ||
-      (typeof value === 'string' && pattern.test(value)),
+    (value) => {
+      ownPattern.lastIndex = 0;
+      return (
+        value === undefined ||
+        value === null ||
+        value === '' ||
+        (typeof value === 'string' && ownPattern.test(value))
+      );
+    },
     message,
     () => ({ pattern }),
   );
