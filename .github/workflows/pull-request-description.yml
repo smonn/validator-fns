@@ -1,0 +1,32 @@
+name: Pull Request Description
+
+on:
+  # edited re-runs the check when the description changes, without re-running
+  # the full check in continuous-integration.yml.
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  decisions:
+    name: decisions answered
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # The description goes through an environment variable, never into the
+      # script text, so its content can't run as shell.
+      - name: Check for open decisions
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/check-decisions.mjs
