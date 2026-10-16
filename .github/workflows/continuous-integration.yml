@@ -17,24 +17,40 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # The changeset check diffs against origin/main.
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
 
-      - name: Use Node 22
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Standing scope: Dependabot PRs skip the changeset check. The library has
+      # no runtime dependencies, so their changeset would always be empty, and
+      # pushing one onto the branch stops Dependabot from rebasing it. Keyed on
+      # the PR author because anyone can name a branch dependabot/*. Revisit if
+      # the library takes a runtime dependency.
+      #
+      # The Version Packages PR (branch changeset-release/main) bumps the version
+      # with no changeset, so it would fail this check. CI doesn't run on it today
+      # because the GITHUB_TOKEN opens it; if that changes, skip changeset-release/* here.
+      - name: Changeset
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: pnpm changeset:status
+
       - name: Check
-        run: pnpm check
+        run: pnpm check:code
 
       - name: Build
         run: pnpm build

@@ -10,6 +10,8 @@ We have some functionalities in mind and we have issued them and there is a _mil
 
 ### Writing some code!
 
+Contributor tooling needs Node 22.11 or later. `.nvmrc` pins the major version, so `nvm use` picks it up.
+
 Contributing to a project on GitHub is pretty straight forward. If this is you're first time, these are the steps you should take.
 
 - Fork this repo.
@@ -23,6 +25,21 @@ When you're done, submit a pull request and for one of the maintainers to check 
 ### Issues and pull requests
 
 Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it.
+
+### Changesets
+
+Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. Dependabot pull requests are the exception: they only touch dev tooling, so CI skips the check for them.
+
+- Run `pnpm changeset` and pick the bump: `major` for a change that breaks the exported API or `package.json` `exports`, `types`, or `engines`, `minor` for a new feature, `patch` for a fix. Write the summary for library users.
+- For a change users won't notice, such as tooling, tests, or docs, run `pnpm changeset --empty`.
+- Stage the new file before running `pnpm check`. The check reads changesets from git, so an untracked file doesn't count.
+- Leave `version` in `package.json` and `CHANGELOG.md` to the Version Packages pull request, which generates both from changesets.
+
+### Releases
+
+The maintainer releases. When a pull request with a changeset merges, CI opens or updates a Version Packages pull request that bumps `version` and writes `CHANGELOG.md`. Merging that pull request runs `pnpm check`, publishes to npm through trusted publishing, and creates the git tag and GitHub release.
+
+If `pnpm check` fails in that release run, `main` has the version bump but nothing is published. Fix the failure in a follow-up pull request with a patch changeset that says the previous version failed to publish. An empty changeset won't work: the release workflow does nothing while any changeset is pending, so the bumped version would stay unpublished. The next Version Packages pull request releases the following patch version, and the failed version is never published.
 
 ### Tests
 

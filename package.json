@@ -51,7 +51,9 @@
   },
   "scripts": {
     "build": "tsup",
-    "check": "run-s format:check lint typecheck deps fta coverage build publint attw smoke",
+    "check": "run-s changeset:status check:code",
+    "check:code": "run-s format:check lint typecheck deps fta coverage build publint attw smoke",
+    "changeset:status": "changeset status --since=origin/main",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --deny-warnings",
@@ -68,6 +70,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
+    "@changesets/cli": "3.0.3",
     "@types/node": "20.12.12",
     "@vitest/coverage-v8": "1.6.0",
     "fta-cli": "3.0.1",
