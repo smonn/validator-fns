@@ -85,6 +85,21 @@ test('empty object config is always valid', async () => {
   });
 });
 
+test('inherited properties of the config are not validated', async () => {
+  const inherited = { name: string(required('required')) };
+  const properties = Object.assign(Object.create(inherited) as object, {
+    age: number(),
+  });
+  const validate = object(properties);
+
+  assert.deepEqual(await validate({ name: undefined, age: 22 }), {
+    state: 'valid',
+    value: { age: 22 },
+    isValid: true,
+    field: undefined,
+  });
+});
+
 test('nested object', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
