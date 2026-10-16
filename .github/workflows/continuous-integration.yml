@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
+  # Every PR, including one stacked on another PR's branch, gets checked.
   pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -29,7 +28,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          # The changeset check diffs against origin/main.
+          # The changeset check diffs against the PR's base branch.
           fetch-depth: 0
 
       - name: Install pnpm

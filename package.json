@@ -53,7 +53,7 @@
     "build": "tsup",
     "check": "run-s changeset:status check:code",
     "check:code": "run-s format:check lint typecheck deps fta coverage build publint attw smoke",
-    "changeset:status": "changeset status --since=origin/main",
+    "changeset:status": "node scripts/changeset-status.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --deny-warnings",
