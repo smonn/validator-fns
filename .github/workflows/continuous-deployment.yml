@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - main
+  # Publishes a version that a failed release run left unpublished. See
+  # CONTRIBUTING.md (Releases).
+  workflow_dispatch:
 
 # Each job asks for only the permissions it needs.
 permissions: {}
@@ -16,11 +19,14 @@ concurrency:
 
 jobs:
   # Pending changesets mean "version", an unpublished version in package.json
-  # means "publish", and anything else means "none".
+  # means "publish", and anything else means "none". A manual run never
+  # versions: it publishes an unpublished version, or does nothing.
   select-mode:
+    # A manual run can target any branch; only main may publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      mode: ${{ steps.select-mode.outputs.mode }}
+      mode: ${{ steps.select-mode.outputs.mode || steps.stranded.outputs.mode }}
       publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
     permissions:
       contents: read
@@ -42,8 +48,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Select Changesets mode
+        if: github.event_name == 'push'
         id: select-mode
         uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+
+      # select-mode returns "none" while empty changesets are pending, which
+      # leaves a stranded version unpublished. Without a publish plan artifact,
+      # pack computes the same plan itself.
+      - name: Select mode for a stranded version
+        if: github.event_name == 'workflow_dispatch'
+        id: stranded
+        run: node scripts/stranded-release-mode.mjs
 
   # Opens or updates the Version Packages PR. Merging it triggers a publish.
   version:
