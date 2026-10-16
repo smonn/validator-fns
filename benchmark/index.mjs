@@ -30,6 +30,21 @@ suite.add('simple', (done) => {
   simpleValidate(simpleObject).then(() => done());
 });
 
+// Real traffic rarely repeats exact values, so these scenarios build a new
+// value per call. The counter makes each object distinct across iterations.
+let counter = 0;
+
+suite.add('simple (distinct values)', (done) => {
+  const i = counter++;
+  simpleValidate({
+    name: `John Doe ${i}`,
+    email: `john.doe.${i}@company.space`,
+    firstName: `John ${i}`,
+    phone: `123-${i}`,
+    age: 18 + i,
+  }).then(() => done());
+});
+
 // COMPLEX
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -123,6 +138,19 @@ const complexObject = {
 
 suite.add('complex', (done) => {
   complexValidate(complexObject).then(() => done());
+});
+
+suite.add('complex (distinct values)', (done) => {
+  const i = counter++;
+  complexValidate({
+    ...complexObject,
+    age: 18 + i,
+    emailAddress: `foo.${i}@example.com`,
+    firstName: `Bob ${i}`,
+    homepage: `https://www.example.com/${i}`,
+    postalCode: String(i % 100_000).padStart(5, '0'),
+    startDate: new Date(startDate.getTime() + (i % ONE_DAY)),
+  }).then(() => done());
 });
 
 suite.run();

@@ -1,5 +1,13 @@
 import { assert, test } from 'vitest';
-import { exact, formatMessage, oneOf, required, string } from '../src/index.js';
+import {
+  exact,
+  formatMessage,
+  number,
+  oneOf,
+  required,
+  string,
+  valid,
+} from '../src/index.js';
 
 test('format string message', () => {
   assert.strictEqual(
@@ -208,4 +216,21 @@ test('custom test that throws an atypical error', async () => {
     field: undefined,
     errors: undefined,
   });
+});
+
+test('should return the field of each call when the same value repeats', async () => {
+  const validate = number();
+  await validate(1, 'first');
+  assert.strictEqual((await validate(1, 'second')).field, 'second');
+});
+
+test('should run custom tests on every call when the same value repeats', async () => {
+  let calls = 0;
+  const validate = string(async (value, field) => {
+    calls++;
+    return valid({ value, field });
+  });
+  await validate('a');
+  await validate('a');
+  assert.strictEqual(calls, 2);
 });

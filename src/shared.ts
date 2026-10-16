@@ -222,7 +222,6 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   applyConfig: (value: unknown, config: C) => T | null | undefined,
 ): ValidatorFactory<C, T, string> {
   return (config, ...tests) => {
-    const cache: Record<string, ValidatorResult<T>> = {};
     let finalConfig = defaultConfig;
     let allTests = tests;
 
@@ -240,21 +239,14 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     return async (value, field) => {
       try {
         const parsedValue = applyConfig(value, finalConfig);
-        const parsedValueString = String(parsedValue);
-        if (hasOwnProperty(cache, parsedValueString)) {
-          return cache[parsedValueString] as ValidatorResult<T, any>;
-        }
-
         for (const validatorTest of allTests) {
           const result = await validatorTest(parsedValue, field);
           if (result.state === 'invalid') {
-            cache[parsedValueString] = result;
             return result;
           }
         }
 
-        cache[parsedValueString] = await valid({ value: parsedValue, field });
-        return cache[parsedValueString] as ValidatorResult<T, any>;
+        return await valid({ value: parsedValue, field });
       } catch (error) {
         return invalid({
           message: error instanceof Error ? error.message : String(error),
