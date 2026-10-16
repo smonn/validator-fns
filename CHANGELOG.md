@@ -1,5 +1,11 @@
 # validator-fns
 
+## 2.0.5
+
+### Patch Changes
+
+- 640c6c3: The RunKit example is now `runkit.cjs`. As `runkit.js` it loaded as an ES module, so its `require` call failed.
+
 ## 2.0.4
 
 ### Patch Changes
