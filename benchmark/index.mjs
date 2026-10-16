@@ -4,6 +4,23 @@ import * as V from 'validator-fns';
 
 const suite = benchmark.createSuite('validator-fns');
 
+// benchmarkify's done() takes no error, and a run that never calls it hangs
+// the suite, so a rejected run exits with its error.
+function fail(error) {
+  console.error(error);
+  process.exit(1);
+}
+
+/**
+ * @param {string} name
+ * @param {() => Promise<unknown>} run
+ */
+function add(name, run) {
+  suite.add(name, (done) => {
+    run().then(() => done(), fail);
+  });
+}
+
 // SIMPLE
 
 const simpleObject = {
@@ -26,23 +43,21 @@ const simpleValidate = V.object({
   age: V.number(V.required('required'), V.min(18, 'min:18')),
 });
 
-suite.add('simple', (done) => {
-  simpleValidate(simpleObject).then(() => done());
-});
+add('simple', () => simpleValidate(simpleObject));
 
 // Real traffic rarely repeats exact values, so these scenarios build a new
 // value per call. The counter makes each object distinct across iterations.
 let counter = 0;
 
-suite.add('simple (distinct values)', (done) => {
+add('simple (distinct values)', () => {
   const i = counter++;
-  simpleValidate({
+  return simpleValidate({
     name: `John Doe ${i}`,
     email: `john.doe.${i}@company.space`,
     firstName: `John ${i}`,
     phone: `123-${i}`,
     age: 18 + i,
-  }).then(() => done());
+  });
 });
 
 // COMPLEX
@@ -136,13 +151,11 @@ const complexObject = {
   startDate,
 };
 
-suite.add('complex', (done) => {
-  complexValidate(complexObject).then(() => done());
-});
+add('complex', () => complexValidate(complexObject));
 
-suite.add('complex (distinct values)', (done) => {
+add('complex (distinct values)', () => {
   const i = counter++;
-  complexValidate({
+  return complexValidate({
     ...complexObject,
     age: 18 + i,
     emailAddress: `foo.${i}@example.com`,
@@ -150,7 +163,7 @@ suite.add('complex (distinct values)', (done) => {
     homepage: `https://www.example.com/${i}`,
     postalCode: String(i % 100_000).padStart(5, '0'),
     startDate: new Date(startDate.getTime() + (i % ONE_DAY)),
-  }).then(() => done());
+  });
 });
 
 // Every field fails, so each call builds an invalid result per field.
@@ -168,13 +181,11 @@ const invalidComplexObject = {
   startDate: new Date(now.getTime() - TEN_DAYS),
 };
 
-suite.add('complex (invalid values)', (done) => {
-  complexValidate(invalidComplexObject).then((result) => {
-    if (result.isValid) {
-      throw new Error('Expected an invalid result.');
-    }
-    done();
-  });
+add('complex (invalid values)', async () => {
+  const result = await complexValidate(invalidComplexObject);
+  if (result.isValid) {
+    throw new Error('Expected an invalid result.');
+  }
 });
 
 suite.run();
