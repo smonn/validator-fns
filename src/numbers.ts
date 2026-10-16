@@ -29,6 +29,7 @@ export function parseNumber(value: unknown): number | null | undefined {
     return Number.parseFloat(value);
   }
 
+  // oxlint-disable-next-line typescript/no-base-to-string -- coerces all other input on purpose; #484 decides non-primitives
   return Number.parseFloat(String(value));
 }
 

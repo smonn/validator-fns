@@ -329,8 +329,7 @@ function getAmount(value: SharedValueType | null | undefined) {
     : value;
 }
 
-export interface MaxValidatorMessageParameters
-  extends ValidatorMessageParameters<SharedValueType> {
+export interface MaxValidatorMessageParameters extends ValidatorMessageParameters<SharedValueType> {
   max: number;
   amount: number | null | undefined;
   limit: number;
@@ -369,8 +368,7 @@ export function max(
   );
 }
 
-export interface MinValidatorMessageParameters
-  extends ValidatorMessageParameters<SharedValueType> {
+export interface MinValidatorMessageParameters extends ValidatorMessageParameters<SharedValueType> {
   min: number;
   limit: number;
   amount: number | null | undefined;
@@ -409,8 +407,7 @@ export function min(
   );
 }
 
-export interface ExactValidatorMessageParameters
-  extends ValidatorMessageParameters<SharedValueType> {
+export interface ExactValidatorMessageParameters extends ValidatorMessageParameters<SharedValueType> {
   limit: number;
   amount: number | null | undefined;
   exact: number;
@@ -445,8 +442,9 @@ export function exact(
   );
 }
 
-export interface OneOfValidatorMessageParameters<T>
-  extends ValidatorMessageParameters<T> {
+export interface OneOfValidatorMessageParameters<
+  T,
+> extends ValidatorMessageParameters<T> {
   values: readonly T[];
 }
 

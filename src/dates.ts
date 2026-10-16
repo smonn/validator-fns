@@ -63,6 +63,7 @@ const dateParts = [
  * @param value Value to parse
  * @category Parsers
  */
+// oxlint-disable-next-line eslint/complexity -- one guard per input type plus ISO parsing; split in #483
 export function parseDate(value: unknown): Date | null | undefined {
   if (value === null || value === undefined) {
     return value;
@@ -143,8 +144,7 @@ export function applyDateConfig(
 
 export type SharedDateValueType = Date | string | number;
 
-export interface MinDateValidatorMessageParameters
-  extends ValidatorMessageParameters<Date> {
+export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
   limit: Date | null | undefined;
   exclusive?: boolean | undefined;
@@ -180,8 +180,7 @@ export function minDate(
   );
 }
 
-export interface MaxDateValidatorMessageParameters
-  extends ValidatorMessageParameters<Date> {
+export interface MaxDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   max: Date | null | undefined;
   limit: Date | null | undefined;
   exclusive?: boolean | undefined;

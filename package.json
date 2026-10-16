@@ -51,34 +51,38 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "eslint .",
-    "format": "prettier --write .",
+    "check": "run-s format:check lint typecheck deps fta coverage build",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint --deny-warnings",
+    "typecheck": "tsc --noEmit",
+    "deps": "rev-dep config run",
+    "fta": "fta src --score-cap 62",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "prepublishOnly": "run-s lint test build",
+    "prepublishOnly": "pnpm check",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@eslint/js": "9.2.0",
     "@types/node": "20.12.12",
     "@vitest/coverage-v8": "1.6.0",
-    "eslint": "9.2.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-unicorn": "53.0.0",
+    "fta-cli": "3.0.1",
     "husky": "9.0.11",
     "lint-staged": "15.2.2",
     "npm-run-all": "4.1.5",
-    "prettier": "3.2.5",
+    "oxfmt": "0.70.0",
+    "oxlint": "1.85.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "rev-dep": "3.1.0",
     "tsup": "8.0.2",
     "typescript": "5.4.5",
-    "typescript-eslint": "7.9.0",
     "vitest": "1.6.0"
   },
   "repository": "github:smonn/validator-fns",
   "homepage": "https://validator-fns.smonn.se/",
   "runkitExampleFilename": "runkit.js",
   "lint-staged": {
-    "*.ts": "eslint --cache --fix",
-    "*.{ts,js,css,md}": "prettier --write"
+    "*.ts": "oxlint --fix --deny-warnings",
+    "*.{ts,js,json,jsonc,md,yml,yaml}": "oxfmt --no-error-on-unmatched-pattern"
   }
 }

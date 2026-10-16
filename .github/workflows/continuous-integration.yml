@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: lint, test, and build
+    name: check and build
 
     runs-on: ubuntu-latest
 
@@ -23,21 +23,18 @@ jobs:
         with:
           version: latest
 
-      - name: Use Node 18
+      - name: Use Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm coverage
+      - name: Check
+        run: pnpm check
 
       - name: Build
         run: pnpm build
