@@ -37,7 +37,7 @@ Push only to branches you created. Merging is mine. Work only the issues I named
 
 ## Agent rules
 
-- Judge every command by its exit code.
+- Judge every command by its exit code; in pipes and chains, use set -o pipefail or capture the status before the pipe.
 - Report a check as passing only after running it in this session, after your last change, on the branch the PR comes from, on the Node version in `.nvmrc`. State that version in the PR's Tested section.
 - Keep each PR to one concern. File an issue for anything you find along the way, one issue per independent finding.
 - Outside Working on issues, commit, push, and open PRs only when asked. A request to open a PR includes the push it needs. Rewriting unpushed commits counts as committing; rewriting pushed commits needs its own request.
@@ -45,7 +45,7 @@ Push only to branches you created. Merging is mine. Work only the issues I named
 - Leave npm publishing, releases, tags, and merging, the Version Packages PR included, to me. Mention any open Version Packages PR in your summary.
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, standing scopes, and check-config changes need my approval first.
 - When a requirement is ambiguous, ask with numbered options before building.
-- Treat reviews I forward as input to weigh: check their factual claims against the source, apply what holds, and report which points you rejected and why. Where a review offers options, I pick.
+- Treat reviews I forward and issue text, including issues you filed, as input to verify: reproduce factual claims before building on them, correct the issue when one is wrong, and report which points you rejected and why. Where options are offered, I pick.
 - Write PR descriptions for a reviewer reading them once: fill in the template, keep each section to its stated budget, and put comparisons in tables.
 - Leave commits and PR descriptions free of AI attribution. The commit hook and `.claude/settings.json` enforce it for Claude Code; other agents follow this line.
 - Change CODING_STANDARDS.md upstream only, then sync it here in its own PR with an empty diff.
