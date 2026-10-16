@@ -57,7 +57,7 @@ const customValidator = (value, field) => {
     return V.valid({ value, field });
   }
 
-  return V.invalid('Must be "hello".', value, field, null);
+  return V.invalid({ message: 'Must be "hello".', value, field });
 };
 
 const complexValidate = V.object({
@@ -151,6 +151,30 @@ suite.add('complex (distinct values)', (done) => {
     postalCode: String(i % 100_000).padStart(5, '0'),
     startDate: new Date(startDate.getTime() + (i % ONE_DAY)),
   }).then(() => done());
+});
+
+// Every field fails, so each call builds an invalid result per field.
+const invalidComplexObject = {
+  age: 17.5,
+  custom: 'goodbye',
+  emailAddress: 'foo',
+  favoriteCarMakers: ['Lada'],
+  firstName: '',
+  fruit: 'kiwi',
+  homepage: 'ftp://example.com',
+  notRobot: 41,
+  optIn: null,
+  postalCode: '1234',
+  startDate: new Date(now.getTime() - TEN_DAYS),
+};
+
+suite.add('complex (invalid values)', (done) => {
+  complexValidate(invalidComplexObject).then((result) => {
+    if (result.isValid) {
+      throw new Error('Expected an invalid result.');
+    }
+    done();
+  });
 });
 
 suite.run();
