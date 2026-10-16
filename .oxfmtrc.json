@@ -3,5 +3,9 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": ["CODING_STANDARDS.md"]
+  "ignorePatterns": [
+    // A verbatim copy of smonn/coding-standards. Formatting it here would make
+    // the sync PR's diff against upstream non-empty.
+    "CODING_STANDARDS.md"
+  ]
 }
