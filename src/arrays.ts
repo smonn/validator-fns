@@ -1,5 +1,6 @@
 import {
   invalid,
+  isIterable,
   valid,
   type ConfigBase,
   type ValidatorTest,
@@ -24,17 +25,16 @@ export type ArrayConfig = ConfigBase<unknown[]>;
  */
 export function parseArray(value: unknown): unknown[] | null | undefined {
   if (Array.isArray(value)) {
-    return value as unknown[];
+    const items: unknown[] = value;
+    return items;
   }
 
   if (value === null || value === undefined) {
     return value;
   }
 
-  const iterable = value as Iterable<unknown>;
-
-  if (iterable[Symbol.iterator]) {
-    return [...iterable];
+  if (isIterable(value)) {
+    return [...value];
   }
 
   return [];

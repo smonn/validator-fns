@@ -23,7 +23,6 @@ export function object<
   }
 
   return async (values, field) => {
-    const definedValues = (values ?? {}) as V;
     const errors = {} as E;
     const resolvedValues = {} as V;
     let isValid = true;
@@ -31,7 +30,8 @@ export function object<
     for (const key in properties) {
       if (hasOwnProperty(properties, key)) {
         const validator = properties[key];
-        const value = definedValues[key];
+        // Object() boxes primitives and turns null and undefined into {}.
+        const value: unknown = Reflect.get(Object(values), key);
         const result =
           typeof validator === 'function'
             ? await validator(value, key)
