@@ -26,4 +26,4 @@
 
 ## Decisions needed
 
-<!-- Questions for the reviewer, as numbered options. Delete if none. -->
+<!-- Questions for the reviewer, as numbered options. CI fails while this section has content. Once they're answered, record the answers above and delete the section. Delete it now if there are none. -->
