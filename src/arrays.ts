@@ -2,7 +2,6 @@ import {
   invalid,
   valid,
   type ConfigBase,
-  type ValidatorResult,
   type ValidatorTest,
 } from './shared.js';
 
@@ -65,6 +64,66 @@ export function applyArrayConfig<T>(
 }
 
 /**
+ * Runs the tests that target the array itself, stopping at the first failure.
+ * @param tests Array-level tests
+ * @param arrayValue Parsed array
+ * @param field Field name
+ * @internal
+ */
+async function findArrayInvalidResult(
+  tests: ValidatorTest[],
+  arrayValue: unknown[] | null | undefined,
+  field: string | undefined,
+) {
+  for (const validatorTest of tests) {
+    const result = await validatorTest(arrayValue, field);
+    if (result.state === 'invalid') {
+      return result;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Runs the item test on every item, collecting `null` for valid items and the
+ * message or errors for invalid ones. Without an array or an item test, there
+ * is nothing to check.
+ * @param validateItem Item test
+ * @param arrayValue Parsed array
+ * @param field Field name
+ * @internal
+ */
+async function validateItems(
+  validateItem: ValidatorTest | undefined,
+  arrayValue: unknown[] | null | undefined,
+  field: string | undefined,
+) {
+  let isValid = true;
+  const errors: ArrayItemValidatorResult[] = [];
+
+  if (!arrayValue || !validateItem) {
+    return { isValid, errors };
+  }
+
+  for (const [index, item] of arrayValue.entries()) {
+    const result = await validateItem(
+      item,
+      field ? `${field}[${index}]` : `[${index}]`,
+    );
+
+    if (result.state === 'invalid') {
+      isValid = false;
+      errors.push(result.message || result.errors);
+    } else {
+      errors.push(null);
+    }
+  }
+
+  return { isValid, errors };
+}
+
+/**
  * Validates an array. The first passed validator is used to validate individual
  * items. The remaining validators target the array itself.
  * @category Type Validators
@@ -89,40 +148,18 @@ export function array<T, E>(
     }
   }
 
-  // oxlint-disable-next-line eslint/complexity -- array and item tests share one closure; split in #483
   return async (value, field) => {
     const arrayValue = applyArrayConfig<T>(finalConfig, value);
-    let arrayInvalidResult: ValidatorResult | undefined;
-    let isValid = true;
-    const errors: ArrayItemValidatorResult[] = [];
     const [validateItem, ...arrayTests] = allTests;
 
-    for (const validatorTest of arrayTests) {
-      const result = await validatorTest(arrayValue, field);
-      if (result.state === 'invalid') {
-        isValid = false;
-        arrayInvalidResult = result;
-        break;
-      }
-    }
+    const arrayInvalidResult = await findArrayInvalidResult(
+      arrayTests,
+      arrayValue,
+      field,
+    );
+    const items = await validateItems(validateItem, arrayValue, field);
 
-    if (arrayValue && validateItem) {
-      for (const [index, item] of arrayValue.entries()) {
-        const result = await validateItem(
-          item,
-          field ? `${field}[${index}]` : `[${index}]`,
-        );
-
-        if (result.state === 'invalid') {
-          isValid = false;
-          errors.push(result.message || result.errors);
-        } else {
-          errors.push(null);
-        }
-      }
-    }
-
-    if (isValid) {
+    if (!arrayInvalidResult && items.isValid) {
       return valid({
         value: arrayValue,
         field,
@@ -130,13 +167,10 @@ export function array<T, E>(
     }
 
     return invalid<T[], ArrayItemValidatorResult<E>[]>({
-      message:
-        arrayInvalidResult?.state === 'invalid'
-          ? arrayInvalidResult.message
-          : '',
+      message: arrayInvalidResult ? arrayInvalidResult.message : '',
       value,
       field,
-      errors: errors as ArrayItemValidatorResult<E>[],
+      errors: items.errors as ArrayItemValidatorResult<E>[],
     });
   };
 }
