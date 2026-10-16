@@ -18,7 +18,11 @@
     {
       "path": ".",
       "prodEntryPoints": ["src/index.ts"],
-      "devEntryPoints": ["test/**/*.test.ts", "*.config.ts", "scripts/*.mjs"],
+      "devEntryPoints": [
+        "test/**/*.test.ts",
+        "*.config.{ts,mjs}",
+        "scripts/*.mjs",
+      ],
       "moduleBoundaries": [
         {
           "name": "shared",
@@ -66,7 +70,7 @@
       "unusedExportsDetection": { "enabled": true },
       "unusedNodeModulesDetection": {
         "enabled": true,
-        "pkgJsonFieldsWithBinaries": ["scripts", "lint-staged"],
+        "pkgJsonFieldsWithBinaries": ["scripts"],
         "excludeModules": [
           "@types/node",
           "@vitest/coverage-v8",

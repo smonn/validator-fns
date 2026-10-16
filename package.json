@@ -65,6 +65,7 @@
     "format:check": "oxfmt --check",
     "ignores": "node scripts/check-ignores.mjs",
     "lint": "oxlint --deny-warnings",
+    "lint:staged": "lint-staged",
     "typecheck": "tsc --noEmit",
     "deps": "rev-dep config run",
     "fta": "node scripts/fta-check.mjs",
@@ -98,9 +99,5 @@
   },
   "repository": "github:smonn/validator-fns",
   "homepage": "https://validator-fns.smonn.se/",
-  "runkitExampleFilename": "runkit.cjs",
-  "lint-staged": {
-    "*.ts": "oxlint --fix --deny-warnings",
-    "*.{ts,js,json,jsonc,md,yml,yaml}": "oxfmt --no-error-on-unmatched-pattern"
-  }
+  "runkitExampleFilename": "runkit.cjs"
 }
