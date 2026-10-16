@@ -13,6 +13,14 @@ const emailPattern =
   /^[\w!#$%&'*+./=?^`{|}~-]+@[\dA-Za-z](?:[\dA-Za-z-]{0,61}[\dA-Za-z])?(?:\.[\dA-Za-z](?:[\dA-Za-z-]{0,61}[\dA-Za-z])?)*$/;
 
 /**
+ * RFC 9562 UUIDs: versions 1 to 8 with the RFC's variant (10xx), plus the nil
+ * and max UUIDs.
+ * @internal
+ */
+const uuidPattern =
+  /^(?:[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}|0{8}-0{4}-0{4}-0{4}-0{12}|f{8}-f{4}-f{4}-f{4}-f{12})$/i;
+
+/**
  * Configuration for string validation.
  * @category Types
  */
@@ -113,6 +121,16 @@ export function email(
   message: ValidatorMessage<string>,
 ): ValidatorTest<string> {
   return matches(emailPattern, message);
+}
+
+/**
+ * Ensures a string value is an RFC 9562 UUID, any version from 1 to 8, or the
+ * nil or max UUID. Case-insensitive, without braces or a `urn:uuid:` prefix.
+ * @param message Error message
+ * @category Validation Tests
+ */
+export function uuid(message: ValidatorMessage<string>): ValidatorTest<string> {
+  return matches(uuidPattern, message);
 }
 
 /**

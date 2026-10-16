@@ -284,7 +284,7 @@ To use this with a library such as [Formik][formik], you can use the resulting `
 
 Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional.
 
-Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, and `url`.
+Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, `url`, and `uuid`.
 
 <details><summary>config</summary>
 
@@ -311,6 +311,7 @@ A **validation test** is a simplified version of a validation type. It accepts a
 - [oneOf(values, message)](#oneofvalues-message)
 - [required(message, nullable?)](#requiredmessage-nullable)
 - [url(message, protocols?)](#urlmessage-protocols)
+- [uuid(message)](#uuidmessage)
 
 #### email(message)
 
@@ -456,6 +457,18 @@ Ensures value is a valid URL. Works with strings. `protocols` is provided to the
 | :---------- | :----------------- | :------------------------------------------------------- |
 | `message`   | string or function | The validation error message.                            |
 | `protocols` | array              | List of allowed URL protocols, e.g. `https:`, `mailto:`. |
+
+</details>
+
+#### uuid(message)
+
+Ensures the value is a UUID as defined by [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562): any version from 1 to 8 with the RFC's variant, or the nil or max UUID. Case-insensitive. Braces, a `urn:uuid:` prefix, and missing hyphens are invalid. Wraps the `matches` validation test. Works with strings.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                   |
+| :-------- | :----------------- | :---------------------------- |
+| `message` | string or function | The validation error message. |
 
 </details>
 

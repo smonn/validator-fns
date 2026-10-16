@@ -60,6 +60,7 @@ export {
   parseString,
   string,
   url,
+  uuid,
 } from './strings';
 export type {
   MatchesValidatorMessageParameters,

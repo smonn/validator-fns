@@ -1,5 +1,14 @@
 import { assert, test } from 'vitest';
-import { email, matches, max, min, required, string, url } from '../src/index';
+import {
+  email,
+  matches,
+  max,
+  min,
+  required,
+  string,
+  url,
+  uuid,
+} from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -344,4 +353,69 @@ test('should leave lastIndex unchanged when testing the caller pattern', async (
   const validate = matches(pattern, 'invalid');
   await validate('ab');
   assert.equal(pattern.lastIndex, 0);
+});
+
+test('uuid', async () => {
+  const validate = uuid('invalid uuid');
+  const validValues = [
+    // One per RFC 9562 version, 1 to 8, from the RFC's examples where it has one.
+    'c232ab00-9414-11ec-b3c8-9f6bdeced846',
+    '000003e8-cbb9-21ea-b201-00045a86c8a1',
+    '5df41881-3aed-3515-88a7-2f4a814cf09e',
+    '919108f7-52d1-4320-9bac-f847db4148a8',
+    '2ed6657d-e927-568b-95e1-2665a8aea6a2',
+    '1ec9414c-232a-6b00-b3c8-9f6bdeced846',
+    '017f22e2-79b0-7cc3-98c4-dc0c0c07398f',
+    '2489e9ad-2ee2-8e00-8ec9-32d5f69181c0',
+    // Nil and max.
+    '00000000-0000-0000-0000-000000000000',
+    'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    // Uppercase.
+    '919108F7-52D1-4320-9BAC-F847DB4148A8',
+    'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
+    '',
+    null,
+    undefined,
+  ];
+  for (const value of validValues) {
+    assert.deepEqual(
+      await validate(value),
+      { state: 'valid', isValid: true, field: undefined, value },
+      String(value),
+    );
+  }
+
+  const invalidValues = [
+    // Braces and missing hyphens.
+    '{919108f7-52d1-4320-9bac-f847db4148a8}',
+    '919108f752d143209bacf847db4148a8',
+    // Versions 0 and 9 outside nil.
+    '919108f7-52d1-0320-9bac-f847db4148a8',
+    '919108f7-52d1-9320-9bac-f847db4148a8',
+    // Variants other than RFC 9562's 10xx.
+    '919108f7-52d1-4320-7bac-f847db4148a8',
+    '919108f7-52d1-4320-cbac-f847db4148a8',
+    // Wrong length, non-hex, surrounding text.
+    '919108f7-52d1-4320-9bac-f847db4148a',
+    '919108f7-52d1-4320-9bac-f847db4148a8a',
+    '919108g7-52d1-4320-9bac-f847db4148a8',
+    ' 919108f7-52d1-4320-9bac-f847db4148a8',
+    'id:919108f7-52d1-4320-9bac-f847db4148a8',
+    'urn:uuid:919108f7-52d1-4320-9bac-f847db4148a8',
+    0,
+  ];
+  for (const value of invalidValues) {
+    assert.deepEqual(
+      await validate(value),
+      {
+        state: 'invalid',
+        isValid: false,
+        field: undefined,
+        errors: undefined,
+        value,
+        message: 'invalid uuid',
+      },
+      String(value),
+    );
+  }
 });
