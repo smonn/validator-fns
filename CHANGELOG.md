@@ -1,5 +1,11 @@
 # validator-fns
 
+## 2.1.0
+
+### Minor Changes
+
+- 38b00d3: Add the `uuid(message)` validation test. It accepts RFC 9562 UUIDs of any version from 1 to 8, plus the nil and max UUIDs, in any letter case.
+
 ## 2.0.5
 
 ### Patch Changes
