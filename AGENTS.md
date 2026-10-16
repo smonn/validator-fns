@@ -26,3 +26,4 @@ This library follows docs/CODING_STANDARDS.md (from github.com/smonn/coding-stan
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and check-config changes need my approval first.
 - When a requirement is ambiguous, ask with numbered options before building.
 - Keep secrets out of reach: when a secret's value is needed, write a script I can run myself.
+- Write PR descriptions for a reviewer reading them once: fill in the template, keep each section to its stated budget, and put comparisons (such as dependency evaluations) in tables.

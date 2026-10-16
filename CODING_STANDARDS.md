@@ -307,6 +307,8 @@ A fully covered function scores its complexity. An untested one scores roughly i
 - PR titles **should** use the Conventional Commits format: `feat(billing): add proration`. The title **should** be imperative and stand alone in history.
 - The description body **should** say why the change is made and note its shortcomings, with enough context that it still reads if linked pages disappear. Authors **should** re-check it before merge, since changes drift during review.
 - PRs **should** open as drafts.
+- A PR description should cite a standard only where it deviates from one. Compliance needs no citation.
+- Notes about other work should go on that work's issue, not in the PR.
 
 **Merge gates**
 
