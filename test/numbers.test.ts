@@ -1,5 +1,12 @@
 import { assert, test } from 'vitest';
-import { integer, max, min, number, required } from '../src/index.js';
+import {
+  integer,
+  max,
+  min,
+  number,
+  parseNumber,
+  required,
+} from '../src/index.js';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}', true);
@@ -293,5 +300,47 @@ test('number default', async () => {
     value: 123,
     isValid: true,
     field: undefined,
+  });
+});
+
+// Pins today's coercion of non-primitive input. #579 changes it in v3 to
+// return an invalid result instead.
+test('number coerces non-primitive input through its string form', async () => {
+  const coerced: [unknown, number][] = [
+    [[1], 1],
+    [[[1, 2]], 1],
+    [1n, 1],
+    [new Number(3), 3],
+    [[], Number.NaN],
+    [['a', 'b'], Number.NaN],
+    [{}, Number.NaN],
+    [new Map(), Number.NaN],
+    [Symbol('s'), Number.NaN],
+    [true, Number.NaN],
+    [() => 1, Number.NaN],
+  ];
+  const validate = number();
+  for (const [value, expected] of coerced) {
+    assert.deepEqual(parseNumber(value), expected, String(expected));
+    assert.deepEqual(
+      await validate(value),
+      { state: 'valid', isValid: true, field: undefined, value: expected },
+      String(expected),
+    );
+  }
+
+  const nullPrototype: unknown = Object.create(null);
+  assert.throws(
+    () => parseNumber(nullPrototype),
+    TypeError,
+    'Cannot convert object to primitive value',
+  );
+  assert.deepEqual(await validate(nullPrototype), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    value: nullPrototype as number,
+    message: 'Cannot convert object to primitive value',
+    errors: undefined,
   });
 });
