@@ -2,7 +2,13 @@ import Benchmark from 'benchmarkify';
 const benchmark = new Benchmark('Benchmark validator-fns').printHeader();
 import * as V from 'validator-fns';
 
-const suite = benchmark.createSuite('validator-fns');
+// --smoke runs each scenario only briefly, so `pnpm check` catches a scenario
+// that fails without waiting for real measurements.
+const smoke = process.argv.includes('--smoke');
+const suite = benchmark.createSuite(
+  'validator-fns',
+  smoke ? { time: 1, cycles: 1, minSamples: 1 } : {},
+);
 
 // benchmarkify's done() takes no error, and a run that never calls it hangs
 // the suite, so a rejected run exits with its error.
