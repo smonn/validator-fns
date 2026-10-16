@@ -8,9 +8,9 @@
 
 <!-- One bullet per change. A clause of explanation at most. -->
 
-## Semver
+## Changeset
 
-<!-- None, patch, minor, or major. Major if it breaks the exported API or package.json `exports`, `types`, or `engines`. None for tooling-only changes. -->
+<!-- The bump in your changeset: patch, minor, major, or empty. See CONTRIBUTING.md. -->
 
 ## New dependencies
 

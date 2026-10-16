@@ -5,13 +5,14 @@ This library follows CODING_STANDARDS.md (from github.com/smonn/coding-standards
 ## Project facts
 
 - Small async validation library, TypeScript, published to npm as validator-fns.
-- Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint).
+- Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint). Dependabot PRs skip the changeset check because of this; revisit that skip if a runtime dependency arrives.
 - The public contract is the exported API plus the package's published shape (`package.json` `exports`, `types`, `engines`). Get approval before changing it.
-- Package manager: pnpm. Tests: Vitest. Contributor tooling needs Node 20.19+.
+- Package manager: pnpm. Tests: Vitest. Contributor tooling needs Node 22.11+ (`.nvmrc`); the `engines` field is the published support range and stays separate.
 
 ## Done means
 
-- `pnpm check` exits 0. It covers format, lint, typecheck, tests, coverage, build, and publint.
+- `pnpm check` exits 0. It covers the changeset, format, lint, typecheck, tests, coverage, build, and publint.
+- The PR adds a changeset (see CONTRIBUTING.md), empty when users won't notice the change. Version bumps come from changesets; the Version Packages PR owns `version` in package.json and `CHANGELOG.md`.
 - New behavior has tests written first.
 - Changes to the published shape are verified by packing the library and loading it with both `require` and `import` from a separate project.
 - README API docs are updated when public behavior changes.
@@ -24,7 +25,7 @@ This library follows CODING_STANDARDS.md (from github.com/smonn/coding-standards
 - Commit and push only when asked, as separate requests.
 - Commit messages carry no AI attribution trailers; the commit hook rejects them.
 - PR and issue bodies carry no AI attribution either, such as a "Generated with Claude Code" footer.
-- Leave npm publishing, releases, and tags to me. Propose them when they're due.
+- Leave npm publishing, releases, and tags to me. They happen when I merge the Version Packages PR. Propose a release when one is due.
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and check-config changes need my approval first.
 - When a requirement is ambiguous, ask with numbered options before building.
 - Keep secrets out of reach: when a secret's value is needed, write a script I can run myself.
