@@ -63,7 +63,6 @@ const dateParts = [
  * @param value Value to parse
  * @category Parsers
  */
-// oxlint-disable-next-line eslint/complexity -- one guard per input type plus ISO parsing; split in #483
 export function parseDate(value: unknown): Date | null | undefined {
   if (value === null || value === undefined) {
     return value;
@@ -77,10 +76,19 @@ export function parseDate(value: unknown): Date | null | undefined {
     return new Date(value);
   }
 
-  if (typeof value !== 'string') {
-    return invalidDate;
+  if (typeof value === 'string') {
+    return parseIsoDate(value);
   }
 
+  return invalidDate;
+}
+
+/**
+ * Parses an ISO 8601 string into a date. Without a timezone, the date is local.
+ * @param value String to parse
+ * @internal
+ */
+function parseIsoDate(value: string): Date {
   const parts = isoDatePattern.exec(value);
 
   if (parts === null) {
