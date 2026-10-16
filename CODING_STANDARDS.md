@@ -19,7 +19,7 @@ Keywords carry weight:
 - **Must exceptions** need the rule, a reason, a tracking issue to remove the exception, and approval in review.
 - **Who approves.** Approval comes from a reviewer other than the author. In a repository with a single maintainer, the maintainer approves their own exceptions and the PR says so. An AI agent's review never counts as approval.
 - **Checks.** An exception to a check is an inline suppression carrying its reason. A check that cannot be suppressed inline, such as coverage, takes a waiver on the PR that CI recognizes (for example a label), approved like any must exception. Formatting and compile errors have no exceptions. A check's configuration never changes for one PR.
-- **Standing scopes.** A check's configuration **may** permanently exclude a category of change (for example dependency-bot PRs from the release-note check). The exclusion is approved like a must exception and recorded in the configuration with its reason. It is not a per-PR exception.
+- **Standing scopes.** A check's configuration **may** permanently exclude a category of change (for example dependency-bot PRs from the release-note check). The exclusion is approved like a must exception and recorded in the configuration with its reason. It is not a per-PR exception. A standing scope **must** key on an identity contributors cannot forge (the PR author, or a branch in the same repository), never a branch name alone. CI runs the full check command by default; a standing scope runs a named subset of it.
 - **Lowering code health.** A PR that makes code health worse **must** be either tech debt recorded as a must exception, or an emergency.
 - **Emergencies** are production outages, major bugs affecting users, legal issues, security holes, and launches with a hard deadline and serious consequences. They are not: wanting to ship sooner, soft deadlines, the end of the week, a reviewer being away, a manager asking for a same-day review, or rolling back a PR that broke tests or the build.
 - **Declaring an emergency.** The author declares it in the PR, and the reviewer confirms it.
@@ -86,7 +86,7 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 
 - Public contracts (HTTP APIs, library exports, package metadata such as entry points, types, and supported runtime versions, event and message schemas, persisted file formats, CLI flags and output) **must** stay backward compatible or be versioned.
 - Breaking changes **must** be versioned and announced. Where consumers live outside the repository, they **should** get a deprecation period.
-- Libraries **should** follow Semantic Versioning. Dropping a supported runtime version is a breaking change.
+- Libraries **should** follow Semantic Versioning. Dropping a supported runtime version is a breaking change. The lowest supported runtime version **should** run in CI.
 - Database migrations **should** follow expand, migrate, contract: add the new shape, move data and readers, then remove the old shape in a later deploy. Running code **must** keep working at every step.
 - Migrations **should** be plain SQL files run by a language-agnostic tool (for example [dbmate](https://github.com/amacneil/dbmate)), not ORM-generated code. The schema then outlives any one language, framework, or ORM.
 
@@ -145,6 +145,8 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 - Version numbers and changelogs **should** be generated from those notes, not edited by hand.
 - Releases **should** be published by CI from a known commit, after the full check command passes. Publishing credentials follow Supply chain (A03).
 - A library **should** be tested as published: pack it, then load it from a separate project the way consumers do (for example with both require and import). The Package shape check covers the rest.
+- The artifact that passes the checks **should** be the one published, with no rebuild in between.
+- The release process **should** document how to recover when publishing fails after the version is bumped.
 
 ## Code organization
 
@@ -243,7 +245,7 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 **How checks run**
 
 - The same checks **must** run locally and in CI, from one command (for example `check`).
-- The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations).
+- The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
 - A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
 - Checks **should** be fast enough to run on every iteration, including every agent loop. Slow checks (mutation testing, full-repo analysis) **may** run on a schedule instead.
 - Findings **should** be errors or off. Warnings that never fail the build become noise.
@@ -327,7 +329,7 @@ A fully covered function scores its complexity. An untested one scores roughly i
 **Merge gates**
 
 - The main branch **must** be protected against direct pushes.
-- Required checks **must** pass before merge, including on PRs opened by bots or automation.
+- Required checks **must** pass before merge, including on PRs opened by bots or automation. Where the platform does not run checks on automation-opened PRs, a documented manual step that runs them before merge satisfies this.
 - At least one review approval **should** be required.
 
 **Review**
