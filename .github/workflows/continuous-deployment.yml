@@ -4,9 +4,12 @@ name: Continuous Deployment
 # breaks publishing until the npm package settings are updated to match.
 
 on:
+  # main releases; next releases v3 prereleases in Changesets pre mode. See
+  # CONTRIBUTING.md (Releases, Next major release).
   push:
     branches:
       - main
+      - next
   # Publishes a version that a failed release run left unpublished. See
   # CONTRIBUTING.md (Releases).
   workflow_dispatch:
@@ -22,8 +25,8 @@ jobs:
   # means "publish", and anything else means "none". A manual run never
   # versions: it publishes an unpublished version, or does nothing.
   select-mode:
-    # A manual run can target any branch; only main may publish.
-    if: github.ref == 'refs/heads/main'
+    # A manual run can target any branch; only main and next may publish.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/next'
     runs-on: ubuntu-latest
     outputs:
       mode: ${{ steps.select-mode.outputs.mode || steps.stranded.outputs.mode }}
