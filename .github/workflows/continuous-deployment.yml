@@ -8,6 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      # Push the version commit back to main.
+      contents: write
+      # Publish to npm through trusted publishing (OIDC) instead of a token.
+      id-token: write
 
     steps:
       - name: Checkout repo
@@ -38,13 +43,8 @@ jobs:
       - name: Update version in package.json
         run: pnpm version ${{ github.event.release.tag_name }} --allow-same-version
 
-      - name: Configure npm client for publish
-        run: pnpm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
       - name: Publish package to npmjs.com
         run: pnpm publish --no-git-checks
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Push updates to repo
         run: git push
