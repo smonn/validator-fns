@@ -28,7 +28,7 @@ Report bugs and request features with the [issue forms](https://github.com/smonn
 
 ### Changesets
 
-Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. Dependabot pull requests are the exception: they only touch dev tooling, so CI skips the check for them.
+Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, and the Version Packages pull request, which consumes the changesets it releases.
 
 - Run `pnpm changeset` and pick the bump: `major` for a change that breaks the exported API or `package.json` `exports`, `types`, or `engines`, `minor` for a new feature, `patch` for a fix. Write the summary for library users.
 - For a change users won't notice, such as tooling, tests, or docs, run `pnpm changeset --empty`.
@@ -38,6 +38,12 @@ Every pull request adds a changeset, a small file in `.changeset/` that records 
 ### Releases
 
 The maintainer releases. When a pull request with a changeset merges, CI opens or updates a Version Packages pull request that bumps `version` and writes `CHANGELOG.md`. Merging that pull request runs `pnpm check`, publishes to npm through trusted publishing, and creates the git tag and GitHub release.
+
+CI doesn't run on the Version Packages pull request by itself, because GitHub Actions opens and updates it. To release:
+
+1. Close and reopen the Version Packages pull request. Reopening is your event, so CI runs.
+2. Wait for the checks to pass.
+3. Merge it right away. If another pull request merges first, the action updates the Version Packages pull request without running CI, so close and reopen it again.
 
 If `pnpm check` fails in that release run, `main` has the version bump but nothing is published. Fix the failure in a follow-up pull request with a patch changeset that says the previous version failed to publish. An empty changeset won't work: the release workflow does nothing while any changeset is pending, so the bumped version would stay unpublished. The next Version Packages pull request releases the following patch version, and the failed version is never published.
 
