@@ -8,5 +8,11 @@ export default defineConfig({
   sourcemap: true,
   minify: true,
   clean: true,
-  dts: true,
+  dts: {
+    compilerOptions: {
+      // tsup sets baseUrl for its declaration build, and TypeScript 6 fails
+      // on the deprecated option. Our tsconfig doesn't set it.
+      ignoreDeprecations: '6.0',
+    },
+  },
 });
