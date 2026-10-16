@@ -17,7 +17,7 @@ This library follows CODING_STANDARDS.md in the repo root, a verbatim copy of gi
 - Changes to the published shape are verified by packing the library and loading it with both `require` and `import` from a separate project.
 - README API docs are updated when public behavior changes.
 - The PR has a changeset. Bump by contract impact: patch for fixes, minor for additions, major for breaking changes. Tooling and docs-only changes, README included, get an empty changeset. Security warnings get a patch so they reach npm now.
-- Versions come from changesets; the Version Packages PR owns `version` in package.json.
+- Versions come from changesets; the Version Packages PR owns `version` in package.json and `CHANGELOG.md`.
 
 ## Agent rules
 
