@@ -50,7 +50,7 @@ export function parseString(value: unknown): string | null | undefined {
     throw new TypeError('Failed to parse value to string.');
   }
 
-  // oxlint-disable-next-line typescript/no-base-to-string -- only plain objects throw above; #484 decides other non-primitives
+  // oxlint-disable-next-line typescript/no-base-to-string -- only plain objects throw above; tests pin the coercion of other non-primitives until #579 rejects them in v3
   return String(value);
 }
 
