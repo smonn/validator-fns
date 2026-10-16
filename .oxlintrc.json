@@ -2,7 +2,8 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "vitest"],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "suspicious": "error"
   },
   "options": {
     "typeAware": true
@@ -10,6 +11,9 @@
   "rules": {
     "eslint/complexity": ["error", { "max": 10 }],
     "typescript/no-floating-promises": ["error", { "ignoreVoid": false }],
-    "vitest/expect-expect": "error"
+    "vitest/expect-expect": "error",
+    // Off until v3: #585 enables it after #498's unknown defaults, which
+    // remove many of its findings.
+    "typescript/no-unsafe-type-assertion": "off"
   }
 }
