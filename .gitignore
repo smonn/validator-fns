@@ -117,3 +117,6 @@ dist
 
 # Documentation
 docs/
+
+# project-level claude config
+.claude-clean/
