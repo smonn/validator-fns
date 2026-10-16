@@ -25,7 +25,7 @@ When I ask you to implement a set of issues:
 
 1. Triage first. Read every issue and list the ones that need a decision from me: an ambiguous requirement, a public contract change, a new dependency, a suppression, waiver, standing scope or check-config change, or approaches with different tradeoffs. Ask them all at once, with numbered options and any measurements that settle them.
 2. Work the rest while you wait. Only an issue with an open decision holds; the others proceed. A decision that comes up mid-work holds that issue too.
-3. Use one branch and one PR per issue, branched from main. Stack branches only when one issue depends on another, and say so in both PRs.
+3. Use one branch and one PR per issue, branched from main. Name branches `<prefix>/<issue>-<slug>` with a Conventional Branch prefix, such as `fix/527-benchmark-invalid`; docs, CI, and tooling work uses `chore/`. Stack branches only when one issue depends on another, and say so in both PRs.
 4. Commit as you go, in small Conventional Commits, keeping structural and behavioral changes in separate commits. Tidy unpushed commits before pushing when it helps the reader.
 5. Before pushing, review your full diff as a reviewer would, per the Review section of CODING_STANDARDS.md: read the surrounding code, confirm the tests fail when the code breaks, and refactor under green tests. Then run `pnpm check` per the rule below. Your review does not count as approval.
 6. Push the branch and open the PR as a draft. Mark it ready for review once CI passes.
