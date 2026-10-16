@@ -163,7 +163,7 @@ test('enums', async () => {
   const strings = oneOf(['foo', 'bar', 'baz'], 'oneOf:{values}');
   assert.deepEqual(await strings('asdf'), {
     state: 'invalid',
-    value: 'asdf' as 'foo',
+    value: 'asdf',
     message: 'oneOf:foo,bar,baz',
     isValid: false,
     field: undefined,
