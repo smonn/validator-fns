@@ -26,9 +26,19 @@
           "deny": ["src/**"],
         },
         {
+          "name": "parse-date",
+          "pattern": "src/parse-date.ts",
+          "deny": ["src/**"],
+        },
+        {
           "name": "validators",
-          "pattern": "src/{arrays,booleans,dates,numbers,objects,strings}.ts",
+          "pattern": "src/{arrays,booleans,numbers,objects,strings}.ts",
           "allow": ["src/shared.ts"],
+        },
+        {
+          "name": "dates",
+          "pattern": "src/dates.ts",
+          "allow": ["src/shared.ts", "src/parse-date.ts"],
         },
         {
           "name": "entry",
