@@ -173,11 +173,11 @@ importers:
         specifier: 3.0.3
         version: 3.0.3
       '@types/node':
-        specifier: 20.12.12
-        version: 20.12.12
+        specifier: 26.6.5
+        version: 26.6.5
       '@vitest/coverage-v8':
         specifier: 1.6.0
-        version: 1.6.0(supports-color@7.2.0)(vitest@1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0))
+        version: 1.6.0(supports-color@7.2.0)(vitest@1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0))
       fta-cli:
         specifier: 3.0.1
         version: 3.0.1
@@ -207,13 +207,13 @@ importers:
         version: 3.1.0
       tsup:
         specifier: 8.0.2
-        version: 8.0.2(postcss@8.4.38)(supports-color@7.2.0)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))(typescript@5.4.5)
+        version: 8.0.2(postcss@8.4.38)(supports-color@7.2.0)(ts-node@10.9.2(@types/node@26.6.5)(typescript@5.4.5))(typescript@5.4.5)
       typescript:
         specifier: 5.4.5
         version: 5.4.5
       vitest:
         specifier: 1.6.0
-        version: 1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0)
+        version: 1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0)
 
 packages:
 
@@ -1090,8 +1090,8 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
-  '@types/node@20.12.12':
-    resolution: {integrity: sha512-eWLDGF/FOSPtAvEqeRAQ4C8LSA7M1I7i0ky1I8U7kD1J5ITyW3AsRhQrKVoWf5pFKZ2kILsEGJhsI9r93PYnOw==}
+  '@types/node@26.6.5':
+    resolution: {integrity: sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==}
 
   '@vitest/coverage-v8@1.6.0':
     resolution: {integrity: sha512-KvapcbMY/8GYIG0rlwwOKCVNRc0OL20rrhFkg/CHNzncV03TE2XWvO5w9uZYoxNiMEBacAJt3unSOiZ7svePew==}
@@ -2486,8 +2486,8 @@ packages:
   unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
 
-  undici-types@5.26.5:
-    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   unicode-emoji-modifier-base@1.0.0:
     resolution: {integrity: sha512-yLSH4py7oFH3oG/9K+XWrz1pSi3dfUrWEnInbxMfArOfc1+33BlGPQtLsOYwvdMy11AwUBetYuaRxSPqgkq+8g==}
@@ -3239,11 +3239,11 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
-  '@types/node@20.12.12':
+  '@types/node@26.6.5':
     dependencies:
-      undici-types: 5.26.5
+      undici-types: 8.9.0
 
-  '@vitest/coverage-v8@1.6.0(supports-color@7.2.0)(vitest@1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0))':
+  '@vitest/coverage-v8@1.6.0(supports-color@7.2.0)(vitest@1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -3258,7 +3258,7 @@ snapshots:
       std-env: 3.7.0
       strip-literal: 2.1.0
       test-exclude: 6.0.0
-      vitest: 1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0)
+      vitest: 1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -4360,18 +4360,18 @@ snapshots:
 
   possible-typed-array-names@1.0.0: {}
 
-  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)):
+  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@26.6.5)(typescript@5.4.5)):
     dependencies:
       lilconfig: 3.0.0
       yaml: 2.3.4
     optionalDependencies:
       postcss: 8.4.38
-      ts-node: 10.9.2(@types/node@20.12.12)(typescript@5.4.5)
+      ts-node: 10.9.2(@types/node@26.6.5)(typescript@5.4.5)
 
   postcss@8.4.38:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.0.1
+      picocolors: 1.1.1
       source-map-js: 1.2.0
 
   pretty-format@29.7.0:
@@ -4722,14 +4722,14 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5):
+  ts-node@10.9.2(@types/node@26.6.5)(typescript@5.4.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.12.12
+      '@types/node': 26.6.5
       acorn: 8.11.3
       acorn-walk: 8.3.2
       arg: 4.1.3
@@ -4741,7 +4741,7 @@ snapshots:
       yn: 3.1.1
     optional: true
 
-  tsup@8.0.2(postcss@8.4.38)(supports-color@7.2.0)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))(typescript@5.4.5):
+  tsup@8.0.2(postcss@8.4.38)(supports-color@7.2.0)(ts-node@10.9.2(@types/node@26.6.5)(typescript@5.4.5))(typescript@5.4.5):
     dependencies:
       bundle-require: 4.1.0(esbuild@0.19.12)
       cac: 6.7.14
@@ -4751,7 +4751,7 @@ snapshots:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
+      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@26.6.5)(typescript@5.4.5))
       resolve-from: 5.0.0
       rollup: 4.17.2
       source-map: 0.8.0-beta.0
@@ -4811,7 +4811,7 @@ snapshots:
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
 
-  undici-types@5.26.5: {}
+  undici-types@8.9.0: {}
 
   unicode-emoji-modifier-base@1.0.0: {}
 
@@ -4825,13 +4825,13 @@ snapshots:
 
   validate-npm-package-name@5.0.1: {}
 
-  vite-node@1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0):
+  vite-node@1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0):
     dependencies:
       cac: 6.7.14
       debug: 4.3.4(supports-color@7.2.0)
       pathe: 1.1.2
       picocolors: 1.0.1
-      vite: 5.2.11(@types/node@20.12.12)(terser@5.31.0)
+      vite: 5.2.11(@types/node@26.6.5)(terser@5.31.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -4842,17 +4842,17 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.2.11(@types/node@20.12.12)(terser@5.31.0):
+  vite@5.2.11(@types/node@26.6.5)(terser@5.31.0):
     dependencies:
       esbuild: 0.20.2
       postcss: 8.4.38
       rollup: 4.17.2
     optionalDependencies:
-      '@types/node': 20.12.12
+      '@types/node': 26.6.5
       fsevents: 2.3.3
       terser: 5.31.0
 
-  vitest@1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0):
+  vitest@1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0):
     dependencies:
       '@vitest/expect': 1.6.0
       '@vitest/runner': 1.6.0
@@ -4871,11 +4871,11 @@ snapshots:
       strip-literal: 2.1.0
       tinybench: 2.8.0
       tinypool: 0.8.4
-      vite: 5.2.11(@types/node@20.12.12)(terser@5.31.0)
-      vite-node: 1.6.0(@types/node@20.12.12)(supports-color@7.2.0)(terser@5.31.0)
+      vite: 5.2.11(@types/node@26.6.5)(terser@5.31.0)
+      vite-node: 1.6.0(@types/node@26.6.5)(supports-color@7.2.0)(terser@5.31.0)
       why-is-node-running: 2.2.2
     optionalDependencies:
-      '@types/node': 20.12.12
+      '@types/node': 26.6.5
     transitivePeerDependencies:
       - less
       - lightningcss
