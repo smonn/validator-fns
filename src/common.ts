@@ -43,11 +43,12 @@ export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
   message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
 ): ValidatorTest<T> {
+  const allowed: readonly unknown[] = values;
   return createValidatorTest(
     (value) =>
       value === undefined ||
       value === null ||
-      values.includes(value as T) ||
+      allowed.includes(value) ||
       (value instanceof Date &&
         values.some((x) => x.valueOf() === value.valueOf())),
     message,
