@@ -228,7 +228,7 @@ export type DateConfig = ConfigBase<Date>;
  * Validates a date value.
  * @category Type Validators
  */
-export const date = createTypeValidatorTest(
+export const date = createTypeValidatorTest<Date, DateConfig>(
   { parser: parseDate },
   applyDateConfig,
 );

@@ -48,7 +48,7 @@ export type BooleanConfig = ConfigBase<boolean>;
  * Validates a boolean value.
  * @category Type Validators
  */
-export const boolean = createTypeValidatorTest(
+export const boolean = createTypeValidatorTest<boolean, BooleanConfig>(
   { parser: parseBoolean },
   applyBooleanConfig,
 );
