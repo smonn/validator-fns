@@ -18,6 +18,9 @@
     "noUnusedLocals": true,
     "noEmit": true,
     "noUnusedParameters": true,
+    // Suppresses type errors in dependencies' .d.ts files. vite 5.2, which
+    // vitest 1.6 brings in, references DOM's Worker, and lib has no dom.
+    // Remove it with the vitest upgrade in #575.
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
