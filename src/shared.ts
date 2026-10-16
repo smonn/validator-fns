@@ -155,8 +155,9 @@ export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
 
 /**
  * Creates a valid result
- * @param value Parsed value
- * @param field Field name
+ * @param result Result fields
+ * @param result.value Parsed value
+ * @param result.field Field name
  * @category Helpers
  */
 export async function valid<T, E = never>({
@@ -176,10 +177,12 @@ export async function valid<T, E = never>({
 
 /**
  * Creates an invalid result.
- * @param message Error message
- * @param value Parsed value
- * @param field Field name
- * @param extras Extra message params
+ * @param result Result fields
+ * @param result.message Error message, formatted with `formatMessage`
+ * @param result.value Parsed value
+ * @param result.field Field name
+ * @param result.errors Extra error details, such as per-field errors from `object` and `array`
+ * @param result.extras Extra message params
  * @category Helpers
  */
 export async function invalid<

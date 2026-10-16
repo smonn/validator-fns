@@ -465,8 +465,8 @@ Custom validation types and validators can be created and used as needed. There 
 
 - [formatMessage(template, params)](#formatmessagetemplate-params)
 - [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
-- [valid(value, field)](#validvalue-field)
-- [invalid(message, value, field, extras)](#invalidmessage-value-field-extras)
+- [valid({ value, field })](#valid-value-field-)
+- [invalid({ message, value, field, errors, extras })](#invalid-message-value-field-errors-extras-)
 
 #### formatMessage(template, params)
 
