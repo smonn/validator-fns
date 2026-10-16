@@ -31,14 +31,19 @@
           "deny": ["src/**"],
         },
         {
-          "name": "validators",
-          "pattern": "src/{arrays,booleans,numbers,objects,strings}.ts",
+          "name": "factories",
+          "pattern": "src/factories.ts",
           "allow": ["src/shared.ts"],
+        },
+        {
+          "name": "validators",
+          "pattern": "src/{arrays,booleans,common,limits,numbers,objects,strings}.ts",
+          "allow": ["src/shared.ts", "src/factories.ts"],
         },
         {
           "name": "dates",
           "pattern": "src/dates.ts",
-          "allow": ["src/shared.ts", "src/parse-date.ts"],
+          "allow": ["src/shared.ts", "src/factories.ts", "src/parse-date.ts"],
         },
         {
           "name": "entry",

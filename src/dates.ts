@@ -1,10 +1,9 @@
-import {
-  createTypeValidatorTest,
-  createValidatorTest,
-  type ConfigBase,
-  type ValidatorMessage,
-  type ValidatorMessageParameters,
-  type ValidatorTest,
+import { createTypeValidatorTest, createValidatorTest } from './factories.js';
+import type {
+  ConfigBase,
+  ValidatorMessage,
+  ValidatorMessageParameters,
+  ValidatorTest,
 } from './shared.js';
 import { parseDate } from './parse-date.js';
 
