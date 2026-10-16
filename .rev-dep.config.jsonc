@@ -5,7 +5,15 @@
     "resolutionType": "entry-package",
     "includeDevDepsFromRoot": false,
   },
-  "ignoreFiles": ["benchmark/**", "runkit.cjs"],
+  "ignoreFiles": [
+    // A separate project with its own package.json and lockfile. Its imports
+    // (benchmarkify, validator-fns) resolve only inside benchmark/, so rev-dep
+    // reports them as missing and the file as an orphan.
+    "benchmark/**",
+    // The published RunKit example. It imports the package by name, which
+    // rev-dep can't resolve, and nothing imports it.
+    "runkit.cjs",
+  ],
   "workspaces": [
     {
       "path": ".",
