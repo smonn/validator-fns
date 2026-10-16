@@ -78,7 +78,7 @@ for (const file of Object.keys(baselines)) {
 
 if (update) {
   const sorted = Object.fromEntries(
-    Object.entries(nextBaselines).sort(([a], [b]) => a.localeCompare(b)),
+    Object.entries(nextBaselines).toSorted(([a], [b]) => a.localeCompare(b)),
   );
   writeFileSync(baselineFile, `${JSON.stringify(sorted, null, 2)}\n`);
   for (const line of stale) {
