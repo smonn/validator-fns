@@ -1,5 +1,14 @@
 import { assert, test } from 'vitest';
-import { array, max, min, object, required, string } from '../src/index.js';
+import {
+  array,
+  max,
+  min,
+  object,
+  required,
+  string,
+  valid,
+  type ValidatorTest,
+} from '../src/index.js';
 
 test('array', async () => {
   const validate = array(
@@ -147,4 +156,23 @@ test('array without validation', async () => {
     isValid: true,
     field: undefined,
   });
+});
+
+test('array item field names', async () => {
+  const fields: (string | undefined)[] = [];
+  const recordField: ValidatorTest = (value, field) => {
+    fields.push(field);
+    return valid({ value, field });
+  };
+
+  await array(recordField)(['a', 'b']);
+  assert.deepEqual(fields, ['[0]', '[1]']);
+
+  fields.length = 0;
+  await array(recordField)(['a', 'b'], 'tags');
+  assert.deepEqual(fields, ['tags[0]', 'tags[1]']);
+
+  fields.length = 0;
+  await object({ tags: array(recordField) })({ tags: ['a', 'b'] });
+  assert.deepEqual(fields, ['tags[0]', 'tags[1]']);
 });
