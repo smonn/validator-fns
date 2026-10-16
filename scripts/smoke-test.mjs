@@ -75,7 +75,7 @@ try {
     'require and import expose different exports',
   );
   console.log(
-    `Smoke test passed: ${required.length} exports via require and import`,
+    `Smoke test passed on Node.js ${process.version}: ${required.length} exports via require and import`,
   );
 } finally {
   rmSync(workDir, { recursive: true, force: true });
