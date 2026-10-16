@@ -1,5 +1,6 @@
 {
   "type": "module",
+  "packageManager": "pnpm@12.14.0",
   "scripts": {
     "start": "node index.mjs"
   },

@@ -12,7 +12,7 @@ We have some functionalities in mind and we have issued them and there is a _mil
 
 Contributor tooling needs Node 22.11 or later. `.nvmrc` pins the major version, so `nvm use` picks it up.
 
-`packageManager` in `package.json` pins the pnpm version, and CI uses it. pnpm 10 or later switches to the pinned version on its own. Dependabot doesn't bump the pin, so bump it by hand: run `pnpm self-update <version>`, then `pnpm install`, which updates the pnpm entry at the top of `pnpm-lock.yaml`, and commit both files.
+`packageManager` in `package.json` pins the pnpm version, and CI uses it. pnpm 10 or later switches to the pinned version on its own. Dependabot doesn't bump the pin, so bump it by hand: run `pnpm self-update <version>`, then `pnpm install`, which updates the pnpm entry at the top of `pnpm-lock.yaml`, and commit both files. `benchmark/package.json` pins the same version, so that `pnpm check` installs the benchmark with it; bump it the same way in `benchmark/`.
 
 Contributing to a project on GitHub is pretty straight forward. If this is you're first time, these are the steps you should take.
 
