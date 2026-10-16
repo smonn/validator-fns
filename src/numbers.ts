@@ -1,6 +1,6 @@
+import { createTypeValidatorTest } from './factories.js';
 import {
   type ConfigBase,
-  createTypeValidatorTest,
   invalid,
   valid,
   type ValidatorMessage,

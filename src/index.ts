@@ -15,31 +15,29 @@ export { invalidDate, parseDate } from './parse-date';
 export type { NumberConfig } from './numbers';
 export { object } from './objects';
 export type { ObjectParameter as ObjectParam } from './objects';
+export { oneOf, required } from './common';
+export type { OneOfValidatorMessageParameters } from './common';
+export { createTypeValidatorTest, createValidatorTest } from './factories';
+export { exact, max, min } from './limits';
+export type {
+  ExactValidatorMessageParameters,
+  MaxValidatorMessageParameters,
+  MinValidatorMessageParameters,
+  SharedValueType,
+} from './limits';
 export {
-  createTypeValidatorTest,
-  createValidatorTest,
-  exact,
   formatMessage,
   hasOwnProperty,
   invalid,
   isObject,
-  max,
-  min,
-  oneOf,
-  required,
   valid,
 } from './shared';
 export type {
   ConfigBase,
   DeepPartial,
-  ExactValidatorMessageParameters,
   ExtractError,
   ExtractValue,
   InvalidResult,
-  MaxValidatorMessageParameters,
-  MinValidatorMessageParameters,
-  OneOfValidatorMessageParameters,
-  SharedValueType,
   ValidatorFactory,
   ValidatorMessage,
   ValidatorMessageParameters,

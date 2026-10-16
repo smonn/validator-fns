@@ -1,4 +1,5 @@
-import { type ConfigBase, createTypeValidatorTest } from './shared.js';
+import { createTypeValidatorTest } from './factories.js';
+import type { ConfigBase } from './shared.js';
 
 /**
  * Parses a value into a boolean.
