@@ -19,6 +19,7 @@ Keywords carry weight:
 - **Must exceptions** need the rule, a reason, a tracking issue to remove the exception, and approval in review.
 - **Who approves.** Approval comes from a reviewer other than the author. In a repository with a single maintainer, the maintainer approves their own exceptions and the PR says so. An AI agent's review never counts as approval.
 - **Checks.** An exception to a check is an inline suppression carrying its reason. A check that cannot be suppressed inline, such as coverage, takes a waiver on the PR that CI recognizes (for example a label), approved like any must exception. Formatting and compile errors have no exceptions. A check's configuration never changes for one PR.
+- **Standing scopes.** A check's configuration **may** permanently exclude a category of change (for example dependency-bot PRs from the release-note check). The exclusion is approved like a must exception and recorded in the configuration with its reason. It is not a per-PR exception.
 - **Lowering code health.** A PR that makes code health worse **must** be either tech debt recorded as a must exception, or an emergency.
 - **Emergencies** are production outages, major bugs affecting users, legal issues, security holes, and launches with a hard deadline and serious consequences. They are not: wanting to ship sooner, soft deadlines, the end of the week, a reviewer being away, a manager asking for a same-day review, or rolling back a PR that broke tests or the build.
 - **Declaring an emergency.** The author declares it in the PR, and the reviewer confirms it.
@@ -83,8 +84,9 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 
 *Why:* other people's code depends on these shapes, and breaking them breaks systems you cannot see.
 
-- Public contracts (HTTP APIs, event and message schemas, persisted file formats, CLI flags and output) **must** stay backward compatible or be versioned.
+- Public contracts (HTTP APIs, library exports, package metadata such as entry points, types, and supported runtime versions, event and message schemas, persisted file formats, CLI flags and output) **must** stay backward compatible or be versioned.
 - Breaking changes **must** be versioned and announced. Where consumers live outside the repository, they **should** get a deprecation period.
+- Libraries **should** follow Semantic Versioning. Dropping a supported runtime version is a breaking change.
 - Database migrations **should** follow expand, migrate, contract: add the new shape, move data and readers, then remove the old shape in a later deploy. Running code **must** keep working at every step.
 - Migrations **should** be plain SQL files run by a language-agnostic tool (for example [dbmate](https://github.com/amacneil/dbmate)), not ORM-generated code. The schema then outlives any one language, framework, or ORM.
 
@@ -134,6 +136,15 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 - Infrastructure **must** be defined as code (for example OpenTofu or Terraform) and changed through PRs like application code.
 - Every environment **should** be reproducible from the repository alone. Manual changes in a console are drift and **should** be folded back into code or reverted.
 - Deployments **should** be automated and repeatable from a known commit. Configuration comes from the environment, not from per-environment builds.
+
+## Releases
+
+*Why:* a release is where code reaches people who cannot see the repository. Notes written with the change and publishing from CI keep each release reproducible and reviewable.
+
+- Each user-facing change **should** carry its release note in the PR that makes it (for example a changeset). A check **should** fail a PR without one. A PR with no user-facing change records that explicitly (for example an empty changeset).
+- Version numbers and changelogs **should** be generated from those notes, not edited by hand.
+- Releases **should** be published by CI from a known commit, after the full check command passes. Publishing credentials follow Supply chain (A03).
+- A library **should** be tested as published: pack it, then load it from a separate project the way consumers do (for example with both require and import). The Package shape check covers the rest.
 
 ## Code organization
 
@@ -232,6 +243,7 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 **How checks run**
 
 - The same checks **must** run locally and in CI, from one command (for example `check`).
+- The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations).
 - A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
 - Checks **should** be fast enough to run on every iteration, including every agent loop. Slow checks (mutation testing, full-repo analysis) **may** run on a schedule instead.
 - Findings **should** be errors or off. Warnings that never fail the build become noise.
@@ -261,6 +273,7 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 | Duplication | Copy-pasted blocks (for example jscpd, or rev-dep in TypeScript), tuned so the rule of three still holds. | Project-defined | May |
 | Unhandled results | Ignored errors, results, and promises (see Robustness). | Zero findings | Must |
 | Per-file maintainability | One score per file combining complexity measures (TypeScript: FTA). | Below 50 | Should |
+| Package shape | A published library's entry points, types, and module formats resolve the way consumers load them. | Zero findings | Should |
 
 Every test **must** contain at least one assertion, enforced by a lint rule where one exists and by review otherwise. Assertion-free tests raise coverage while checking nothing, which Fowler gives as the extreme case of coverage gamed as a target ([Test Coverage](https://martinfowler.com/bliki/TestCoverage.html)). Coverage only shows what code ran, not that results were checked. That is why the changed-lines rule is the floor, 90% is a target, and mutation testing checks the check.
 
@@ -314,7 +327,7 @@ A fully covered function scores its complexity. An untested one scores roughly i
 **Merge gates**
 
 - The main branch **must** be protected against direct pushes.
-- Required checks **must** pass before merge.
+- Required checks **must** pass before merge, including on PRs opened by bots or automation.
 - At least one review approval **should** be required.
 
 **Review**
@@ -357,6 +370,7 @@ The core takes no third-party dependencies by default (see Architecture). Every 
 - Versions **must** be pinned through committed dependency metadata: a lockfile where the ecosystem has one (`pnpm-lock.yaml`, `Cargo.lock`), and `go.mod` with `go.sum` in Go, where `go.mod` fixes the versions and `go.sum` holds checksums.
 - Every project **must** have a defined update story: automated update PRs on a schedule (Renovate, Dependabot, or similar), or a documented manual cadence. Security patches **should** be applied promptly.
 - Dependency updates **should** land in their own PRs, separate from feature work.
+- Automated update PRs **may** be grouped to reduce review load.
 
 ## Security
 
@@ -386,7 +400,9 @@ Grouped by [OWASP Top 10:2025](https://owasp.org/Top10/2025/) category, after a 
 **Supply chain (A03)**
 
 - Dependency vulnerability scanning **should** run in CI (see also Dependencies).
+- Vulnerability findings **should** be fixed, or accepted with a recorded reason.
 - CI actions **should** be pinned by commit SHA. CI tokens follow the least-privilege rule above.
+- Publishing **should** use short-lived credentials (for example OIDC trusted publishing), granted only to the job that publishes. Packages **should** carry provenance where the registry supports it.
 
 **Cryptography (A04)**
 
@@ -503,6 +519,7 @@ Tools for the checks in Static analysis:
 | Change risk (CRAP) | No common tool; compute from coverage and complexity reports |
 | Unhandled results | oxlint's type-aware `no-floating-promises` with `ignoreVoid` set to false (its default is true) |
 | Secrets | Language-agnostic tools (see Static analysis) |
+| Package shape | publint and attw (@arethetypeswrong/cli) on the packed package |
 
 ## Language notes: Go (provisional)
 
