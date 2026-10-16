@@ -43,6 +43,7 @@ export function parseString(value: unknown): string | null | undefined {
     throw new TypeError('Failed to parse value to string.');
   }
 
+  // oxlint-disable-next-line typescript/no-base-to-string -- only plain objects throw above; #484 decides other non-primitives
   return String(value);
 }
 
@@ -71,8 +72,7 @@ export function applyStringConfig(
   return parsedValue;
 }
 
-export interface MatchesValidatorMessageParameters
-  extends ValidatorMessageParameters<string> {
+export interface MatchesValidatorMessageParameters extends ValidatorMessageParameters<string> {
   pattern: RegExp;
 }
 

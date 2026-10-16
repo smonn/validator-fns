@@ -89,6 +89,7 @@ export function array<T, E>(
     }
   }
 
+  // oxlint-disable-next-line eslint/complexity -- array and item tests share one closure; split in #483
   return async (value, field) => {
     const arrayValue = applyArrayConfig<T>(finalConfig, value);
     let arrayInvalidResult: ValidatorResult | undefined;

@@ -1,0 +1,59 @@
+{
+  "configVersion": "2.0",
+  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/2.0.schema.json?raw=true",
+  "nodeModulesResolution": {
+    "resolutionType": "entry-package",
+    "includeDevDepsFromRoot": false,
+  },
+  "ignoreFiles": ["benchmark/**", "runkit.js"],
+  "workspaces": [
+    {
+      "path": ".",
+      "prodEntryPoints": ["src/index.ts"],
+      "devEntryPoints": ["test/**/*.test.ts", "*.config.ts"],
+      "moduleBoundaries": [
+        {
+          "name": "shared",
+          "pattern": "src/shared.ts",
+          "deny": ["src/**"],
+        },
+        {
+          "name": "validators",
+          "pattern": "src/{arrays,booleans,dates,numbers,objects,strings}.ts",
+          "allow": ["src/shared.ts"],
+        },
+        {
+          "name": "entry",
+          "pattern": "src/index.ts",
+          "allow": ["src/*.ts"],
+        },
+        {
+          "name": "tests",
+          "pattern": "test/**/*",
+          "allow": ["src/index.ts"],
+        },
+      ],
+      "restrictedImportsDetection": {
+        "enabled": true,
+        "entryPoints": ["src/index.ts"],
+        "denyModules": ["*"],
+      },
+      "circularImportsDetection": { "enabled": true },
+      "orphanFilesDetection": { "enabled": true },
+      "unusedExportsDetection": { "enabled": true },
+      "unusedNodeModulesDetection": {
+        "enabled": true,
+        "pkgJsonFieldsWithBinaries": ["scripts", "lint-staged"],
+        "excludeModules": [
+          "@types/node",
+          "@vitest/coverage-v8",
+          "oxlint-tsgolint",
+        ],
+      },
+      "missingNodeModulesDetection": { "enabled": true },
+      "unresolvedImportsDetection": { "enabled": true },
+      "devDepsUsageOnProdDetection": { "enabled": true },
+      "duplicatedCodeDetection": { "enabled": true },
+    },
+  ],
+}

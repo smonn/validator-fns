@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "vitest"],
+  "categories": {
+    "correctness": "error"
+  },
+  "options": {
+    "typeAware": true
+  },
+  "ignorePatterns": ["runkit.js"],
+  "rules": {
+    "eslint/complexity": ["error", { "max": 10 }],
+    "typescript/no-floating-promises": ["error", { "ignoreVoid": false }],
+    "vitest/expect-expect": "error"
+  }
+}
