@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest a new validator or a change to an existing one.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What are you trying to validate, and why doesn't the current API cover it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: Show how you would call it. Leave empty if you're unsure.
+      render: ts
