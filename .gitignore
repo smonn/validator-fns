@@ -120,3 +120,6 @@ docs/
 
 # project-level claude config
 .claude-clean/
+
+# Stryker sandboxes
+.stryker-tmp/
