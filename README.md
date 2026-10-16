@@ -532,7 +532,9 @@ Formats a failed validation result. `message` is the same as the `formatMessage`
 
 ## Supported environments
 
-- Node.js 12+, but may work in older Node.js versions.
+Supports Node versions in active or maintenance LTS at release time. Dropping one waits for the next major release.
+
+- Node.js 22 and later.
 - [ES2019 compatible browsers][compat], which essentially is all modern evergreen browsers and Safari 13.1+. If you need to target IE11, for example, ensure you use a compiler such as Babel.js.
 
 Older environments may require polyfill or transpile for the following:
