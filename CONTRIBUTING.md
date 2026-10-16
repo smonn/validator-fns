@@ -24,6 +24,8 @@ And that's it! Read the code available and change the part you don't like! You'r
 
 If you're adding a new functionality, start from the branch **main**. It would be a better practice to create a new branch and work in there.
 
+`pnpm fta` checks each file in `src/` against the FTA score threshold: below 50. A file over it has a baseline in `fta-baseline.json`. The check fails when a file scores worse than its baseline, and also when it scores better, so that the baseline follows each improvement. Run `pnpm fta:update` to lower or remove baselines, then commit the file. Raising a baseline, or adding one for a file, loosens the check and needs the maintainer's approval.
+
 When you're done, submit a pull request and for one of the maintainers to check it out. We would let you know if there is any problem or any changes that should be considered.
 
 ### Issues and pull requests
