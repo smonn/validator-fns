@@ -489,6 +489,39 @@ Formats a string for use as an error message. `template` can be a plain string w
 
 Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
 
+In TypeScript, pass the value type and the config type as type arguments. TypeScript 5.6 and later infer the config type from `defaultConfig` alone, so without them the validator rejects options that `defaultConfig` doesn't set.
+
+```ts
+import {
+  type ConfigBase,
+  createTypeValidatorTest,
+  parseNumber,
+} from 'validator-fns';
+
+interface MoneyConfig extends ConfigBase<number> {
+  /** Convert the amount to cents. */
+  cents?: boolean;
+}
+
+function applyMoneyConfig(
+  value: unknown,
+  config: MoneyConfig,
+): number | null | undefined {
+  const amount = config.parser(value);
+  return config.cents && typeof amount === 'number'
+    ? Math.round(amount * 100)
+    : amount;
+}
+
+const money = createTypeValidatorTest<number, MoneyConfig>(
+  { parser: parseNumber },
+  applyMoneyConfig,
+);
+
+const result = await money({ cents: true })('12.5');
+// { state: 'valid', value: 1250, ... }
+```
+
 #### valid({ value, field })
 
 Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
