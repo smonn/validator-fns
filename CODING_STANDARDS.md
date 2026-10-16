@@ -304,11 +304,12 @@ A fully covered function scores its complexity. An untested one scores roughly i
 
 - Issues and PRs **must** follow the project's established template, so each one covers the same aspects. A project without templates **should** add them.
 - Description length **should** scale with the change's impact and risk, not its line count. A one-line change to a security config warrants a thorough explanation. A large mechanical change, such as an automated rename, needs only a few sentences.
+- A description **should** cite a standard only where the change deviates from it. Following a standard needs no citation.
+- Each fact **should** appear once in a description.
+- Notes about other work **should** go on that work's issue, not in the PR.
 - PR titles **should** use the Conventional Commits format: `feat(billing): add proration`. The title **should** be imperative and stand alone in history.
 - The description body **should** say why the change is made and note its shortcomings, with enough context that it still reads if linked pages disappear. Authors **should** re-check it before merge, since changes drift during review.
 - PRs **should** open as drafts.
-- A PR description should cite a standard only where it deviates from one. Compliance needs no citation.
-- Notes about other work should go on that work's issue, not in the PR.
 
 **Merge gates**
 
