@@ -14,6 +14,8 @@ Contributor tooling needs Node 22.11 or later. `.nvmrc` pins the major version, 
 
 `packageManager` in `package.json` pins the pnpm version, and CI uses it. pnpm 10 or later switches to the pinned version on its own. Dependabot doesn't bump the pin, so bump it by hand: run `pnpm self-update <version>`, then `pnpm install`, which updates the pnpm entry at the top of `pnpm-lock.yaml`, and commit both files. `benchmark/package.json` pins the same version, so that `pnpm check` installs the benchmark with it; bump it the same way in `benchmark/`.
 
+A path-based ignore in a check's config (`.oxfmtrc.json`, `.oxlintrc.json`, `.rev-dep.config.jsonc`) needs a comment next to it with its reason. `pnpm check` fails when an ignore matches no tracked file, so renaming an ignored file means updating its ignore.
+
 Contributing to a project on GitHub is pretty straight forward. If this is you're first time, these are the steps you should take.
 
 - Fork this repo.
