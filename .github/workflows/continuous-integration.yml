@@ -37,6 +37,18 @@ jobs:
         with:
           version: latest
 
+      # engines.node claims >=18, so the packed package is also loaded on the
+      # lowest version it claims. Set up Node 18 first and keep its path, so the
+      # .nvmrc version set up next stays first on PATH for the tooling.
+      # Update this with engines.node.
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Record the Node.js 18 path
+        run: echo "NODE_18=$(command -v node)" >> "$GITHUB_ENV"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -54,6 +66,11 @@ jobs:
       - name: Check without the changeset (standing scope)
         if: env.CHANGESET_SCOPE == 'true'
         run: pnpm check:code
+
+      # Runs after Check, which builds dist. The script packs and installs with
+      # the .nvmrc tooling, then loads the package with the Node it runs on.
+      - name: Smoke test on Node.js 18
+        run: '"$NODE_18" scripts/smoke-test.mjs'
 
       - name: Build
         run: pnpm build
