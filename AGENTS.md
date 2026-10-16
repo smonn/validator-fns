@@ -22,6 +22,8 @@ This library follows CODING_STANDARDS.md (from github.com/smonn/coding-standards
 - Report a check as passing only after running it in this session, after your last change.
 - Keep each PR to one concern. File an issue for any bug you find along the way.
 - Commit and push only when asked, as separate requests.
+- Commit messages carry no AI attribution trailers; the commit hook rejects them.
+- PR and issue bodies carry no AI attribution either, such as a "Generated with Claude Code" footer.
 - Leave npm publishing, releases, and tags to me. Propose them when they're due.
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and check-config changes need my approval first.
 - When a requirement is ambiguous, ask with numbered options before building.
