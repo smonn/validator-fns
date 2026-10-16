@@ -38,8 +38,8 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./index.d.cts",
-        "default": "./index.cjs"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       }
     }
   },
@@ -51,13 +51,14 @@
   },
   "scripts": {
     "build": "tsup",
-    "check": "run-s format:check lint typecheck deps fta coverage build",
+    "check": "run-s format:check lint typecheck deps fta coverage build publint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --deny-warnings",
     "typecheck": "tsc --noEmit",
     "deps": "rev-dep config run",
     "fta": "fta src --score-cap 62",
+    "publint": "publint --strict",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm check",
@@ -73,6 +74,7 @@
     "oxfmt": "0.70.0",
     "oxlint": "1.85.0",
     "oxlint-tsgolint": "7.0.2003",
+    "publint": "0.3.25",
     "rev-dep": "3.1.0",
     "tsup": "8.0.2",
     "typescript": "5.4.5",
