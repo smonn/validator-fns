@@ -40,7 +40,7 @@ Applies to design docs, PR descriptions, reviews, and agent output alike.
 - You **must** separate observation from interpretation. "The handler calls the DB three times" is an observation; "the handler is slow" is an interpretation until measured.
 - You **should** state confidence levels, tradeoffs, and knowledge gaps explicitly. Prefer precise, falsifiable claims over vague generalizations. Avoid absolutist claims.
 - When a tradeoff exists, you **must** name both sides. Do not silently pick one.
-- When a requirement is ambiguous, you **should** present numbered options rather than guess and build.
+- When a requirement is ambiguous, you **should** present numbered options rather than guess and build. When the choice hinges on a measurable fact, measure first and present the data with the options.
 - Written output **should** be dry and plain, moderate-to-high detail, with no recap of what was just said.
 
 ## Design principles
@@ -53,6 +53,7 @@ Simple over easy (in Rich Hickey's sense): fewer things braided together, even w
 - **Rule of three for DRY.** You **should** abstract duplication only once it reveals a real pattern, usually on the third occurrence. Two similar blocks are cheaper than a wrong abstraction.
 - **Simplest correct solution.** You **should** pick the simplest approach that solves the problem correctly. Between two approaches of similar complexity, pick the more readable one. Cleverness needs a measured reason (see Performance).
 - **Pure functions, immutable data, explicit data flow.** You **should** prefer these over hidden state and side effects.
+- **Caller-owned arguments.** Functions **should not** mutate arguments the caller owns unless that is their documented purpose. Copy stateful inputs (a RegExp with g or y flags, iterators) before use.
 - **Data and behavior, not hybrids.** You **should** prefer plain data plus functions over objects that both expose their fields and carry behavior. A type is either a data structure (exposes data, no behavior) or an object (hides data, exposes behavior), not both.
 - **Composition over inheritance.** You **should** compose small parts rather than build class hierarchies.
 - **Parse, don't validate.** At boundaries you **must** transform untyped input into narrowed types once, rather than checking and passing the raw value along.
@@ -115,10 +116,10 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 
 *Why:* optimizing without measurement targets the wrong thing, and regressions without a budget go unnoticed until users feel them.
 
-- **Measure before optimizing.** Performance claims and optimizations **should** come with a benchmark or profile showing the problem and the gain.
+- **Measure before optimizing.** Performance claims and optimizations **should** come with a benchmark or profile showing the problem and the gain. Benchmarks **should** use production-like input (distinct values, realistic sizes), not one value in a loop, and report memory as well as time. Keeping an optimization needs the same evidence as adding it.
 - **Budgets.** What users feel **should** have a budget in the repository: p95 latency for key endpoints, and JavaScript bundle size and Core Web Vitals for UIs. Budgets **should** be checked in CI where practical.
 - **No N+1 queries.** Data access per request **should** be bounded and visible. New hot queries and indexes **should** be checked against their query plans.
-- **Caching needs a staleness story.** A cache **must** have a stated invalidation strategy or a stated, acceptable staleness window.
+- **Caching needs a staleness story.** A cache **must** have a stated invalidation strategy or a stated, acceptable staleness window. Its key **must** include every input the result depends on. Results of caller-supplied functions are cached only when the contract states they are pure.
 - **Benchmarks in CI.** Hot paths **may** have benchmarks that run in CI and fail on regressions past a threshold.
 
 ## Logging and metrics
@@ -245,7 +246,8 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 **How checks run**
 
 - The same checks **must** run locally and in CI, from one command (for example `check`).
-- The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
+- The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. Local checks **should** fail on a toolchain version other than the pinned one. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
+- When a tool's default conflicts with a project rule, the repository **should** configure the tool, including AI agent settings.
 - A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
 - Checks **should** be fast enough to run on every iteration, including every agent loop. Slow checks (mutation testing, full-repo analysis) **may** run on a schedule instead.
 - Findings **should** be errors or off. Warnings that never fail the build become noise.
@@ -322,6 +324,10 @@ A fully covered function scores its complexity. An untested one scores roughly i
 - A description **should** cite a standard only where the change deviates from it. Following a standard needs no citation.
 - Each fact **should** appear once in a description.
 - Notes about other work **should** go on that work's issue, not in the PR.
+- Independent findings **should** get one issue each, or a tracking issue with a checklist.
+- When several PRs share an issue, the last one to merge **should** close it.
+- Negative results (checked, nothing found) **should** be recorded on the issue.
+- CI **may** check PR descriptions against the template's rules (required sections, banned content).
 - PR titles **should** use the Conventional Commits format: `feat(billing): add proration`. The title **should** be imperative and stand alone in history.
 - The description body **should** say why the change is made and note its shortcomings, with enough context that it still reads if linked pages disappear. Authors **should** re-check it before merge, since changes drift during review.
 - PRs **should** open as drafts.
@@ -388,6 +394,7 @@ Grouped by [OWASP Top 10:2025](https://owasp.org/Top10/2025/) category, after a 
 - Input from outside the process **must** be parsed at the boundary (see Design principles).
 - Processes, services, and credentials **should** have the least privilege they need.
 - Controls **should** be layered (defense in depth), so no single check is the only barrier.
+- Regexes run on untrusted input **should** be checked for super-linear backtracking, by a tool in the check command where one exists (for example recheck).
 
 **Access control (A01)**
 
@@ -415,6 +422,7 @@ Grouped by [OWASP Top 10:2025](https://owasp.org/Top10/2025/) category, after a 
 
 - Queries and commands **must** be parameterized, never built by string concatenation. Shell commands take their arguments as an array, never interpolated into a shell string.
 - Output **must** be encoded for its context (HTML, HTML attributes, URLs).
+- URLs from users rendered as links **must** be checked against a scheme allowlist (usually http: and https:), using the parsed scheme, not a string match.
 
 **Design (A06).** Changes touching authentication, authorization, payments, or personal data **should** include a brief threat note in the PR.
 
@@ -534,6 +542,7 @@ Tools for the checks in Static analysis:
 - IO functions in the shell **should** take `context.Context` as the first parameter. The core **should not** need it.
 - Packages **should** be organized by domain, not by layer type. Avoid `util` and `common` packages. Use `internal/` for anything not meant to be imported.
 - Tests **should** be table-driven where cases share a shape.
+- The regexp package guarantees linear-time matching, so the backtracking check in Security does not apply to it.
 
 | Check | Tool |
 | --- | --- |
@@ -562,6 +571,7 @@ Tools for the checks in Static analysis:
 - Ports **should** be traits. Adapters implement them.
 - Layering **should** be enforced with workspace crates: the core crate does not depend on the shell crate, so the compiler checks the dependency direction.
 - Unit tests **should** live next to the code in `#[cfg(test)]` modules; integration tests in `tests/`.
+- The regex crate guarantees linear-time matching, so the backtracking check in Security does not apply to it. Backtracking crates (for example fancy-regex) are covered.
 
 | Check | Tool |
 | --- | --- |
