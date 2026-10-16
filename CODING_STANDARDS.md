@@ -18,7 +18,7 @@ Keywords carry weight:
 - **Should exceptions** need the rule and a reason in the PR description.
 - **Must exceptions** need the rule, a reason, a tracking issue to remove the exception, and approval in review.
 - **Who approves.** Approval comes from a reviewer other than the author. In a repository with a single maintainer, the maintainer approves their own exceptions and the PR says so. An AI agent's review never counts as approval.
-- **Checks.** An exception to a check is an inline suppression carrying its reason. Where a tool supports only path-based ignores, each **should** carry its reason, and an ignore that matches no file **should** fail the check. A check that cannot be suppressed inline, such as coverage, takes a waiver on the PR that CI recognizes (for example a label), approved like any must exception. Formatting and compile errors have no exceptions. A check's configuration never changes for one PR.
+- **Checks.** An exception to a check is an inline suppression carrying its reason. A configuration option that silences a diagnostic (for example skipLibCheck) is a suppression too: it carries its reason next to it and is approved like any other. Where a tool supports only path-based ignores, each **should** carry its reason, and an ignore that matches no file **should** fail the check. A check that cannot be suppressed inline, such as coverage, takes a waiver on the PR that CI recognizes (for example a label), approved like any must exception. Formatting and compile errors have no exceptions. A check's configuration never changes for one PR.
 - **Standing scopes.** A check's configuration **may** permanently exclude a category of change (for example dependency-bot PRs from the release-note check). The exclusion is approved like a must exception and recorded in the configuration with its reason. It is not a per-PR exception. A standing scope **must** key on an identity contributors cannot forge (the PR author, or a branch in the same repository), never a branch name alone. CI runs the full check command by default; a standing scope runs a named subset of it.
 - **Lowering code health.** A PR that makes code health worse **must** be either tech debt recorded as a must exception, or an emergency.
 - **Emergencies** are production outages, major bugs affecting users, legal issues, security holes, and launches with a hard deadline and serious consequences. They are not: wanting to ship sooner, soft deadlines, the end of the week, a reviewer being away, a manager asking for a same-day review, or rolling back a PR that broke tests or the build.
@@ -144,6 +144,7 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 - Version numbers and changelogs **should** be generated from those notes, not edited by hand.
 - Releases **should** be published by CI from a known commit after the full check command passes, using the exact artifact that passed the checks, with no rebuild in between. Publishing credentials follow Supply chain (A03).
 - A library **should** be tested as published: build it with the same command the release uses, then load it from a separate project the way consumers do (for example with both require and import). The Package shape check covers the rest.
+- A toolchain bump or structural refactor of a library **should** show its public API surface (for example built type declarations) unchanged against the base, or list each difference.
 - The release process **should** document how to recover when publishing fails after the version is bumped.
 
 ## Code organization
@@ -243,6 +244,7 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 
 - The same checks **must** run locally and in CI, from one command (for example `check`).
 - A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
+- In repositories that merge without squashing, each commit on main **should** pass the code checks: fold a red-test commit into its fix before merge. Per-PR checks apply to the PR's last commit.
 - A check's result **should** depend only on tracked files, including lockfiles, and the pinned toolchain, not on local state such as a sub-project's installed dependencies or caches. CI or the check itself **should** set up every sub-project the checks read, from its lockfile.
 - A new check **should** be shown to fail once: break what it guards on purpose, and record the result in the PR.
 - The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. Local checks **should** fail on a toolchain version other than the pinned one. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
@@ -256,7 +258,7 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 - A threshold that an existing codebase does not yet meet starts as a baseline at the current value. Checks fail only when a value gets worse than its baseline.
 - A baseline moves toward its threshold as values improve and never moves away from it.
 - Coverage has no stored baseline; it uses the changed-lines rule in the table instead.
-- A change made to improve one tracked metric **should** report before and after for the others it moves on the same code.
+- A change made to improve one tracked metric **should** report before and after for the others it moves on the same code, and choose the structure a reader would want, not the one that scores best.
 
 **What to check**
 
@@ -379,6 +381,7 @@ The core takes no third-party dependencies by default (see Architecture). Every 
 - Every project **must** have a defined update story: automated update PRs on a schedule (Renovate, Dependabot, or similar), or a documented manual cadence. Security patches **should** be applied promptly.
 - Dependency updates **should** land in their own PRs, separate from feature work.
 - Automated update PRs **may** be grouped to reduce review load.
+- When a dependency's new major version cannot be adopted yet, the blocker **should** be recorded in an issue with the measured failures and a done-when condition, and the failing update PR closed.
 
 ## Security
 
