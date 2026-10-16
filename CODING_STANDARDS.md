@@ -38,7 +38,7 @@ Applies to design docs, PR descriptions, reviews, and agent output alike.
 
 - You **should** separate reasoning into phases: observe, evaluate, analyze, synthesize, communicate. Scale the rigor to the decision's reversibility and impact.
 - You **must** separate observation from interpretation. "The handler calls the DB three times" is an observation; "the handler is slow" is an interpretation until measured.
-- You **should** state confidence levels, tradeoffs, and knowledge gaps explicitly. Prefer precise, falsifiable claims over vague generalizations. Avoid absolutist claims. Claims about tool behavior **should** name the version observed and whether they were reproduced.
+- You **should** state confidence levels, tradeoffs, and knowledge gaps explicitly. Prefer precise, falsifiable claims over vague generalizations. Avoid absolutist claims. Factual claims in issues and PRs **should** state the measurement behind them (for tool behavior, the version observed) or be labeled unmeasured. Results tables hold only measured cases.
 - When a tradeoff exists, you **must** name both sides. Do not silently pick one.
 - When a requirement is ambiguous, you **should** present numbered options rather than guess and build, in conversation, issues, and PR bodies alike. When the choice hinges on a measurable fact, measure first and present the data with the options.
 - Written output **should** be dry and plain, moderate-to-high detail, with no recap of what was just said.
@@ -144,7 +144,7 @@ The structural default is functional core, imperative shell (Gary Bernhardt, "Bo
 - Version numbers and changelogs **should** be generated from those notes, not edited by hand.
 - Releases **should** be published by CI from a known commit after the full check command passes, using the exact artifact that passed the checks, with no rebuild in between. Publishing credentials follow Supply chain (A03).
 - A library **should** be tested as published: build it with the same command the release uses, then load it from a separate project the way consumers do (for example with both require and import). The Package shape check covers the rest.
-- A toolchain bump or structural refactor of a library **should** show its public API surface (for example built type declarations) unchanged against the base, or list each difference.
+- A toolchain bump or structural refactor of a library **should** show its public API surface (for example built type declarations) and its built output's syntax level and built-ins unchanged against the base, or list each difference.
 - The release process **should** document how to recover when publishing fails after the version is bumped.
 
 ## Code organization
@@ -242,11 +242,12 @@ Rules a tool can check **should** be enforced by a tool rather than by review or
 
 **How checks run**
 
-- The same checks **must** run locally and in CI, from one command (for example `check`).
+- The same checks **must** run locally and in CI, from one command (for example `check`). Local hooks that run part of it **should** cover the same files.
 - A change **must** pass that command before it is declared done. Check configuration **must not** be loosened to make a change pass (see Exceptions).
 - In repositories that merge without squashing, each commit on main **should** pass the code checks: fold a red-test commit into its fix before merge. Per-PR checks apply to the PR's last commit.
 - A check's result **should** depend only on tracked files, including lockfiles, and the pinned toolchain, not on local state such as a sub-project's installed dependencies or caches. CI or the check itself **should** set up every sub-project the checks read, from its lockfile.
 - A new check **should** be shown to fail once: break what it guards on purpose, and record the result in the PR.
+- A CI change that cannot run before merge **should** name, in the PR, a safe first run after merge and its expected result.
 - The development toolchain version **should** be pinned in the repository (.nvmrc, rust-toolchain.toml, the toolchain line in go.mod), and CI **should** use the pinned version. Local checks **should** fail on a toolchain version other than the pinned one. This is separate from the runtime versions a library supports, which are part of its contract (see Contracts and migrations). Contributor-only requirements (package manager, toolchain) **should** stay out of metadata consumers see (for example engines).
 - When a tool's default conflicts with a project rule, the repository **should** configure the tool, including AI agent settings.
 - Checks **should** be fast enough to run on every iteration, including every agent loop. Slow checks (mutation testing, full-repo analysis) **may** run on a schedule instead.
@@ -336,7 +337,7 @@ A fully covered function scores its complexity. An untested one scores roughly i
 
 - The main branch **must** be protected against direct pushes.
 - Required checks **must** pass before merge, including on PRs opened by bots or automation. Where the platform does not run checks on automation-opened PRs, a documented manual step that runs them before merge satisfies this.
-- A new CI check **should** be made required in the same change, or run inside a job that already is.
+- A new CI check **should** be made required in the same change, or run inside a job that already is, and the change **should** list the open PRs that predate it, since they cannot report it until rebased.
 - CI **should** run on PRs into any branch, so each PR in a stack is checked before it is retargeted. Per-PR checks (release note, changed-lines coverage, diff-based lint) **should** compare against the PR's base branch.
 - At least one review approval **should** be required.
 
