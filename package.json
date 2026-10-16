@@ -51,7 +51,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "check": "run-s format:check lint typecheck deps fta coverage build publint",
+    "check": "run-s format:check lint typecheck deps fta coverage build publint attw smoke",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --deny-warnings",
@@ -59,12 +59,15 @@
     "deps": "rev-dep config run",
     "fta": "fta src --score-cap 62",
     "publint": "publint --strict",
+    "attw": "attw --pack .",
+    "smoke": "node scripts/smoke-test.mjs",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm check",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@types/node": "20.12.12",
     "@vitest/coverage-v8": "1.6.0",
     "fta-cli": "3.0.1",

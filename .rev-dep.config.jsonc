@@ -10,7 +10,7 @@
     {
       "path": ".",
       "prodEntryPoints": ["src/index.ts"],
-      "devEntryPoints": ["test/**/*.test.ts", "*.config.ts"],
+      "devEntryPoints": ["test/**/*.test.ts", "*.config.ts", "scripts/*.mjs"],
       "moduleBoundaries": [
         {
           "name": "shared",

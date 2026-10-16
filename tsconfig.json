@@ -16,11 +16,12 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
+    "noEmit": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "scripts"]
 }
