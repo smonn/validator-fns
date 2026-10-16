@@ -448,6 +448,8 @@ Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or
 
 Ensures value is a valid URL. Works with strings. `protocols` is provided to the message.
 
+> **Warning:** without `protocols`, any URL that the `URL` constructor parses is valid, including `javascript:` and `data:` URLs, which can run script when used as a link. Pass `['http:', 'https:']` for values you render as links. The default is planned to change to `http:` and `https:` in v3 ([#521](https://github.com/smonn/validator-fns/issues/521)).
+
 <details><summary>arguments</summary>
 
 | name        | type               | description                                              |

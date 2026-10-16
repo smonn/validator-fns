@@ -111,7 +111,8 @@ export function email(
 /**
  * Ensures a string value is a valid URL
  * @param message Error message
- * @param protocols Optional list of protocols to allow
+ * @param protocols Optional list of protocols to allow. Without it, `javascript:`
+ * and `data:` URLs are valid; use `['http:', 'https:']` for values rendered as links.
  * @category Validation Tests
  */
 export function url(
