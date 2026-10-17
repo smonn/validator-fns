@@ -123,3 +123,7 @@ docs/
 
 # Stryker sandboxes
 .stryker-tmp/
+
+# Claude Code agent worktrees, which are full checkouts that lint and rev-dep
+# would otherwise scan
+.claude/worktrees/
