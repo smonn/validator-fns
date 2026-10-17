@@ -107,10 +107,7 @@ async function validateItems(
   }
 
   for (const [index, item] of arrayValue.entries()) {
-    const result = await validateItem(
-      item,
-      field ? `${field}[${index}]` : `[${index}]`,
-    );
+    const result = await validateItem(item, `${field || ''}[${index}]`);
 
     if (result.state === 'invalid') {
       isValid = false;
