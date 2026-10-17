@@ -1,5 +1,18 @@
 # validator-fns
 
+## 3.0.0-next.1
+
+### Major Changes
+
+- 50525a5: `applyArrayConfig` no longer takes a type parameter and returns `unknown[] | null | undefined`. Remove the type argument from calls such as `applyArrayConfig<string>(config, value)`, and check the items' type where you use them.
+- 664623e: `array()` and `object()` record an empty string `''` for an item or field that fails with an empty message and no `errors`, instead of `undefined`. `null` still marks an array item that passed. Only custom validators can fail this way; the built-in tests always set a message.
+- 99671be: TypeScript 5.4 or later is required for the type declarations. `createTypeValidatorTest` now infers the config type from `applyConfig`, so a custom type validator no longer needs explicit type arguments to accept options that `defaultConfig` doesn't set. Explicit type arguments still work.
+- 1fe3f32: `number()` returns an invalid result (`Failed to parse value to number.`) for non-blank input it can't read as a number, such as `'abc'` or `true`, instead of a valid `NaN`. A blank string still gives `NaN`, which `required()` treats as empty and the `default` option replaces. `parseNumber` throws a `TypeError` for the same input.
+- 813d598: `object()`'s value type includes `null` for each field, as in `{ name?: string | null }`, matching what it returns for a `null` field. Code that read those fields as non-null now needs a `null` check.
+- 1150a43: `string()` and `number()` return an invalid result for arrays, Maps, Sets, functions, RegExps, plain objects, other non-primitive objects, and symbols, instead of coercing them (`[1]` used to pass `string()` as `"1"` and `number()` as `1`). Dates and `String`, `Number`, or `Boolean` objects are still accepted. `parseString` and `parseNumber` throw a `TypeError` for the same input.
+- 5c88a3f: Remove the deprecated `isValid` property from validation results. Replace `result.isValid` with `result.state === 'valid'`, which also narrows the result type.
+- cdecb5f: `url()` now allows only `http:` and `https:` URLs by default, so `javascript:` and `data:` URLs are invalid. Pass a list of protocols to allow others; the list replaces the default, so include `http:` and `https:` in it if you still want them.
+
 ## 3.0.0-next.0
 
 ### Major Changes
