@@ -22,7 +22,7 @@ function applyMoneyConfig(
     : amount;
 }
 
-const money = createTypeValidatorTest<number, MoneyConfig>(
+const money = createTypeValidatorTest(
   { parser: parseNumber },
   applyMoneyConfig,
 );

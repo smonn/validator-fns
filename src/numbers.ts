@@ -116,7 +116,7 @@ export interface NumberConfig extends ConfigBase<number> {
  * Validates a number value.
  * @category Type Validators
  */
-export const number = createTypeValidatorTest<number, NumberConfig>(
+export const number = createTypeValidatorTest(
   {
     parser: parseNumber,
   },

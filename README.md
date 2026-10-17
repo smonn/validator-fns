@@ -488,7 +488,7 @@ Useful helper for simple validation types such as strings, numbers, etc. `defaul
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
-In TypeScript, pass the value type and the config type as type arguments. TypeScript 5.6 and later infer the config type from `defaultConfig` alone, so without them the validator rejects options that `defaultConfig` doesn't set.
+In TypeScript, the value type and the config type are inferred from `applyConfig`, so the validator accepts options that `defaultConfig` doesn't set. Passing them as type arguments, as in `createTypeValidatorTest<number, MoneyConfig>(…)`, still works.
 
 ```ts
 import {
@@ -512,7 +512,7 @@ function applyMoneyConfig(
     : amount;
 }
 
-const money = createTypeValidatorTest<number, MoneyConfig>(
+const money = createTypeValidatorTest(
   { parser: parseNumber },
   applyMoneyConfig,
 );
@@ -534,6 +534,7 @@ Formats a failed validation result. `message` is the same as the `formatMessage`
 Supports Node versions in active or maintenance LTS at release time. Dropping one waits for the next major release.
 
 - Node.js 22 and later.
+- TypeScript 5.4 and later, for the type declarations.
 - Chrome and Edge 85+, Firefox 77+, and Safari 13.1+ (iOS 13.4+): the first versions with every feature below, per [MDN's browser compatibility data][bcd] 8.1.6.
 
 To support older environments, transpile or polyfill these:

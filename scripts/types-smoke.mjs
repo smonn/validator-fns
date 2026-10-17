@@ -1,0 +1,134 @@
+// Type-checks a consumer project against the packed package's declarations,
+// on the lowest TypeScript version the README states and on the current one,
+// with skipLibCheck off so errors inside the declarations count. The fixture is
+// the README's createTypeValidatorTest example, without type arguments.
+// Update `lowest` and the typescript-5.4 dev dependency with the README.
+import { execFileSync } from 'node:child_process';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const packageRoot = fileURLToPath(new URL('..', import.meta.url));
+
+const compilers = [
+  {
+    name: 'lowest',
+    tsc: join(packageRoot, 'node_modules', 'typescript-5.4', 'bin', 'tsc'),
+  },
+  {
+    name: 'current',
+    tsc: join(packageRoot, 'node_modules', 'typescript', 'bin', 'tsc'),
+  },
+];
+
+const fixture = `import {
+  type ConfigBase,
+  createTypeValidatorTest,
+  object,
+  parseNumber,
+  required,
+  string,
+  type ValidatorTest,
+} from 'validator-fns';
+
+interface MoneyConfig extends ConfigBase<number> {
+  /** Convert the amount to cents. */
+  cents?: boolean;
+}
+
+function applyMoneyConfig(
+  value: unknown,
+  config: MoneyConfig,
+): number | null | undefined {
+  const amount = config.parser(value);
+  return config.cents && typeof amount === 'number'
+    ? Math.round(amount * 100)
+    : amount;
+}
+
+const money = createTypeValidatorTest(
+  { parser: parseNumber },
+  applyMoneyConfig,
+);
+
+export const price: ValidatorTest<number, string> = money({ cents: true });
+export const order = object({ name: string(required('Required.')), price });
+`;
+
+const tsconfig = {
+  compilerOptions: {
+    strict: true,
+    skipLibCheck: false,
+    noEmit: true,
+    target: 'ES2022',
+    lib: ['ES2022'],
+    module: 'ESNext',
+    moduleResolution: 'Bundler',
+    types: [],
+  },
+  include: ['index.ts'],
+};
+
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {string} cwd
+ */
+function run(command, args, cwd) {
+  return execFileSync(command, args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
+}
+
+const workDir = mkdtempSync(join(tmpdir(), 'validator-fns-types-'));
+
+try {
+  run('pnpm', ['pack', '--pack-destination', workDir], packageRoot);
+  const tarball = readdirSync(workDir).find((name) => name.endsWith('.tgz'));
+  if (!tarball) {
+    throw new Error('pnpm pack produced no tarball');
+  }
+
+  const consumer = join(workDir, 'consumer');
+  mkdirSync(consumer);
+  writeFileSync(
+    join(consumer, 'package.json'),
+    '{ "private": true, "type": "module" }\n',
+  );
+  writeFileSync(join(consumer, 'tsconfig.json'), JSON.stringify(tsconfig));
+  writeFileSync(join(consumer, 'index.ts'), fixture);
+  run(
+    'npm',
+    ['install', '--offline', '--no-audit', '--no-fund', join(workDir, tarball)],
+    consumer,
+  );
+
+  for (const { name, tsc } of compilers) {
+    const version = run(process.execPath, [tsc, '--version'], consumer).trim();
+    try {
+      run(process.execPath, [tsc, '--project', 'tsconfig.json'], consumer);
+    } catch (error) {
+      const output =
+        error && typeof error === 'object' && 'stdout' in error
+          ? String(error.stdout)
+          : '';
+      throw new Error(
+        `The declarations fail to type-check on the ${name} TypeScript (${version}):\n${output}`,
+        { cause: error },
+      );
+    }
+
+    console.log(`Declarations type-check on ${version} (${name}).`);
+  }
+} finally {
+  rmSync(workDir, { recursive: true, force: true });
+}

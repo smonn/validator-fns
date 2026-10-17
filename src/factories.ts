@@ -17,7 +17,9 @@ import {
  * @category Helpers
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
-  defaultConfig: C,
+  // NoInfer makes TypeScript infer C from applyConfig's config parameter, so C
+  // keeps the options that defaultConfig leaves out. Needs TypeScript 5.4.
+  defaultConfig: NoInfer<C>,
   applyConfig: (value: unknown, config: C) => T | null | undefined,
 ): ValidatorFactory<C, T, string> {
   return (config, ...tests) => {
