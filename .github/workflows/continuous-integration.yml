@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - next
   # Every PR, including one stacked on another PR's branch, gets checked.
   pull_request:
 

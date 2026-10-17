@@ -54,6 +54,25 @@ CI doesn't run on the Version Packages pull request by itself, because GitHub Ac
 
 If `pnpm check` fails in that release run, `main` has the version bump but nothing is published. Fix the failure in a follow-up pull request. If the fix changes the library, give it a patch changeset that says the previous version failed to publish; the next Version Packages pull request releases the following patch version, and the failed version is never published. Otherwise give it an empty changeset, merge it, and run the Continuous Deployment workflow by hand on `main` (Actions, Continuous Deployment, Run workflow). The manual run publishes the version in `package.json` if it isn't on npm, and does nothing if it is. It fails while a changeset with a version bump is pending, because those changes belong in the next version.
 
+### Next major release
+
+The next major version is built on the `next` branch in Changesets pre mode, so `main` keeps releasing patches and features for the current one.
+
+- Issues in the next major's milestone branch from `next`, and their pull requests target it. Add changesets as usual. Locally, set `GITHUB_BASE_REF=next` so the changeset check compares against `next`.
+- Merging into `next` opens or updates a Version Packages (next) pull request, which releases the same way as `main`'s. It publishes a prerelease such as `3.0.0-next.0` under the `next` dist-tag (`npm install validator-fns@next`) and creates a GitHub prerelease. The manual run for a stranded version works on `next` too.
+
+After each release from `main`, merge `main` into `next`:
+
+1. `git switch -c sync/next-<date> origin/next`, then `git merge origin/main`.
+2. Resolve the conflicts in `next`'s favor: keep its `version` in `package.json`, keep its `CHANGELOG.md` entries on top with `main`'s new entries below them, and keep the changesets it moved to `.changeset/pre/` that `main`'s release deleted.
+3. Open a pull request into `next` and merge it with a merge commit.
+
+To release the major version:
+
+1. Merge `main` into `next` one last time.
+2. Branch from `next`, run `pnpm changeset pre exit`, and commit it with an empty changeset.
+3. Open a pull request into `main` and merge it with a merge commit. `main`'s Version Packages pull request then releases the major version, with every prerelease's changes in one changelog entry.
+
 ### Tests
 
 We've written tests and you can run them to assure the stability of the code, just try `npm test`. If you're adding a new functionality please write a test for it.
