@@ -172,7 +172,7 @@ export function url(
  * Validates a string value.
  * @category Type Validators
  */
-export const string = createTypeValidatorTest<string, StringConfig>(
+export const string = createTypeValidatorTest(
   {
     parser: parseString,
   },

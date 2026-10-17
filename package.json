@@ -59,7 +59,7 @@
   "scripts": {
     "build": "tsdown",
     "check": "run-s changeset:status check:code",
-    "check:code": "run-s ignores format:check lint typecheck deps fta coverage build publint attw smoke bench:smoke",
+    "check:code": "run-s ignores format:check lint typecheck deps fta coverage build publint attw smoke types:smoke bench:smoke",
     "changeset:status": "node scripts/changeset-status.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -73,6 +73,7 @@
     "publint": "publint --strict",
     "attw": "attw --pack .",
     "smoke": "node scripts/smoke-test.mjs",
+    "types:smoke": "node scripts/types-smoke.mjs",
     "bench:smoke": "pnpm --dir benchmark install --frozen-lockfile && node benchmark/index.mjs --smoke",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -95,6 +96,7 @@
     "rev-dep": "3.1.0",
     "tsdown": "0.23.1",
     "typescript": "7.0.2",
+    "typescript-5.4": "npm:typescript@5.4.5",
     "vitest": "5.0.5"
   },
   "repository": "github:smonn/validator-fns",

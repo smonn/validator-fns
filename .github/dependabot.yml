@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: 'monthly'
     open-pull-requests-limit: 20
+    ignore:
+      # The lowest TypeScript the README states, used by scripts/types-smoke.mjs.
+      # It changes only with that stated minimum, in a major release.
+      - dependency-name: 'typescript-5.4'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
