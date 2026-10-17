@@ -3,6 +3,7 @@ import {
   array,
   max,
   min,
+  number,
   object,
   required,
   string,
@@ -175,4 +176,26 @@ test('array item field names', async () => {
   fields.length = 0;
   await object({ tags: array(recordField) })({ tags: ['a', 'b'] });
   assert.deepEqual(fields, ['tags[0]', 'tags[1]']);
+});
+
+test('should return the parsed items when the item validator parses', async () => {
+  const validate = array(number());
+
+  assert.deepEqual(await validate(['1', '2.5']), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: [1, 2.5],
+  });
+});
+
+test('should return the transformed items when the item validator transforms', async () => {
+  const validate = array(string({ trim: true }));
+
+  assert.deepEqual(await validate([' a ', 'b ']), {
+    state: 'valid',
+    isValid: true,
+    field: undefined,
+    value: ['a', 'b'],
+  });
 });
