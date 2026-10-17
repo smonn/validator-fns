@@ -64,8 +64,8 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
  * @param getExtras Optional extra fields for error message
  */
 export function createValidatorTest<
-  T = any,
-  E = any,
+  T = unknown,
+  E = never,
   P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >(
   test: (value: unknown, field?: string) => boolean,

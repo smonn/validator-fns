@@ -165,15 +165,15 @@ if (result.state === 'valid') {
 
 ### Validation result
 
-All validation tests yield one of two results: `valid` and `invalid`. Both are objects.
+All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `ValidatorResult<T, E>` and a validation test is `ValidatorTest<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
 
 | property      | type    | description                                                                |
 | :------------ | :------ | :------------------------------------------------------------------------- |
 | `state`       | string  | Either `valid` or `invalid`.                                               |
 | `field`       | string  | Either the field name or `undefined`.                                      |
-| `value`       | any     | The parsed value.                                                          |
+| `value`       | `T`     | The parsed value.                                                          |
 | `message`     | string  | The error message unless `state` is `valid`.                               |
-| `errors`      | any     | Only if `state` is `invalid` and using the `object` or `array` validators. |
+| `errors`      | `E`     | Only if `state` is `invalid` and using the `object` or `array` validators. |
 | ~~`isValid`~~ | boolean | Deprecated. Use `state` instead.                                           |
 
 ### Validation error message
@@ -488,6 +488,8 @@ Formats a string for use as an error message. `template` can be a plain string w
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
 Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
+
+The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
 In TypeScript, pass the value type and the config type as type arguments. TypeScript 5.6 and later infer the config type from `defaultConfig` alone, so without them the validator rejects options that `defaultConfig` doesn't set.
 
