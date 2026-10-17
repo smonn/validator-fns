@@ -46,11 +46,10 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  * @param config Configuration to apply
  * @category Helpers
  */
-// oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- removing T breaks callers that pass a type argument; #588 removes it in v3
-export function applyArrayConfig<T>(
+export function applyArrayConfig(
   config: ArrayConfig,
   value: unknown,
-): T[] | null | undefined {
+): unknown[] | null | undefined {
   let parsedValue = config.parser(value);
   if (
     config.default !== undefined &&
@@ -61,7 +60,7 @@ export function applyArrayConfig<T>(
     parsedValue = config.default;
   }
 
-  return parsedValue as T[];
+  return parsedValue;
 }
 
 /**
@@ -150,7 +149,7 @@ export function array<T, E>(
   }
 
   return async (value, field) => {
-    const arrayValue = applyArrayConfig<T>(finalConfig, value);
+    const arrayValue = applyArrayConfig(finalConfig, value);
     const [validateItem, ...arrayTests] = allTests;
 
     const arrayInvalidResult = await findArrayInvalidResult(
@@ -162,7 +161,8 @@ export function array<T, E>(
 
     if (!arrayInvalidResult && items.isValid) {
       return valid({
-        value: arrayValue,
+        // The items passed the item test but keep their raw values (#603).
+        value: arrayValue as T[] | null | undefined,
         field,
       });
     }
