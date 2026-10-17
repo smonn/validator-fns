@@ -88,6 +88,16 @@ _Avoid_: validation error, exception
 Invalid options given to a validator factory. It throws when the validator is built, not when it runs.
 _Avoid_: invalid config error
 
+## Entry points
+
+**Safe call**:
+Calling a validator directly. It resolves to a result and never throws for invalid input.
+_Avoid_: safeParse, validate
+
+**Parse**:
+The entry point that resolves to the parsed value, or throws the failure when the input is invalid. Not to be confused with a parser.
+_Avoid_: assert, validateOrThrow
+
 ## Messages
 
 **Code**:
