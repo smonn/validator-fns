@@ -255,8 +255,6 @@ For a custom validator, `optional()` accepts `undefined` and `null` without call
 
 In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and `undefined`. In `object()`, a key is optional when its validator's value type includes `undefined`, so `object({ name: string(), age: optional(number()) })` is typed `{ name: string; age?: number | null | undefined }`.
 
-Put `optional()` inside `standard()`, as in `standard(optional(string()))`: `standard()` returns a new validator that `optional()` treats as a custom one.
-
 ### Validation types
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, and rejects a missing value unless wrapped in [`optional()`](#optionalvalidator). It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
@@ -267,6 +265,8 @@ A **validation type** is expected to parse and prepare the value for the provide
 - [number(config?, ...tests)](#numberconfig-tests)
 - [object(schema, config?, ...tests)](#objectschema-config-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
+
+Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [standard(validator)](#standardvalidator) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `ValidatorTest<T, E>` with a `~standard` property.
 
 #### array(config?, itemTest, ...tests)
 
@@ -592,7 +592,7 @@ Formats a string for use as an error message. `template` can be a plain string w
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, and works with `optional()`, like the built-in ones.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`, which is still a `ValidatorTest`, so factories typed with `ValidatorFactory` keep working.
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
@@ -639,13 +639,15 @@ Formats a failed validation result. `message` is the same as the `formatMessage`
 
 #### standard(validator)
 
-Adds the [Standard Schema][standard-schema] interface to a validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged.
+Adds the [Standard Schema][standard-schema] interface to a custom validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged. Validation types already have the interface, so `standard()` returns them as they are.
 
 ```ts
-const schema = standard(object({ email: string(email('Must be an email.')) }));
+const schema = object({ email: string(email('Must be an email.')) });
 
 await schema['~standard'].validate({ email: 'nope' });
 // { issues: [{ message: 'Must be an email.', path: ['email'] }] }
+
+const custom = standard(async (value, field) => valid({ value, field }));
 ```
 
 - `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
