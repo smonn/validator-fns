@@ -257,7 +257,7 @@ The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso86
 
 Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional.
 
-The default parser accepts numbers, strings (with `parseFloat`), bigints, booleans (as `NaN`), dates (as their timestamp), and `Number`, `String`, or `Boolean` objects. Any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to number.`
+The default parser accepts numbers, bigints, dates (as their timestamp), strings that start with a number (read with `parseFloat`, so `'12px'` is `12`), and `Number` or `String` objects holding one. A blank string (`''` or only whitespace) gives `NaN`, which `required` treats as empty and `default` replaces. Any other input gives an invalid result with the message `Failed to parse value to number.`: strings without a leading number, such as `'abc'`, booleans, symbols, and objects other than the ones above, arrays and functions included.
 
 Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `required`.
 
