@@ -1,5 +1,6 @@
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import { requirable } from './optional.js';
+import type { TypeValidator } from './standard.js';
 import {
   invalid,
   isIterable,
@@ -112,7 +113,7 @@ async function validateItems(
 export function array<T, E>(
   config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
   ...tests: ValidatorTest[]
-): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
+): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]> {
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
     parser: parseArray,

@@ -1,9 +1,9 @@
 import { isBlank, requirable } from './optional.js';
+import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
   invalidResult,
   validResult,
-  type ValidatorFactory,
   type ValidatorMessage,
   type ValidatorMessageParameters,
   type ValidatorResult,
@@ -35,7 +35,10 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   // keeps the options that defaultConfig leaves out. Needs TypeScript 5.4.
   defaultConfig: NoInfer<C>,
   applyConfig: (value: unknown, config: C) => T | null | undefined,
-): ValidatorFactory<C, T, string> {
+): (
+  config?: Partial<C> | ValidatorTest<unknown, string>,
+  ...tests: ValidatorTest<unknown, string>[]
+) => TypeValidator<T, string> {
   return (config, ...tests) => {
     let finalConfig = defaultConfig;
     let allTests = tests;

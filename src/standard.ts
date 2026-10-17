@@ -36,15 +36,38 @@ function collectIssues(
 }
 
 /**
- * Adds the Standard Schema interface (https://standardschema.dev) to a
- * validator, so libraries that accept any Standard Schema can use it. Returns a
- * new validator; the one passed in is unchanged. `validate` always returns a
- * promise, since every validator here is async.
- * @category Helpers
+ * A validator that is also a Standard Schema (https://standardschema.dev),
+ * as every type validator is.
+ * @category Types
  */
-export function standard<T, E>(
+export type TypeValidator<T, E> = ValidatorTest<T, E> &
+  StandardSchemaV1<unknown, T>;
+
+/**
+ * Validators that carry this library's `~standard`, so `standard()` returns
+ * them as they are.
+ * @internal
+ */
+const carriers = new WeakSet<object>();
+
+/**
+ * Whether `withStandard` added `~standard` to validator, which it does with
+ * validator's own value type.
+ * @internal
+ */
+function isTypeValidator<T, E>(
   validator: ValidatorTest<T, E>,
-): ValidatorTest<T, E> & StandardSchemaV1<unknown, T> {
+): validator is TypeValidator<T, E> {
+  return carriers.has(validator);
+}
+
+/**
+ * Adds `~standard` to validator itself and returns it.
+ * @internal
+ */
+export function withStandard<T, E>(
+  validator: ValidatorTest<T, E>,
+): TypeValidator<T, E> {
   const validate = async (
     value: unknown,
   ): Promise<StandardSchemaV1.Result<T>> => {
@@ -65,10 +88,29 @@ export function standard<T, E>(
     };
   };
 
-  return Object.assign(
-    (value?: unknown, field?: string) => validator(value, field),
-    {
-      '~standard': { version: 1, vendor: 'validator-fns', validate } as const,
-    },
+  const typeValidator = Object.assign(validator, {
+    '~standard': { version: 1, vendor: 'validator-fns', validate } as const,
+  });
+  carriers.add(typeValidator);
+  return typeValidator;
+}
+
+/**
+ * Adds the Standard Schema interface (https://standardschema.dev) to a
+ * validator, so libraries that accept any Standard Schema can use it. Type
+ * validators already have it and are returned as they are; any other validator
+ * gets a new validator, and the one passed in is unchanged. `validate` always
+ * returns a promise, since every validator here is async.
+ * @category Helpers
+ */
+export function standard<T, E>(
+  validator: ValidatorTest<T, E>,
+): TypeValidator<T, E> {
+  if (isTypeValidator(validator)) {
+    return validator;
+  }
+
+  return withStandard((value?: unknown, field?: string) =>
+    validator(value, field),
   );
 }
