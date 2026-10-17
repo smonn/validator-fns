@@ -1,5 +1,6 @@
 import {
   invalid,
+  isIterable,
   valid,
   type ConfigBase,
   type ValidatorTest,
@@ -24,17 +25,16 @@ export type ArrayConfig = ConfigBase<unknown[]>;
  */
 export function parseArray(value: unknown): unknown[] | null | undefined {
   if (Array.isArray(value)) {
-    return value as unknown[];
+    const items: unknown[] = value;
+    return items;
   }
 
   if (value === null || value === undefined) {
     return value;
   }
 
-  const iterable = value as Iterable<unknown>;
-
-  if (iterable[Symbol.iterator]) {
-    return [...iterable];
+  if (isIterable(value)) {
+    return [...value];
   }
 
   return [];
@@ -133,21 +133,11 @@ export function array<T, E>(
   config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
   ...tests: ValidatorTest[]
 ): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
-  let allTests = tests;
-  let finalConfig: ArrayConfig = {
+  const allTests = typeof config === 'function' ? [config, ...tests] : tests;
+  const finalConfig: ArrayConfig = {
     parser: parseArray,
+    ...(typeof config === 'function' ? undefined : config),
   };
-
-  if (config !== undefined) {
-    if (typeof config === 'function') {
-      allTests = [config, ...tests];
-    } else {
-      finalConfig = {
-        ...finalConfig,
-        ...config,
-      };
-    }
-  }
 
   return async (value, field) => {
     const arrayValue = applyArrayConfig<T>(finalConfig, value);

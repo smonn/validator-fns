@@ -131,6 +131,15 @@ export function hasOwnProperty(
   return Object.prototype.hasOwnProperty.call(object, property);
 }
 
+/**
+ * Checks for a truthy `Symbol.iterator` property, boxing primitives so strings
+ * count as iterable.
+ * @internal
+ */
+export function isIterable(value: unknown): value is Iterable<unknown> {
+  return Boolean(Reflect.get(Object(value), Symbol.iterator));
+}
+
 /** @internal */
 const formatPattern = /{(\w+)}/g;
 
