@@ -2,7 +2,7 @@
 status: accepted
 ---
 
-# Tests are steps; a changed value is checked for missing again
+# Tests are steps
 
 ## Context
 
@@ -15,17 +15,16 @@ Decided in #700:
 - **Tests are steps.** Each test's valid value goes to the next test, in the order written, and the last one is the result's value. A step keeps the value's type. A change of type goes through a parser.
 - **`transform(fn)` makes a test that changes the value.** `fn` is synchronous, `(value: T) => T`, and never fails. A throw from it is a bug (ADR 0001). Core ships no named transforms.
 - **`trim` is dropped.** Trimming is `transform((s) => s.trim())`.
-- **A changed value is checked for missing again.** After a step returns a different value, the missing check runs on it. A missing value fails with `required`, or inside `optional()` it's valid and the later steps are skipped. Whether a `default` fills a value a step made missing is left to #692. A `default` for missing input is unaffected.
+- **No missing check after a step.** Amended in #692 (ADR 0004). Missing is only `undefined` or `null`, which a step can't return, so the missing check runs once, on the input.
 
 ## Considered options
 
 - **Tests only check, with transforms through custom types.** No new concept, but lowercasing an email needs a custom type wrapping `string()`.
-- **No re-check, as in Zod and Valibot.** Simpler, but `string(transform((s) => s.trim()))` would accept `'  '` as `''`, and `''` would fail with `required` while `'  '` fails with a test's code, such as `min`.
+- **A changed value checked for missing again.** #700 first chose it, so that trimming `'  '` failed with `required`, as `''` did. #692 dropped it once `''` stopped counting as missing.
 - **Transforms before the missing check, as in Yup.** It breaks the in-order rule, so `transform(Math.round)` after `integer()` would run before it.
 - **`trim` as a parse option.** It keeps 2.x's behaviour without a re-check, but gives two ways to change a string, one of them string-only.
 
 ## Consequences
 
 - A hand-written test that resolves to a valid result with a different value now transforms. The migration notes cover it, and `trim`.
-- The pipeline compares each step's value with the one it passed in, and checks a changed value for missing.
 - Do not add named transforms such as `trim()` or `toLowerCase()` to core. Each is a one-line `transform()`.
