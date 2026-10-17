@@ -82,6 +82,12 @@ We've written tests and you can run them to assure the stability of the code, ju
 
 Mutation testing with [StrykerJS](https://stryker-mutator.io) runs every Monday in the Mutation Testing workflow, and on pull requests that change `stryker.config.mjs` or the workflow. Run it locally with `pnpm mutation`. It fails when the mutation score drops below `thresholds.break` in `stryker.config.mjs`. Raise that threshold as the score improves; lowering it loosens the check and needs the maintainer's approval.
 
+The maintainer owns the scheduled run. When it fails:
+
+1. Open an issue that lists the surviving mutants from the run's log (the clear-text report prints each one with its file, line, and mutation).
+2. For each one, add a test that kills it, or record in the issue why the mutant is acceptable, for example an equivalent mutant that no test can tell apart from the original.
+3. Close the issue when the workflow passes again, either from a manual run (Actions, Mutation Testing, Run workflow) or the next scheduled one.
+
 ### Documentation
 
 Every chunk of code that may be hard to understand has some comments above it. If you write some new code or change some part of the existing code in a way that it would not be functional without changing it's usages, it needs to be documented.
