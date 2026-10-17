@@ -209,7 +209,7 @@ test('string', async () => {
   assert.deepEqual(await validate({ name: 'August' }), {
     state: 'invalid',
     message: 'Failed to parse value to string.',
-    value: { name: 'August' } as unknown as string,
+    value: { name: 'August' },
     field: undefined,
     errors: undefined,
   });

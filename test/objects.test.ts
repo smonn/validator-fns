@@ -81,7 +81,8 @@ test('empty object config accepts any object', async () => {
 
 test('inherited properties of the config are not validated', async () => {
   const inherited = { name: string({ requiredMessage: 'required' }) };
-  const properties = Object.assign(Object.create(inherited) as object, {
+  const prototype: object = Object.create(inherited);
+  const properties = Object.assign(prototype, {
     age: number(),
   });
   const validate = object(properties);
@@ -109,7 +110,7 @@ test('should report a field as missing when its name is on Object.prototype', as
 });
 
 test('should report a field as missing when the input only inherits it', async () => {
-  const input = Object.create({ name: 'inherited' }) as object;
+  const input: object = Object.create({ name: 'inherited' });
   const validate = object({ name: string({ requiredMessage: 'Required' }) });
 
   assert.deepEqual(await validate(input), {
@@ -217,13 +218,10 @@ test('nested object', async () => {
 });
 
 test('invalid configuration', async () => {
-  const config: Record<string, ValidatorTest> = 'bad value' as any as Record<
-    string,
-    ValidatorTest
-  >;
-  assert.throws(() => object(config));
+  // JSON.parse returns any, which lets the test pass values the types reject.
+  assert.throws(() => object(JSON.parse('"bad value"')));
 
-  const validate = object({ test: 'test' } as any);
+  const validate = object(JSON.parse('{ "test": "test" }'));
   assert.deepInclude(await validate({}), {
     state: 'invalid',
     errors: { test: 'No validator set' },

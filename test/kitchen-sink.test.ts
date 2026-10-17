@@ -19,8 +19,6 @@ import {
   string,
   url,
   valid,
-  type ExtractError,
-  type InvalidResult,
   type ValidatorTest,
 } from '../src/index.js';
 
@@ -167,8 +165,8 @@ test('kitchen sink invalid', async () => {
     postalCode: '1234',
     startDate,
   });
-  const invalidResult = result as InvalidResult<ExtractError<typeof validate>>;
-  assert.deepEqual(invalidResult.errors, {
+  assert(result.state === 'invalid');
+  assert.deepEqual(result.errors, {
     firstName: 'First name is required.',
     emailAddress: 'Must be a valid email address.',
     age: 'Must be at least 18 years old.',

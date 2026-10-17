@@ -171,7 +171,11 @@ test('rounding', async () => {
   const nearest = number({ round: 'nearest' });
   const floor = number({ round: 'floor' });
   const ceil = number({ round: 'ceil' });
-  const badRounding = number({ round: 'bad' as 'nearest' });
+  // defineProperty types the config as {}, so it can hold a round value the
+  // config type rejects.
+  const badRounding = number(
+    Object.defineProperty({}, 'round', { value: 'bad', enumerable: true }),
+  );
 
   assert.deepEqual(await nearest(0.9), {
     value: 1,
