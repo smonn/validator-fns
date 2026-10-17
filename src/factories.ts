@@ -28,6 +28,8 @@ const syncTests = new WeakMap<
  * @param defaultParser Parser to convert value into type.
  * @param applyConfig Function that applies configuration to value.
  * @category Helpers
+ * @deprecated v3 removes this. In v3, use `createTypeValidator(parser)`
+ * instead.
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   defaultConfig: C,

@@ -40,6 +40,8 @@ function collectIssues(
  * new validator; the one passed in is unchanged. `validate` always returns a
  * promise, since every validator here is async.
  * @category Helpers
+ * @deprecated v3 removes this. In v3, built-in validators are Standard Schemas,
+ * and `createValidator(fn)` makes custom ones.
  */
 export function standard<T, E>(
   validator: Validator<T, E>,

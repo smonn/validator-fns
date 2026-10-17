@@ -60,16 +60,28 @@ export type Validator<T = any, E = any> = (
   field?: string,
 ) => Promise<Result<T, E>>;
 
-/** @category Types */
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Valid` instead.
+ */
 export type ValidResult<T> = Valid<T>;
 
-/** @category Types */
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Failure` instead.
+ */
 export type InvalidResult<E> = Failure<E>;
 
-/** @category Types */
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Result` instead.
+ */
 export type ValidatorResult<T = any, E = any> = Result<T, E>;
 
-/** @category Types */
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Validator` instead.
+ */
 export type ValidatorTest<T = any, E = any> = Validator<T, E>;
 
 /**
@@ -92,6 +104,7 @@ export type ExtractValue<T extends Validator> =
  * Make a deep partial type.
  * @typeParam T any object type
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
@@ -101,6 +114,7 @@ export type DeepPartial<T> = {
  * Validation factory function.
  * @typeParam C The configuration type
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export type ValidatorFactory<C, T, E> = (
   config?: Partial<C> | Validator,
@@ -111,9 +125,14 @@ export type ValidatorFactory<C, T, E> = (
  * Base configuration type.
  * @typeParam T The target type.
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export interface ConfigBase<T> {
-  /** Parser to convert value into the designated type. */
+  /**
+   * Parser to convert value into the designated type.
+   * @deprecated v3 removes this option. In v3, use
+   * `createTypeValidator(parser)` instead.
+   */
   parser: (value: unknown) => T | null | undefined;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
@@ -137,6 +156,7 @@ export type ValidatorMessage<
 /**
  * Simple check for objects.
  * @param value Value to test
+ * @deprecated v3 removes this. Use a plain check of your own instead.
  */
 export function isObject(value: unknown): boolean {
   return Object.prototype.toString.call(value) === '[object Object]';
@@ -146,6 +166,7 @@ export function isObject(value: unknown): boolean {
  * Safe hasOwnProperty check
  * @param object Object to check
  * @param property Property to look for
+ * @deprecated v3 removes this. Use `Object.hasOwn()` instead.
  */
 export function hasOwnProperty(
   object: unknown,
@@ -171,6 +192,8 @@ const formatPattern = /{(\w+)}/g;
  * @param template Message template as string or function
  * @param parameters Params to inject into template
  * @category Helpers
+ * @deprecated v3 removes this. `invalid()` and `createValidatorTest()` format
+ * messages.
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
   template: ValidatorMessage<T, P>,

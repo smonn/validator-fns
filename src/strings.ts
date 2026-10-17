@@ -24,7 +24,11 @@ const uuidPattern =
  * @category Types
  */
 export interface StringConfig extends ConfigBase<string> {
-  /** Apply trim to string before validation. */
+  /**
+   * Apply trim to string before validation.
+   * @deprecated v3 removes this option. In v3, use `transform((s) => s.trim())`
+   * instead.
+   */
   trim?: boolean;
 }
 
@@ -32,6 +36,7 @@ export interface StringConfig extends ConfigBase<string> {
  * Parses a value into a string.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function parseString(value: unknown): string | null | undefined {
   if (value === null || value === undefined) {
@@ -59,6 +64,7 @@ export function parseString(value: unknown): string | null | undefined {
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function applyStringConfig(
   value: unknown,
