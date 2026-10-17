@@ -242,3 +242,41 @@ test('messages get their extras with the value and field', async () => {
   });
   assert.deepInclude(withExtras, { message: 'count 1' });
 });
+
+type Signup = { password: string; confirm: string };
+type Addresses = { billing: { zip: string }; shipping: { zip: string } };
+
+test('check() types its errors from the path', () => {
+  expectTypeOf(
+    check(
+      'confirm',
+      (value: Signup) => value.confirm === value.password,
+      'Must match.',
+    ),
+  ).toEqualTypeOf<ValidationTest<Signup, { confirm?: string }>>();
+  expectTypeOf(
+    check(
+      ['shipping', 'zip'],
+      (value: Addresses) => value.shipping.zip === value.billing.zip,
+      'Must match.',
+    ),
+  ).toEqualTypeOf<ValidationTest<Addresses, { shipping?: { zip?: string } }>>();
+  expectTypeOf(
+    check(['password'], (value: Signup) => value.password !== '', 'Empty.'),
+  ).toEqualTypeOf<ValidationTest<Signup, { password?: string }>>();
+});
+
+test('check() infers the object and path inside object()', () => {
+  expectTypeOf(
+    object(
+      { password: string(), confirm: string() },
+      check(
+        'confirm',
+        (value) => value.confirm === value.password,
+        'Must match.',
+      ),
+    ),
+  ).toEqualTypeOf<
+    TypeValidator<Signup, { password?: string; confirm?: string }>
+  >();
+});

@@ -221,7 +221,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    createValidator(async (value, field) => valid({ value, field }));
    ```
 
-7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out. Validation tests are typed `ValidationTest<T, E>` and take the validator's value type, so a custom test that takes another type, or a test called directly with `null`, is a type error. A message function passed to `invalid()` gets `value` as `unknown`, and one that reads extra parameters needs them in `extras`.
+7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out. `check()`'s `path` must name properties of the parsed object, and an empty path `[]` is a type error; leave the path out instead. Validation tests are typed `ValidationTest<T, E>` and take the validator's value type, so a custom test that takes another type, or a test called directly with `null`, is a type error. A message function passed to `invalid()` gets `value` as `unknown`, and one that reads extra parameters needs them in `extras`.
 
 ## API Reference
 
@@ -448,6 +448,8 @@ In TypeScript, a test's type is `ValidationTest<T, E>`, a function that takes a 
 #### check(path?, test, message)
 
 An object-level test for `object`. It fails when `test` returns `false` for the parsed object. With a `path`, the message is the error at that property in the object's `errors`; a list of names reaches into nested objects, such as `['shipping', 'zip']`. Without a `path`, the message is the object's own `message`. The parsed object is provided to the message as `value`.
+
+In TypeScript, `path` is checked against the parsed object's type, so a misspelled property is a type error, and the test's error type is the errors it produces, such as `{ shipping?: { zip?: string } }`. A path ends at an array, a date or a function.
 
 <details><summary>arguments</summary>
 
