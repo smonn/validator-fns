@@ -61,6 +61,19 @@ function setOwn(target: object, key: string, value: unknown) {
 }
 
 /**
+ * The parsed object, typed from the validators. The only type assertion in
+ * `object()`: `values` holds each validator's result value for every key of
+ * `properties`, but no loop can produce the mapped type `ObjectValue<P>`,
+ * since inside it `P[key]` is a union over all the keys.
+ * @internal
+ */
+function asObjectValue<P extends ObjectParameter>(
+  values: Partial<Record<keyof P, unknown>>,
+): ObjectValue<P> {
+  return values as ObjectValue<P>;
+}
+
+/**
  * Configuration for object validation.
  * @category Types
  */
@@ -78,17 +91,11 @@ export interface ObjectConfig {
  * every property is valid, and the first failure is the result.
  * @category Type Validators
  */
-export function object<
-  P extends ObjectParameter,
-  V extends ObjectValue<P>,
-  E extends ObjectErrors<P>,
->(
+export function object<P extends ObjectParameter>(
   properties: P,
-  // Typed from P rather than V and E, so the tests don't take part in
-  // inferring V and E.
   config?: ObjectConfig | ValidatorTest<ObjectValue<P>, ObjectErrors<P>>,
   ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
-): TypeValidator<V, E> {
+): TypeValidator<ObjectValue<P>, ObjectErrors<P>> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
@@ -97,56 +104,60 @@ export function object<
   const requiredMessage =
     typeof config === 'object' ? config.requiredMessage : undefined;
 
-  return requirable<V, E>(requiredMessage, async (values, field, onEmpty) => {
-    if (values === null || values === undefined) {
-      return onEmpty(values, field);
-    }
+  return requirable<ObjectValue<P>, ObjectErrors<P>>(
+    requiredMessage,
+    async (values, field, onEmpty) => {
+      if (values === null || values === undefined) {
+        return onEmpty(values, field);
+      }
 
-    // Object() boxes primitives.
-    const source: object = Object(values);
-    const errors = {} as E;
-    const resolvedValues = {} as V;
-    let isValid = true;
+      // Object() boxes primitives.
+      const source: object = Object(values);
+      const errors: ObjectErrors<P> = {};
+      const resolvedValues: Partial<Record<keyof P, unknown>> = {};
+      let isValid = true;
 
-    for (const key in properties) {
-      if (hasOwnProperty(properties, key)) {
-        const validator = properties[key];
-        // Only own properties, so a missing key named like an inherited one,
-        // such as `constructor`, reads as missing.
-        const value: unknown = hasOwnProperty(source, key)
-          ? Reflect.get(source, key)
-          : undefined;
-        const result = await (typeof validator === 'function'
-          ? validator(value, key)
-          : invalid({ field: key, message: 'No validator set', value }));
+      for (const key in properties) {
+        if (hasOwnProperty(properties, key)) {
+          const validator = properties[key];
+          // Only own properties, so a missing key named like an inherited one,
+          // such as `constructor`, reads as missing.
+          const value: unknown = hasOwnProperty(source, key)
+            ? Reflect.get(source, key)
+            : undefined;
+          const result = await (typeof validator === 'function'
+            ? validator(value, key)
+            : invalid({ field: key, message: 'No validator set', value }));
 
-        setOwn(resolvedValues, key, result.value);
+          setOwn(resolvedValues, key, result.value);
 
-        if (result.state === 'invalid') {
-          isValid = false;
-          setOwn(errors, key, invalidDetail(result));
+          if (result.state === 'invalid') {
+            isValid = false;
+            setOwn(errors, key, invalidDetail(result));
+          }
         }
       }
-    }
 
-    if (!isValid) {
-      return invalid({ message: '', value: values, field, errors });
-    }
+      if (!isValid) {
+        return invalid({ message: '', value: values, field, errors });
+      }
 
-    const objectInvalidResult = await findInvalidResult(
-      allTests,
-      resolvedValues,
-      field,
-    );
-    if (objectInvalidResult) {
-      return invalid({
-        message: objectInvalidResult.message,
-        value: values,
+      const parsed = asObjectValue<P>(resolvedValues);
+      const objectInvalidResult = await findInvalidResult(
+        allTests,
+        parsed,
         field,
-        errors: objectInvalidResult.errors as E,
-      });
-    }
+      );
+      if (objectInvalidResult) {
+        return invalid({
+          message: objectInvalidResult.message,
+          value: values,
+          field,
+          errors: objectInvalidResult.errors,
+        });
+      }
 
-    return valid({ value: resolvedValues, field });
-  });
+      return valid({ value: parsed, field });
+    },
+  );
 }
