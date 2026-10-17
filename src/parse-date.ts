@@ -50,9 +50,12 @@ const dateParts = [
   (part = '0') => Number.parseFloat(part) * 1e3,
 ];
 
+/** @internal */
+const parseErrorMessage = 'Failed to parse value to date.';
+
 /**
  * Parses a value into a date. Throws a `TypeError` for a non-blank string that
- * isn't ISO 8601.
+ * isn't ISO 8601, and for input that isn't a date, number, or string.
  * @param value Value to parse
  * @category Parsers
  */
@@ -69,11 +72,13 @@ export function parseDate(value: unknown): Date | null | undefined {
     return new Date(value);
   }
 
+  if (typeof value !== 'string') {
+    throw new TypeError(parseErrorMessage);
+  }
+
   // A blank string stays empty, as an invalid date, for `default` and
   // `optional()` to handle.
-  return typeof value === 'string' && value.trim() !== ''
-    ? parseIsoDate(value)
-    : invalidDate;
+  return value.trim() === '' ? invalidDate : parseIsoDate(value);
 }
 
 /**
@@ -86,7 +91,7 @@ function parseIsoDate(value: string): Date {
   const parts = isoDatePattern.exec(value);
 
   if (parts === null) {
-    throw new TypeError('Failed to parse value to date.');
+    throw new TypeError(parseErrorMessage);
   }
 
   const [
