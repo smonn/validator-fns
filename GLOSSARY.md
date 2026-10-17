@@ -29,7 +29,7 @@ A wrapper that lets a validator accept missing input instead of failing with `re
 _Avoid_: nullable
 
 **Missing**:
-Input, or a value a test changes it to, that counts as absent for a type validator. It fails with `required` unless the validator is optional or has a default.
+Input that counts as absent for a type validator. It fails with `required` unless the validator is optional or has a default. A value a test changes to an absent one is missing too; whether a default fills it is not yet decided.
 _Avoid_: blank, empty, nullish
 
 **Default**:

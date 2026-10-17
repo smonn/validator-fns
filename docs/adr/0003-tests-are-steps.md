@@ -15,7 +15,7 @@ Decided in #700:
 - **Tests are steps.** Each test's valid value goes to the next test, in the order written, and the last one is the result's value. A step keeps the value's type. A change of type goes through a parser.
 - **`transform(fn)` makes a test that changes the value.** `fn` is synchronous, `(value: T) => T`, and never fails. A throw from it is a bug (ADR 0001). Core ships no named transforms.
 - **`trim` is dropped.** Trimming is `transform((s) => s.trim())`.
-- **A changed value is checked for missing again.** After a step returns a different value, the missing check runs on it. A missing value fails with `required`, or inside `optional()` it's valid and the later steps are skipped.
+- **A changed value is checked for missing again.** After a step returns a different value, the missing check runs on it. A missing value fails with `required`, or inside `optional()` it's valid and the later steps are skipped. Whether a `default` fills a value a step made missing is left to #692. A `default` for missing input is unaffected.
 
 ## Considered options
 
