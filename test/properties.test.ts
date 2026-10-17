@@ -149,24 +149,25 @@ const fixedResult =
       ? valid({ value, field })
       : invalid({ message: `${String(field)} failed`, value, field });
 
-// fc.string makes names like __proto__ and constructor on purpose.
-const schemaKey = fc.string({ minLength: 1 });
-
-// object() drops a __proto__ key from errors today (#598), which removes this
-// filter.
-const writableKey = schemaKey.filter((key) => key !== '__proto__');
+// fc.string makes names like __proto__ and constructor on purpose, but in
+// under a fifth of runs, so the Object.prototype names are also drawn directly.
+const schemaKey = fc.oneof(
+  fc.constantFrom(...Object.getOwnPropertyNames(Object.prototype)),
+  fc.string({ minLength: 1 }),
+);
 
 test('object() reports errors for exactly the invalid fields', async () => {
-  const schemas = fc.dictionary(writableKey, fc.boolean(), {
-    noNullPrototype: true,
+  // Pairs rather than fc.dictionary, which never makes an own __proto__ key.
+  const schemas = fc.uniqueArray(fc.tuple(schemaKey, fc.boolean()), {
+    selector: ([key]) => key,
   });
 
   await fc.assert(
-    fc.asyncProperty(schemas, async (passes) => {
+    fc.asyncProperty(schemas, async (fields) => {
       const properties = Object.fromEntries(
-        Object.entries(passes).map(([key, pass]) => [key, fixedResult(pass)]),
+        fields.map(([key, pass]) => [key, fixedResult(pass)]),
       );
-      const failing = Object.keys(passes).filter((key) => !passes[key]);
+      const failing = fields.filter(([, pass]) => !pass).map(([key]) => key);
 
       const result = await object(properties)({});
 
