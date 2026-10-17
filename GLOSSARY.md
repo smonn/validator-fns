@@ -29,11 +29,11 @@ A wrapper that lets a validator accept missing input instead of failing with `re
 _Avoid_: nullable
 
 **Missing**:
-Input that counts as absent for a type validator. It fails with `required` unless the validator is optional or has a default. A value a test changes to an absent one is missing too; whether a default fills it is not yet decided.
+Input that is `undefined` or `null`. It fails with `required` unless the validator is optional or has a default. Every other value is present, `''`, `0` and `NaN` included.
 _Avoid_: blank, empty, nullish
 
 **Default**:
-The value a type validator uses in place of missing input.
+The value a type validator uses in place of missing input, before its tests run. An object's default is built from its children, when each of them accepts missing input.
 _Avoid_: fallback
 
 ## Collections
@@ -73,7 +73,7 @@ The result for invalid input. It carries a code, params and a message, but no va
 _Avoid_: invalid result, error, validation error
 
 **Unreadable input**:
-Input a parser can't turn into its type. It's a failure with code `type`, never a throw.
+Input a parser can't turn into its type, such as `''` for `number()`. It's a failure with code `type`, never a throw.
 _Avoid_: parse error, cast failure
 
 **Errors tree**:
