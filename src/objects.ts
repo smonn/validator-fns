@@ -31,7 +31,11 @@ export function object<
     for (const key in properties) {
       if (hasOwnProperty(properties, key)) {
         const validator = properties[key];
-        const value = definedValues[key];
+        // Only own properties, so a missing key named like an inherited one,
+        // such as `constructor`, reads as missing.
+        const value = hasOwnProperty(definedValues, key)
+          ? definedValues[key]
+          : undefined;
         const result = await (typeof validator === 'function'
           ? validator(value, key)
           : invalid({ field: key, message: 'No validator set', value }));

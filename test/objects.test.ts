@@ -100,6 +100,36 @@ test('inherited properties of the config are not validated', async () => {
   });
 });
 
+test('should report a field as missing when its name is on Object.prototype', async () => {
+  const validate = object({
+    constructor: string(required('Required')),
+    toString: string(required('Required')),
+  });
+
+  assert.deepEqual(await validate({}), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    message: '',
+    value: {},
+    errors: { constructor: 'Required', toString: 'Required' },
+  });
+});
+
+test('should report a field as missing when the input only inherits it', async () => {
+  const input = Object.create({ name: 'inherited' }) as object;
+  const validate = object({ name: string(required('Required')) });
+
+  assert.deepEqual(await validate(input), {
+    state: 'invalid',
+    isValid: false,
+    field: undefined,
+    message: '',
+    value: input,
+    errors: { name: 'Required' },
+  });
+});
+
 test('nested object', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
