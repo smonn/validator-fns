@@ -8,6 +8,7 @@ This library follows CODING_STANDARDS.md in the repo root, a verbatim copy of gi
 - Keep runtime dependencies at zero. Dev dependencies need approval, and the PR records their evaluation (maintenance, license, footprint). An issue I ask you to implement that names a dependency approves that dependency. The PR still records its evaluation. Anything else it pulls in as a direct dependency still needs asking.
 - The public contract is the exported API plus the package's published shape (`package.json` `exports`, `types`, `engines`). Get approval before changing it.
 - Package manager: pnpm. Tests: Vitest. Contributor Node version: `.nvmrc`.
+- GLOSSARY.md names the domain concepts. Use its terms in code, docs, issues and PRs, not the words it lists to avoid. When a decision settles a new term or changes one, update the glossary in the same change.
 - Dependabot and Version Packages PRs skip the changeset check (a standing scope, with its reasons in the CI workflow). Revisit it if the library gains a runtime dependency.
 
 ## Done means
