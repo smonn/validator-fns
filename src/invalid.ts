@@ -1,12 +1,20 @@
 import {
+  formatMessage,
   invalidResult,
   type ValidatorMessage,
-  type ValidatorMessageParameters,
   type ValidatorResult,
 } from './shared.js';
 
+/** @internal */
+type InvalidFields<E> = {
+  value: unknown;
+  field: string | undefined;
+  errors?: E | undefined;
+};
+
 /**
- * Creates an invalid result.
+ * Creates an invalid result. A message function gets the value as `unknown`,
+ * and `extras` must hold the extra parameters it reads.
  * @param result Result fields
  * @param result.message Error message, formatted with `formatMessage`
  * @param result.value Parsed value
@@ -15,16 +23,24 @@ import {
  * @param result.extras Extra message params
  * @category Helpers
  */
-export async function invalid<
-  T,
-  E = never,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
->(result: {
-  message: ValidatorMessage<T, P>;
-  value: unknown;
-  field: string | undefined;
-  errors?: E | undefined;
-  extras?: Omit<P, 'field' | 'value'> | undefined;
-}): Promise<ValidatorResult<T, E>> {
-  return invalidResult(result);
+export function invalid<T, E = never>(
+  result: InvalidFields<E> & { message: ValidatorMessage<unknown> },
+): Promise<ValidatorResult<T, E>>;
+export function invalid<T, E, X extends object>(
+  result: InvalidFields<E> & {
+    message: ValidatorMessage<unknown, X>;
+    extras: X;
+  },
+): Promise<ValidatorResult<T, E>>;
+export async function invalid<T, E, X extends object>(
+  result:
+    | (InvalidFields<E> & { message: ValidatorMessage<unknown> })
+    | (InvalidFields<E> & { message: ValidatorMessage<unknown, X>; extras: X }),
+): Promise<ValidatorResult<T, E>> {
+  const { value, field, errors } = result;
+  const message =
+    'extras' in result
+      ? formatMessage(result.message, { ...result.extras, value, field })
+      : formatMessage<unknown>(result.message, { value, field });
+  return invalidResult({ message, value, field, errors });
 }

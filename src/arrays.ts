@@ -1,4 +1,5 @@
 import {
+  type ArrayTest,
   findInvalidResult,
   keepItems,
   validateItems,
@@ -80,8 +81,8 @@ function arrayOf<T, E>(
     arrayValue: unknown[],
     field: string | undefined,
   ) => Promise<ValidatedItems<T, E>>,
-  config: Partial<ArrayConfig> | ValidatorTest | undefined,
-  tests: ValidatorTest[],
+  config: Partial<ArrayConfig> | ArrayTest | undefined,
+  tests: ArrayTest[],
 ): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]> {
   const arrayTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
@@ -108,7 +109,7 @@ function arrayOf<T, E>(
         return valid({ value: items.values, field });
       }
 
-      return invalidResult<T[], ArrayItemValidatorResult<E>[]>({
+      return invalidResult({
         message: arrayInvalidResult ? arrayInvalidResult.message : '',
         value,
         field,
@@ -126,16 +127,16 @@ function arrayOf<T, E>(
  */
 export function array<T, E>(
   item: ValidatorTest<T, E>,
-  config?: Partial<ArrayConfig> | ValidatorTest,
-  ...tests: ValidatorTest[]
+  config?: Partial<ArrayConfig> | ArrayTest,
+  ...tests: ArrayTest[]
 ): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>;
 export function array(
   config?: Partial<ArrayConfig>,
 ): TypeValidator<unknown[], string | ArrayItemValidatorResult[]>;
 export function array<T, E>(
   first?: ValidatorTest<T, E> | Partial<ArrayConfig>,
-  second?: Partial<ArrayConfig> | ValidatorTest,
-  ...tests: ValidatorTest[]
+  second?: Partial<ArrayConfig> | ArrayTest,
+  ...tests: ArrayTest[]
 ):
   | TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>
   | TypeValidator<unknown[], string | ArrayItemValidatorResult[]> {

@@ -8,6 +8,7 @@ import {
   invalidResult,
   setOwn,
   valid,
+  type ValidationTest,
   type ValidatorMessage,
   type ValidatorTest,
 } from './shared.js';
@@ -80,8 +81,8 @@ export interface ObjectConfig {
  */
 export function object<P extends ObjectParameter>(
   properties: P,
-  config?: ObjectConfig | ValidatorTest<ObjectValue<P>, ObjectErrors<P>>,
-  ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
+  config?: ObjectConfig | ValidationTest<ObjectValue<P>, ObjectErrors<P>>,
+  ...tests: ValidationTest<ObjectValue<P>, ObjectErrors<P>>[]
 ): TypeValidator<ObjectValue<P>, ObjectErrors<P>> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');

@@ -1,4 +1,4 @@
-import { expectTypeOf, test } from 'vitest';
+import { assert, expectTypeOf, test } from 'vitest';
 import {
   applyArrayConfig,
   array,
@@ -17,7 +17,12 @@ import {
   string,
   valid,
   type ExtractValue,
+  type MinValidatorMessageParameters,
+  type SharedValueType,
   type TypeValidator,
+  type ValidationTest,
+  type ValidatorMessage,
+  type ValidatorMessageParameters,
   type ValidatorResult,
   type ValidatorTest,
 } from '../src/index.js';
@@ -43,10 +48,10 @@ test('type validators carry their value type and string errors', () => {
 
 test('built-in tests and results without errors have never as the error type', () => {
   expectTypeOf(min(1, 'min')).toEqualTypeOf<
-    ValidatorTest<string | number | unknown[], never>
+    ValidationTest<string | number | unknown[], never>
   >();
   expectTypeOf(createValidatorTest(() => true, 'message')).toEqualTypeOf<
-    ValidatorTest<unknown, never>
+    ValidationTest<unknown, never>
   >();
   expectTypeOf(
     invalid({ message: 'message', value: 1, field: undefined }),
@@ -182,4 +187,58 @@ test('applyArrayConfig returns unknown items and takes no type argument', () => 
   expectTypeOf(applyArrayConfig).toEqualTypeOf<
     (config: ArrayConfig, value: unknown) => unknown[] | null | undefined
   >();
+});
+
+const anyValue = async (value: unknown, field?: string) =>
+  valid({ value, field });
+
+test('validation tests take the parsed value', () => {
+  expectTypeOf(min(1, 'min')).toEqualTypeOf<
+    ValidationTest<SharedValueType, never>
+  >();
+  expectTypeOf(
+    check((value: { name: string }) => value.name !== '', 'empty'),
+  ).toEqualTypeOf<ValidationTest<{ name: string }, never>>();
+
+  // A test for another type doesn't fit, and a test on unknown fits any type.
+  const isTrue = createValidatorTest((value: boolean) => value, 'true');
+  expectTypeOf(isTrue).not.toExtend<ValidationTest<string, string>>();
+  expectTypeOf(isTrue).toExtend<ValidationTest<boolean, string>>();
+  expectTypeOf(anyValue).toExtend<ValidationTest<string, string>>();
+  string(min(1, 'min'), anyValue);
+});
+
+const annotated = (parameters: MinValidatorMessageParameters) =>
+  `at least ${parameters.min}`;
+
+test('messages get their extras with the value and field', async () => {
+  min(1, (parameters) => {
+    expectTypeOf(parameters.min).toEqualTypeOf<number>();
+    expectTypeOf(parameters.amount).toEqualTypeOf<number | null | undefined>();
+    expectTypeOf(parameters.value).toEqualTypeOf<
+      SharedValueType | null | undefined
+    >();
+    expectTypeOf(parameters.field).toEqualTypeOf<string | undefined>();
+    return '';
+  });
+
+  // A message annotated with the exported parameters type still fits.
+  min(1, annotated);
+
+  // A message that reads extras isn't a plain message, so invalid() takes
+  // one only with its extras, and a plain message reads value as unknown.
+  type ExtrasMessage = (
+    parameters: { count: number } & ValidatorMessageParameters<unknown>,
+  ) => string;
+  expectTypeOf<ExtrasMessage>().not.toExtend<ValidatorMessage<unknown>>();
+  expectTypeOf<
+    (parameters: ValidatorMessageParameters<string>) => string
+  >().not.toExtend<ValidatorMessage<unknown>>();
+  const withExtras = await invalid({
+    message: ({ count }: { count: number }) => `count ${count}`,
+    value: 1,
+    field: undefined,
+    extras: { count: 1 },
+  });
+  assert.deepInclude(withExtras, { message: 'count 1' });
 });

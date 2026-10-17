@@ -1,9 +1,10 @@
 import { createTypeValidatorTest, createValidatorTest } from './factories.js';
 import type {
   ConfigBase,
+  MessageExtras,
   ValidatorMessage,
+  ValidationTest,
   ValidatorMessageParameters,
-  ValidatorTest,
 } from './shared.js';
 import { parseDate } from './parse-date.js';
 
@@ -47,18 +48,18 @@ export interface MinDateValidatorMessageParameters extends ValidatorMessageParam
  */
 export function minDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
+  message: ValidatorMessage<
+    Date,
+    MessageExtras<MinDateValidatorMessageParameters>
+  >,
   exclusive?: boolean,
-): ValidatorTest<Date, never> {
+): ValidationTest<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
-    (value) =>
+    (value: Date) =>
       parsedDate !== null &&
       parsedDate !== undefined &&
-      (value === null ||
-        value === undefined ||
-        (value instanceof Date &&
-          (exclusive ? value > parsedDate : value >= parsedDate))),
+      (exclusive ? value > parsedDate : value >= parsedDate),
     message,
     () => ({
       min: parsedDate,
@@ -83,18 +84,18 @@ export interface MaxDateValidatorMessageParameters extends ValidatorMessageParam
  */
 export function maxDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
+  message: ValidatorMessage<
+    Date,
+    MessageExtras<MaxDateValidatorMessageParameters>
+  >,
   exclusive?: boolean,
-): ValidatorTest<Date, never> {
+): ValidationTest<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
-    (value) =>
+    (value: Date) =>
       parsedDate !== null &&
       parsedDate !== undefined &&
-      (value === null ||
-        value === undefined ||
-        (value instanceof Date &&
-          (exclusive ? value < parsedDate : value <= parsedDate))),
+      (exclusive ? value < parsedDate : value <= parsedDate),
     message,
     () => ({
       max: parsedDate,

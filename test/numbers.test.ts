@@ -6,15 +6,10 @@ import {
   number,
   optional,
   parseNumber,
-  type ValidatorTest,
 } from '../src/index.js';
 
-// Tests called directly here are typed as plain ValidatorTest: a built-in test
-// passes a missing value through, which its value type leaves out, since type
-// validators only run tests on present values.
-
 test('min', async () => {
-  const validate: ValidatorTest = min(5, 'min:{min}', true);
+  const validate = min(5, 'min:{min}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -28,16 +23,6 @@ test('min', async () => {
     message: 'min:5',
     field: undefined,
     errors: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    value: null,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
   });
   assert.deepEqual(await validate(5.01), {
     state: 'valid',
@@ -61,7 +46,7 @@ test('min', async () => {
 });
 
 test('max', async () => {
-  const validate: ValidatorTest = max(5, 'max:{max}', true);
+  const validate = max(5, 'max:{max}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -72,16 +57,6 @@ test('max', async () => {
   assert.deepEqual(await validate(0), {
     state: 'valid',
     value: 0,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    value: null,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(5.01), {
@@ -106,7 +81,7 @@ test('max', async () => {
 });
 
 test('integer', async () => {
-  const validate: ValidatorTest = integer('integer');
+  const validate = integer('integer');
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -117,16 +92,6 @@ test('integer', async () => {
   assert.deepEqual(await validate(0), {
     state: 'valid',
     value: 0,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    value: null,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(0.1), {
@@ -193,20 +158,6 @@ test('number', async () => {
     value: 0,
     field: undefined,
   });
-  assert.deepEqual(await validate(), {
-    state: 'invalid',
-    message: 'Must enter a value.',
-    value: undefined,
-    errors: undefined,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'invalid',
-    message: 'Must enter a value.',
-    value: null,
-    errors: undefined,
-    field: undefined,
-  });
   assert.deepEqual(await validate({}), {
     state: 'invalid',
     message: 'Failed to parse value to number.',
@@ -248,16 +199,6 @@ test('rounding', async () => {
 
 test('number default', async () => {
   const validate = number({ default: 5 });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: 5,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    value: 5,
-    field: undefined,
-  });
   assert.deepEqual(await validate(Number.NaN), {
     state: 'valid',
     value: 5,

@@ -1,8 +1,9 @@
 import { createValidatorTest } from './factories.js';
 import type {
+  MessageExtras,
+  ValidationTest,
   ValidatorMessage,
   ValidatorMessageParameters,
-  ValidatorTest,
 } from './shared.js';
 
 export interface OneOfValidatorMessageParameters<
@@ -19,14 +20,14 @@ export interface OneOfValidatorMessageParameters<
  */
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
-  message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
-): ValidatorTest<T, never> {
-  const allowed: readonly unknown[] = values;
+  message: ValidatorMessage<
+    T,
+    MessageExtras<OneOfValidatorMessageParameters<T>>
+  >,
+): ValidationTest<T, never> {
   return createValidatorTest(
-    (value) =>
-      value === undefined ||
-      value === null ||
-      allowed.includes(value) ||
+    (value: T) =>
+      values.includes(value) ||
       (value instanceof Date &&
         values.some((x) => x.valueOf() === value.valueOf())),
     message,

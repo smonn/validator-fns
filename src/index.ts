@@ -36,6 +36,7 @@ export type {
   ExtractError,
   ExtractValue,
   InvalidResult,
+  ValidationTest,
   ValidatorFactory,
   ValidatorMessage,
   ValidatorMessageParameters,

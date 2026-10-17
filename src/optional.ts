@@ -1,4 +1,5 @@
 import {
+  formatMessage,
   invalidResult,
   validResult,
   type ValidatorMessage,
@@ -60,7 +61,11 @@ export function requirable<T, E>(
   const message =
     requiredMessage === undefined ? defaultRequiredMessage : requiredMessage;
   const reject = (parsed: T | null | undefined, field: string | undefined) =>
-    invalidResult<T, E>({ message, value: parsed, field });
+    invalidResult<E>({
+      message: formatMessage(message, { value: parsed, field }),
+      value: parsed,
+      field,
+    });
   const accept = (parsed: T | null | undefined, field: string | undefined) =>
     validResult<T | null | undefined, E>({ value: parsed, field });
   const required: ValidatorTest<T, E> = (value, field) =>

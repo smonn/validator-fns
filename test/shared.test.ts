@@ -80,7 +80,7 @@ enum TestValue {
 }
 
 test('enums', async () => {
-  const strings = oneOf(['foo', 'bar', 'baz'], 'oneOf:{values}');
+  const strings = oneOf<string>(['foo', 'bar', 'baz'], 'oneOf:{values}');
   assert.deepEqual(await strings('asdf'), {
     state: 'invalid',
     value: 'asdf',
@@ -170,7 +170,7 @@ test('isObject is true only for objects tagged Object', () => {
 });
 
 test('should return a promise when a built-in test is called directly', async () => {
-  const result = oneOf(['a'], 'oneOf')('b');
+  const result = oneOf<string>(['a'], 'oneOf')('b');
   assert.instanceOf(result, Promise);
   assert.strictEqual((await result).state, 'invalid');
 });
