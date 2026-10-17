@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-In 2.x, every built-in test takes a required message (`min(2, 'Too short.')`), and a missing value fails with `requiredMessage` or `'Required.'`. Parsers and Standard Schema add more fixed English: `'Failed to parse value to number.'` and `'Invalid value.'`. A failure carries only `message: string`, and nested failures in `errors` are message strings. A program can't tell which check failed without matching on wording, and an app can't translate messages without supplying every one by hand. Standard Schema requires a `message: string` on every issue, and `~standard.validate` takes only the input value.
+In 2.x, every built-in test takes a required message (`min(2, 'Too short.')`), and a missing value fails with `requiredMessage` or `'Required.'`. Parsers and Standard Schema add more fixed English: `'Failed to parse value to number.'` and `'Invalid value.'`. A failure carries only `message: string`, and nested failures in `errors` are message strings. A program can't tell which check failed without matching on wording, and an app can't translate messages without supplying every one by hand. Standard Schema requires a `message: string` on every issue. Its `validate(value, options?)` can carry vendor-specific parameters in `options.libraryOptions`, but `options` is optional, so an integration may pass only the value.
 
 ## Decision
 
@@ -21,7 +21,7 @@ Decided in #699. Failures carry codes, and the core library ships no wording:
 
 - **Built-in English defaults in core.** Friendlier out of the box, but it keeps the wording v3 sets out to drop.
 - **Locale entry points**, where `validator-fns/en` re-exports the whole API with English defaults. That needs no new function, but every locale duplicates the surface.
-- **A per-call message map.** It suits a locale per request, but `~standard.validate` can't receive it, so Standard Schema consumers would see bare codes.
+- **A per-call message map.** It suits a locale per request, and it could reach `~standard.validate` through `options.libraryOptions`. But an integration that passes only the value would show bare codes. Messages bound to the validator reach every consumer, whatever options it passes.
 - **Global `configure()`.** Mutable module state shared by every user of the library in a process.
 - **Zod-style semantic codes** (`too_small`, `invalid_type`). Familiar, but `min` and `minDate` would share a code and differ only in params.
 
