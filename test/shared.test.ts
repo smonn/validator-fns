@@ -2,6 +2,8 @@ import { assert, test } from 'vitest';
 import {
   exact,
   formatMessage,
+  invalid,
+  min,
   number,
   oneOf,
   required,
@@ -233,4 +235,33 @@ test('should run custom tests on every call when the same value repeats', async 
   await validate('a');
   await validate('a');
   assert.strictEqual(calls, 2);
+});
+
+test('should return a promise when a built-in test is called directly', async () => {
+  const result = required('required')('');
+  assert.instanceOf(result, Promise);
+  assert.strictEqual((await result).state, 'invalid');
+});
+
+test('should stop at a custom test when it fails between built-in tests', async () => {
+  const validate = string(
+    required('required'),
+    async (value, field) => invalid({ message: 'custom', value, field }),
+    min(10, 'min'),
+  );
+
+  assert.deepInclude(await validate('abc'), {
+    state: 'invalid',
+    message: 'custom',
+  });
+});
+
+test('should return an invalid result when a built-in test message throws', async () => {
+  const validate = string(
+    required(() => {
+      throw new Error('boom');
+    }),
+  );
+
+  assert.deepInclude(await validate(''), { state: 'invalid', message: 'boom' });
 });
