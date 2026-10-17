@@ -32,7 +32,7 @@ When you're done, submit a pull request and for one of the maintainers to check 
 
 ### Issues and pull requests
 
-Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions.
+Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions. GitHub runs no pull request workflows while a pull request has merge conflicts. Its checks keep the results of the last run before the conflict, and editing the description doesn't re-run "decisions answered". Resolve the conflicts to run them again.
 
 ### Changesets
 
