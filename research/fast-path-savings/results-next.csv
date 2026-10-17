@@ -1,0 +1,103 @@
+build,scenario,n,median,min,max,cv_pct,saving_pct_vs_build
+no-unbox-early-return,"parseArray(array)",8,383831148,377822927,391136361,1.10,0.51
+no-unbox-early-return,"parseBoolean(boolean)",8,350254697,342270430,352794834,1.04,-0.18
+no-unbox-early-return,"parseString(string)",8,356489267,352441871,362061666,0.88,1.18
+no-unbox-early-return,"parseString(number)",8,460036,439022,467916,2.01,34930.83
+no-unbox-early-return,"parseNumber(string)",8,92054469,87937476,92954924,1.78,38.65
+no-unbox-early-return,"parseString(boolean)",8,214212,201397,220331,3.00,59928.25
+no-unbox-early-return,"parseString(bigint)",8,146163,139254,149198,2.22,37955.85
+no-unbox-early-return,"array(string) validator",8,1861842,1801822,1958024,2.58,1.69
+no-unbox-early-return,"boolean validator",8,19104531,18672779,19761645,1.97,1.96
+no-unbox-early-return,"string validator, 2 tests",8,11517431,11179886,11939980,2.28,2.22
+no-unbox-early-return,"number validator (number)",8,15716759,15130325,16226198,2.38,1.20
+no-unbox-early-return,"number validator (string)",8,13289276,12874678,13804584,2.87,8.16
+no-unbox-early-return,"suite: simple",8,751765,739203,775348,1.72,1.21
+no-unbox-early-return,"suite: simple (distinct values)",8,711228,685968,732268,2.72,0.83
+no-unbox-early-return,"suite: complex",8,263004,246266,273656,3.29,1.91
+no-unbox-early-return,"suite: complex (distinct values)",8,256107,244645,261590,2.46,1.08
+no-unbox-early-return,"suite: complex (invalid values)",8,167296,160536,171787,2.63,1.00
+no-array-fast-path,"parseArray(array)",8,38202341,35461183,41280195,4.88,909.84
+no-array-fast-path,"parseBoolean(boolean)",8,346558222,338713721,354345015,1.61,0.88
+no-array-fast-path,"parseString(string)",8,361162066,350224444,364679832,1.49,-0.13
+no-array-fast-path,"parseString(number)",8,161521586,156350368,163236444,1.48,-0.23
+no-array-fast-path,"parseNumber(string)",8,128505789,124293304,129587072,1.31,-0.68
+no-array-fast-path,"parseString(boolean)",8,128699247,125669566,129711962,1.09,-0.09
+no-array-fast-path,"parseString(bigint)",8,55875610,54154251,56623068,1.76,-0.45
+no-array-fast-path,"array(string) validator",8,1790638,1661021,1814056,2.89,5.73
+no-array-fast-path,"boolean validator",8,19659641,18976672,20435979,2.51,-0.92
+no-array-fast-path,"string validator, 2 tests",8,11779213,10774968,12013047,3.31,-0.06
+no-array-fast-path,"number validator (number)",8,15650239,14528951,16229150,3.61,1.63
+no-array-fast-path,"number validator (string)",8,14268032,13634632,14618887,2.71,0.74
+no-array-fast-path,"suite: simple",8,757581,711224,773978,3.15,0.44
+no-array-fast-path,"suite: simple (distinct values)",8,703167,661875,728983,3.29,1.99
+no-array-fast-path,"suite: complex",8,260479,248922,274860,3.08,2.90
+no-array-fast-path,"suite: complex (distinct values)",8,252166,232362,259862,3.73,2.66
+no-array-fast-path,"suite: complex (invalid values)",8,167413,158449,170006,2.25,0.93
+no-sync-twin,"parseArray(array)",8,388174121,380297329,391362017,1.13,-0.62
+no-sync-twin,"parseBoolean(boolean)",8,350237897,342228164,354056595,1.19,-0.18
+no-sync-twin,"parseString(string)",8,360109607,351037592,363696969,1.34,0.16
+no-sync-twin,"parseString(number)",8,161942799,158155740,162854380,0.97,-0.49
+no-sync-twin,"parseNumber(string)",8,128405417,126590506,129393307,0.77,-0.60
+no-sync-twin,"parseString(boolean)",8,132331645,128858872,132801954,1.15,-2.83
+no-sync-twin,"parseString(bigint)",8,56343518,54312562,56619452,1.36,-1.28
+no-sync-twin,"array(string) validator",8,1885654,1795695,1916855,2.04,0.40
+no-sync-twin,"boolean validator",8,19876104,19417268,20205337,1.58,-2.00
+no-sync-twin,"string validator, 2 tests",8,5985622,5797612,6109808,1.87,96.68
+no-sync-twin,"number validator (number)",8,9132042,8736589,9301360,2.08,74.17
+no-sync-twin,"number validator (string)",8,9011381,8725370,9390778,2.46,59.50
+no-sync-twin,"suite: simple",8,657502,636414,682157,2.55,15.72
+no-sync-twin,"suite: simple (distinct values)",8,632641,580261,649478,3.78,13.36
+no-sync-twin,"suite: complex",8,235242,231596,242689,1.70,13.94
+no-sync-twin,"suite: complex (distinct values)",8,220648,215946,230166,2.58,17.33
+no-sync-twin,"suite: complex (invalid values)",8,154938,149041,160240,2.54,9.06
+no-string-fast-path,"parseArray(array)",8,388776194,382362143,392528932,0.95,-0.77
+no-string-fast-path,"parseBoolean(boolean)",8,351379160,344874218,353731003,0.95,-0.50
+no-string-fast-path,"parseString(string)",8,151389366,145353007,152929622,1.60,138.25
+no-string-fast-path,"parseString(number)",8,161533462,158385309,163108441,1.01,-0.23
+no-string-fast-path,"parseNumber(string)",8,127714574,126388279,129500942,0.84,-0.06
+no-string-fast-path,"parseString(boolean)",8,128987590,126916084,130370909,0.79,-0.31
+no-string-fast-path,"parseString(bigint)",8,56852544,55836895,58044345,1.38,-2.16
+no-string-fast-path,"array(string) validator",8,1870508,1800209,1912333,1.88,1.22
+no-string-fast-path,"boolean validator",8,19448018,18324996,20508921,3.25,0.16
+no-string-fast-path,"string validator, 2 tests",8,10947832,10680523,11202975,1.71,7.53
+no-string-fast-path,"number validator (number)",8,15679864,15266265,16087461,1.94,1.44
+no-string-fast-path,"number validator (string)",8,14340664,13849467,14566060,2.02,0.23
+no-string-fast-path,"suite: simple",8,738212,694638,757924,3.14,3.07
+no-string-fast-path,"suite: simple (distinct values)",8,694478,681702,718312,1.69,3.26
+no-string-fast-path,"suite: complex",8,264640,243177,277626,3.86,1.28
+no-string-fast-path,"suite: complex (distinct values)",8,252977,228499,261298,4.11,2.33
+no-string-fast-path,"suite: complex (invalid values)",8,167463,159491,171071,2.65,0.90
+baseline,"parseArray(array)",8,385781009,382905557,393121739,0.97,
+baseline,"parseBoolean(boolean)",8,349611324,341000000,353769828,1.23,
+baseline,"parseString(string)",8,360678696,352975692,364097919,1.07,
+baseline,"parseString(number)",8,161154533,156362838,163213509,1.38,
+baseline,"parseNumber(string)",8,127635622,123073275,129583030,1.66,
+baseline,"parseString(boolean)",8,128587688,122596359,129604966,1.90,
+baseline,"parseString(bigint)",8,55623577,54384115,56624604,1.70,
+baseline,"array(string) validator",8,1893289,1785450,1949993,3.30,
+baseline,"boolean validator",8,19479107,18871316,19955162,2.15,
+baseline,"string validator, 2 tests",8,11772730,10659773,12029055,3.71,
+baseline,"number validator (number)",8,15905272,14848008,16195261,2.79,
+baseline,"number validator (string)",8,14373183,13870863,14764928,2.33,
+baseline,"suite: simple",8,760880,721318,774121,2.54,
+baseline,"suite: simple (distinct values)",8,717138,671245,726109,3.34,
+baseline,"suite: complex",8,268030,250432,276960,3.78,
+baseline,"suite: complex (distinct values)",8,258878,232967,261761,4.45,
+baseline,"suite: complex (invalid values)",8,168973,157407,172705,3.48,
+no-boolean-fast-path,"parseArray(array)",8,384533378,378444551,390743653,1.20,0.32
+no-boolean-fast-path,"parseBoolean(boolean)",8,302318199,277841319,312468043,4.35,15.64
+no-boolean-fast-path,"parseString(string)",8,362039112,346912344,365344030,1.71,-0.38
+no-boolean-fast-path,"parseString(number)",8,161433186,156083289,162598413,1.43,-0.17
+no-boolean-fast-path,"parseNumber(string)",8,127970628,124905193,129445000,1.27,-0.26
+no-boolean-fast-path,"parseString(boolean)",8,127534659,123468915,129768764,1.83,0.83
+no-boolean-fast-path,"parseString(bigint)",8,55162229,52324806,56516515,2.67,0.84
+no-boolean-fast-path,"array(string) validator",8,1869527,1668118,1960915,4.62,1.27
+no-boolean-fast-path,"boolean validator",8,19749743,18636965,20653837,3.45,-1.37
+no-boolean-fast-path,"string validator, 2 tests",8,11627704,10983916,12001244,3.02,1.25
+no-boolean-fast-path,"number validator (number)",8,15512506,15089421,16219046,2.48,2.53
+no-boolean-fast-path,"number validator (string)",8,14247349,13077737,14888001,4.69,0.88
+no-boolean-fast-path,"suite: simple",8,735181,725710,771334,2.59,3.50
+no-boolean-fast-path,"suite: simple (distinct values)",8,706297,678274,737321,3.28,1.53
+no-boolean-fast-path,"suite: complex",8,260925,254039,276712,3.21,2.72
+no-boolean-fast-path,"suite: complex (distinct values)",8,255512,240477,263842,3.39,1.32
+no-boolean-fast-path,"suite: complex (invalid values)",8,165410,162596,171160,2.03,2.15
