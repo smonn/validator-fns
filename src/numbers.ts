@@ -1,4 +1,5 @@
 import { createTypeValidatorTest } from './factories.js';
+import { primitiveToString } from './primitives.js';
 import {
   type ConfigBase,
   invalid,
@@ -25,12 +26,12 @@ export function parseNumber(value: unknown): number | null | undefined {
     return value.getTime();
   }
 
-  if (typeof value === 'string') {
-    return Number.parseFloat(value);
+  const parsed = primitiveToString(value);
+  if (parsed === undefined) {
+    throw new TypeError('Failed to parse value to number.');
   }
 
-  // oxlint-disable-next-line typescript/no-base-to-string -- tests pin the coercion of non-primitives until #579 rejects them in v3
-  return Number.parseFloat(String(value));
+  return Number.parseFloat(parsed);
 }
 
 /**

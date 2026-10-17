@@ -1,7 +1,7 @@
 import { createTypeValidatorTest, createValidatorTest } from './factories.js';
+import { primitiveToString } from './primitives.js';
 import {
   type ConfigBase,
-  isObject,
   type ValidatorMessage,
   type ValidatorMessageParameters,
   type ValidatorTest,
@@ -46,12 +46,12 @@ export function parseString(value: unknown): string | null | undefined {
     return value.toISOString();
   }
 
-  if (isObject(value)) {
+  const parsed = primitiveToString(value);
+  if (parsed === undefined) {
     throw new TypeError('Failed to parse value to string.');
   }
 
-  // oxlint-disable-next-line typescript/no-base-to-string -- only plain objects throw above; tests pin the coercion of other non-primitives until #579 rejects them in v3
-  return String(value);
+  return parsed;
 }
 
 /**

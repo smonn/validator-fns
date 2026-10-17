@@ -35,14 +35,24 @@
           "deny": ["src/**"],
         },
         {
+          "name": "primitives",
+          "pattern": "src/primitives.ts",
+          "deny": ["src/**"],
+        },
+        {
           "name": "factories",
           "pattern": "src/factories.ts",
           "allow": ["src/shared.ts"],
         },
         {
           "name": "validators",
-          "pattern": "src/{arrays,booleans,common,limits,numbers,objects,strings}.ts",
+          "pattern": "src/{arrays,booleans,common,limits,objects}.ts",
           "allow": ["src/shared.ts", "src/factories.ts"],
+        },
+        {
+          "name": "scalar-validators",
+          "pattern": "src/{numbers,strings}.ts",
+          "allow": ["src/shared.ts", "src/factories.ts", "src/primitives.ts"],
         },
         {
           "name": "dates",

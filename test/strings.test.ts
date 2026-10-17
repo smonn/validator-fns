@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   email,
@@ -407,47 +408,59 @@ test('uuid', async () => {
   }
 });
 
-// Pins today's coercion of non-primitive input. #579 changes it in v3 to
-// return an invalid result instead.
-test('string coerces non-primitive input other than plain objects', async () => {
-  const coerced: [unknown, string][] = [
-    [[1], '1'],
-    [[], ''],
-    [['a', 'b'], 'a,b'],
-    [new Map(), '[object Map]'],
-    [new Set([1]), '[object Set]'],
-    [Symbol('s'), 'Symbol(s)'],
+test('string accepts primitives, dates, and boxed primitives', async () => {
+  const date = new Date('2020-01-02T03:04:05.000Z');
+  const accepted: [unknown, string][] = [
+    [1, '1'],
     [1n, '1'],
     [true, 'true'],
-    [() => 1, '() => 1'],
     [new String('x'), 'x'],
-    [/re/, '/re/'],
+    [new Number(3), '3'],
+    [new Boolean(false), 'false'],
+    [runInNewContext('new String("y")'), 'y'],
+    [date, '2020-01-02T03:04:05.000Z'],
   ];
   const validate = string();
-  for (const [value, expected] of coerced) {
+  for (const [value, expected] of accepted) {
     assert.equal(parseString(value), expected, expected);
-    assert.deepEqual(
-      await validate(value),
-      { state: 'valid', field: undefined, value: expected },
-      expected,
-    );
+    const result = await validate(value);
+    assert.equal(result.state, 'valid', expected);
+    assert.equal(result.value, expected, expected);
   }
+});
 
+test('string returns an invalid result for non-primitive and symbol input', async () => {
   class Point {
     x = 1;
   }
-  for (const value of [{}, Object.create(null), new Point()]) {
+  const rejected: [unknown, string][] = [
+    [[1], 'array'],
+    [[], 'empty array'],
+    [new Map(), 'Map'],
+    [new Set([1]), 'Set'],
+    [() => 1, 'function'],
+    [/re/, 'RegExp'],
+    [{}, 'plain object'],
+    [Object.create(null), 'null-prototype object'],
+    [new Point(), 'class instance'],
+    [{ [Symbol.toStringTag]: 'String' }, 'object tagged String'],
+    [Symbol('s'), 'symbol'],
+  ];
+  const validate = string();
+  for (const [value, label] of rejected) {
     assert.throws(
       () => parseString(value),
       TypeError,
       'Failed to parse value to string.',
+      label,
     );
-    assert.deepEqual(await validate(value), {
-      state: 'invalid',
-      field: undefined,
-      value: value as string,
-      message: 'Failed to parse value to string.',
-      errors: undefined,
-    });
+    const result = await validate(value);
+    assert.equal(result.state, 'invalid', label);
+    assert.equal(
+      result.state === 'invalid' && result.message,
+      'Failed to parse value to string.',
+      label,
+    );
+    assert.equal(result.value, value, label);
   }
 });
