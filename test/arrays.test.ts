@@ -6,7 +6,7 @@ import {
   min,
   number,
   object,
-  required,
+  optional,
   string,
   valid,
   type ValidatorTest,
@@ -14,8 +14,8 @@ import {
 
 test('array', async () => {
   const validate = array(
+    { requiredMessage: 'required' },
     string(min(3, 'min:{min}')),
-    required('required'),
     min(1, 'min:{min}'),
   );
   assert.deepEqual(await validate(['foo', 'bar', 'baz']), {
@@ -27,14 +27,14 @@ test('array', async () => {
     state: 'invalid',
     value: null,
     message: 'required',
-    errors: [],
+    errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'invalid',
     value: undefined,
     message: 'required',
-    errors: [],
+    errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate([]), {
@@ -70,7 +70,7 @@ test('array', async () => {
 test('array with object', async () => {
   const validate = array(
     object({
-      username: string(required('required'), min(3, 'min:{min}')),
+      username: string({ requiredMessage: 'required' }, min(3, 'min:{min}')),
     }),
     min(2, 'min:{min}'),
     max(10, 'max:{max}'),
@@ -97,7 +97,7 @@ test('array with object', async () => {
 
 test('nested array', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
-  const validate = array(array(string(required('required'))));
+  const validate = array(array(string({ requiredMessage: 'required' })));
   assert.deepEqual(await validate([['', 'foo', null]]), {
     state: 'invalid',
     message: '',
@@ -138,7 +138,7 @@ test('array without validation', async () => {
     value: [],
     field: undefined,
   });
-  assert.deepEqual(await validate(), {
+  assert.deepEqual(await optional(validate)(), {
     state: 'valid',
     value: undefined,
     field: undefined,

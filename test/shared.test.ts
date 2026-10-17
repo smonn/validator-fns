@@ -7,7 +7,6 @@ import {
   min,
   number,
   oneOf,
-  required,
   string,
   valid,
 } from '../src/index.js';
@@ -32,72 +31,6 @@ test('format function message', () => {
     }),
     'Hello World!',
   );
-});
-
-test('required', async () => {
-  const validate = required('required');
-  assert.deepEqual(await validate('hello'), {
-    state: 'valid',
-    value: 'hello',
-    field: undefined,
-  });
-  assert.deepEqual(await validate(true), {
-    state: 'valid',
-    value: true,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(false), {
-    state: 'valid',
-    value: false,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(0), {
-    state: 'valid',
-    value: 0,
-    field: undefined,
-  });
-  const now = new Date();
-  assert.deepEqual(await validate(now), {
-    state: 'valid',
-    value: now,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(''), {
-    state: 'invalid',
-    value: '',
-    message: 'required',
-    field: undefined,
-    errors: undefined,
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'invalid',
-    value: null,
-    message: 'required',
-    field: undefined,
-    errors: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'invalid',
-    value: undefined,
-    message: 'required',
-    field: undefined,
-    errors: undefined,
-  });
-  const invalidDate = new Date('');
-  assert.deepEqual(await validate(invalidDate), {
-    state: 'invalid',
-    value: invalidDate,
-    message: 'required',
-    field: undefined,
-    errors: undefined,
-  });
-
-  const nullableValidate = required('required', true);
-  assert.deepEqual(await nullableValidate(null), {
-    state: 'valid',
-    value: null,
-    field: undefined,
-  });
 });
 
 test('exact', async () => {
@@ -237,14 +170,14 @@ test('isObject is true only for objects tagged Object', () => {
 });
 
 test('should return a promise when a built-in test is called directly', async () => {
-  const result = required('required')('');
+  const result = oneOf(['a'], 'oneOf')('b');
   assert.instanceOf(result, Promise);
   assert.strictEqual((await result).state, 'invalid');
 });
 
 test('should stop at a custom test when it fails between built-in tests', async () => {
   const validate = string(
-    required('required'),
+    min(1, 'min'),
     async (value, field) => invalid({ message: 'custom', value, field }),
     min(10, 'min'),
   );
@@ -257,10 +190,13 @@ test('should stop at a custom test when it fails between built-in tests', async 
 
 test('should return an invalid result when a built-in test message throws', async () => {
   const validate = string(
-    required(() => {
+    min(5, () => {
       throw new Error('boom');
     }),
   );
 
-  assert.deepInclude(await validate(''), { state: 'invalid', message: 'boom' });
+  assert.deepInclude(await validate('abc'), {
+    state: 'invalid',
+    message: 'boom',
+  });
 });

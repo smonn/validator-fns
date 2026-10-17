@@ -44,10 +44,10 @@ function collectIssues(
  */
 export function standard<T, E>(
   validator: ValidatorTest<T, E>,
-): ValidatorTest<T, E> & StandardSchemaV1<unknown, T | null | undefined> {
+): ValidatorTest<T, E> & StandardSchemaV1<unknown, T> {
   const validate = async (
     value: unknown,
-  ): Promise<StandardSchemaV1.Result<T | null | undefined>> => {
+  ): Promise<StandardSchemaV1.Result<T>> => {
     const result = await validator(value);
     if (result.state === 'valid') {
       return { value: result.value };

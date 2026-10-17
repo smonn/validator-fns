@@ -4,12 +4,17 @@ import {
   max,
   min,
   number,
+  optional,
   parseNumber,
-  required,
+  type ValidatorTest,
 } from '../src/index.js';
 
+// Tests called directly here are typed as plain ValidatorTest: a built-in test
+// passes a missing value through, which its value type leaves out, since type
+// validators only run tests on present values.
+
 test('min', async () => {
-  const validate = min(5, 'min:{min}', true);
+  const validate: ValidatorTest = min(5, 'min:{min}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -56,7 +61,7 @@ test('min', async () => {
 });
 
 test('max', async () => {
-  const validate = max(5, 'max:{max}', true);
+  const validate: ValidatorTest = max(5, 'max:{max}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -101,7 +106,7 @@ test('max', async () => {
 });
 
 test('integer', async () => {
-  const validate = integer('integer');
+  const validate: ValidatorTest = integer('integer');
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     value: Number.NaN,
@@ -142,7 +147,7 @@ test('integer', async () => {
 
 test('number', async () => {
   const validate = number(
-    required('Must enter a value.'),
+    { requiredMessage: 'Must enter a value.' },
     min(-10, 'Must be at least -10.'),
     max(10, 'Must be at most 10.'),
   );
@@ -275,7 +280,8 @@ test('number accepts primitives, dates, and boxed primitives', async () => {
     [new String('4'), 4],
     [new Date(5), 5],
   ];
-  const validate = number();
+  // Blank input parses to NaN, which only optional() accepts.
+  const validate = optional(number());
   for (const [value, expected] of accepted) {
     assert.deepEqual(parseNumber(value), expected, String(expected));
     const result = await validate(value);

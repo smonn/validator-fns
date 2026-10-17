@@ -45,9 +45,14 @@
           "allow": ["src/shared.ts"],
         },
         {
+          "name": "optional",
+          "pattern": "src/optional.ts",
+          "allow": ["src/shared.ts"],
+        },
+        {
           "name": "factories",
           "pattern": "src/factories.ts",
-          "allow": ["src/shared.ts"],
+          "allow": ["src/shared.ts", "src/optional.ts"],
         },
         {
           "name": "validators",
@@ -66,6 +71,7 @@
             "src/shared.ts",
             "src/factories.ts",
             "src/invalid-detail.ts",
+            "src/optional.ts",
           ],
         },
         {

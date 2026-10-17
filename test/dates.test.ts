@@ -5,7 +5,6 @@ import {
   maxDate,
   minDate,
   parseDate,
-  required,
 } from '../src/index.js';
 
 test('parseDate', () => {
@@ -127,7 +126,7 @@ test('date', async () => {
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   const validate = date(
-    required('required'),
+    { requiredMessage: 'required' },
     minDate(now, 'min'),
     maxDate(nextMonth, 'max'),
   );

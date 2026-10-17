@@ -7,6 +7,7 @@ import {
   max,
   min,
   object,
+  optional,
   standard,
   string,
 } from '../src/index.js';
@@ -109,8 +110,10 @@ test('should leave the wrapped validator unchanged when wrapping it', async () =
 
 test('should type the output as the valid result value when wrapped', () => {
   const schema = standard(object({ name: string() }));
+  expectTypeOf<InferOutput<typeof schema>>().toEqualTypeOf<{ name: string }>();
 
-  expectTypeOf<InferOutput<typeof schema>>().toEqualTypeOf<
-    { name?: string | null } | null | undefined
+  const optionalSchema = standard(optional(string()));
+  expectTypeOf<InferOutput<typeof optionalSchema>>().toEqualTypeOf<
+    string | null | undefined
   >();
 });

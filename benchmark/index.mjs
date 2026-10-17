@@ -39,14 +39,14 @@ const simpleObject = {
 
 const simpleValidate = V.object({
   name: V.string(
-    V.required('required'),
+    { requiredMessage: 'required' },
     V.min(4, 'min:4'),
     V.max(25, 'max:25'),
   ),
-  email: V.string(V.required('required'), V.email('email')),
-  firstName: V.string(V.required('required')),
-  phone: V.string(V.required('required')),
-  age: V.number(V.required('required'), V.min(18, 'min:18')),
+  email: V.string({ requiredMessage: 'required' }, V.email('email')),
+  firstName: V.string({ requiredMessage: 'required' }),
+  phone: V.string({ requiredMessage: 'required' }),
+  age: V.number({ requiredMessage: 'required' }, V.min(18, 'min:18')),
 });
 
 add('simple', () => simpleValidate(simpleObject));
@@ -82,21 +82,23 @@ const customValidator = (value, field) => {
 };
 
 const complexValidate = V.object({
-  firstName: V.string(
-    { default: '', trim: true },
-    V.required('First name is required.'),
-  ),
+  firstName: V.string({
+    default: '',
+    trim: true,
+    requiredMessage: 'First name is required.',
+  }),
   emailAddress: V.string(
-    V.required('Email address is required.'),
+    { requiredMessage: 'Email address is required.' },
     V.email('Must be a valid email address.'),
   ),
   age: V.number(
-    { round: 'floor' },
-    V.required('Age is required.'),
+    { round: 'floor', requiredMessage: 'Age is required.' },
     V.integer('Age must be a whole number.'),
     V.min(18, 'Must be at least 18 years old.'),
   ),
-  homepage: V.string(V.url('Must be a valid URL.', ['http:', 'https:'])),
+  homepage: V.optional(
+    V.string(V.url('Must be a valid URL.', ['http:', 'https:'])),
+  ),
   fruit: V.string(
     { default: 'apple' },
     V.oneOf(
@@ -107,7 +109,7 @@ const complexValidate = V.object({
   favoriteCarMakers: V.array(
     { default: [] },
     V.string(
-      V.required('Car brand is required.'),
+      { requiredMessage: 'Car brand is required.' },
       V.oneOf(
         [
           'BMW',
@@ -128,16 +130,20 @@ const complexValidate = V.object({
     V.min(2, 'Must pick at least two.'),
     V.max(4, 'Must pick at most four.'),
   ),
-  startDate: V.date(
-    V.minDate(now, 'Must be on or after today.'),
-    V.maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+  startDate: V.optional(
+    V.date(
+      V.minDate(now, 'Must be on or after today.'),
+      V.maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+    ),
   ),
-  optIn: V.boolean(V.required('Must decide to opt in or out.')),
+  optIn: V.boolean({ requiredMessage: 'Must decide to opt in or out.' }),
   notRobot: V.number(
-    V.required('Must enter the correct answer.'),
+    { requiredMessage: 'Must enter the correct answer.' },
     V.exact(42, 'This is the answer.'),
   ),
-  postalCode: V.string(V.matches(/^\d{5}$/, 'Must be a five-digit number.')),
+  postalCode: V.optional(
+    V.string(V.matches(/^\d{5}$/, 'Must be a five-digit number.')),
+  ),
   custom: customValidator,
 });
 

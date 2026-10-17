@@ -13,7 +13,7 @@ const {
   number,
   object,
   oneOf,
-  required,
+  optional,
   string,
   url,
   valid,
@@ -38,21 +38,21 @@ const customValidator = (value, field) => {
 };
 
 const validate = object({
-  firstName: string(
-    { default: '', trim: true },
-    required('First name is required.'),
-  ),
+  firstName: string({
+    default: '',
+    trim: true,
+    requiredMessage: 'First name is required.',
+  }),
   emailAddress: string(
-    required('Email address is required.'),
+    { requiredMessage: 'Email address is required.' },
     email('Must be a valid email address.'),
   ),
   age: number(
-    { round: 'floor' },
-    required('Age is required.'),
+    { round: 'floor', requiredMessage: 'Age is required.' },
     integer('Age must be a whole number.'),
     min(18, 'Must be at least {min} years old.'),
   ),
-  homepage: string(url('Must be a valid URL.', ['http:', 'https:'])),
+  homepage: optional(string(url('Must be a valid URL.', ['http:', 'https:']))),
   fruit: string(
     { default: 'apple' },
     oneOf(
@@ -63,7 +63,7 @@ const validate = object({
   favoriteCarMakers: array(
     { default: [] },
     string(
-      required('Car brand is required.'),
+      { requiredMessage: 'Car brand is required.' },
       oneOf(
         [
           'BMW',
@@ -84,16 +84,20 @@ const validate = object({
     min(2, 'Must pick at least two.'),
     max(4, 'Must pick at most four.'),
   ),
-  startDate: date(
-    minDate(now, 'Must be on or after today.'),
-    maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+  startDate: optional(
+    date(
+      minDate(now, 'Must be on or after today.'),
+      maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+    ),
   ),
-  optIn: boolean(required('Must decide to opt in or out.')),
+  optIn: boolean({ requiredMessage: 'Must decide to opt in or out.' }),
   notRobot: number(
-    required('Must enter the correct answer.'),
+    { requiredMessage: 'Must enter the correct answer.' },
     exact(42, 'This is the answer.'),
   ),
-  postalCode: string(matches(/^\d{5}$/, 'Must be a five-digit number.')),
+  postalCode: optional(
+    string(matches(/^\d{5}$/, 'Must be a five-digit number.')),
+  ),
   custom: customValidator,
 });
 
