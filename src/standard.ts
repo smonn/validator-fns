@@ -1,4 +1,4 @@
-import type { ValidatorTest } from './shared.js';
+import type { Validator } from './shared.js';
 import type { StandardSchemaV1 } from './standard-schema.js';
 
 /** @internal */
@@ -42,8 +42,8 @@ function collectIssues(
  * @category Helpers
  */
 export function standard<T, E>(
-  validator: ValidatorTest<T, E>,
-): ValidatorTest<T, E> & StandardSchemaV1<unknown, T | null | undefined> {
+  validator: Validator<T, E>,
+): Validator<T, E> & StandardSchemaV1<unknown, T | null | undefined> {
   const validate = async (
     value: unknown,
   ): Promise<StandardSchemaV1.Result<T | null | undefined>> => {

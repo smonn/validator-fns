@@ -4,7 +4,7 @@ import {
   invalid,
   valid,
   type ValidatorMessage,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /**
@@ -81,9 +81,7 @@ export function applyNumberConfig(
  * @param message Error message
  * @category Validation Tests
  */
-export function integer(
-  message: ValidatorMessage<number>,
-): ValidatorTest<number> {
+export function integer(message: ValidatorMessage<number>): Validator<number> {
   return async (value, field) => {
     if (
       value === undefined ||

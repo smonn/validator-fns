@@ -3,7 +3,7 @@ import {
   invalid,
   valid,
   type ValidatorMessage,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /**
@@ -17,12 +17,12 @@ import {
 export function check<T, E = never>(
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidatorTest<T, E>;
+): Validator<T, E>;
 export function check<T, E = never>(
   path: string | readonly string[],
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidatorTest<T, E>;
+): Validator<T, E>;
 export function check<T, E = never>(
   ...args:
     | [test: (value: T) => boolean, message: ValidatorMessage<T>]
@@ -31,7 +31,7 @@ export function check<T, E = never>(
         test: (value: T) => boolean,
         message: ValidatorMessage<T>,
       ]
-): ValidatorTest<T, E> {
+): Validator<T, E> {
   const [path, test, message] = args.length === 2 ? [[], ...args] : args;
   const keys = typeof path === 'string' ? [path] : path;
 
