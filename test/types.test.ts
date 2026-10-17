@@ -61,7 +61,7 @@ test('type validators reject tests whose errors are not strings', () => {
 test('object() maps each property to its value and error types', () => {
   expectTypeOf(object({ name: string(), age: number() })).toEqualTypeOf<
     ValidatorTest<
-      { name?: string; age?: number },
+      { name?: string | null; age?: number | null },
       { name?: string; age?: string }
     >
   >();
