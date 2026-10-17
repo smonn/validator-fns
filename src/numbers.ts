@@ -26,12 +26,14 @@ export function parseNumber(value: unknown): number | null | undefined {
     return value.getTime();
   }
 
-  const parsed = primitiveToString(value);
-  if (parsed === undefined) {
+  const text = primitiveToString(value);
+  const parsed = text === undefined ? Number.NaN : Number.parseFloat(text);
+  // Blank input stays empty, as NaN, for `required` and `default` to handle.
+  if (Number.isNaN(parsed) && (text === undefined || text.trim() !== '')) {
     throw new TypeError('Failed to parse value to number.');
   }
 
-  return Number.parseFloat(parsed);
+  return parsed;
 }
 
 /**

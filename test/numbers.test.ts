@@ -269,7 +269,8 @@ test('number accepts primitives, dates, and boxed primitives', async () => {
   const accepted: [unknown, number][] = [
     ['1.5', 1.5],
     [1n, 1],
-    [true, Number.NaN],
+    ['', Number.NaN],
+    ['  ', Number.NaN],
     [new Number(3), 3],
     [new String('4'), 4],
     [new Date(5), 5],
@@ -283,7 +284,7 @@ test('number accepts primitives, dates, and boxed primitives', async () => {
   }
 });
 
-test('number returns an invalid result for non-primitive and symbol input', async () => {
+test('number returns an invalid result for input it cannot parse', async () => {
   const rejected: [unknown, string][] = [
     [[1], 'array'],
     [[[1, 2]], 'nested array'],
@@ -293,6 +294,10 @@ test('number returns an invalid result for non-primitive and symbol input', asyn
     [new Map(), 'Map'],
     [() => 1, 'function'],
     [Symbol('s'), 'symbol'],
+    ['abc', 'unparseable string'],
+    ['NaN', 'the string NaN'],
+    [true, 'boolean'],
+    [new String('x'), 'String object holding an unparseable string'],
   ];
   const validate = number();
   for (const [value, label] of rejected) {
