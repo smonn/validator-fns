@@ -4,7 +4,7 @@ import {
   isObject,
   type ValidatorMessage,
   type ValidatorMessageParameters,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /** @internal */
@@ -24,7 +24,11 @@ const uuidPattern =
  * @category Types
  */
 export interface StringConfig extends ConfigBase<string> {
-  /** Apply trim to string before validation. */
+  /**
+   * Apply trim to string before validation.
+   * @deprecated v3 removes this option. In v3, use `transform((s) => s.trim())`
+   * instead.
+   */
   trim?: boolean;
 }
 
@@ -32,6 +36,7 @@ export interface StringConfig extends ConfigBase<string> {
  * Parses a value into a string.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function parseString(value: unknown): string | null | undefined {
   if (value === null || value === undefined) {
@@ -59,6 +64,7 @@ export function parseString(value: unknown): string | null | undefined {
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function applyStringConfig(
   value: unknown,
@@ -92,7 +98,7 @@ export interface MatchesValidatorMessageParameters extends ValidatorMessageParam
 export function matches(
   pattern: RegExp,
   message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
-): ValidatorTest<string> {
+): Validator<string> {
   // A g or y pattern advances lastIndex on each test(), so a shared one would
   // fail matching values after a match. Test a private copy from index 0.
   const ownPattern = new RegExp(pattern);
@@ -116,9 +122,7 @@ export function matches(
  * @param message Error message
  * @category Validation Tests
  */
-export function email(
-  message: ValidatorMessage<string>,
-): ValidatorTest<string> {
+export function email(message: ValidatorMessage<string>): Validator<string> {
   return matches(emailPattern, message);
 }
 
@@ -128,7 +132,7 @@ export function email(
  * @param message Error message
  * @category Validation Tests
  */
-export function uuid(message: ValidatorMessage<string>): ValidatorTest<string> {
+export function uuid(message: ValidatorMessage<string>): Validator<string> {
   return matches(uuidPattern, message);
 }
 
@@ -142,7 +146,7 @@ export function uuid(message: ValidatorMessage<string>): ValidatorTest<string> {
 export function url(
   message: ValidatorMessage<string>,
   protocols?: string[],
-): ValidatorTest<string> {
+): Validator<string> {
   return createValidatorTest(
     (value) => {
       try {

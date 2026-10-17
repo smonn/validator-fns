@@ -3,7 +3,7 @@ import type {
   ConfigBase,
   ValidatorMessage,
   ValidatorMessageParameters,
-  ValidatorTest,
+  Validator,
 } from './shared.js';
 import { parseDate } from './parse-date.js';
 
@@ -12,6 +12,7 @@ import { parseDate } from './parse-date.js';
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function applyDateConfig(
   value: unknown,
@@ -30,11 +31,14 @@ export function applyDateConfig(
   return parsedValue;
 }
 
+/** @deprecated v3 removes this, with no replacement. */
 export type SharedDateValueType = Date | string | number;
 
 export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
+  /** @deprecated v3 removes this. Use `min` instead. */
   limit: Date | null | undefined;
+  /** @deprecated v3 removes this, with the `exclusive` argument. */
   exclusive?: boolean | undefined;
 }
 
@@ -42,14 +46,31 @@ export interface MinDateValidatorMessageParameters extends ValidatorMessageParam
  * Ensures a date value is on or after a date.
  * @param limit Minimum date
  * @param message Error message
- * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function minDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
+): Validator<Date, null>;
+/**
+ * Ensures a date value is on or after a date.
+ * @param limit Minimum date
+ * @param message Error message
+ * @param exclusive Makes comparison exclusive instead of inclusive
+ * @category Validation Tests
+ * @deprecated v3 removes `exclusive`. In v3, use `check()` instead, such as
+ * `check((d) => d > limit, message)`.
+ */
+export function minDate(
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
   exclusive?: boolean,
-): ValidatorTest<Date, null> {
+): Validator<Date, null>;
+export function minDate(
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
+  exclusive?: boolean,
+): Validator<Date, null> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value) =>
@@ -70,7 +91,9 @@ export function minDate(
 
 export interface MaxDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   max: Date | null | undefined;
+  /** @deprecated v3 removes this. Use `max` instead. */
   limit: Date | null | undefined;
+  /** @deprecated v3 removes this, with the `exclusive` argument. */
   exclusive?: boolean | undefined;
 }
 
@@ -78,14 +101,31 @@ export interface MaxDateValidatorMessageParameters extends ValidatorMessageParam
  * Ensures a date value is on or before a date.
  * @param limit Maximum date
  * @param message Error message
- * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function maxDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
+): Validator<Date>;
+/**
+ * Ensures a date value is on or before a date.
+ * @param limit Maximum date
+ * @param message Error message
+ * @param exclusive Makes comparison exclusive instead of inclusive
+ * @category Validation Tests
+ * @deprecated v3 removes `exclusive`. In v3, use `check()` instead, such as
+ * `check((d) => d < limit, message)`.
+ */
+export function maxDate(
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
   exclusive?: boolean,
-): ValidatorTest<Date> {
+): Validator<Date>;
+export function maxDate(
+  limit: SharedDateValueType,
+  message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
+  exclusive?: boolean,
+): Validator<Date> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value) =>

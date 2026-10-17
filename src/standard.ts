@@ -1,4 +1,4 @@
-import type { ValidatorTest } from './shared.js';
+import type { Validator } from './shared.js';
 import type { StandardSchemaV1 } from './standard-schema.js';
 
 /** @internal */
@@ -40,10 +40,12 @@ function collectIssues(
  * new validator; the one passed in is unchanged. `validate` always returns a
  * promise, since every validator here is async.
  * @category Helpers
+ * @deprecated v3 removes this. In v3, built-in validators are Standard Schemas,
+ * and `createValidator(fn)` makes custom ones.
  */
 export function standard<T, E>(
-  validator: ValidatorTest<T, E>,
-): ValidatorTest<T, E> & StandardSchemaV1<unknown, T | null | undefined> {
+  validator: Validator<T, E>,
+): Validator<T, E> & StandardSchemaV1<unknown, T | null | undefined> {
   const validate = async (
     value: unknown,
   ): Promise<StandardSchemaV1.Result<T | null | undefined>> => {

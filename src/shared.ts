@@ -1,4 +1,9 @@
-export type ValidResult<T> = {
+/**
+ * A valid result.
+ * @typeParam T The value type
+ * @category Types
+ */
+export type Valid<T> = {
   /**
    * True if the original value is valid according to all validation tests
    * @deprecated Use `state` instead.
@@ -12,7 +17,12 @@ export type ValidResult<T> = {
   field?: string | undefined;
 };
 
-export type InvalidResult<E> = {
+/**
+ * A failed result.
+ * @typeParam E The error type
+ * @category Types
+ */
+export type Failure<E> = {
   /**
    * True if the original value is valid according to all validation tests.
    * @deprecated Use `state` instead.
@@ -33,42 +43,67 @@ export type InvalidResult<E> = {
 /**
  * The result of a validation.
  * @typeParam T The value type
+ * @typeParam E The error type
  * @category Types
  */
-export type ValidatorResult<T = any, E = any> =
-  | ValidResult<T>
-  | InvalidResult<E>;
+export type Result<T = any, E = any> = Valid<T> | Failure<E>;
 
 /**
- * Validation test function.
+ * Validator function.
  * @typeParam T The value type
+ * @typeParam E The error type
  * @category Types
  */
-export type ValidatorTest<T = any, E = any> = (
+export type Validator<T = any, E = any> = (
   value?: unknown,
   field?: string,
-) => Promise<ValidatorResult<T, E>>;
+) => Promise<Result<T, E>>;
 
 /**
- * Extracts the generic error type from a ValidatorTest.
- * @typeParam T a ValidatorTest
  * @category Types
+ * @deprecated v3 removes this name. Use `Valid` instead.
  */
-export type ExtractError<T extends ValidatorTest> =
-  T extends ValidatorTest<any, infer E> ? E : unknown;
+export type ValidResult<T> = Valid<T>;
 
 /**
- * Extracts the generic value type from a ValidatorTest.
- * @typeParam T a ValidatorTest
+ * @category Types
+ * @deprecated v3 removes this name. Use `Failure` instead.
+ */
+export type InvalidResult<E> = Failure<E>;
+
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Result` instead.
+ */
+export type ValidatorResult<T = any, E = any> = Result<T, E>;
+
+/**
+ * @category Types
+ * @deprecated v3 removes this name. Use `Validator` instead.
+ */
+export type ValidatorTest<T = any, E = any> = Validator<T, E>;
+
+/**
+ * Extracts the generic error type from a Validator.
+ * @typeParam T a Validator
  * @category Types
  */
-export type ExtractValue<T extends ValidatorTest> =
-  T extends ValidatorTest<infer V> ? V : unknown;
+export type ExtractError<T extends Validator> =
+  T extends Validator<any, infer E> ? E : unknown;
+
+/**
+ * Extracts the generic value type from a Validator.
+ * @typeParam T a Validator
+ * @category Types
+ */
+export type ExtractValue<T extends Validator> =
+  T extends Validator<infer V> ? V : unknown;
 
 /**
  * Make a deep partial type.
  * @typeParam T any object type
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
@@ -78,19 +113,25 @@ export type DeepPartial<T> = {
  * Validation factory function.
  * @typeParam C The configuration type
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export type ValidatorFactory<C, T, E> = (
-  config?: Partial<C> | ValidatorTest,
-  ...tests: ValidatorTest[]
-) => ValidatorTest<T, E>;
+  config?: Partial<C> | Validator,
+  ...tests: Validator[]
+) => Validator<T, E>;
 
 /**
  * Base configuration type.
  * @typeParam T The target type.
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export interface ConfigBase<T> {
-  /** Parser to convert value into the designated type. */
+  /**
+   * Parser to convert value into the designated type.
+   * @deprecated v3 removes this option. In v3, use
+   * `createTypeValidator(parser)` instead.
+   */
   parser: (value: unknown) => T | null | undefined;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
@@ -114,6 +155,7 @@ export type ValidatorMessage<
 /**
  * Simple check for objects.
  * @param value Value to test
+ * @deprecated v3 removes this. Use a plain check of your own instead.
  */
 export function isObject(value: unknown): boolean {
   return Object.prototype.toString.call(value) === '[object Object]';
@@ -123,6 +165,7 @@ export function isObject(value: unknown): boolean {
  * Safe hasOwnProperty check
  * @param object Object to check
  * @param property Property to look for
+ * @deprecated v3 removes this. Use `Object.hasOwn()` instead.
  */
 export function hasOwnProperty(
   object: unknown,
@@ -148,6 +191,8 @@ const formatPattern = /{(\w+)}/g;
  * @param template Message template as string or function
  * @param parameters Params to inject into template
  * @category Helpers
+ * @deprecated v3 removes this. `invalid()` and `createValidatorTest()` format
+ * messages.
  */
 export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
   template: ValidatorMessage<T, P>,
@@ -172,7 +217,7 @@ export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
 export async function valid<T, E = never>(result: {
   value: T | null | undefined;
   field: string | undefined;
-}): Promise<ValidatorResult<T, E>> {
+}): Promise<Result<T, E>> {
   return validResult(result);
 }
 
@@ -187,7 +232,7 @@ export function validResult<T, E = never>({
 }: {
   value: T | null | undefined;
   field: string | undefined;
-}): ValidatorResult<T, E> {
+}): Result<T, E> {
   return {
     isValid: true,
     state: 'valid',
@@ -216,7 +261,7 @@ export async function invalid<
   field: string | undefined;
   errors?: E | undefined;
   extras?: Omit<P, 'field' | 'value'> | undefined;
-}): Promise<ValidatorResult<T, E>> {
+}): Promise<Result<T, E>> {
   return invalidResult(result);
 }
 
@@ -241,7 +286,7 @@ export function invalidResult<
   field: string | undefined;
   errors?: E | undefined;
   extras?: Omit<P, 'field' | 'value'> | undefined;
-}): ValidatorResult<T, E> {
+}): Result<T, E> {
   return {
     isValid: false,
     state: 'invalid',

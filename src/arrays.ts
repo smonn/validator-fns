@@ -3,12 +3,13 @@ import {
   isIterable,
   valid,
   type ConfigBase,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /**
  * Invalid validation result for an item in the array
  * @category Types
+ * @deprecated v3 removes this, with no replacement.
  */
 export type ArrayItemValidatorResult<E = unknown> = null | string | E;
 
@@ -22,6 +23,7 @@ export type ArrayConfig = ConfigBase<unknown[]>;
  * Parses a value into an array.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function parseArray(value: unknown): unknown[] | null | undefined {
   if (Array.isArray(value)) {
@@ -45,6 +47,7 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- removing T breaks callers that pass a type argument; #588 removes it in v3
 export function applyArrayConfig<T>(
@@ -72,7 +75,7 @@ export function applyArrayConfig<T>(
  * @internal
  */
 async function findArrayInvalidResult(
-  tests: ValidatorTest[],
+  tests: Validator[],
   arrayValue: unknown[] | null | undefined,
   field: string | undefined,
 ) {
@@ -97,7 +100,7 @@ async function findArrayInvalidResult(
  * @internal
  */
 async function validateItems(
-  validateItem: ValidatorTest | undefined,
+  validateItem: Validator | undefined,
   arrayValue: unknown[] | null | undefined,
   field: string | undefined,
 ) {
@@ -134,9 +137,9 @@ async function validateItems(
  * @category Type Validators
  */
 export function array<T, E>(
-  config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
-  ...tests: ValidatorTest[]
-): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
+  config?: Partial<ArrayConfig> | Validator<T, E>,
+  ...tests: Validator[]
+): Validator<T[], string | ArrayItemValidatorResult<E>[]> {
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
     parser: parseArray,

@@ -2,7 +2,7 @@ import { createValidatorTest } from './factories.js';
 import type {
   ValidatorMessage,
   ValidatorMessageParameters,
-  ValidatorTest,
+  Validator,
 } from './shared.js';
 
 /**
@@ -10,11 +10,13 @@ import type {
  * @param message Error message
  * @param nullable Allow null values
  * @category Validation Tests
+ * @deprecated v3 removes this. v3 validators are required by default; wrap the
+ * others in `optional()`.
  */
 export function required<T, P extends ValidatorMessageParameters<T>>(
   message: ValidatorMessage<T, P>,
   nullable?: boolean,
-): ValidatorTest<T> {
+): Validator<T> {
   return createValidatorTest(
     (value) =>
       (nullable && value === null) ||
@@ -42,7 +44,7 @@ export interface OneOfValidatorMessageParameters<
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
   message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
-): ValidatorTest<T> {
+): Validator<T> {
   return createValidatorTest(
     (value) =>
       value === undefined ||

@@ -16,6 +16,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
   - [Validation types](#validation-types)
   - [Validation tests](#validation-tests)
   - [Custom validation](#custom-validation)
+  - [Deprecations](#deprecations)
 - [Supported environments](#supported-environments)
 
 <!-- tocstop -->
@@ -176,6 +177,8 @@ All validation tests yield one of two results: `valid` and `invalid`. Both are o
 | `errors`      | any     | Only if `state` is `invalid` and using the `object` or `array` validators. |
 | ~~`isValid`~~ | boolean | Deprecated. Use `state` instead.                                           |
 
+In TypeScript, a result is a `Result`: either `Valid` or `Failure`. A validator is a `Validator`. The older names `ValidatorResult`, `ValidResult`, `InvalidResult` and `ValidatorTest` are deprecated.
+
 ### Validation error message
 
 The `message` argument in the validation tests must be a static string, a template string, or a function returning a string.
@@ -217,10 +220,10 @@ Where valid entries are represented as `null` and invalid entries with the error
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                             |
-| :-------- | :------- | :-------------------------------------------------------------------------------------- |
-| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string.                     |
+| option       | type     | description                                                                             |
+| :----------- | :------- | :-------------------------------------------------------------------------------------- |
+| `default`    | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
+| ~~`parser`~~ | function | Deprecated. v3 removes it. In v3, use `createTypeValidator(parser)` instead.            |
 
 </details>
 
@@ -232,10 +235,10 @@ Supported validation tests: `oneOf` and `required`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                          |
-| :-------- | :------- | :------------------------------------------------------------------- |
-| `default` | boolean  | Optional. Value used if the parser returns `undefined` or `null`.    |
-| `parser`  | function | Optional. Used to customize how a value is converted into a boolean. |
+| option       | type     | description                                                                  |
+| :----------- | :------- | :--------------------------------------------------------------------------- |
+| `default`    | boolean  | Optional. Value used if the parser returns `undefined` or `null`.            |
+| ~~`parser`~~ | function | Deprecated. v3 removes it. In v3, use `createTypeValidator(parser)` instead. |
 
 </details>
 
@@ -247,10 +250,10 @@ Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                         |
-| :-------- | :------- | :---------------------------------------------------------------------------------- |
-| `default` | date     | Optional. Value used if the parser returns `undefined`, `null`, or an invalid date. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a date.                   |
+| option       | type     | description                                                                         |
+| :----------- | :------- | :---------------------------------------------------------------------------------- |
+| `default`    | date     | Optional. Value used if the parser returns `undefined`, `null`, or an invalid date. |
+| ~~`parser`~~ | function | Deprecated. v3 removes it. In v3, use `createTypeValidator(parser)` instead.        |
 
 The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
 
@@ -264,11 +267,11 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `requ
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                                |
-| :-------- | :------- | :----------------------------------------------------------------------------------------- |
-| `round`   | string   | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor`                        |
-| `default` | number   | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a number.                        |
+| option       | type     | description                                                                                                                                        |
+| :----------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~`round`~~  | string   | Deprecated. Rounding method to use, one of `nearest`, `ceil`, `floor`. v3 removes it. Use `integer()` instead, or, in v3, `transform(Math.round)`. |
+| `default`    | number   | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`.                                                         |
+| ~~`parser`~~ | function | Deprecated. v3 removes it. In v3, use `createTypeValidator(parser)` instead.                                                                       |
 
 </details>
 
@@ -305,11 +308,11 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                              |
-| :-------- | :------- | :--------------------------------------------------------------------------------------- |
-| `trim`    | boolean  | Optional. If true, clears whitespace from the start and end of the string.               |
-| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty string `''`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string.                      |
+| option       | type     | description                                                                                                                                  |
+| :----------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~`trim`~~   | boolean  | Deprecated. If true, clears whitespace from the start and end of the string. v3 removes it. In v3, use `transform((s) => s.trim())` instead. |
+| `default`    | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty string `''`.                                                     |
+| ~~`parser`~~ | function | Deprecated. v3 removes it. In v3, use `createTypeValidator(parser)` instead.                                                                 |
 
 </details>
 
@@ -359,7 +362,7 @@ Ensures the value follows an email address format. Wraps the `matches` validatio
 
 #### exact(limit, message)
 
-Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. `limit` (aliased as `exact`) and `amount` (the string length, array length, or numeric value) are provided to the message.
+Ensures value is of an exact `amount`. Works with strings, arrays, and numbers. `exact` (also as the deprecated `limit`) and `amount` (the string length, array length, or numeric value) are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -397,57 +400,57 @@ Ensures value matches the specified pattern. Works with strings. `pattern` is pr
 
 #### max(limit, message, exclusive?)
 
-Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
+Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `max` (also as the deprecated `limit`), `amount` (string length, array length, or numeric value), and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type               | description                                                                      |
-| :---------- | :----------------- | :------------------------------------------------------------------------------- |
-| `limit`     | number             | The maximum string length, array length, or numeric value allowed.               |
-| `message`   | string or function | The validation error message.                                                    |
-| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name            | type               | description                                                                                                                     |
+| :-------------- | :----------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`         | number             | The maximum string length, array length, or numeric value allowed.                                                              |
+| `message`       | string or function | The validation error message.                                                                                                   |
+| ~~`exclusive`~~ | boolean            | Deprecated. If true, makes comparison exclusive instead of the default, inclusive. v3 removes it. In v3, use `check()` instead. |
 
 </details>
 
 #### maxDate(limit, message, exclusive?)
 
-Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) and `exclusive` are provided to the message.
+Ensures value is on or before the specified date. Works with dates. `max` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type                    | description                                                                      |
-| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
-| `limit`     | date, number, or string | The maximum date allowed. Uses the internal date parser.                         |
-| `message`   | string or function      | The validation error message.                                                    |
-| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name            | type                    | description                                                                                                                     |
+| :-------------- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`         | date, number, or string | The maximum date allowed. Uses the internal date parser.                                                                        |
+| `message`       | string or function      | The validation error message.                                                                                                   |
+| ~~`exclusive`~~ | boolean                 | Deprecated. If true, makes comparison exclusive instead of the default, inclusive. v3 removes it. In v3, use `check()` instead. |
 
 </details>
 
 #### min(limit, message, exclusive?)
 
-Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
+Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `min` (also as the deprecated `limit`), `amount` (string length, array length, or numeric value), and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type               | description                                                                      |
-| :---------- | :----------------- | :------------------------------------------------------------------------------- |
-| `limit`     | number             | The minimum string length, array length, or numeric value allowed.               |
-| `message`   | string or function | The validation error message.                                                    |
-| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name            | type               | description                                                                                                                     |
+| :-------------- | :----------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`         | number             | The minimum string length, array length, or numeric value allowed.                                                              |
+| `message`       | string or function | The validation error message.                                                                                                   |
+| ~~`exclusive`~~ | boolean            | Deprecated. If true, makes comparison exclusive instead of the default, inclusive. v3 removes it. In v3, use `check()` instead. |
 
 </details>
 
 #### minDate(limit, message, exclusive?)
 
-Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) and `exclusive` are provided to the message.
+Ensures value is on or after the specified date. Works with dates. `min` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type                    | description                                                                      |
-| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
-| `limit`     | date, number, or string | The minimum date allowed. Uses the internal date parser.                         |
-| `message`   | string or function      | The validation error message.                                                    |
-| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name            | type                    | description                                                                                                                     |
+| :-------------- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`         | date, number, or string | The minimum date allowed. Uses the internal date parser.                                                                        |
+| `message`       | string or function      | The validation error message.                                                                                                   |
+| ~~`exclusive`~~ | boolean                 | Deprecated. If true, makes comparison exclusive instead of the default, inclusive. v3 removes it. In v3, use `check()` instead. |
 
 </details>
 
@@ -465,6 +468,8 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 </details>
 
 #### required(message, nullable?)
+
+> **Deprecated.** v3 removes `required()`: v3 validators are required by default, and `optional()` wraps the others.
 
 Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date. Works with all types.
 
@@ -516,9 +521,13 @@ Custom validation types and validators can be created and used as needed. There 
 
 #### formatMessage(template, params)
 
+> **Deprecated.** v3 removes `formatMessage()`. `invalid()` and `createValidatorTest()` format messages.
+
 Formats a string for use as an error message. `template` can be a plain string with `{keys}` replaced by the `params` or a function that returns a string and accepts `params` as a parameter.
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
+
+> **Deprecated.** v3 removes `createTypeValidatorTest()`, `ConfigBase` and the `parser` option. In v3, use `createTypeValidator(parser)` instead, with `coerce.number()` in place of `parseNumber`.
 
 Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
 
@@ -565,6 +574,8 @@ Formats a failed validation result. `message` is the same as the `formatMessage`
 
 #### standard(validator)
 
+> **Deprecated.** v3 removes `standard()`. In v3, built-in validators are Standard Schemas, and `createValidator(fn)` makes custom ones.
+
 Adds the [Standard Schema][standard-schema] interface to a validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged.
 
 ```ts
@@ -578,6 +589,27 @@ await schema['~standard'].validate({ email: 'nope' });
 - A valid result gives `{ value }`, the parsed value. Its type is the validator's value type or `null` or `undefined`, as in a valid result.
 - An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
 - An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
+
+### Deprecations
+
+Everything that v3 removes is deprecated in 2.x. TypeScript-aware editors cross out deprecated functions, types and arguments where you use them, and show the replacement on hover. Replacements marked "in v3" exist only in v3.
+
+| Deprecated                                                                                                            | Replacement                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `applyArrayConfig`, `applyBooleanConfig`, `applyDateConfig`, `applyNumberConfig`, `applyStringConfig`                 | None                                                                                         |
+| `parseArray`, `parseBoolean`, `parseNumber`, `parseString`, `parseDate`, `invalidDate`                                | In v3, `coerce.number()`, `coerce.boolean()` and `coerce.date()` for text input              |
+| `hasOwnProperty`, `isObject`                                                                                          | `Object.hasOwn()`, or a plain check of your own                                              |
+| `formatMessage`                                                                                                       | `invalid()` and `createValidatorTest()` format messages                                      |
+| `createTypeValidatorTest`, the `parser` option                                                                        | In v3, `createTypeValidator(parser)`                                                         |
+| `DeepPartial`, `ValidatorFactory`, `SharedValueType`, `SharedDateValueType`, `ConfigBase`, `ArrayItemValidatorResult` | None                                                                                         |
+| `required()`                                                                                                          | In v3, validators are required by default, and `optional()` wraps the others                 |
+| `standard()`                                                                                                          | In v3, built-in validators are Standard Schemas, and `createValidator(fn)` makes custom ones |
+| The `round` option                                                                                                    | `integer()`, or in v3, `transform(Math.round)`                                               |
+| The `exclusive` argument of `min`, `max`, `minDate` and `maxDate`, and its message parameter                          | In v3, `check()`, such as `check((n) => n > 0, message)`                                     |
+| The `trim` option                                                                                                     | In v3, `transform((s) => s.trim())`                                                          |
+| The `limit` message parameter                                                                                         | `min`, `max` or `exact`                                                                      |
+| `ValidatorResult`, `ValidResult`, `InvalidResult`                                                                     | `Result`, `Valid`, `Failure`                                                                 |
+| `ValidatorTest`                                                                                                       | `Validator`                                                                                  |
 
 ## Supported environments
 
