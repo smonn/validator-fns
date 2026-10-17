@@ -20,10 +20,11 @@ function parseTimezone(timezone: string): number {
     return 0;
   }
 
-  const [, sign, hour = '0', minute = '0'] = parts;
+  // The pattern's groups aren't optional, so a match always has the sign,
+  // hour, and minute.
+  const [, sign, hour, minute] = parts;
   const multiplier = sign === '-' ? -1 : 1;
-  const hoursInMinutes = Number.parseInt(hour, 10) * 60;
-  const offset = hoursInMinutes + Number.parseInt(minute, 10);
+  const offset = Number(hour) * 60 + Number(minute);
 
   return multiplier * offset;
 }
@@ -33,8 +34,8 @@ const BASE = 10;
 const dateParts = [
   // Skip
   () => 0,
-  // Year
-  (part = '0') => Number.parseInt(part, BASE),
+  // Year, which the date pattern always captures
+  (part?: string) => Number(part),
   // Month
   (part = '1') => Number.parseInt(part, BASE) - 1,
   // Day
