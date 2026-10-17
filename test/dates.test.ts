@@ -13,7 +13,6 @@ test('parseDate', () => {
   const now = new Date();
   assert.deepEqual(parseDate(now), now);
   assert.deepEqual(parseDate(0), new Date(0));
-  assert.deepEqual(parseDate({}), invalidDate);
   assert.deepEqual(parseDate(''), invalidDate);
   assert.deepEqual(parseDate('2020'), new Date(2020, 0));
   assert.deepEqual(parseDate('2020-13'), new Date(2021, 0));
@@ -226,4 +225,29 @@ test('date() fails an unreadable string apart from a missing one', async () => {
     state: 'valid',
     value: invalidDate,
   });
+});
+
+test('parseDate throws for input that is not a date, number, or string', () => {
+  for (const value of [true, false, {}, [2020], Symbol('s'), 1n, () => 0]) {
+    assert.throws(
+      () => parseDate(value),
+      TypeError,
+      'Failed to parse value to date.',
+      typeof value,
+    );
+  }
+});
+
+test('date() fails input that is not a date, number, or string', async () => {
+  for (const value of [true, {}, [2020]]) {
+    const parseError: InvalidResult<string> = {
+      state: 'invalid',
+      message: 'Failed to parse value to date.',
+      value,
+      field: 'start',
+      errors: undefined,
+    };
+    assert.deepEqual(await date()(value, 'start'), parseError);
+    assert.deepEqual(await optional(date())(value, 'start'), parseError);
+  }
 });
