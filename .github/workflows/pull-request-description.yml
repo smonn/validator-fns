@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # Lists the open pull requests that share this head commit.
+  pull-requests: read
 
 jobs:
   decisions:
@@ -24,9 +26,23 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # A status check attaches to a commit, so this result shows on every
+      # open pull request with the same head commit (#611). List them so the
+      # check covers all of their descriptions. A failed request fails the job.
+      - name: List open pull requests with this head commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100"
+          --jq '.[] | select(.head.sha == env.HEAD_SHA) | {number, body}'
+          > "$RUNNER_TEMP/same-head-prs.jsonl"
+
       # The description goes through an environment variable, never into the
       # script text, so its content can't run as shell.
       - name: Check for open decisions
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SAME_HEAD_PRS: ${{ runner.temp }}/same-head-prs.jsonl
         run: node scripts/check-decisions.mjs
