@@ -1,4 +1,4 @@
-import { invalidDetail } from './invalid-detail.js';
+import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import {
   invalid,
   isIterable,
@@ -65,28 +65,6 @@ export function applyArrayConfig(
 }
 
 /**
- * Runs the tests that target the array itself, stopping at the first failure.
- * @param tests Array-level tests
- * @param arrayValue Parsed array
- * @param field Field name
- * @internal
- */
-async function findArrayInvalidResult(
-  tests: ValidatorTest[],
-  arrayValue: unknown[] | null | undefined,
-  field: string | undefined,
-) {
-  for (const validatorTest of tests) {
-    const result = await validatorTest(arrayValue, field);
-    if (result.state === 'invalid') {
-      return result;
-    }
-  }
-
-  return undefined;
-}
-
-/**
  * Runs the item test on every item, collecting each item's parsed value, and
  * `null` for valid items and the message or errors for invalid ones. Without
  * an array or an item test, there is nothing to check, and the values are the
@@ -144,7 +122,7 @@ export function array<T, E>(
     const arrayValue = applyArrayConfig(finalConfig, value);
     const [validateItem, ...arrayTests] = allTests;
 
-    const arrayInvalidResult = await findArrayInvalidResult(
+    const arrayInvalidResult = await findInvalidResult(
       arrayTests,
       arrayValue,
       field,
