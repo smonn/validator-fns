@@ -482,6 +482,7 @@ Custom validation types and validators can be created and used as needed. There 
 - [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
 - [valid({ value, field })](#valid-value-field-)
 - [invalid({ message, value, field, errors, extras })](#invalid-message-value-field-errors-extras-)
+- [standard(validator)](#standardvalidator)
 
 #### formatMessage(template, params)
 
@@ -532,6 +533,22 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
 
+#### standard(validator)
+
+Adds the [Standard Schema][standard-schema] interface to a validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged.
+
+```ts
+const schema = standard(object({ email: string(email('Must be an email.')) }));
+
+await schema['~standard'].validate({ email: 'nope' });
+// { issues: [{ message: 'Must be an email.', path: ['email'] }] }
+```
+
+- `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
+- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type or `null` or `undefined`, as in a valid result.
+- An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
+- An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
+
 ## Supported environments
 
 - Node.js 18 and later.
@@ -550,6 +567,7 @@ To support older environments, transpile or polyfill these:
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: #documentation
 [github]: https://github.com/smonn/validator-fns
+[standard-schema]: https://standardschema.dev
 [yup]: https://github.com/jquense/yup
 [bcd]: https://github.com/mdn/browser-compat-data
 [date-fns]: https://date-fns.org

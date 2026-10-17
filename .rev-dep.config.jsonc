@@ -50,6 +50,17 @@
           "allow": ["src/shared.ts", "src/factories.ts", "src/parse-date.ts"],
         },
         {
+          // Types copied from @standard-schema/spec, with no imports.
+          "name": "standard-schema",
+          "pattern": "src/standard-schema.ts",
+          "deny": ["src/**"],
+        },
+        {
+          "name": "standard",
+          "pattern": "src/standard.ts",
+          "allow": ["src/shared.ts", "src/standard-schema.ts"],
+        },
+        {
           "name": "entry",
           "pattern": "src/index.ts",
           "allow": ["src/*.ts"],
