@@ -46,11 +46,11 @@ Every pull request adds a changeset, a small file in `.changeset/` that records 
 
 The maintainer releases. When a pull request with a changeset merges, CI opens or updates a Version Packages pull request that bumps `version` and writes `CHANGELOG.md`. Merging that pull request runs `pnpm check`, publishes to npm through trusted publishing, and creates the git tag and GitHub release.
 
-CI doesn't run on the Version Packages pull request by itself, because GitHub Actions opens and updates it. To release:
+GitHub Actions opens and updates the Version Packages pull request, so its workflows wait for a maintainer's approval before they run. To release:
 
-1. Close and reopen the Version Packages pull request. Reopening is your event, so CI runs.
+1. On the Version Packages pull request, select "Approve workflows to run".
 2. Wait for the checks to pass.
-3. Merge it right away. If another pull request merges first, the action updates the Version Packages pull request without running CI, so close and reopen it again.
+3. Merge it right away. If another pull request merges first, the action pushes a new commit to the Version Packages pull request, and its workflows wait for approval again.
 
 If `pnpm check` fails in that release run, `main` has the version bump but nothing is published. Fix the failure in a follow-up pull request. If the fix changes the library, give it a patch changeset that says the previous version failed to publish; the next Version Packages pull request releases the following patch version, and the failed version is never published. Otherwise give it an empty changeset, merge it, and run the Continuous Deployment workflow by hand on `main` (Actions, Continuous Deployment, Run workflow). The manual run publishes the version in `package.json` if it isn't on npm, and does nothing if it is. It fails while a changeset with a version bump is pending, because those changes belong in the next version.
 
@@ -59,6 +59,7 @@ If `pnpm check` fails in that release run, `main` has the version bump but nothi
 The next major version is built on the `next` branch in Changesets pre mode, so `main` keeps releasing patches and features for the current one.
 
 - Issues in the next major's milestone branch from `next`, and their pull requests target it. Add changesets as usual. Locally, set `GITHUB_BASE_REF=next` so the changeset check compares against `next`.
+- Merge pull requests into `next` with a rebase, as on `main`. The syncs from `main` below are the exception: they need a merge commit, which holds their conflict resolutions.
 - Merging into `next` opens or updates a Version Packages (next) pull request, which releases the same way as `main`'s. It publishes a prerelease such as `3.0.0-next.0` under the `next` dist-tag (`npm install validator-fns@next`) and creates a GitHub prerelease. The manual run for a stranded version works on `next` too.
 
 After each release from `main`, merge `main` into `next`:
