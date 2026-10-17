@@ -446,16 +446,14 @@ Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or
 
 #### url(message, protocols?)
 
-Ensures value is a valid URL. Works with strings. `protocols` is provided to the message.
-
-> **Warning:** without `protocols`, any URL that the `URL` constructor parses is valid, including `javascript:` and `data:` URLs, which can run script when used as a link. Pass `['http:', 'https:']` for values you render as links. The default is planned to change to `http:` and `https:` in v3 ([#521](https://github.com/smonn/validator-fns/issues/521)).
+Ensures value is a valid URL with an allowed protocol. Works with strings. `protocols` defaults to `['http:', 'https:']`, so `javascript:` and `data:` URLs, which can run script when used as a link, are invalid. A list replaces the default, so `['mailto:']` allows only `mailto:`. `protocols` is provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type               | description                                              |
-| :---------- | :----------------- | :------------------------------------------------------- |
-| `message`   | string or function | The validation error message.                            |
-| `protocols` | array              | List of allowed URL protocols, e.g. `https:`, `mailto:`. |
+| name        | type               | description                                                                        |
+| :---------- | :----------------- | :--------------------------------------------------------------------------------- |
+| `message`   | string or function | The validation error message.                                                      |
+| `protocols` | array              | Allowed URL protocols, e.g. `https:`, `mailto:`. Defaults to `http:` and `https:`. |
 
 </details>
 

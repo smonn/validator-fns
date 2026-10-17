@@ -178,6 +178,36 @@ test('url', async () => {
   });
 });
 
+test('url allows only http: and https: by default', async () => {
+  const validate = url('invalid url');
+  for (const value of ['http://example.com', 'https://example.com/path']) {
+    assert.equal((await validate(value)).state, 'valid', value);
+  }
+  for (const value of [
+    'javascript:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    'mailto:name@example.com',
+    'ftp://example.com',
+  ]) {
+    assert.equal((await validate(value)).state, 'invalid', value);
+  }
+});
+
+test('url protocols replace the default', async () => {
+  const validate = url('invalid url', ['mailto:']);
+  assert.equal((await validate('mailto:name@example.com')).state, 'valid');
+  assert.equal((await validate('https://example.com')).state, 'invalid');
+});
+
+test('url passes the default protocols to the message', async () => {
+  const validate = url('Use {protocols}.');
+  const result = await validate('mailto:name@example.com');
+  assert.equal(
+    result.state === 'invalid' && result.message,
+    'Use http:,https:.',
+  );
+});
+
 test('string', async () => {
   const validate = string(
     { trim: true },
