@@ -203,6 +203,8 @@ A **validation type** is expected to parse and prepare the value for the provide
 
 Casts value to an array, `null` or `undefined` if using the default date parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
 
+A valid result's `value` holds each item as `itemTest` returned it, so `array(number())` turns `['1', '2.5']` into `[1, 2.5]`, and `array(string({ trim: true }))` trims each item.
+
 Supported validation tests: `max`, `min`, and `required`.
 
 For invalid results, errors are in the `errors` property. It is an array of type:
