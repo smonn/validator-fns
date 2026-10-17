@@ -55,7 +55,7 @@ A test on a whole collection that runs only once every child is valid.
 _Avoid_: object-level test, array-level test
 
 **Field**:
-The name or path of the value under validation, such as `email` or `tags[0]`.
+The full path of the value under validation, starting at the caller's field, such as `email` or `user.tags[0].name`.
 _Avoid_: key, name
 
 ## Results
@@ -73,7 +73,7 @@ Input a parser can't turn into its type. It's a failure with code `type`, never 
 _Avoid_: parse error, cast failure
 
 **Errors tree**:
-The failures of a collection's children, nested by property and index.
+The failures of a collection's children, each as the child returned it, nested by property and index.
 _Avoid_: errors object, details
 
 **Issue**:
@@ -105,3 +105,7 @@ _Avoid_: error, label
 **Translation**:
 A map from codes to messages, applied to a whole validator tree, such as the English one at `validator-fns/en`.
 _Avoid_: locale (except for the subpath name), i18n, error map
+
+**Message tree**:
+A failure's messages, nested like its errors tree, in the shape that form libraries such as Formik read.
+_Avoid_: error messages, Formik errors
