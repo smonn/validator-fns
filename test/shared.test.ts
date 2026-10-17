@@ -2,6 +2,7 @@ import { assert, test } from 'vitest';
 import {
   exact,
   formatMessage,
+  isObject,
   number,
   oneOf,
   required,
@@ -211,4 +212,24 @@ test('should run custom tests on every call when the same value repeats', async 
   await validate('a');
   await validate('a');
   assert.strictEqual(calls, 2);
+});
+
+test('isObject is true only for objects tagged Object', () => {
+  class Point {
+    x = 1;
+  }
+  for (const value of [{}, Object.create(null), new Point()]) {
+    assert.isTrue(isObject(value));
+  }
+  const others: [unknown, string][] = [
+    [[], 'array'],
+    [null, 'null'],
+    [undefined, 'undefined'],
+    [new Map(), 'Map'],
+    ['x', 'string'],
+    [1, 'number'],
+  ];
+  for (const [value, label] of others) {
+    assert.isFalse(isObject(value), label);
+  }
 });
