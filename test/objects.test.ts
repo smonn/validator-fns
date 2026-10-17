@@ -11,6 +11,7 @@ import {
   object,
   required,
   string,
+  valid,
   type ValidatorTest,
 } from '../src/index.js';
 
@@ -368,4 +369,58 @@ test('should type the check value as the parsed object when used in object()', (
       return true;
     }, 'message'),
   );
+});
+
+test('should start every field validator before any of them finishes', async () => {
+  const started: string[] = [];
+  let startedBeforeFirstFinished: string[] = [];
+  const first: ValidatorTest = async (value, field) => {
+    started.push('first');
+    await Promise.resolve();
+    startedBeforeFirstFinished = [...started];
+    return valid({ value, field });
+  };
+  const second: ValidatorTest = async (value, field) => {
+    started.push('second');
+    return valid({ value, field });
+  };
+  await object({ first, second })({ first: 1, second: 2 });
+  assert.deepEqual(startedBeforeFirstFinished, ['first', 'second']);
+});
+
+/** Resolves after a few microtasks, so it finishes after a field with none. */
+async function afterTicks() {
+  for (let tick = 0; tick < 5; tick++) {
+    await Promise.resolve();
+  }
+}
+
+const slowInvalid: ValidatorTest = async (value, field) => {
+  await afterTicks();
+  return invalid({ message: 'slow', value, field });
+};
+
+const fastInvalid: ValidatorTest = async (value, field) =>
+  invalid({ message: 'fast', value, field });
+
+const slowValid: ValidatorTest = async (value, field) => {
+  await afterTicks();
+  return valid({ value, field });
+};
+
+test('should keep schema key order in value and errors when fields finish out of order', async () => {
+  const result = await object({ slow: slowInvalid, fast: fastInvalid })({
+    slow: 1,
+    fast: 2,
+  });
+  assert.deepEqual(
+    Object.keys(result.state === 'invalid' ? (result.errors ?? {}) : {}),
+    ['slow', 'fast'],
+  );
+
+  const values = await object({ slow: slowValid, fast: string() })({
+    slow: 1,
+    fast: 'x',
+  });
+  assert.deepEqual(Object.keys(values.value ?? {}), ['slow', 'fast']);
 });

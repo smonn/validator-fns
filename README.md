@@ -279,6 +279,8 @@ The only validation type that does not cast the entered value, meaning it does n
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
+The property validators run concurrently: each one starts before any of them finishes, so async validators such as server lookups don't wait for each other. Don't rely on one property's validator finishing before another's starts. The valid value and `errors` keep the schema's key order.
+
 In TypeScript, every field of the valid value is optional and can be `null`, as in `{ name?: string | null }`: a field's validator passes `null` and `undefined` through unless a test such as `required` rejects them.
 
 The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Use [`check`](#checkpath-test-message) to compare fields and put the error on one of them:

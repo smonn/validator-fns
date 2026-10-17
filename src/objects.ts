@@ -84,24 +84,31 @@ export function object<
     const resolvedValues = {} as V;
     let isValid = true;
 
-    for (const key in properties) {
-      if (hasOwnProperty(properties, key)) {
+    // Every field starts before any finishes, and Promise.all keeps the
+    // results in schema order, so value and errors keep the schema's key order.
+    const keys = Object.keys(properties);
+    const results = await Promise.all(
+      keys.map((key) => {
         const validator = properties[key];
         // Only own properties, so a missing key named like an inherited one,
         // such as `constructor`, reads as missing.
         const value: unknown = hasOwnProperty(source, key)
           ? Reflect.get(source, key)
           : undefined;
-        const result = await (typeof validator === 'function'
+        return typeof validator === 'function'
           ? validator(value, key)
-          : invalid({ field: key, message: 'No validator set', value }));
+          : invalid({ field: key, message: 'No validator set', value });
+      }),
+    );
 
-        setOwn(resolvedValues, key, result.value);
+    for (const [index, result] of results.entries()) {
+      // Same length as results, so the key is always there.
+      const key = String(keys[index]);
+      setOwn(resolvedValues, key, result.value);
 
-        if (result.state === 'invalid') {
-          isValid = false;
-          setOwn(errors, key, invalidDetail(result));
-        }
+      if (result.state === 'invalid') {
+        isValid = false;
+        setOwn(errors, key, invalidDetail(result));
       }
     }
 
