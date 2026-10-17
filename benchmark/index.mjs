@@ -107,7 +107,6 @@ const complexValidate = V.object({
     ),
   ),
   favoriteCarMakers: V.array(
-    { default: [] },
     V.string(
       { requiredMessage: 'Car brand is required.' },
       V.oneOf(
@@ -127,6 +126,7 @@ const complexValidate = V.object({
         'Must be a known car brand.',
       ),
     ),
+    { default: [] },
     V.min(2, 'Must pick at least two.'),
     V.max(4, 'Must pick at most four.'),
   ),

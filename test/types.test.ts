@@ -9,6 +9,7 @@ import {
   createValidatorTest,
   date,
   invalid,
+  max,
   min,
   number,
   object,
@@ -145,6 +146,20 @@ test('object() takes a config object or a test as its second argument', () => {
       }, 'message'),
     ),
   ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
+});
+
+test('array() takes its config after the item validator', () => {
+  expectTypeOf(
+    array(string(), { requiredMessage: 'Pick some.' }, max(2, 'max')),
+  ).toEqualTypeOf<
+    TypeValidator<string[], string | ArrayItemValidatorResult<string>[]>
+  >();
+  expectTypeOf(array({ requiredMessage: 'Pick some.' })).toEqualTypeOf<
+    TypeValidator<unknown[], string | ArrayItemValidatorResult[]>
+  >();
+  expectTypeOf(array()).toEqualTypeOf<
+    TypeValidator<unknown[], string | ArrayItemValidatorResult[]>
+  >();
 });
 
 test('array() carries the item value and error types', () => {

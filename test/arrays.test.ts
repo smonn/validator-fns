@@ -14,8 +14,8 @@ import {
 
 test('array', async () => {
   const validate = array(
-    { requiredMessage: 'required' },
     string(min(3, 'min:{min}')),
+    { requiredMessage: 'required' },
     min(1, 'min:{min}'),
   );
   assert.deepEqual(await validate(['foo', 'bar', 'baz']), {
@@ -108,7 +108,7 @@ test('nested array', async () => {
 });
 
 test('array default', async () => {
-  const validate = array({ default: ['hello'] }, string(min(5, 'min:{min}')));
+  const validate = array(string(min(5, 'min:{min}')), { default: ['hello'] });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: ['hello'],
@@ -192,4 +192,36 @@ test('should return the transformed items when the item validator transforms', a
     field: undefined,
     value: ['a', 'b'],
   });
+});
+
+test('array() takes an array test right after the item validator', async () => {
+  const validate = array(string(), max(1, 'max:{max}'), min(1, 'min:{min}'));
+  assert.deepEqual(await validate(['a']), {
+    state: 'valid',
+    value: ['a'],
+    field: undefined,
+  });
+  assert.deepInclude(await validate(['a', 'b']), {
+    state: 'invalid',
+    message: 'max:1',
+  });
+});
+
+test('array() without an item validator takes only a config', async () => {
+  const validate = array({ requiredMessage: 'Pick some.' });
+  assert.deepEqual(await validate(['a', 1]), {
+    state: 'valid',
+    value: ['a', 1],
+    field: undefined,
+  });
+  assert.deepInclude(await validate(null), { message: 'Pick some.' });
+});
+
+test('array() rejects the 2.x order, config before the item validator', () => {
+  // JavaScript callers can still pass it; TypeScript rejects it.
+  assert.throws(
+    () => Reflect.apply(array, undefined, [{ default: [] }, string()]),
+    TypeError,
+    'array(item, config?, ...tests)',
+  );
 });
