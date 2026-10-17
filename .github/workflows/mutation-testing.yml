@@ -2,7 +2,8 @@ name: Mutation Testing
 
 # Mutation testing takes minutes, so it runs on a schedule instead of in
 # pnpm check. It fails when the score drops below thresholds.break in
-# stryker.config.mjs. See CONTRIBUTING.md (Tests).
+# stryker.config.mjs. The maintainer owns it; CONTRIBUTING.md (Tests) has the
+# steps for a failed run.
 
 on:
   schedule:
