@@ -16,6 +16,10 @@ _Avoid_: type, factory
 The part of a type validator that turns unknown input into its type, or reports unreadable input. Any validator can serve as a parser.
 _Avoid_: cast, coercer
 
+**Coercion**:
+Turning input of another type, such as text from a form field, into a type validator's type before its missing check. Blank text becomes missing.
+_Avoid_: cast, preprocess
+
 **Test**:
 A check on a value that has already been parsed, such as `min()` or `check()`. Its valid value is passed to the next test, so a test can also change the value.
 _Avoid_: rule, validation test, ValidationTest
