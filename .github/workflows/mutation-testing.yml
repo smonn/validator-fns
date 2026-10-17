@@ -27,7 +27,7 @@ jobs:
   mutation:
     name: mutation score
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout repo
