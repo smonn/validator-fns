@@ -103,7 +103,6 @@ const validate = object({
     ),
   ),
   favoriteCarMakers: array(
-    { default: [] },
     string(
       { requiredMessage: 'Car brand is required.' },
       oneOf(
@@ -123,6 +122,7 @@ const validate = object({
         'Must be a known car brand.',
       ),
     ),
+    { default: [] },
     min(2, 'Must pick at least two.'),
     max(4, 'Must pick at most four.'),
   ),
@@ -184,7 +184,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    // 3.x
    string({ requiredMessage: 'Enter a name.' }, min(2, 'Too short.'));
    number({ round: 'floor', requiredMessage: 'Enter your age.' });
-   array({ requiredMessage: 'Pick some.' }, string());
+   array(string(), { requiredMessage: 'Pick some.' });
    ```
 
 2. **Wrap each validator that had no `required()` in `optional()`**, or it now rejects a missing value:
@@ -198,8 +198,18 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    ```
 
 3. **Replace `required(message, true)`** (nullable): `optional()` accepts `null`, as well as the other missing values.
-4. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { requiredMessage }, ...tests)`. A missing object now fails with its `requiredMessage` instead of reporting each field as missing; wrap it in `optional()` to accept one.
-5. **Replace `standard()`**: remove it around built-in validators, which are Standard Schemas themselves, and change `standard(fn)` to `createValidator(fn)`:
+4. **Move `array()`'s config after the item validator**: `array(config, item, ...tests)` becomes `array(item, config, ...tests)`, as in `object(schema, config, ...tests)`. `array(config)` without an item validator stays. Passing the config first with an item validator throws a `TypeError`:
+
+   ```js
+   // 2.x
+   array({ default: [] }, string(), min(2, 'Pick two.'));
+
+   // 3.x
+   array(string(), { default: [] }, min(2, 'Pick two.'));
+   ```
+
+5. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { requiredMessage }, ...tests)`. A missing object now fails with its `requiredMessage` instead of reporting each field as missing; wrap it in `optional()` to accept one.
+6. **Replace `standard()`**: remove it around built-in validators, which are Standard Schemas themselves, and change `standard(fn)` to `createValidator(fn)`:
 
    ```js
    // 2.x
@@ -211,7 +221,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    createValidator(async (value, field) => valid({ value, field }));
    ```
 
-6. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
+7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
 
 ## API Reference
 
@@ -272,7 +282,7 @@ In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, and rejects a missing value unless wrapped in [`optional()`](#optionalvalidator). It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
 
-- [array(config?, itemTest, ...tests)](#arrayconfig-itemtest-tests)
+- [array(itemTest?, config?, ...tests)](#arrayitemtest-config-tests)
 - [boolean(config?, ...tests)](#booleanconfig-tests)
 - [date(config?, ...tests)](#dateconfig-tests)
 - [number(config?, ...tests)](#numberconfig-tests)
@@ -281,9 +291,9 @@ A **validation type** is expected to parse and prepare the value for the provide
 
 Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [createValidator(fn)](#createvalidatorfn) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `ValidatorTest<T, E>` with a `~standard` property.
 
-#### array(config?, itemTest, ...tests)
+#### array(itemTest?, config?, ...tests)
 
-Casts value to an array, or keeps `null` or `undefined` if using the default array parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
+Casts value to an array, or keeps `null` or `undefined` if using the default array parser. `itemTest` is the validation type or test to be applied on each value within the array value. `config` is optional and comes after `itemTest`, as `object()`'s does. All remaining `tests` are applied to the array as a whole. Without `itemTest`, `array(config?)` keeps the items as they are and takes no tests.
 
 A valid result's `value` holds each item as `itemTest` returned it, so `array(number())` turns `['1', '2.5']` into `[1, 2.5]`, and `array(string({ trim: true }))` trims each item.
 

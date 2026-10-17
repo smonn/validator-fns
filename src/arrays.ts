@@ -1,4 +1,9 @@
-import { findInvalidResult, invalidDetail } from './invalid-detail.js';
+import {
+  findInvalidResult,
+  keepItems,
+  validateItems,
+  type ValidatedItems,
+} from './invalid-detail.js';
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
@@ -67,54 +72,18 @@ export function applyArrayConfig(
 }
 
 /**
- * Runs the item test on every item, collecting each item's parsed value, and
- * `null` for valid items and the message or errors for invalid ones. Without
- * an item test, there is nothing to check, and the values are the array as
- * given.
- * @param validateItem Item test
- * @param arrayValue Parsed array
- * @param field Field name
+ * Builds the array validator around a function that checks the items.
  * @internal
  */
-async function validateItems(
-  validateItem: ValidatorTest | undefined,
-  arrayValue: unknown[],
-  field: string | undefined,
-) {
-  let isValid = true;
-  const errors: ArrayItemValidatorResult[] = [];
-
-  if (!validateItem) {
-    return { isValid, errors, values: arrayValue };
-  }
-
-  const values: unknown[] = [];
-
-  for (const [index, item] of arrayValue.entries()) {
-    const result = await validateItem(item, `${field || ''}[${index}]`);
-    values.push(result.value);
-
-    if (result.state === 'invalid') {
-      isValid = false;
-      errors.push(invalidDetail(result));
-    } else {
-      errors.push(null);
-    }
-  }
-
-  return { isValid, errors, values };
-}
-
-/**
- * Validates an array. The first passed validator is used to validate individual
- * items. The remaining validators target the array itself.
- * @category Type Validators
- */
-export function array<T, E>(
-  config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
-  ...tests: ValidatorTest[]
+function arrayOf<T, E>(
+  checkItems: (
+    arrayValue: unknown[],
+    field: string | undefined,
+  ) => Promise<ValidatedItems<T, E>>,
+  config: Partial<ArrayConfig> | ValidatorTest | undefined,
+  tests: ValidatorTest[],
 ): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]> {
-  const allTests = typeof config === 'function' ? [config, ...tests] : tests;
+  const arrayTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
     parser: parseArray,
     ...(typeof config === 'function' ? undefined : config),
@@ -128,28 +97,63 @@ export function array<T, E>(
         return onEmpty(arrayValue, field);
       }
 
-      const [validateItem, ...arrayTests] = allTests;
-
       const arrayInvalidResult = await findInvalidResult(
         arrayTests,
         arrayValue,
         field,
       );
-      const items = await validateItems(validateItem, arrayValue, field);
+      const items = await checkItems(arrayValue, field);
 
       if (!arrayInvalidResult && items.isValid) {
-        return valid({
-          value: items.values as T[],
-          field,
-        });
+        return valid({ value: items.values, field });
       }
 
       return invalid<T[], ArrayItemValidatorResult<E>[]>({
         message: arrayInvalidResult ? arrayInvalidResult.message : '',
         value,
         field,
-        errors: items.errors as ArrayItemValidatorResult<E>[],
+        errors: items.errors,
       });
     },
   );
+}
+
+/**
+ * Validates an array. The item validator, if any, comes first and runs on each
+ * item. Then an optional configuration, and tests that target the array
+ * itself.
+ * @category Type Validators
+ */
+export function array<T, E>(
+  item: ValidatorTest<T, E>,
+  config?: Partial<ArrayConfig> | ValidatorTest,
+  ...tests: ValidatorTest[]
+): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>;
+export function array(
+  config?: Partial<ArrayConfig>,
+): TypeValidator<unknown[], string | ArrayItemValidatorResult[]>;
+export function array<T, E>(
+  first?: ValidatorTest<T, E> | Partial<ArrayConfig>,
+  second?: Partial<ArrayConfig> | ValidatorTest,
+  ...tests: ValidatorTest[]
+):
+  | TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>
+  | TypeValidator<unknown[], string | ArrayItemValidatorResult[]> {
+  if (typeof first === 'function') {
+    return arrayOf(
+      (arrayValue, field) => validateItems(first, arrayValue, field),
+      second,
+      tests,
+    );
+  }
+
+  // 2.x took the config first, so a JavaScript caller may still pass the item
+  // validator second, where it would be ignored.
+  if (second !== undefined) {
+    throw new TypeError(
+      'array() takes the item validator first: array(item, config?, ...tests)',
+    );
+  }
+
+  return arrayOf(keepItems, first, []);
 }

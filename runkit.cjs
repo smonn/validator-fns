@@ -61,7 +61,6 @@ const validate = object({
     ),
   ),
   favoriteCarMakers: array(
-    { default: [] },
     string(
       { requiredMessage: 'Car brand is required.' },
       oneOf(
@@ -81,6 +80,7 @@ const validate = object({
         'Must be a known car brand.',
       ),
     ),
+    { default: [] },
     min(2, 'Must pick at least two.'),
     max(4, 'Must pick at most four.'),
   ),

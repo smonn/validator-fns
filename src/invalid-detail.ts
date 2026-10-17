@@ -35,3 +35,58 @@ export function invalidDetail<E>(result: InvalidResult<E>): string | E {
     ? result.message
     : result.errors;
 }
+
+/**
+ * Each item as the item validator parsed it, and each item's error: `null` for
+ * a valid item, and the message or errors for an invalid one.
+ * @internal
+ */
+export type ValidatedItems<T, E> = {
+  isValid: boolean;
+  errors: (null | string | E)[];
+  values: T[];
+};
+
+/**
+ * Runs the item validator on every item.
+ * @param validateItem Item validator
+ * @param arrayValue Parsed array
+ * @param field Field name
+ * @internal
+ */
+export async function validateItems<T, E>(
+  validateItem: ValidatorTest<T, E>,
+  arrayValue: unknown[],
+  field: string | undefined,
+): Promise<ValidatedItems<T, E>> {
+  let isValid = true;
+  const errors: (null | string | E)[] = [];
+  // Only valid items' values, which are only used when every item is valid.
+  const values: T[] = [];
+
+  for (const [index, item] of arrayValue.entries()) {
+    const result = await validateItem(item, `${field || ''}[${index}]`);
+
+    if (result.state === 'invalid') {
+      isValid = false;
+      errors.push(invalidDetail(result));
+    } else {
+      values.push(result.value);
+      errors.push(null);
+    }
+  }
+
+  return { isValid, errors, values };
+}
+
+/**
+ * Without an item validator, there is nothing to check, and the values are the
+ * array as given.
+ * @param arrayValue Parsed array
+ * @internal
+ */
+export async function keepItems(
+  arrayValue: unknown[],
+): Promise<ValidatedItems<unknown, unknown>> {
+  return { isValid: true, errors: [], values: arrayValue };
+}
