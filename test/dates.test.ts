@@ -4,7 +4,9 @@ import {
   invalidDate,
   maxDate,
   minDate,
+  optional,
   parseDate,
+  type InvalidResult,
 } from '../src/index.js';
 
 test('parseDate', () => {
@@ -190,5 +192,38 @@ test('date default', async () => {
     state: 'valid',
     value: new Date(0),
     field: undefined,
+  });
+});
+
+test('parseDate throws for a non-blank string it cannot read', () => {
+  for (const value of ['garbage', '2020-01-01x', 'tomorrow', '12/31/2020']) {
+    assert.throws(
+      () => parseDate(value),
+      TypeError,
+      'Failed to parse value to date.',
+      value,
+    );
+  }
+  assert.deepEqual(parseDate(''), invalidDate);
+  assert.deepEqual(parseDate('  '), invalidDate);
+  assert.strictEqual(parseDate(invalidDate), invalidDate);
+});
+
+test('date() fails an unreadable string apart from a missing one', async () => {
+  const parseError: InvalidResult<string> = {
+    state: 'invalid',
+    message: 'Failed to parse value to date.',
+    value: 'garbage',
+    field: 'start',
+    errors: undefined,
+  };
+  assert.deepEqual(await date()('garbage', 'start'), parseError);
+  assert.deepEqual(await optional(date())('garbage', 'start'), parseError);
+
+  assert.deepInclude(await date()('  '), { message: 'Required.' });
+  assert.deepInclude(await date()(invalidDate), { message: 'Required.' });
+  assert.deepInclude(await optional(date())('  '), {
+    state: 'valid',
+    value: invalidDate,
   });
 });

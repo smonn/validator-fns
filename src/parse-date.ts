@@ -51,7 +51,8 @@ const dateParts = [
 ];
 
 /**
- * Parses a value into a date.
+ * Parses a value into a date. Throws a `TypeError` for a non-blank string that
+ * isn't ISO 8601.
  * @param value Value to parse
  * @category Parsers
  */
@@ -68,11 +69,16 @@ export function parseDate(value: unknown): Date | null | undefined {
     return new Date(value);
   }
 
-  return typeof value === 'string' ? parseIsoDate(value) : invalidDate;
+  // A blank string stays empty, as an invalid date, for `default` and
+  // `optional()` to handle.
+  return typeof value === 'string' && value.trim() !== ''
+    ? parseIsoDate(value)
+    : invalidDate;
 }
 
 /**
  * Parses an ISO 8601 string into a date. Without a timezone, the date is local.
+ * Throws for a string that isn't ISO 8601.
  * @param value String to parse
  * @internal
  */
@@ -80,7 +86,7 @@ function parseIsoDate(value: string): Date {
   const parts = isoDatePattern.exec(value);
 
   if (parts === null) {
-    return invalidDate;
+    throw new TypeError('Failed to parse value to date.');
   }
 
   const [
