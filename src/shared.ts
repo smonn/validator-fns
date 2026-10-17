@@ -40,6 +40,28 @@ export type ValidatorResult<T = any, E = any> =
   | InvalidResult<E>;
 
 /**
+ * The result of a validation, valid or a failure.
+ * @typeParam T The value type
+ * @typeParam E The error type
+ * @category Types
+ */
+export type Result<T = any, E = any> = ValidatorResult<T, E>;
+
+/**
+ * A valid result.
+ * @typeParam T The value type
+ * @category Types
+ */
+export type Valid<T> = ValidResult<T>;
+
+/**
+ * A failed result.
+ * @typeParam E The error type
+ * @category Types
+ */
+export type Failure<E> = InvalidResult<E>;
+
+/**
  * Validation test function.
  * @typeParam T The value type
  * @category Types
@@ -48,6 +70,15 @@ export type ValidatorTest<T = any, E = any> = (
   value?: unknown,
   field?: string,
 ) => Promise<ValidatorResult<T, E>>;
+
+/**
+ * A validator: takes a value and an optional field name, and resolves to a
+ * result.
+ * @typeParam T The value type
+ * @typeParam E The error type
+ * @category Types
+ */
+export type Validator<T = any, E = any> = ValidatorTest<T, E>;
 
 /**
  * Extracts the generic error type from a ValidatorTest.
