@@ -10,6 +10,20 @@ import {
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 
 /**
+ * Sets an own property. Plain assignment of `__proto__` calls the
+ * `Object.prototype.__proto__` setter instead of creating the property.
+ * @internal
+ */
+function setOwn(target: object, key: string, value: unknown) {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
+}
+
+/**
  * Validates an object.
  * @category Type Validators
  */
@@ -40,14 +54,11 @@ export function object<
           ? validator(value, key)
           : invalid({ field: key, message: 'No validator set', value }));
 
-        resolvedValues[key] = result.value as V[Extract<keyof P, string>];
+        setOwn(resolvedValues, key, result.value);
 
         if (result.state === 'invalid') {
           isValid = false;
-          errors[key] = (result.message || result.errors) as E[Extract<
-            keyof P,
-            string
-          >];
+          setOwn(errors, key, result.message || result.errors);
         }
       }
     }

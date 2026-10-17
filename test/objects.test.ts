@@ -130,6 +130,43 @@ test('should report a field as missing when the input only inherits it', async (
   });
 });
 
+test('should keep a __proto__ field as an own property when it is in the schema', async () => {
+  const validate = object(
+    Object.fromEntries([['__proto__', string(required('Required'))]]),
+  );
+
+  const validResult = await validate(JSON.parse('{"__proto__": "x"}'));
+  assert.equal(validResult.state, 'valid');
+  assert.deepEqual(Object.getOwnPropertyNames(validResult.value), [
+    '__proto__',
+  ]);
+  assert.equal(Reflect.get(validResult.value ?? {}, '__proto__'), 'x');
+
+  const invalidResult = await validate(JSON.parse('{"__proto__": null}'));
+  assert.equal(invalidResult.state, 'invalid');
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(
+      (invalidResult.state === 'invalid' && invalidResult.errors) || {},
+      '__proto__',
+    )?.value,
+    'Required',
+  );
+});
+
+test('should not change the prototype of the value when a __proto__ field is an object', async () => {
+  const validate = object(
+    Object.fromEntries([['__proto__', object({ admin: string() })]]),
+  );
+
+  const result = await validate(JSON.parse('{"__proto__": {"admin": "yes"}}'));
+
+  assert.equal(Object.getPrototypeOf(result.value), Object.prototype);
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(result.value, '__proto__')?.value,
+    { admin: 'yes' },
+  );
+});
+
 test('nested object', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
