@@ -4,7 +4,7 @@ import {
   isObject,
   type ValidatorMessage,
   type ValidatorMessageParameters,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /** @internal */
@@ -92,7 +92,7 @@ export interface MatchesValidatorMessageParameters extends ValidatorMessageParam
 export function matches(
   pattern: RegExp,
   message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
-): ValidatorTest<string> {
+): Validator<string> {
   // A g or y pattern advances lastIndex on each test(), so a shared one would
   // fail matching values after a match. Test a private copy from index 0.
   const ownPattern = new RegExp(pattern);
@@ -116,9 +116,7 @@ export function matches(
  * @param message Error message
  * @category Validation Tests
  */
-export function email(
-  message: ValidatorMessage<string>,
-): ValidatorTest<string> {
+export function email(message: ValidatorMessage<string>): Validator<string> {
   return matches(emailPattern, message);
 }
 
@@ -128,7 +126,7 @@ export function email(
  * @param message Error message
  * @category Validation Tests
  */
-export function uuid(message: ValidatorMessage<string>): ValidatorTest<string> {
+export function uuid(message: ValidatorMessage<string>): Validator<string> {
   return matches(uuidPattern, message);
 }
 
@@ -142,7 +140,7 @@ export function uuid(message: ValidatorMessage<string>): ValidatorTest<string> {
 export function url(
   message: ValidatorMessage<string>,
   protocols?: string[],
-): ValidatorTest<string> {
+): Validator<string> {
   return createValidatorTest(
     (value) => {
       try {

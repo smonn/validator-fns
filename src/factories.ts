@@ -6,8 +6,8 @@ import {
   type ValidatorFactory,
   type ValidatorMessage,
   type ValidatorMessageParameters,
-  type ValidatorResult,
-  type ValidatorTest,
+  type Result,
+  type Validator,
 } from './shared.js';
 
 /**
@@ -17,8 +17,8 @@ import {
  * @internal
  */
 const syncTests = new WeakMap<
-  ValidatorTest,
-  (value: unknown, field: string | undefined) => ValidatorResult
+  Validator,
+  (value: unknown, field: string | undefined) => Result
 >();
 
 /**
@@ -55,7 +55,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           const syncTest = syncTests.get(validatorTest);
           // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
           // await in a ternary arm a negative count.
-          let result: ValidatorResult;
+          let result: Result;
           if (syncTest) {
             result = syncTest(parsedValue, field);
           } else {
@@ -92,11 +92,11 @@ export function createValidatorTest<
   test: (value: unknown, field?: string) => boolean,
   message: ValidatorMessage<T, P>,
   getExtras?: (value: T | null | undefined) => Omit<P, 'value' | 'field'>,
-): ValidatorTest<T, E> {
+): Validator<T, E> {
   const syncTest = (
     value: unknown,
     field: string | undefined,
-  ): ValidatorResult<T, E> => {
+  ): Result<T, E> => {
     if (test(value, field)) {
       return validResult({ value: value as T, field });
     }
@@ -108,7 +108,7 @@ export function createValidatorTest<
       extras: getExtras ? getExtras(value as T) : undefined,
     });
   };
-  const validatorTest: ValidatorTest<T, E> = async (value, field) =>
+  const validatorTest: Validator<T, E> = async (value, field) =>
     syncTest(value, field);
   syncTests.set(validatorTest, syncTest);
 

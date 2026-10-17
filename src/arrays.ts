@@ -3,7 +3,7 @@ import {
   isIterable,
   valid,
   type ConfigBase,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /**
@@ -72,7 +72,7 @@ export function applyArrayConfig<T>(
  * @internal
  */
 async function findArrayInvalidResult(
-  tests: ValidatorTest[],
+  tests: Validator[],
   arrayValue: unknown[] | null | undefined,
   field: string | undefined,
 ) {
@@ -97,7 +97,7 @@ async function findArrayInvalidResult(
  * @internal
  */
 async function validateItems(
-  validateItem: ValidatorTest | undefined,
+  validateItem: Validator | undefined,
   arrayValue: unknown[] | null | undefined,
   field: string | undefined,
 ) {
@@ -134,9 +134,9 @@ async function validateItems(
  * @category Type Validators
  */
 export function array<T, E>(
-  config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
-  ...tests: ValidatorTest[]
-): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
+  config?: Partial<ArrayConfig> | Validator<T, E>,
+  ...tests: Validator[]
+): Validator<T[], string | ArrayItemValidatorResult<E>[]> {
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
     parser: parseArray,

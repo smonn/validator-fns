@@ -4,10 +4,10 @@ import {
   hasOwnProperty,
   invalid,
   valid,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
-export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
+export type ObjectParameter = Record<string, Validator<unknown, unknown>>;
 
 /** @internal */
 type ObjectValue<P extends ObjectParameter> = {
@@ -42,7 +42,7 @@ function setOwn(target: object, key: string, value: unknown) {
  * @internal
  */
 async function findInvalidResult<V, E>(
-  tests: ValidatorTest<V, E>[],
+  tests: Validator<V, E>[],
   value: V,
   field: string | undefined,
 ) {
@@ -69,8 +69,8 @@ export function object<
   properties: P,
   // Typed from P rather than V and E, so the tests don't take part in
   // inferring V and E.
-  ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
-): ValidatorTest<V, E> {
+  ...tests: Validator<ObjectValue<P>, ObjectErrors<P>>[]
+): Validator<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
