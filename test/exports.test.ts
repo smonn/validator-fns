@@ -1,0 +1,46 @@
+import { assert, test } from 'vitest';
+import * as api from '../src/index.js';
+
+// Type-only exports have no runtime name, so test/types.test.ts covers those.
+test('should export the 2.x functions and values when listing runtime exports', () => {
+  assert.deepStrictEqual(Object.keys(api).toSorted(), [
+    'applyArrayConfig',
+    'applyBooleanConfig',
+    'applyDateConfig',
+    'applyNumberConfig',
+    'applyStringConfig',
+    'array',
+    'boolean',
+    'check',
+    'createTypeValidatorTest',
+    'createValidatorTest',
+    'date',
+    'email',
+    'exact',
+    'formatMessage',
+    'hasOwnProperty',
+    'integer',
+    'invalid',
+    'invalidDate',
+    'isObject',
+    'matches',
+    'max',
+    'maxDate',
+    'min',
+    'minDate',
+    'number',
+    'object',
+    'oneOf',
+    'parseArray',
+    'parseBoolean',
+    'parseDate',
+    'parseNumber',
+    'parseString',
+    'required',
+    'standard',
+    'string',
+    'url',
+    'uuid',
+    'valid',
+  ]);
+});
