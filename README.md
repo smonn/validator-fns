@@ -221,7 +221,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    createValidator(async (value, field) => valid({ value, field }));
    ```
 
-7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out.
+7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out. Validation tests are typed `ValidationTest<T, E>` and take the validator's value type, so a custom test that takes another type, or a test called directly with `null`, is a type error. A message function passed to `invalid()` gets `value` as `unknown`, and one that reads extra parameters needs them in `extras`.
 
 ## API Reference
 
@@ -247,7 +247,9 @@ The `message` argument in the validation tests must be a static string, a templa
 | template string | `'Password must be at least {min} characters.'`                                        |
 | function        | `` ({ value, field, max }) => `${field} must be less than ${max} but was ${value}.` `` |
 
-The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available.
+The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available, such as `min` for `min()`.
+
+In TypeScript, a message function's parameters are typed: `ValidatorMessage<T, X>` gets the value and field, `X & ValidatorMessageParameters<T>`, where `X` holds the test's extra parameters. Each test's exported parameters type, such as `MinValidatorMessageParameters`, still describes everything a message gets, so a message annotated with it fits.
 
 ### Required and optional values
 
@@ -426,7 +428,9 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 ### Validation tests
 
-A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values; called directly, the built-in tests pass `null` and `undefined` through. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
+A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values, so a built-in test fails `null` and `undefined` when it's called with them directly. An empty string is a string like any other: `min(1, …)` fails it and `max(1, …)` accepts it. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
+
+In TypeScript, a test's type is `ValidationTest<T, E>`, a function that takes a value of type `T`. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. A custom test that takes `unknown` fits every validation type.
 
 - [check(path?, test, message)](#checkpath-test-message)
 - [email(message)](#emailmessage)
@@ -687,6 +691,8 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 #### invalid({ message, value, field, errors, extras })
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
+
+In TypeScript, a message function gets `value` as `unknown`, since `invalid()` takes any value. A message that reads extra parameters needs `extras` with them; without `extras`, it's a type error.
 
 ## Supported environments
 

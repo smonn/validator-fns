@@ -1,4 +1,4 @@
-import type { InvalidResult, ValidatorTest } from './shared.js';
+import type { InvalidResult, ValidationTest, ValidatorTest } from './shared.js';
 
 /**
  * Runs tests on a value in order, stopping at the first failure, for the
@@ -9,7 +9,7 @@ import type { InvalidResult, ValidatorTest } from './shared.js';
  * @internal
  */
 export async function findInvalidResult<V, E>(
-  tests: ValidatorTest<V, E>[],
+  tests: ValidationTest<V, E>[],
   value: V,
   field: string | undefined,
 ): Promise<InvalidResult<E> | undefined> {
@@ -35,6 +35,13 @@ export function invalidDetail<E>(result: InvalidResult<E>): string | E {
     ? result.message
     : result.errors;
 }
+
+/**
+ * A test on an array itself, such as `max()`. It runs on the parsed array,
+ * before the item validator, so the items are `unknown`.
+ * @internal
+ */
+export type ArrayTest = ValidationTest<unknown[]>;
 
 /**
  * Each item as the item validator parsed it, and each item's error: `null` for

@@ -43,6 +43,19 @@ export type ValidatorTest<T = unknown, E = unknown> = (
 ) => Promise<ValidatorResult<T, E>>;
 
 /**
+ * Validation test function, such as `min()`: it checks a parsed value. Type
+ * validators run their tests on the parsed value once it's present, so a test
+ * takes the validator's value type. Its own result value is never read.
+ * @typeParam T The value type the test checks
+ * @typeParam E The error type
+ * @category Types
+ */
+export type ValidationTest<T = unknown, E = unknown> = (
+  value: T,
+  field?: string,
+) => Promise<ValidatorResult<unknown, E>>;
+
+/**
  * Extracts the generic error type from a ValidatorTest.
  * @typeParam T a ValidatorTest
  * @category Types
@@ -73,8 +86,8 @@ export type DeepPartial<T> = {
  * @category Types
  */
 export type ValidatorFactory<C, T, E> = (
-  config?: Partial<C> | ValidatorTest<unknown, E>,
-  ...tests: ValidatorTest<unknown, E>[]
+  config?: Partial<C> | ValidationTest<T, E>,
+  ...tests: ValidationTest<T, E>[]
 ) => ValidatorTest<T, E>;
 
 /**
@@ -100,14 +113,27 @@ export interface ValidatorMessageParameters<T> {
 }
 
 /**
+ * The extra parameters of a message parameters type, without the value and
+ * field every message gets.
+ * @internal
+ */
+export type MessageExtras<P extends ValidatorMessageParameters<unknown>> = Omit<
+  P,
+  'value' | 'field'
+>;
+
+/**
  * Validation message. May be a plain string or a function that accepts arguments.
  * While using a string, values in squiggly brackets `{}` are replaced.
+ * A function gets the value and field, and any extra parameters `X` the test
+ * adds, such as `min` for `min()`.
+ * @typeParam T The value type
+ * @typeParam X The extra parameters
  * @category Types
  */
-export type ValidatorMessage<
-  T,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
-> = string | ((parameters: P) => string);
+export type ValidatorMessage<T, X extends object = object> =
+  | string
+  | ((parameters: X & ValidatorMessageParameters<T>) => string);
 
 /**
  * Simple check for objects.
@@ -161,9 +187,9 @@ const formatPattern = /{(\w+)}/g;
  * @param parameters Params to inject into template
  * @category Helpers
  */
-export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
-  template: ValidatorMessage<T, P>,
-  parameters: P,
+export function formatMessage<T, X extends object = object>(
+  template: ValidatorMessage<T, X>,
+  parameters: X & ValidatorMessageParameters<T>,
 ): string {
   if (typeof template === 'string') {
     return template.replaceAll(formatPattern, (_, key: string) =>
@@ -208,30 +234,24 @@ export function validResult<T, E = never>({
 }
 
 /**
- * Creates an invalid result synchronously, for `invalid` and the built-in
- * tests' synchronous twins.
+ * Creates an invalid result synchronously from a formatted message, for
+ * `invalid` and the built-in tests' synchronous twins.
  * @internal
  */
-export function invalidResult<
-  T,
-  E,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
->({
+export function invalidResult<E = never>({
   errors,
   field,
   message,
   value,
-  extras,
 }: {
-  message: ValidatorMessage<T, P>;
+  message: string;
   value: unknown;
   field: string | undefined;
   errors?: E | undefined;
-  extras?: Omit<P, 'field' | 'value'> | undefined;
-}): ValidatorResult<T, E> {
+}): InvalidResult<E> {
   return {
     state: 'invalid',
-    message: formatMessage(message, { ...extras, value, field } as P),
+    message,
     value,
     field,
     errors,

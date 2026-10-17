@@ -1,6 +1,6 @@
 import { createTypeValidatorTest, createValidatorTest } from './factories.js';
 import { primitiveToString } from './primitives.js';
-import type { ConfigBase, ValidatorMessage, ValidatorTest } from './shared.js';
+import type { ConfigBase, ValidationTest, ValidatorMessage } from './shared.js';
 
 /**
  * Parses a value into a number.
@@ -80,14 +80,9 @@ export function applyNumberConfig(
  */
 export function integer(
   message: ValidatorMessage<number>,
-): ValidatorTest<number, never> {
+): ValidationTest<number, never> {
   return createValidatorTest(
-    (value) =>
-      value === undefined ||
-      value === null ||
-      (typeof value === 'number' &&
-        Number.isFinite(value) &&
-        Math.floor(value) === value),
+    (value: number) => Number.isFinite(value) && Math.floor(value) === value,
     message,
   );
 }

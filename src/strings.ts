@@ -2,9 +2,10 @@ import { createTypeValidatorTest, createValidatorTest } from './factories.js';
 import { primitiveToString } from './primitives.js';
 import {
   type ConfigBase,
+  type MessageExtras,
   type ValidatorMessage,
   type ValidatorMessageParameters,
-  type ValidatorTest,
+  type ValidationTest,
 } from './shared.js';
 
 /** @internal */
@@ -91,20 +92,18 @@ export interface MatchesValidatorMessageParameters extends ValidatorMessageParam
  */
 export function matches(
   pattern: RegExp,
-  message: ValidatorMessage<string, MatchesValidatorMessageParameters>,
-): ValidatorTest<string, never> {
+  message: ValidatorMessage<
+    string,
+    MessageExtras<MatchesValidatorMessageParameters>
+  >,
+): ValidationTest<string, never> {
   // A g or y pattern advances lastIndex on each test(), so a shared one would
   // fail matching values after a match. Test a private copy from index 0.
   const ownPattern = new RegExp(pattern);
   return createValidatorTest(
-    (value) => {
+    (value: string) => {
       ownPattern.lastIndex = 0;
-      return (
-        value === undefined ||
-        value === null ||
-        value === '' ||
-        (typeof value === 'string' && ownPattern.test(value))
-      );
+      return ownPattern.test(value);
     },
     message,
     () => ({ pattern }),
@@ -118,7 +117,7 @@ export function matches(
  */
 export function email(
   message: ValidatorMessage<string>,
-): ValidatorTest<string, never> {
+): ValidationTest<string, never> {
   return matches(emailPattern, message);
 }
 
@@ -130,7 +129,7 @@ export function email(
  */
 export function uuid(
   message: ValidatorMessage<string>,
-): ValidatorTest<string, never> {
+): ValidationTest<string, never> {
   return matches(uuidPattern, message);
 }
 
@@ -144,24 +143,14 @@ export function uuid(
 export function url(
   message: ValidatorMessage<string>,
   protocols: string[] = ['http:', 'https:'],
-): ValidatorTest<string, never> {
+): ValidationTest<string, never> {
   return createValidatorTest(
-    (value) => {
+    (value: string) => {
       try {
-        let parsed: URL | undefined;
-        if (
-          value === undefined ||
-          value === null ||
-          value === '' ||
-          (typeof value === 'string' && (parsed = new URL(value)))
-        ) {
-          return !parsed || protocols.includes(parsed.protocol);
-        }
+        return protocols.includes(new URL(value).protocol);
       } catch {
-        // Do nothing
+        return false;
       }
-
-      return false;
     },
     message,
     () => ({ protocols }),

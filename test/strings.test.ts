@@ -9,34 +9,21 @@ import {
   string,
   url,
   uuid,
-  type ValidatorTest,
 } from '../src/index';
 
-// Tests called directly here are typed as plain ValidatorTest: a built-in test
-// passes a missing value through, which its value type leaves out, since type
-// validators only run tests on present values.
-
 test('min', async () => {
-  const validate: ValidatorTest = min(5, 'min:{min}');
+  const validate = min(5, 'min:{min}');
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
-    state: 'valid',
+    state: 'invalid',
+    message: 'min:5',
+    field: undefined,
+    errors: undefined,
     value: '',
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
@@ -48,7 +35,7 @@ test('min', async () => {
 });
 
 test('max', async () => {
-  const validate: ValidatorTest = max(5, 'max:{max}');
+  const validate = max(5, 'max:{max}');
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
@@ -57,16 +44,6 @@ test('max', async () => {
   assert.deepEqual(await validate(''), {
     state: 'valid',
     value: '',
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate('foo bar'), {
@@ -79,7 +56,7 @@ test('max', async () => {
 });
 
 test('email', async () => {
-  const validate: ValidatorTest = email('invalid email');
+  const validate = email('invalid email');
   assert.deepEqual(await validate('name@example.com'), {
     state: 'valid',
     value: 'name@example.com',
@@ -95,21 +72,7 @@ test('email', async () => {
     value: 'name+tag@example.com',
     field: undefined,
   });
-  assert.deepEqual(await validate(''), {
-    state: 'valid',
-    value: '',
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    value: undefined,
-    field: undefined,
-  });
+  assert.deepInclude(await validate(''), { state: 'invalid', value: '' });
   assert.deepEqual(await validate('@example.com'), {
     state: 'invalid',
     field: undefined,
@@ -134,11 +97,7 @@ test('email', async () => {
 });
 
 test('url', async () => {
-  const validate: ValidatorTest = url('invalid url', [
-    'http:',
-    'mailto:',
-    'https:',
-  ]);
+  const validate = url('invalid url', ['http:', 'mailto:', 'https:']);
   assert.deepEqual(await validate('http://example.com'), {
     state: 'valid',
     field: undefined,
@@ -150,25 +109,10 @@ test('url', async () => {
     value: 'mailto:name@example.com',
   });
   assert.deepEqual(await validate(''), {
-    state: 'valid',
-    field: undefined,
-    value: '',
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    field: undefined,
-    value: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    field: undefined,
-    value: undefined,
-  });
-  assert.deepEqual(await validate(0), {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: 0 as unknown as string,
+    value: '',
     message: 'invalid url',
   });
   assert.deepEqual(await validate('/foo'), {
@@ -262,20 +206,6 @@ test('string', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.deepEqual(await validate(), {
-    state: 'invalid',
-    message: 'Must enter a value.',
-    value: undefined,
-    field: undefined,
-    errors: undefined,
-  });
-  assert.deepEqual(await validate(), {
-    state: 'invalid',
-    message: 'Must enter a value.',
-    value: undefined,
-    field: undefined,
-    errors: undefined,
-  });
   assert.deepEqual(await validate({ name: 'August' }), {
     state: 'invalid',
     message: 'Failed to parse value to string.',
@@ -287,16 +217,6 @@ test('string', async () => {
 
 test('string default', async () => {
   const validate = string({ default: 'hello' });
-  assert.deepEqual(await validate(), {
-    state: 'valid',
-    field: undefined,
-    value: 'hello',
-  });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    field: undefined,
-    value: 'hello',
-  });
   assert.deepEqual(await validate(''), {
     state: 'valid',
     field: undefined,
@@ -352,7 +272,7 @@ test('should leave lastIndex unchanged when testing the caller pattern', async (
 });
 
 test('uuid', async () => {
-  const validate: ValidatorTest = uuid('invalid uuid');
+  const validate = uuid('invalid uuid');
   const validValues = [
     // One per RFC 9562 version, 1 to 8, from the RFC's examples where it has one.
     'c232ab00-9414-11ec-b3c8-9f6bdeced846',
@@ -369,15 +289,12 @@ test('uuid', async () => {
     // Uppercase.
     '919108F7-52D1-4320-9BAC-F847DB4148A8',
     'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
-    '',
-    null,
-    undefined,
   ];
   for (const value of validValues) {
     assert.deepEqual(
       await validate(value),
       { state: 'valid', field: undefined, value },
-      String(value),
+      value,
     );
   }
 
@@ -398,7 +315,7 @@ test('uuid', async () => {
     ' 919108f7-52d1-4320-9bac-f847db4148a8',
     'id:919108f7-52d1-4320-9bac-f847db4148a8',
     'urn:uuid:919108f7-52d1-4320-9bac-f847db4148a8',
-    0,
+    '',
   ];
   for (const value of invalidValues) {
     assert.deepEqual(
@@ -410,7 +327,7 @@ test('uuid', async () => {
         value,
         message: 'invalid uuid',
       },
-      String(value),
+      value,
     );
   }
 });

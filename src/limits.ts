@@ -1,8 +1,9 @@
 import { createValidatorTest } from './factories.js';
 import type {
+  MessageExtras,
+  ValidationTest,
   ValidatorMessage,
   ValidatorMessageParameters,
-  ValidatorTest,
 } from './shared.js';
 
 export type SharedValueType = string | number | unknown[];
@@ -11,10 +12,15 @@ export type SharedValueType = string | number | unknown[];
  * Extracts a numeric amount from value, i.e. string length, array length, or number.
  * @internal
  */
-function getAmount(value: SharedValueType | null | undefined) {
-  return typeof value === 'string' || Array.isArray(value)
-    ? value.length
-    : value;
+function getAmount(value: SharedValueType): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  // Wider than the type, since JavaScript callers can pass a missing value,
+  // which has no amount (#660).
+  const given: unknown = value;
+  return given === null || given === undefined ? Number.NaN : value.length;
 }
 
 export interface MaxValidatorMessageParameters extends ValidatorMessageParameters<SharedValueType> {
@@ -33,18 +39,16 @@ export interface MaxValidatorMessageParameters extends ValidatorMessageParameter
  */
 export function max(
   limit: number,
-  message: ValidatorMessage<SharedValueType, MaxValidatorMessageParameters>,
+  message: ValidatorMessage<
+    SharedValueType,
+    MessageExtras<MaxValidatorMessageParameters>
+  >,
   exclusive?: boolean,
-): ValidatorTest<SharedValueType, never> {
+): ValidationTest<SharedValueType, never> {
   return createValidatorTest(
-    (value) => {
-      const amount = getAmount(value as SharedValueType);
-      return (
-        amount === undefined ||
-        amount === null ||
-        value === '' ||
-        (exclusive ? amount < limit : amount <= limit)
-      );
+    (value: SharedValueType) => {
+      const amount = getAmount(value);
+      return exclusive ? amount < limit : amount <= limit;
     },
     message,
     (value) => ({
@@ -72,18 +76,16 @@ export interface MinValidatorMessageParameters extends ValidatorMessageParameter
  */
 export function min(
   limit: number,
-  message: ValidatorMessage<SharedValueType, MinValidatorMessageParameters>,
+  message: ValidatorMessage<
+    SharedValueType,
+    MessageExtras<MinValidatorMessageParameters>
+  >,
   exclusive?: boolean,
-): ValidatorTest<SharedValueType, never> {
+): ValidationTest<SharedValueType, never> {
   return createValidatorTest(
-    (value) => {
-      const amount = getAmount(value as SharedValueType);
-      return (
-        amount === undefined ||
-        amount === null ||
-        value === '' ||
-        (exclusive ? amount > limit : amount >= limit)
-      );
+    (value: SharedValueType) => {
+      const amount = getAmount(value);
+      return exclusive ? amount > limit : amount >= limit;
     },
     message,
     (value) => ({
@@ -109,18 +111,13 @@ export interface ExactValidatorMessageParameters extends ValidatorMessageParamet
  */
 export function exact(
   limit: number,
-  message: ValidatorMessage<SharedValueType, ExactValidatorMessageParameters>,
-): ValidatorTest<SharedValueType, never> {
+  message: ValidatorMessage<
+    SharedValueType,
+    MessageExtras<ExactValidatorMessageParameters>
+  >,
+): ValidationTest<SharedValueType, never> {
   return createValidatorTest(
-    (value) => {
-      const amount = getAmount(value as SharedValueType);
-      return (
-        amount === undefined ||
-        amount === null ||
-        value === '' ||
-        amount === limit
-      );
-    },
+    (value: SharedValueType) => getAmount(value) === limit,
     message,
     (value) => ({
       amount: getAmount(value),

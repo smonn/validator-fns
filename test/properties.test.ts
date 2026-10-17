@@ -21,11 +21,13 @@ import {
   url,
   uuid,
   valid,
+  type SharedValueType,
+  type ValidationTest,
   type ValidatorTest,
 } from '../src/index';
 
 // Every built-in test, so a generated list can hold any of them.
-const stringTests = [
+const stringTests: ValidationTest<string, never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),
@@ -35,18 +37,25 @@ const stringTests = [
   matches(/^a/, 'matches'),
   oneOf(['a', 'b'], 'oneOf'),
 ];
-const numberTests = [
+const numberTests: ValidationTest<number, never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),
   integer('integer'),
   oneOf([1, 2], 'oneOf'),
 ];
-const dateTests = [minDate('2020-01-01', 'min'), maxDate('2020-01-01', 'max')];
-const arrayTests = [min(3, 'min'), max(3, 'max'), exact(3, 'exact')];
+const dateTests: ValidationTest<Date, never>[] = [
+  minDate('2020-01-01', 'min'),
+  maxDate('2020-01-01', 'max'),
+];
+const arrayTests: ValidationTest<unknown[], never>[] = [
+  min(3, 'min'),
+  max(3, 'max'),
+  exact(3, 'exact'),
+];
 
-// Built-in tests have the error type never, so they fit every type validator.
-const testsFrom = (pool: ValidatorTest<unknown, never>[]) =>
+// Built-in tests have the error type never, so they fit their type validator.
+const testsFrom = <T>(pool: ValidationTest<T, never>[]) =>
   fc.subarray(pool, { minLength: 0 });
 
 // fc.anything with every kind of value it can make, including null-prototype
@@ -105,12 +114,8 @@ test('string() and number() resolve for any input', async () => {
 });
 
 // The amount min(), max() and exact() compare: a number itself, or the length
-// of a string or array.
-const sized = fc.oneof(
-  fc.double(),
-  fc.string({ minLength: 1 }),
-  fc.array(fc.anything()),
-);
+// of a string or array. An empty string is a string of length 0 (#660).
+const sized = fc.oneof(fc.double(), fc.string(), fc.array(fc.anything()));
 const amountOf = (value: number | string | unknown[]) =>
   typeof value === 'number' ? value : value.length;
 
@@ -122,7 +127,7 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
       fc.boolean(),
       async (value, limit, exclusive) => {
         const amount = amountOf(value);
-        const isValid = async (validate: ValidatorTest) =>
+        const isValid = async (validate: ValidationTest<SharedValueType>) =>
           (await validate(value)).state === 'valid';
 
         assert.equal(
@@ -136,20 +141,6 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
         assert.equal(await isValid(exact(limit, 'exact')), amount === limit);
       },
     ),
-  );
-});
-
-test('min(), max() and exact() accept an empty string at any limit', async () => {
-  await fc.assert(
-    fc.asyncProperty(fc.integer(), async (limit) => {
-      for (const validate of [
-        min(limit, 'min'),
-        max(limit, 'max'),
-        exact(limit, 'exact'),
-      ]) {
-        assert.equal((await validate('')).state, 'valid');
-      }
-    }),
   );
 });
 

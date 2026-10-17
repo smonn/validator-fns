@@ -2,25 +2,31 @@ import { isBlank, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
+  formatMessage,
   invalidResult,
+  type ValidationTest,
   validResult,
   type ValidatorMessage,
-  type ValidatorMessageParameters,
   type ValidatorResult,
-  type ValidatorTest,
 } from './shared.js';
 
 /**
- * Synchronous twins of the tests `createValidatorTest` makes. A type validator
- * runs a test's twin when it has one, which skips the promise and await around
- * every built-in test (#523). The tests themselves stay async.
+ * Key for the synchronous twin of each test `createValidatorTest` makes. A
+ * type validator runs a test's twin when it has one, which skips the promise
+ * and await around every built-in test (#523). The tests themselves stay
+ * async. Module-private, so only tests made here carry it.
  * @internal
  */
-const syncTests = new WeakMap<
-  ValidatorTest,
+const syncTwin = Symbol('sync');
+
+/** @internal */
+type SyncTwin<T> = {
   // The twins never set errors, so their error type is never.
-  (value: unknown, field: string | undefined) => ValidatorResult<unknown, never>
->();
+  readonly [syncTwin]?: (
+    value: T,
+    field: string | undefined,
+  ) => ValidatorResult<unknown, never>;
+};
 
 /**
  * Creates a type validator.
@@ -36,12 +42,13 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   defaultConfig: NoInfer<C>,
   applyConfig: (value: unknown, config: C) => T | null | undefined,
 ): (
-  config?: Partial<C> | ValidatorTest<unknown, string>,
-  ...tests: ValidatorTest<unknown, string>[]
+  config?: Partial<C> | ValidationTest<T, string>,
+  ...tests: ValidationTest<T, string>[]
 ) => TypeValidator<T, string> {
   return (config, ...tests) => {
     let finalConfig = defaultConfig;
-    let allTests = tests;
+    // Typed with the twin, which only tests made here carry.
+    let allTests: (ValidationTest<T, string> & SyncTwin<T>)[] = tests;
 
     if (config !== undefined) {
       if (typeof config === 'function') {
@@ -68,7 +75,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           }
 
           for (const validatorTest of allTests) {
-            const syncTest = syncTests.get(validatorTest);
+            const syncTest = validatorTest[syncTwin];
             // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
             // await in a ternary arm a negative count.
             let result: ValidatorResult<unknown, string>;
@@ -84,7 +91,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 
           return validResult({ value: parsedValue, field });
         } catch (error) {
-          return invalidResult<T, string>({
+          return invalidResult<string>({
             message: error instanceof Error ? error.message : String(error),
             value,
             field,
@@ -96,38 +103,45 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 }
 
 /**
- * Captures basic validator test pattern
+ * Captures basic validator test pattern. The test gets the parsed value, and
+ * fails a missing one, which type validators never pass (#660).
  * @param test Test function
  * @param message Error message
- * @param getExtras Optional extra fields for error message
+ * @param getExtras Extra parameters for the error message
  */
-export function createValidatorTest<
-  T = unknown,
-  E = never,
-  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
->(
-  test: (value: unknown, field?: string) => boolean,
-  message: ValidatorMessage<T, P>,
-  getExtras?: (value: T | null | undefined) => Omit<P, 'value' | 'field'>,
-): ValidatorTest<T, E> {
-  const syncTest = (
-    value: unknown,
+export function createValidatorTest<T, E = never>(
+  test: (value: T, field?: string) => boolean,
+  message: ValidatorMessage<T>,
+): ValidationTest<T, E>;
+export function createValidatorTest<T, E, X extends object>(
+  test: (value: T, field?: string) => boolean,
+  message: ValidatorMessage<T, X>,
+  getExtras: (value: T) => X,
+): ValidationTest<T, E>;
+export function createValidatorTest<T, E, X extends object>(
+  test: (value: T, field?: string) => boolean,
+  ...format:
+    | [message: ValidatorMessage<T>]
+    | [message: ValidatorMessage<T, X>, getExtras: (value: T) => X]
+): ValidationTest<T, E> {
+  const formatFor = (value: T, field: string | undefined) =>
+    format.length === 1
+      ? formatMessage<T>(format[0], { value, field })
+      : formatMessage(format[0], { ...format[1](value), value, field });
+  const twin = (
+    value: T,
     field: string | undefined,
-  ): ValidatorResult<T, never> => {
-    if (test(value, field)) {
-      return validResult({ value: value as T, field });
+  ): ValidatorResult<unknown, never> => {
+    // Wider than T, since JavaScript callers can pass a missing value.
+    const given: unknown = value;
+    if (given !== null && given !== undefined && test(value, field)) {
+      return validResult({ value, field });
     }
 
-    return invalidResult({
-      message,
-      value,
-      field,
-      extras: getExtras ? getExtras(value as T) : undefined,
-    });
+    return invalidResult({ message: formatFor(value, field), value, field });
   };
-  const validatorTest: ValidatorTest<T, E> = async (value, field) =>
-    syncTest(value, field);
-  syncTests.set(validatorTest, syncTest);
+  const validationTest: ValidationTest<T, E> = async (value, field) =>
+    twin(value, field);
 
-  return validatorTest;
+  return Object.assign(validationTest, { [syncTwin]: twin });
 }

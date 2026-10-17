@@ -1,9 +1,9 @@
 import {
   formatMessage,
   invalidResult,
-  valid,
+  type ValidationTest,
+  validResult,
   type ValidatorMessage,
-  type ValidatorTest,
 } from './shared.js';
 
 /**
@@ -17,12 +17,12 @@ import {
 export function check<T, E = never>(
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidatorTest<T, E>;
+): ValidationTest<T, E>;
 export function check<T, E = never>(
   path: string | readonly string[],
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidatorTest<T, E>;
+): ValidationTest<T, E>;
 export function check<T, E = never>(
   ...args:
     | [test: (value: T) => boolean, message: ValidatorMessage<T>]
@@ -31,30 +31,25 @@ export function check<T, E = never>(
         test: (value: T) => boolean,
         message: ValidatorMessage<T>,
       ]
-): ValidatorTest<T, E> {
+): ValidationTest<T, E> {
   const [path, test, message] = args.length === 2 ? [[], ...args] : args;
   const keys = typeof path === 'string' ? [path] : path;
 
   return async (value, field) => {
-    const parsed = value as T;
-    if (test(parsed)) {
-      return valid({ value: parsed, field });
+    if (test(value)) {
+      return validResult({ value, field });
     }
 
+    const formatted = formatMessage(message, { value, field });
     if (keys.length === 0) {
-      return invalidResult({ message, value: parsed, field });
+      return invalidResult({ message: formatted, value, field });
     }
 
     // Computed keys define own properties, so a `__proto__` key stays one.
     const errors = keys.reduceRight<unknown>(
       (inner, key) => ({ [key]: inner }),
-      formatMessage(message, { value: parsed, field }),
+      formatted,
     );
-    return invalidResult({
-      message: '',
-      value: parsed,
-      field,
-      errors: errors as E,
-    });
+    return invalidResult({ message: '', value, field, errors: errors as E });
   };
 }
