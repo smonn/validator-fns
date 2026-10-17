@@ -1,4 +1,27 @@
-import type { InvalidResult } from './shared.js';
+import type { InvalidResult, ValidatorTest } from './shared.js';
+
+/**
+ * Runs tests on a value in order, stopping at the first failure, for the
+ * collection-level tests of `array()` and `object()`.
+ * @param tests Tests to run
+ * @param value Value to test
+ * @param field Field name
+ * @internal
+ */
+export async function findInvalidResult<V, E>(
+  tests: ValidatorTest<V, E>[],
+  value: V,
+  field: string | undefined,
+): Promise<InvalidResult<E> | undefined> {
+  for (const validatorTest of tests) {
+    const result = await validatorTest(value, field);
+    if (result.state === 'invalid') {
+      return result;
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * The error that `array()` and `object()` record for a failed item or field:

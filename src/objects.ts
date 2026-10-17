@@ -1,4 +1,4 @@
-import { invalidDetail } from './invalid-detail.js';
+import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import {
   type ExtractError,
   type ExtractValue,
@@ -33,29 +33,6 @@ function setOwn(target: object, key: string, value: unknown) {
     writable: true,
     configurable: true,
   });
-}
-
-/**
- * Runs the object-level tests on the parsed object, stopping at the first
- * failure.
- * @param tests Object-level tests
- * @param value Parsed object
- * @param field Field name
- * @internal
- */
-async function findInvalidResult<V, E>(
-  tests: ValidatorTest<V, E>[],
-  value: V,
-  field: string | undefined,
-) {
-  for (const objectTest of tests) {
-    const result = await objectTest(value, field);
-    if (result.state === 'invalid') {
-      return result;
-    }
-  }
-
-  return undefined;
 }
 
 /**
