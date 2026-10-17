@@ -11,9 +11,6 @@
   "rules": {
     "eslint/complexity": ["error", { "max": 10 }],
     "typescript/no-floating-promises": ["error", { "ignoreVoid": false }],
-    "vitest/expect-expect": "error",
-    // Off until v3: #585 enables it after #498's unknown defaults, which
-    // remove many of its findings.
-    "typescript/no-unsafe-type-assertion": "off"
+    "vitest/expect-expect": "error"
   }
 }

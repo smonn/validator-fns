@@ -58,6 +58,9 @@ type ObjectErrors<P extends ObjectParameter> = {
 function asObjectValue<P extends ObjectParameter>(
   values: Partial<Record<keyof P, unknown>>,
 ): ObjectValue<P> {
+  // Permanent, approved in #657 (2.5a). Reconsider if TypeScript can check a
+  // mapped type built key by key.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- no loop can build ObjectValue<P>, see above
   return values as ObjectValue<P>;
 }
 
