@@ -169,13 +169,25 @@ export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
  * @param result.field Field name
  * @category Helpers
  */
-export async function valid<T, E = never>({
+export async function valid<T, E = never>(result: {
+  value: T | null | undefined;
+  field: string | undefined;
+}): Promise<ValidatorResult<T, E>> {
+  return validResult(result);
+}
+
+/**
+ * Creates a valid result synchronously, for `valid` and the built-in tests'
+ * synchronous twins.
+ * @internal
+ */
+export function validResult<T, E = never>({
   value,
   field,
 }: {
   value: T | null | undefined;
   field: string | undefined;
-}): Promise<ValidatorResult<T, E>> {
+}): ValidatorResult<T, E> {
   return {
     isValid: true,
     state: 'valid',
@@ -198,6 +210,25 @@ export async function invalid<
   T,
   E,
   P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
+>(result: {
+  message: ValidatorMessage<T, P>;
+  value: unknown;
+  field: string | undefined;
+  errors?: E | undefined;
+  extras?: Omit<P, 'field' | 'value'> | undefined;
+}): Promise<ValidatorResult<T, E>> {
+  return invalidResult(result);
+}
+
+/**
+ * Creates an invalid result synchronously, for `invalid` and the built-in
+ * tests' synchronous twins.
+ * @internal
+ */
+export function invalidResult<
+  T,
+  E,
+  P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >({
   errors,
   field,
@@ -210,7 +241,7 @@ export async function invalid<
   field: string | undefined;
   errors?: E | undefined;
   extras?: Omit<P, 'field' | 'value'> | undefined;
-}): Promise<ValidatorResult<T, E>> {
+}): ValidatorResult<T, E> {
   return {
     isValid: false,
     state: 'invalid',
