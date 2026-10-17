@@ -14,17 +14,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      # Standing scope: two kinds of PR skip the changeset check.
-      # - Dependabot PRs. The library has no runtime dependencies, so their
-      #   changeset would always be empty, and pushing one onto the branch stops
-      #   Dependabot from rebasing it. Keyed on the PR author, which nobody else
-      #   can use. Revisit if the library takes a runtime dependency.
-      # - The Version Packages PR. It consumes the changesets it releases, so the
-      #   check always fails on it. Keyed on a changeset-release/* branch in this
-      #   repository, which only maintainers can push.
-      CHANGESET_SCOPE: ${{ github.event.pull_request.user.login == 'dependabot[bot]' || (github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'changeset-release/')) }}
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -57,12 +46,58 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Standing scope: two kinds of PR skip the changeset check.
+      # - Dependabot PRs. The library has no runtime dependencies, so their
+      #   changeset would always be empty, and pushing one onto the branch stops
+      #   Dependabot from rebasing it. Revisit if the library takes a runtime
+      #   dependency. Anyone with write access can push to a Dependabot branch,
+      #   so the scope applies only while every commit on the PR is Dependabot's:
+      #   authored by dependabot[bot] and committed and signed by GitHub, as
+      #   Dependabot's commits are. A commit pushed by anyone else, or a failed
+      #   lookup, runs the full check. This step runs again on every push.
+      # - The Version Packages PR. It consumes the changesets it releases, so the
+      #   check always fails on it. Keyed on a changeset-release/* branch in this
+      #   repository, which only maintainers can push.
+      - name: Select the check suite
+        id: suite
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          scope=false
+          if [ "$SAME_REPO" = true ] && [[ "$HEAD_REF" == changeset-release/* ]]; then
+            scope=true
+            reason='Version Packages PR'
+          elif [ "$PR_AUTHOR" = 'dependabot[bot]' ]; then
+            if others=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits" \
+              --jq '.[] | select(.author.login != "dependabot[bot]" or .committer.login != "web-flow" or .commit.verification.verified != true) | .sha'); then
+              if [ -z "$others" ]; then
+                scope=true
+                reason='Dependabot PR with only Dependabot commits'
+              else
+                reason="Dependabot PR with other commits: $(echo $others)"
+              fi
+            else
+              reason='Dependabot PR whose commits could not be read'
+            fi
+          fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+          if [ "$scope" = true ]; then
+            echo "Suite: pnpm check:code, without the changeset check (standing scope: $reason)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Suite: pnpm check${reason:+ ($reason)}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Check
-        if: env.CHANGESET_SCOPE != 'true'
+        if: steps.suite.outputs.scope != 'true'
         run: pnpm check
 
       - name: Check without the changeset (standing scope)
-        if: env.CHANGESET_SCOPE == 'true'
+        if: steps.suite.outputs.scope == 'true'
         run: pnpm check:code
 
       # Runs after Check, which builds dist. The script packs and installs with
