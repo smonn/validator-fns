@@ -9,6 +9,16 @@ import {
 
 export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
 
+/** @internal */
+type ObjectValue<P extends ObjectParameter> = {
+  [K in keyof P]?: ExtractValue<P[K]>;
+};
+
+/** @internal */
+type ObjectErrors<P extends ObjectParameter> = {
+  [K in keyof P]?: ExtractError<P[K]>;
+};
+
 /**
  * Sets an own property. Plain assignment of `__proto__` calls the
  * `Object.prototype.__proto__` setter instead of creating the property.
@@ -24,14 +34,43 @@ function setOwn(target: object, key: string, value: unknown) {
 }
 
 /**
- * Validates an object.
+ * Runs the object-level tests on the parsed object, stopping at the first
+ * failure.
+ * @param tests Object-level tests
+ * @param value Parsed object
+ * @param field Field name
+ * @internal
+ */
+async function findInvalidResult<V, E>(
+  tests: ValidatorTest<V, E>[],
+  value: V,
+  field: string | undefined,
+) {
+  for (const objectTest of tests) {
+    const result = await objectTest(value, field);
+    if (result.state === 'invalid') {
+      return result;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Validates an object. The remaining `tests` run on the parsed object, in
+ * order, once every property is valid, and the first failure is the result.
  * @category Type Validators
  */
 export function object<
   P extends ObjectParameter,
-  V extends { [K in keyof P]?: ExtractValue<P[K]> },
-  E extends { [K in keyof P]?: ExtractError<P[K]> },
->(properties: P): ValidatorTest<V, E> {
+  V extends ObjectValue<P>,
+  E extends ObjectErrors<P>,
+>(
+  properties: P,
+  // Typed from P rather than V and E, so the tests don't take part in
+  // inferring V and E.
+  ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
+): ValidatorTest<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
@@ -63,15 +102,24 @@ export function object<
       }
     }
 
-    if (isValid) {
-      return valid({ value: resolvedValues, field });
+    if (!isValid) {
+      return invalid({ message: '', value: values, field, errors });
     }
 
-    return invalid({
-      message: '',
-      value: values,
+    const objectInvalidResult = await findInvalidResult(
+      tests,
+      resolvedValues,
       field,
-      errors,
-    });
+    );
+    if (objectInvalidResult) {
+      return invalid({
+        message: objectInvalidResult.message,
+        value: values,
+        field,
+        errors: objectInvalidResult.errors as E,
+      });
+    }
+
+    return valid({ value: resolvedValues, field });
   };
 }
