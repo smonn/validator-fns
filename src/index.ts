@@ -14,6 +14,7 @@ export { invalidDate, parseDate } from './parse-date';
 export type { NumberConfig } from './numbers';
 export { check } from './check';
 export { object } from './objects';
+export { standard } from './standard';
 export type { ObjectParameter as ObjectParam } from './objects';
 export { oneOf, required } from './common';
 export type { OneOfValidatorMessageParameters } from './common';
