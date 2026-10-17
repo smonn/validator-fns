@@ -226,6 +226,9 @@ export function errorAt<Path extends readonly string[]>(
     (inner, key) => ({ [key]: inner }),
     message,
   );
+  // Permanent, approved in #657 (2.2a). Reconsider if TypeScript can check a
+  // recursive type built in a loop.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- no loop can build AtPath<Path>, see above
   return errors as AtPath<Path>;
 }
 
