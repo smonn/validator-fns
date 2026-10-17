@@ -72,3 +72,7 @@ test('array() carries the item value and error types', () => {
     ValidatorTest<string[], string | ArrayItemValidatorResult<string>[]>
   >();
 });
+
+test('results have no isValid property', () => {
+  expectTypeOf<ValidatorResult>().not.toHaveProperty('isValid');
+});

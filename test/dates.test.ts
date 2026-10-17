@@ -54,7 +54,6 @@ test('minDate', async () => {
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
-    isValid: true,
     field: undefined,
   });
   const tomorrow = new Date(now);
@@ -62,7 +61,6 @@ test('minDate', async () => {
   assert.deepEqual(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
-    isValid: true,
     field: undefined,
   });
   const yesterday = new Date(now);
@@ -71,7 +69,6 @@ test('minDate', async () => {
     state: 'invalid',
     value: yesterday,
     message: `min:${now.toISOString()}`,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -83,7 +80,6 @@ test('maxDate', async () => {
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
-    isValid: true,
     field: undefined,
   });
   const tomorrow = new Date(now);
@@ -92,7 +88,6 @@ test('maxDate', async () => {
     state: 'invalid',
     value: tomorrow,
     message: `max:${now.toISOString()}`,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -101,7 +96,6 @@ test('maxDate', async () => {
   assert.deepEqual(await validate(yesterday), {
     state: 'valid',
     value: yesterday,
-    isValid: true,
     field: undefined,
   });
 });
@@ -113,7 +107,6 @@ test('exclusive', async () => {
     state: 'invalid',
     value: now,
     message: 'must be after now',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -122,7 +115,6 @@ test('exclusive', async () => {
     state: 'invalid',
     value: now,
     message: 'must be before now',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -142,26 +134,22 @@ test('date', async () => {
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(nextMonth), {
     state: 'valid',
     value: nextMonth,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(tomorrow), {
     state: 'valid',
     value: tomorrow,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
     value: invalidDate,
     message: 'required',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -169,7 +157,6 @@ test('date', async () => {
     state: 'invalid',
     value: null,
     message: 'required',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -177,7 +164,6 @@ test('date', async () => {
     state: 'invalid',
     value: undefined,
     message: 'required',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -188,26 +174,22 @@ test('date default', async () => {
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: new Date(0),
-    isValid: true,
     field: undefined,
   });
   const now = new Date();
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(null), {
     state: 'valid',
     value: new Date(0),
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(new Date(Number.NaN)), {
     state: 'valid',
     value: new Date(0),
-    isValid: true,
     field: undefined,
   });
 });

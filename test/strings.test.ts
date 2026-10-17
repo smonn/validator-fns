@@ -16,32 +16,27 @@ test('min', async () => {
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'valid',
     value: '',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
     message: 'min:5',
     field: undefined,
-    isValid: false,
     errors: undefined,
     value: 'foo',
   });
@@ -52,25 +47,21 @@ test('max', async () => {
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'valid',
     value: '',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('foo bar'), {
@@ -78,7 +69,6 @@ test('max', async () => {
     value: 'foo bar',
     message: 'max:5',
     field: undefined,
-    isValid: false,
     errors: undefined,
   });
 });
@@ -88,42 +78,35 @@ test('email', async () => {
   assert.deepEqual(await validate('name@example.com'), {
     state: 'valid',
     value: 'name@example.com',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('name@host'), {
     state: 'valid',
     value: 'name@host',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('name+tag@example.com'), {
     state: 'valid',
     value: 'name+tag@example.com',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'valid',
     value: '',
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('@example.com'), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     errors: undefined,
     value: '@example.com',
@@ -131,7 +114,6 @@ test('email', async () => {
   });
   assert.deepEqual(await validate('name.com'), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     errors: undefined,
     value: 'name.com',
@@ -139,7 +121,6 @@ test('email', async () => {
   });
   assert.deepEqual(await validate('name@.com'), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     errors: undefined,
     value: 'name@.com',
@@ -151,37 +132,31 @@ test('url', async () => {
   const validate = url('invalid url', ['http:', 'mailto:', 'https:']);
   assert.deepEqual(await validate('http://example.com'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'http://example.com',
   });
   assert.deepEqual(await validate('mailto:name@example.com'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'mailto:name@example.com',
   });
   assert.deepEqual(await validate(''), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: '',
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: undefined,
   });
   assert.deepEqual(await validate(0), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     errors: undefined,
     value: 0 as unknown as string,
@@ -189,7 +164,6 @@ test('url', async () => {
   });
   assert.deepEqual(await validate('/foo'), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     errors: undefined,
     value: '/foo',
@@ -197,7 +171,6 @@ test('url', async () => {
   });
   assert.deepEqual(await validate('unknown://path'), {
     state: 'invalid',
-    isValid: false,
     field: undefined,
     value: 'unknown://path',
     errors: undefined,
@@ -215,13 +188,11 @@ test('string', async () => {
 
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'hello',
   });
   assert.deepEqual(await validate(12_345), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: '12345',
   });
@@ -229,7 +200,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'At least five characters.',
     value: 'test',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -237,7 +207,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'At most ten characters.',
     value: 'hello world',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -245,7 +214,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'Must enter a value.',
     value: '',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -253,7 +221,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'At most ten characters.',
     value: '1970-01-01T00:00:00.000Z',
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -261,7 +228,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -269,7 +235,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'Must enter a value.',
     value: undefined,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -277,7 +242,6 @@ test('string', async () => {
     state: 'invalid',
     message: 'Failed to parse value to string.',
     value: { name: 'August' } as unknown as string,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -287,46 +251,39 @@ test('string default', async () => {
   const validate = string({ default: 'hello' });
   assert.deepEqual(await validate(), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'hello',
   });
   assert.deepEqual(await validate(null), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'hello',
   });
   assert.deepEqual(await validate(''), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'hello',
   });
   assert.deepEqual(await validate('other'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'other',
   });
   // Will cast 123 to '123'
   assert.deepEqual(await validate(123), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: '123',
   });
   // Will cast 0 to '0'
   assert.deepEqual(await validate(0), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: '0',
   });
   // Will cast false to 'false'
   assert.deepEqual(await validate(false), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 'false',
   });
@@ -381,7 +338,7 @@ test('uuid', async () => {
   for (const value of validValues) {
     assert.deepEqual(
       await validate(value),
-      { state: 'valid', isValid: true, field: undefined, value },
+      { state: 'valid', field: undefined, value },
       String(value),
     );
   }
@@ -410,7 +367,6 @@ test('uuid', async () => {
       await validate(value),
       {
         state: 'invalid',
-        isValid: false,
         field: undefined,
         errors: undefined,
         value,
@@ -442,7 +398,7 @@ test('string coerces non-primitive input other than plain objects', async () => 
     assert.equal(parseString(value), expected, expected);
     assert.deepEqual(
       await validate(value),
-      { state: 'valid', isValid: true, field: undefined, value: expected },
+      { state: 'valid', field: undefined, value: expected },
       expected,
     );
   }
@@ -458,7 +414,6 @@ test('string coerces non-primitive input other than plain objects', async () => 
     );
     assert.deepEqual(await validate(value), {
       state: 'invalid',
-      isValid: false,
       field: undefined,
       value: value as string,
       message: 'Failed to parse value to string.',

@@ -9,7 +9,6 @@ test('boolean', async () => {
     state: 'invalid',
     message: 'required',
     value: null,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
@@ -17,68 +16,57 @@ test('boolean', async () => {
     state: 'invalid',
     message: 'required',
     value: undefined,
-    isValid: false,
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(true), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(false), {
     state: 'valid',
     value: false,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('true'), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate('false'), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(1), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(0), {
     state: 'valid',
     value: false,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate({}), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validateWithDefault(), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validateWithDefault(null), {
     state: 'valid',
     value: true,
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validateWithDefault(false), {
     state: 'valid',
     value: false,
-    isValid: true,
     field: undefined,
   });
 });
