@@ -28,13 +28,8 @@ export type {
   MinValidatorMessageParameters,
   SharedValueType,
 } from './limits';
-export {
-  formatMessage,
-  hasOwnProperty,
-  invalid,
-  isObject,
-  valid,
-} from './shared';
+export { invalid } from './invalid';
+export { formatMessage, hasOwnProperty, isObject, valid } from './shared';
 export type {
   ConfigBase,
   DeepPartial,

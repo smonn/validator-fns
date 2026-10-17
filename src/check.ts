@@ -1,6 +1,6 @@
 import {
   formatMessage,
-  invalid,
+  invalidResult,
   valid,
   type ValidatorMessage,
   type ValidatorTest,
@@ -42,7 +42,7 @@ export function check<T, E = never>(
     }
 
     if (keys.length === 0) {
-      return invalid({ message, value: parsed, field });
+      return invalidResult({ message, value: parsed, field });
     }
 
     // Computed keys define own properties, so a `__proto__` key stays one.
@@ -50,6 +50,11 @@ export function check<T, E = never>(
       (inner, key) => ({ [key]: inner }),
       formatMessage(message, { value: parsed, field }),
     );
-    return invalid({ message: '', value: parsed, field, errors: errors as E });
+    return invalidResult({
+      message: '',
+      value: parsed,
+      field,
+      errors: errors as E,
+    });
   };
 }
