@@ -16,6 +16,7 @@ import {
   number,
   object,
   oneOf,
+  optional,
   string,
   url,
   uuid,
@@ -23,7 +24,7 @@ import {
   type ValidatorTest,
 } from '../src/index';
 
-// Every test that isn't required(), so a generated list can hold any of them.
+// Every built-in test, so a generated list can hold any of them.
 const stringTests = [
   min(3, 'min'),
   max(3, 'max'),
@@ -63,7 +64,7 @@ const anyValue = fc.anything({
   withUnicodeString: true,
 });
 
-test('type validators accept undefined unless required() is set', async () => {
+test('type validators reject undefined and null unless optional()', async () => {
   const typeValidators = fc.oneof(
     testsFrom(stringTests).map((tests) => string(...tests)),
     testsFrom(numberTests).map((tests) => number(...tests)),
@@ -74,10 +75,21 @@ test('type validators accept undefined unless required() is set', async () => {
   );
 
   await fc.assert(
-    fc.asyncProperty(typeValidators, async (validate) => {
-      const result = await validate(undefined);
-      assert.equal(result.state, 'valid');
-    }),
+    fc.asyncProperty(
+      typeValidators,
+      fc.constantFrom(undefined, null),
+      async (validate: ValidatorTest, value) => {
+        assert.deepInclude(await validate(value), {
+          state: 'invalid',
+          message: 'Required.',
+        });
+        assert.deepEqual(await optional(validate)(value), {
+          state: 'valid',
+          value,
+          field: undefined,
+        });
+      },
+    ),
   );
 });
 

@@ -1,4 +1,5 @@
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
+import { requirable } from './optional.js';
 import {
   invalid,
   isIterable,
@@ -67,8 +68,8 @@ export function applyArrayConfig(
 /**
  * Runs the item test on every item, collecting each item's parsed value, and
  * `null` for valid items and the message or errors for invalid ones. Without
- * an array or an item test, there is nothing to check, and the values are the
- * array as given.
+ * an item test, there is nothing to check, and the values are the array as
+ * given.
  * @param validateItem Item test
  * @param arrayValue Parsed array
  * @param field Field name
@@ -76,13 +77,13 @@ export function applyArrayConfig(
  */
 async function validateItems(
   validateItem: ValidatorTest | undefined,
-  arrayValue: unknown[] | null | undefined,
+  arrayValue: unknown[],
   field: string | undefined,
 ) {
   let isValid = true;
   const errors: ArrayItemValidatorResult[] = [];
 
-  if (!arrayValue || !validateItem) {
+  if (!validateItem) {
     return { isValid, errors, values: arrayValue };
   }
 
@@ -118,29 +119,36 @@ export function array<T, E>(
     ...(typeof config === 'function' ? undefined : config),
   };
 
-  return async (value, field) => {
-    const arrayValue = applyArrayConfig(finalConfig, value);
-    const [validateItem, ...arrayTests] = allTests;
+  return requirable<T[], string | ArrayItemValidatorResult<E>[]>(
+    finalConfig.requiredMessage,
+    async (value, field, onEmpty) => {
+      const arrayValue = applyArrayConfig(finalConfig, value);
+      if (arrayValue === null || arrayValue === undefined) {
+        return onEmpty(arrayValue, field);
+      }
 
-    const arrayInvalidResult = await findInvalidResult(
-      arrayTests,
-      arrayValue,
-      field,
-    );
-    const items = await validateItems(validateItem, arrayValue, field);
+      const [validateItem, ...arrayTests] = allTests;
 
-    if (!arrayInvalidResult && items.isValid) {
-      return valid({
-        value: items.values as T[] | null | undefined,
+      const arrayInvalidResult = await findInvalidResult(
+        arrayTests,
+        arrayValue,
         field,
-      });
-    }
+      );
+      const items = await validateItems(validateItem, arrayValue, field);
 
-    return invalid<T[], ArrayItemValidatorResult<E>[]>({
-      message: arrayInvalidResult ? arrayInvalidResult.message : '',
-      value,
-      field,
-      errors: items.errors as ArrayItemValidatorResult<E>[],
-    });
-  };
+      if (!arrayInvalidResult && items.isValid) {
+        return valid({
+          value: items.values as T[],
+          field,
+        });
+      }
+
+      return invalid<T[], ArrayItemValidatorResult<E>[]>({
+        message: arrayInvalidResult ? arrayInvalidResult.message : '',
+        value,
+        field,
+        errors: items.errors as ArrayItemValidatorResult<E>[],
+      });
+    },
+  );
 }

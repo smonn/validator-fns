@@ -31,9 +31,10 @@ const compilers = [
 const fixture = `import {
   type ConfigBase,
   createTypeValidatorTest,
+  type ExtractValue,
   object,
+  optional,
   parseNumber,
-  required,
   string,
   type ValidatorTest,
 } from 'validator-fns';
@@ -59,7 +60,13 @@ const money = createTypeValidatorTest(
 );
 
 export const price: ValidatorTest<number, string> = money({ cents: true });
-export const order = object({ name: string(required('Required.')), price });
+export const order = object({
+  name: string({ requiredMessage: 'Required.' }),
+  note: optional(string()),
+  price,
+});
+// note is optional and name required, on every TypeScript version.
+export const minimal: ExtractValue<typeof order> = { name: 'a', price: 1 };
 `;
 
 const tsconfig = {

@@ -1,8 +1,8 @@
 import { assert, test } from 'vitest';
-import { boolean, required } from '../src/index.js';
+import { boolean } from '../src/index.js';
 
 test('boolean', async () => {
-  const validate = boolean(required('required'));
+  const validate = boolean({ requiredMessage: 'required' });
   const validateWithDefault = boolean({ default: true });
 
   assert.deepEqual(await validate(null), {

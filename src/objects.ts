@@ -1,24 +1,48 @@
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
+import { requirable } from './optional.js';
 import {
   type ExtractError,
   type ExtractValue,
   hasOwnProperty,
   invalid,
   valid,
+  type ValidatorMessage,
   type ValidatorTest,
 } from './shared.js';
 
 export type ObjectParameter = Record<string, ValidatorTest>;
 
-/** @internal */
-type ObjectValue<P extends ObjectParameter> = {
-  // A field's validator passes null through unless a test rejects it.
-  [K in keyof P]?: ExtractValue<P[K]> | null;
-};
+/**
+ * Flattens an intersection into one object type, keeping optional keys.
+ * @internal
+ */
+type Flatten<T> = { [K in keyof T]: T[K] };
 
-/** @internal */
+/**
+ * Keys whose validator's value type includes undefined, such as an
+ * `optional()` validator's, may be left out. `object()` still sets every key
+ * it validates, to `undefined` for a missing one.
+ * @internal
+ */
+type ObjectValue<P extends ObjectParameter> = Flatten<
+  {
+    [
+      K in keyof P as undefined extends ExtractValue<P[K]> ? never : K
+    ]: ExtractValue<P[K]>;
+  } & {
+    [
+      K in keyof P as undefined extends ExtractValue<P[K]> ? K : never
+    ]?: ExtractValue<P[K]>;
+  }
+>;
+
+/**
+ * A failed field records its message, such as a nested object's
+ * `'Required.'`, or its errors when the message is empty.
+ * @internal
+ */
 type ObjectErrors<P extends ObjectParameter> = {
-  [K in keyof P]?: ExtractError<P[K]>;
+  [K in keyof P]?: string | ExtractError<P[K]>;
 };
 
 /**
@@ -36,8 +60,21 @@ function setOwn(target: object, key: string, value: unknown) {
 }
 
 /**
- * Validates an object. The remaining `tests` run on the parsed object, in
- * order, once every property is valid, and the first failure is the result.
+ * Configuration for object validation.
+ * @category Types
+ */
+export interface ObjectConfig {
+  /**
+   * Message for a missing object, `undefined` or `null`. Defaults to
+   * `'Required.'`.
+   */
+  requiredMessage?: ValidatorMessage<unknown>;
+}
+
+/**
+ * Validates an object. The second argument is a configuration object, or the
+ * first of the `tests`. The tests run on the parsed object, in order, once
+ * every property is valid, and the first failure is the result.
  * @category Type Validators
  */
 export function object<
@@ -48,14 +85,23 @@ export function object<
   properties: P,
   // Typed from P rather than V and E, so the tests don't take part in
   // inferring V and E.
+  config?: ObjectConfig | ValidatorTest<ObjectValue<P>, ObjectErrors<P>>,
   ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
 ): ValidatorTest<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
 
-  return async (values, field) => {
-    // Object() boxes primitives and turns null and undefined into {}.
+  const allTests = typeof config === 'function' ? [config, ...tests] : tests;
+  const requiredMessage =
+    typeof config === 'object' ? config.requiredMessage : undefined;
+
+  return requirable<V, E>(requiredMessage, async (values, field, onEmpty) => {
+    if (values === null || values === undefined) {
+      return onEmpty(values, field);
+    }
+
+    // Object() boxes primitives.
     const source: object = Object(values);
     const errors = {} as E;
     const resolvedValues = {} as V;
@@ -87,7 +133,7 @@ export function object<
     }
 
     const objectInvalidResult = await findInvalidResult(
-      tests,
+      allTests,
       resolvedValues,
       field,
     );
@@ -101,5 +147,5 @@ export function object<
     }
 
     return valid({ value: resolvedValues, field });
-  };
+  });
 }

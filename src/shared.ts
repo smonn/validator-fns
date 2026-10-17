@@ -1,8 +1,11 @@
 export type ValidResult<T> = {
   /** `valid` if the value passed every validation test. */
   state: 'valid';
-  /** The parsed value. Note that may be different than the original value. */
-  value: T | null | undefined;
+  /**
+   * The parsed value. Note that may be different than the original value.
+   * Type validators only pass a missing value inside `optional()`.
+   */
+  value: T;
   /** Field name if provided. Automatically provided if using object validation. */
   field?: string | undefined;
 };
@@ -84,6 +87,11 @@ export interface ConfigBase<T> {
   parser: (value: unknown) => T | null | undefined;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
+  /**
+   * Message for a missing value: `undefined`, `null`, an empty string, `NaN`
+   * or an invalid date after parsing and `default`. Defaults to `'Required.'`.
+   */
+  requiredMessage?: ValidatorMessage<T>;
 }
 
 export interface ValidatorMessageParameters<T> {
@@ -160,7 +168,7 @@ export function formatMessage<T, P extends ValidatorMessageParameters<T>>(
  * @category Helpers
  */
 export async function valid<T, E = never>(result: {
-  value: T | null | undefined;
+  value: T;
   field: string | undefined;
 }): Promise<ValidatorResult<T, E>> {
   return validResult(result);
@@ -175,7 +183,7 @@ export function validResult<T, E = never>({
   value,
   field,
 }: {
-  value: T | null | undefined;
+  value: T;
   field: string | undefined;
 }): ValidatorResult<T, E> {
   return {

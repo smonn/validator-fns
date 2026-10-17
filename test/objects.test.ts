@@ -9,7 +9,7 @@ import {
   min,
   number,
   object,
-  required,
+  optional,
   string,
   type ValidatorTest,
 } from '../src/index.js';
@@ -17,12 +17,12 @@ import {
 test('object', async () => {
   const validate = object({
     username: string(
-      required('Username is required.'),
+      { requiredMessage: 'Username is required.' },
       min(5, 'At least five characters.'),
       max(20, 'At most 20 characters.'),
     ),
     age: number(
-      required('Must enter your age.'),
+      { requiredMessage: 'Must enter your age.' },
       min(18, 'At least 18 years old'),
       max(150, 'Are you really over 150 years old?'),
       integer('Half-years do not count.'),
@@ -64,7 +64,7 @@ test('object', async () => {
   );
 });
 
-test('empty object config is always valid', async () => {
+test('empty object config accepts any object', async () => {
   const validate = object({});
 
   assert.deepEqual(await validate({ foo: 'bar' }), {
@@ -72,12 +72,7 @@ test('empty object config is always valid', async () => {
     value: {},
     field: undefined,
   });
-  assert.deepEqual(await validate(null), {
-    state: 'valid',
-    value: {},
-    field: undefined,
-  });
-  assert.deepEqual(await validate(), {
+  assert.deepEqual(await validate(1), {
     state: 'valid',
     value: {},
     field: undefined,
@@ -85,7 +80,7 @@ test('empty object config is always valid', async () => {
 });
 
 test('inherited properties of the config are not validated', async () => {
-  const inherited = { name: string(required('required')) };
+  const inherited = { name: string({ requiredMessage: 'required' }) };
   const properties = Object.assign(Object.create(inherited) as object, {
     age: number(),
   });
@@ -100,8 +95,8 @@ test('inherited properties of the config are not validated', async () => {
 
 test('should report a field as missing when its name is on Object.prototype', async () => {
   const validate = object({
-    constructor: string(required('Required')),
-    toString: string(required('Required')),
+    constructor: string({ requiredMessage: 'Required' }),
+    toString: string({ requiredMessage: 'Required' }),
   });
 
   assert.deepEqual(await validate({}), {
@@ -115,7 +110,7 @@ test('should report a field as missing when its name is on Object.prototype', as
 
 test('should report a field as missing when the input only inherits it', async () => {
   const input = Object.create({ name: 'inherited' }) as object;
-  const validate = object({ name: string(required('Required')) });
+  const validate = object({ name: string({ requiredMessage: 'Required' }) });
 
   assert.deepEqual(await validate(input), {
     state: 'invalid',
@@ -128,7 +123,9 @@ test('should report a field as missing when the input only inherits it', async (
 
 test('should keep a __proto__ field as an own property when it is in the schema', async () => {
   const validate = object(
-    Object.fromEntries([['__proto__', string(required('Required'))]]),
+    Object.fromEntries([
+      ['__proto__', string({ requiredMessage: 'Required' })],
+    ]),
   );
 
   const validResult = await validate(JSON.parse('{"__proto__": "x"}'));
@@ -167,9 +164,9 @@ test('nested object', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
     person: object({
-      firstName: string(required('required')),
-      lastName: string(required('required')),
-      age: number(),
+      firstName: string({ requiredMessage: 'required' }),
+      lastName: string({ requiredMessage: 'required' }),
+      age: optional(number()),
     }),
   });
 
@@ -186,7 +183,7 @@ test('nested object', async () => {
         person: {
           firstName: 'foo',
           lastName: 'bar',
-          age: undefined as unknown as number,
+          age: undefined,
         },
       },
       field: undefined,
@@ -227,7 +224,10 @@ test('invalid configuration', async () => {
   assert.throws(() => object(config));
 
   const validate = object({ test: 'test' } as any);
-  await validate(null);
+  assert.deepInclude(await validate({}), {
+    state: 'invalid',
+    errors: { test: 'No validator set' },
+  });
 });
 
 // Fails with an empty message and no errors, which built-in tests never do.
@@ -247,8 +247,8 @@ test('object records an empty message for a field that fails without one', async
 
 const signup = object(
   {
-    password: string(required('Required')),
-    confirm: string(required('Required')),
+    password: string({ requiredMessage: 'Required' }),
+    confirm: string({ requiredMessage: 'Required' }),
   },
   check('confirm', (value) => value.confirm === value.password, 'Must match.'),
 );
@@ -274,7 +274,7 @@ test('should return the parsed object when every object-level test passes', asyn
 test('should skip object-level tests when a field is invalid', async () => {
   let calls = 0;
   const validate = object(
-    { password: string(required('Required')) },
+    { password: string({ requiredMessage: 'Required' }) },
     check(() => {
       calls++;
       return false;
@@ -362,8 +362,8 @@ test('should type the check value as the parsed object when used in object()', (
     { password: string(), age: number() },
     check((value) => {
       expectTypeOf(value).toEqualTypeOf<{
-        password?: string | null;
-        age?: number | null;
+        password: string;
+        age: number;
       }>();
       return true;
     }, 'message'),

@@ -5,28 +5,6 @@ import type {
   ValidatorTest,
 } from './shared.js';
 
-/**
- * Ensures a value is not undefined, null, empty string, NaN, nor invalid date.
- * @param message Error message
- * @param nullable Allow null values
- * @category Validation Tests
- */
-export function required<T, P extends ValidatorMessageParameters<T>>(
-  message: ValidatorMessage<T, P>,
-  nullable?: boolean,
-): ValidatorTest<T, never> {
-  return createValidatorTest(
-    (value) =>
-      (nullable && value === null) ||
-      (value !== null &&
-        value !== undefined &&
-        !(typeof value === 'string' && value === '') &&
-        !(typeof value === 'number' && Number.isNaN(value)) &&
-        !(value instanceof Date && Number.isNaN(value.valueOf()))),
-    message,
-  );
-}
-
 export interface OneOfValidatorMessageParameters<
   T,
 > extends ValidatorMessageParameters<T> {

@@ -1,6 +1,6 @@
+import { isBlank, requirable } from './optional.js';
 import {
   type ConfigBase,
-  invalid,
   invalidResult,
   validResult,
   type ValidatorFactory,
@@ -51,33 +51,44 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       }
     }
 
-    return async (value, field) => {
-      try {
-        const parsedValue = applyConfig(value, finalConfig);
-        for (const validatorTest of allTests) {
-          const syncTest = syncTests.get(validatorTest);
-          // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
-          // await in a ternary arm a negative count.
-          let result: ValidatorResult<unknown, string>;
-          if (syncTest) {
-            result = syncTest(parsedValue, field);
-          } else {
-            result = await validatorTest(parsedValue, field);
+    return requirable<T, string>(
+      finalConfig.requiredMessage,
+      async (value, field, onEmpty) => {
+        try {
+          const parsedValue = applyConfig(value, finalConfig);
+          if (
+            parsedValue === null ||
+            parsedValue === undefined ||
+            isBlank(parsedValue)
+          ) {
+            return onEmpty(parsedValue, field);
           }
-          if (result.state === 'invalid') {
-            return result;
-          }
-        }
 
-        return validResult({ value: parsedValue, field });
-      } catch (error) {
-        return invalid({
-          message: error instanceof Error ? error.message : String(error),
-          value,
-          field,
-        });
-      }
-    };
+          for (const validatorTest of allTests) {
+            const syncTest = syncTests.get(validatorTest);
+            // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
+            // await in a ternary arm a negative count.
+            let result: ValidatorResult<unknown, string>;
+            if (syncTest) {
+              result = syncTest(parsedValue, field);
+            } else {
+              result = await validatorTest(parsedValue, field);
+            }
+            if (result.state === 'invalid') {
+              return result;
+            }
+          }
+
+          return validResult({ value: parsedValue, field });
+        } catch (error) {
+          return invalidResult<T, string>({
+            message: error instanceof Error ? error.message : String(error),
+            value,
+            field,
+          });
+        }
+      },
+    );
   };
 }
 

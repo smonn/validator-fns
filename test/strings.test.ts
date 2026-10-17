@@ -6,14 +6,18 @@ import {
   max,
   min,
   parseString,
-  required,
   string,
   url,
   uuid,
+  type ValidatorTest,
 } from '../src/index';
 
+// Tests called directly here are typed as plain ValidatorTest: a built-in test
+// passes a missing value through, which its value type leaves out, since type
+// validators only run tests on present values.
+
 test('min', async () => {
-  const validate = min(5, 'min:{min}');
+  const validate: ValidatorTest = min(5, 'min:{min}');
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
@@ -44,7 +48,7 @@ test('min', async () => {
 });
 
 test('max', async () => {
-  const validate = max(5, 'max:{max}');
+  const validate: ValidatorTest = max(5, 'max:{max}');
   assert.deepEqual(await validate('hello'), {
     state: 'valid',
     value: 'hello',
@@ -75,7 +79,7 @@ test('max', async () => {
 });
 
 test('email', async () => {
-  const validate = email('invalid email');
+  const validate: ValidatorTest = email('invalid email');
   assert.deepEqual(await validate('name@example.com'), {
     state: 'valid',
     value: 'name@example.com',
@@ -130,7 +134,11 @@ test('email', async () => {
 });
 
 test('url', async () => {
-  const validate = url('invalid url', ['http:', 'mailto:', 'https:']);
+  const validate: ValidatorTest = url('invalid url', [
+    'http:',
+    'mailto:',
+    'https:',
+  ]);
   assert.deepEqual(await validate('http://example.com'), {
     state: 'valid',
     field: undefined,
@@ -211,8 +219,7 @@ test('url passes the default protocols to the message', async () => {
 
 test('string', async () => {
   const validate = string(
-    { trim: true },
-    required('Must enter a value.'),
+    { trim: true, requiredMessage: 'Must enter a value.' },
     min(5, 'At least five characters.'),
     max(10, 'At most ten characters.'),
   );
@@ -345,7 +352,7 @@ test('should leave lastIndex unchanged when testing the caller pattern', async (
 });
 
 test('uuid', async () => {
-  const validate = uuid('invalid uuid');
+  const validate: ValidatorTest = uuid('invalid uuid');
   const validValues = [
     // One per RFC 9562 version, 1 to 8, from the RFC's examples where it has one.
     'c232ab00-9414-11ec-b3c8-9f6bdeced846',
