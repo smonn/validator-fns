@@ -1,3 +1,4 @@
+import { invalidDetail } from './invalid-detail.js';
 import {
   type ExtractError,
   type ExtractValue,
@@ -41,10 +42,7 @@ export function object<
 
         if (result.state === 'invalid') {
           isValid = false;
-          errors[key] = (result.message || result.errors) as E[Extract<
-            keyof P,
-            string
-          >];
+          errors[key] = invalidDetail(result) as E[Extract<keyof P, string>];
         }
       }
     }

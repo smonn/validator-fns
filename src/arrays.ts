@@ -1,3 +1,4 @@
+import { invalidDetail } from './invalid-detail.js';
 import {
   invalid,
   isIterable,
@@ -111,7 +112,7 @@ async function validateItems(
 
     if (result.state === 'invalid') {
       isValid = false;
-      errors.push(result.message || result.errors);
+      errors.push(invalidDetail(result));
     } else {
       errors.push(null);
     }

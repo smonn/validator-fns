@@ -40,19 +40,33 @@
           "deny": ["src/**"],
         },
         {
+          "name": "invalid-detail",
+          "pattern": "src/invalid-detail.ts",
+          "allow": ["src/shared.ts"],
+        },
+        {
           "name": "factories",
           "pattern": "src/factories.ts",
           "allow": ["src/shared.ts"],
         },
         {
           "name": "validators",
-          "pattern": "src/{arrays,booleans,common,limits,objects}.ts",
+          "pattern": "src/{booleans,common,limits}.ts",
           "allow": ["src/shared.ts", "src/factories.ts"],
         },
         {
           "name": "scalar-validators",
           "pattern": "src/{numbers,strings}.ts",
           "allow": ["src/shared.ts", "src/factories.ts", "src/primitives.ts"],
+        },
+        {
+          "name": "collection-validators",
+          "pattern": "src/{arrays,objects}.ts",
+          "allow": [
+            "src/shared.ts",
+            "src/factories.ts",
+            "src/invalid-detail.ts",
+          ],
         },
         {
           "name": "dates",
