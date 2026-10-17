@@ -136,6 +136,36 @@ export type ValidatorMessage<T, X extends object = object> =
   | ((parameters: X & ValidatorMessageParameters<T>) => string);
 
 /**
+ * Paths into nested plain objects, as lists of property names, for `check()`.
+ * Arrays, dates and functions end a path.
+ * @internal
+ */
+export type KeyPath<T> = T extends
+  | readonly unknown[]
+  | Date
+  | ((...args: never[]) => unknown)
+  ? never
+  : T extends object
+    ? {
+        [K in keyof T & string]:
+          | readonly [K]
+          | readonly [K, ...KeyPath<NonNullable<T[K]>>];
+      }[keyof T & string]
+    : never;
+
+/**
+ * The errors with a message at `Path` that `check()` produces, such as
+ * `{ shipping?: { zip?: string } }` for `['shipping', 'zip']`.
+ * @internal
+ */
+export type AtPath<Path> = Path extends readonly [
+  infer Head extends string,
+  ...infer Rest,
+]
+  ? { [P in Head]?: AtPath<Rest> }
+  : string;
+
+/**
  * Simple check for objects.
  * @param value Value to test
  */
@@ -167,6 +197,36 @@ export function setOwn(target: object, key: string, value: unknown) {
     writable: true,
     configurable: true,
   });
+}
+
+/**
+ * The errors with `message` at `key`, for `check()`.
+ * @internal
+ */
+export function errorAtKey<K extends string>(
+  key: K,
+  message: string,
+): { [P in K]?: string } {
+  const errors: { [P in K]?: string } = {};
+  setOwn(errors, key, message);
+  return errors;
+}
+
+/**
+ * The errors with `message` at `path`, for `check()`. The one type assertion
+ * it needs: no loop can build the recursive type `AtPath<Path>`.
+ * @internal
+ */
+export function errorAt<Path extends readonly string[]>(
+  path: Path,
+  message: string,
+): AtPath<Path> {
+  // Computed keys define own properties, so a `__proto__` key stays one.
+  const errors = path.reduceRight<unknown>(
+    (inner, key) => ({ [key]: inner }),
+    message,
+  );
+  return errors as AtPath<Path>;
 }
 
 /**
