@@ -84,6 +84,7 @@
     "@arethetypeswrong/cli": "0.18.5",
     "@changesets/cli": "3.0.3",
     "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/node": "26.6.5",
     "@vitest/coverage-v8": "5.0.5",
     "fast-check": "4.10.2",
