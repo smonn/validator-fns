@@ -312,7 +312,7 @@ Supported validation tests: `oneOf`.
 
 #### date(config?, ...tests)
 
-Casts value to a date, or keeps `null` or `undefined` if using the default date parser. An input the parser can't read becomes an invalid date, which counts as missing. `config` is optional.
+Casts value to a date, or keeps `null` or `undefined` if using the default date parser. A string that isn't ISO 8601, such as `'tomorrow'`, gives an invalid result with the message `Failed to parse value to date.`. A blank string, an invalid `Date`, and any other input the parser can't read become an invalid date, which counts as missing. `config` is optional.
 
 Supported validation tests: `maxDate`, `minDate`, and `oneOf`.
 
