@@ -30,11 +30,11 @@ When you're done, submit a pull request and for one of the maintainers to check 
 
 ### Issues and pull requests
 
-Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description.
+Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions.
 
 ### Changesets
 
-Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, and the Version Packages pull request, which consumes the changesets it releases.
+Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, as long as every commit on it is Dependabot's, and the Version Packages pull request, which consumes the changesets it releases.
 
 - Run `pnpm changeset` and pick the bump: `major` for a change that breaks the exported API or `package.json` `exports`, `types`, or `engines`, `minor` for a new feature, `patch` for a fix. Write the summary for library users.
 - For tooling, tests, and docs-only changes, README included, run `pnpm changeset --empty`. The npm page updates with the next release. A security warning is the exception: give it a `patch` so the warning reaches npm now.
@@ -46,11 +46,11 @@ Every pull request adds a changeset, a small file in `.changeset/` that records 
 
 The maintainer releases. When a pull request with a changeset merges, CI opens or updates a Version Packages pull request that bumps `version` and writes `CHANGELOG.md`. Merging that pull request runs `pnpm check`, publishes to npm through trusted publishing, and creates the git tag and GitHub release.
 
-CI doesn't run on the Version Packages pull request by itself, because GitHub Actions opens and updates it. To release:
+GitHub Actions opens and updates the Version Packages pull request, so its workflows wait for a maintainer's approval before they run. To release:
 
-1. Close and reopen the Version Packages pull request. Reopening is your event, so CI runs.
+1. On the Version Packages pull request, select "Approve workflows to run".
 2. Wait for the checks to pass.
-3. Merge it right away. If another pull request merges first, the action updates the Version Packages pull request without running CI, so close and reopen it again.
+3. Merge it right away. If another pull request merges first, the action pushes a new commit to the Version Packages pull request, and its workflows wait for approval again.
 
 If `pnpm check` fails in that release run, `main` has the version bump but nothing is published. Fix the failure in a follow-up pull request. If the fix changes the library, give it a patch changeset that says the previous version failed to publish; the next Version Packages pull request releases the following patch version, and the failed version is never published. Otherwise give it an empty changeset, merge it, and run the Continuous Deployment workflow by hand on `main` (Actions, Continuous Deployment, Run workflow). The manual run publishes the version in `package.json` if it isn't on npm, and does nothing if it is. It fails while a changeset with a version bump is pending, because those changes belong in the next version.
 
@@ -59,6 +59,7 @@ If `pnpm check` fails in that release run, `main` has the version bump but nothi
 The next major version is built on the `next` branch in Changesets pre mode, so `main` keeps releasing patches and features for the current one.
 
 - Issues in the next major's milestone branch from `next`, and their pull requests target it. Add changesets as usual. Locally, set `GITHUB_BASE_REF=next` so the changeset check compares against `next`.
+- Merge pull requests into `next` with a rebase, as on `main`. The syncs from `main` below are the exception: they need a merge commit, which holds their conflict resolutions.
 - Merging into `next` opens or updates a Version Packages (next) pull request, which releases the same way as `main`'s. It publishes a prerelease such as `3.0.0-next.0` under the `next` dist-tag (`npm install validator-fns@next`) and creates a GitHub prerelease. The manual run for a stranded version works on `next` too.
 
 After each release from `main`, merge `main` into `next`:
@@ -76,6 +77,16 @@ To release the major version:
 ### Tests
 
 We've written tests and you can run them to assure the stability of the code, just try `npm test`. If you're adding a new functionality please write a test for it.
+
+`test/properties.test.ts` holds property-based tests written with [fast-check](https://fast-check.dev). They run with the rest of the suite in `pnpm check`. A failing property prints the smallest input that breaks it and the seed that reproduces it.
+
+Mutation testing with [StrykerJS](https://stryker-mutator.io) runs every Monday in the Mutation Testing workflow, and on pull requests that change `stryker.config.mjs` or the workflow. Run it locally with `pnpm mutation`. It fails when the mutation score drops below `thresholds.break` in `stryker.config.mjs`. Raise that threshold as the score improves; lowering it loosens the check and needs the maintainer's approval.
+
+The maintainer owns the scheduled run. When it fails:
+
+1. Open an issue that lists the surviving mutants from the run's log (the clear-text report prints each one with its file, line, and mutation).
+2. For each one, add a test that kills it, or record in the issue why the mutant is acceptable, for example an equivalent mutant that no test can tell apart from the original.
+3. Close the issue when the workflow passes again, either from a manual run (Actions, Mutation Testing, Run workflow) or the next scheduled one.
 
 ### Documentation
 

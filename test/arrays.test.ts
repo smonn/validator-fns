@@ -4,6 +4,7 @@ import {
   invalid,
   max,
   min,
+  number,
   object,
   required,
   string,
@@ -171,4 +172,24 @@ test('array records an empty message for an item that fails without one', async 
   const result = await array(silent)(['a', 'b']);
   assert.equal(result.state, 'invalid');
   assert.deepEqual(result.state === 'invalid' && result.errors, ['', '']);
+});
+
+test('should return the parsed items when the item validator parses', async () => {
+  const validate = array(number());
+
+  assert.deepEqual(await validate(['1', '2.5']), {
+    state: 'valid',
+    field: undefined,
+    value: [1, 2.5],
+  });
+});
+
+test('should return the transformed items when the item validator transforms', async () => {
+  const validate = array(string({ trim: true }));
+
+  assert.deepEqual(await validate([' a ', 'b ']), {
+    state: 'valid',
+    field: undefined,
+    value: ['a', 'b'],
+  });
 });

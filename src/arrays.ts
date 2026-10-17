@@ -87,9 +87,10 @@ async function findArrayInvalidResult(
 }
 
 /**
- * Runs the item test on every item, collecting `null` for valid items and the
- * message or errors for invalid ones. Without an array or an item test, there
- * is nothing to check.
+ * Runs the item test on every item, collecting each item's parsed value, and
+ * `null` for valid items and the message or errors for invalid ones. Without
+ * an array or an item test, there is nothing to check, and the values are the
+ * array as given.
  * @param validateItem Item test
  * @param arrayValue Parsed array
  * @param field Field name
@@ -104,11 +105,14 @@ async function validateItems(
   const errors: ArrayItemValidatorResult[] = [];
 
   if (!arrayValue || !validateItem) {
-    return { isValid, errors };
+    return { isValid, errors, values: arrayValue };
   }
+
+  const values: unknown[] = [];
 
   for (const [index, item] of arrayValue.entries()) {
     const result = await validateItem(item, `${field || ''}[${index}]`);
+    values.push(result.value);
 
     if (result.state === 'invalid') {
       isValid = false;
@@ -118,7 +122,7 @@ async function validateItems(
     }
   }
 
-  return { isValid, errors };
+  return { isValid, errors, values };
 }
 
 /**
@@ -130,21 +134,11 @@ export function array<T, E>(
   config?: Partial<ArrayConfig> | ValidatorTest<T, E>,
   ...tests: ValidatorTest[]
 ): ValidatorTest<T[], string | ArrayItemValidatorResult<E>[]> {
-  let allTests = tests;
-  let finalConfig: ArrayConfig = {
+  const allTests = typeof config === 'function' ? [config, ...tests] : tests;
+  const finalConfig: ArrayConfig = {
     parser: parseArray,
+    ...(typeof config === 'function' ? undefined : config),
   };
-
-  if (config !== undefined) {
-    if (typeof config === 'function') {
-      allTests = [config, ...tests];
-    } else {
-      finalConfig = {
-        ...finalConfig,
-        ...config,
-      };
-    }
-  }
 
   return async (value, field) => {
     const arrayValue = applyArrayConfig(finalConfig, value);
@@ -159,8 +153,7 @@ export function array<T, E>(
 
     if (!arrayInvalidResult && items.isValid) {
       return valid({
-        // The items passed the item test but keep their raw values (#603).
-        value: arrayValue as T[] | null | undefined,
+        value: items.values as T[] | null | undefined,
         field,
       });
     }

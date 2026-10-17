@@ -195,12 +195,14 @@ A **validation type** is expected to parse and prepare the value for the provide
 - [boolean(config?, ...tests)](#booleanconfig-tests)
 - [date(config?, ...tests)](#dateconfig-tests)
 - [number(config?, ...tests)](#numberconfig-tests)
-- [object(schema)](#objectschema)
+- [object(schema, ...tests)](#objectschema-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
 
 #### array(config?, itemTest, ...tests)
 
 Casts value to an array, `null` or `undefined` if using the default date parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
+
+A valid result's `value` holds each item as `itemTest` returned it, so `array(number())` turns `['1', '2.5']` into `[1, 2.5]`, and `array(string({ trim: true }))` trims each item.
 
 Supported validation tests: `max`, `min`, and `required`.
 
@@ -271,7 +273,7 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `requ
 
 </details>
 
-#### object(schema)
+#### object(schema, ...tests)
 
 The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
 
@@ -279,7 +281,22 @@ For invalid results, errors are in the `errors` property. It matches the provide
 
 In TypeScript, every field of the valid value is optional and can be `null`, as in `{ name?: string | null }`: a field's validator passes `null` and `undefined` through unless a test such as `required` rejects them.
 
-Unlike yup, this API does not (yet at least) have a ref option.
+The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Use [`check`](#checkpath-test-message) to compare fields and put the error on one of them:
+
+```ts
+const signup = object(
+  {
+    password: string(required('Required.')),
+    confirm: string(required('Required.')),
+  },
+  check('confirm', (value) => value.confirm === value.password, 'Must match.'),
+);
+
+await signup({ password: 'secret', confirm: 'other' });
+// { state: 'invalid', message: '', errors: { confirm: 'Must match.' }, ... }
+```
+
+A field's own error takes precedence: object-level tests don't run while any property is invalid, so they always compare valid, parsed values.
 
 To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
 
@@ -305,6 +322,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
+- [check(path?, test, message)](#checkpath-test-message)
 - [email(message)](#emailmessage)
 - [exact(limit, message)](#exactlimit-message)
 - [integer(message)](#integermessage)
@@ -317,6 +335,20 @@ A **validation test** is a simplified version of a validation type. It accepts a
 - [required(message, nullable?)](#requiredmessage-nullable)
 - [url(message, protocols?)](#urlmessage-protocols)
 - [uuid(message)](#uuidmessage)
+
+#### check(path?, test, message)
+
+An object-level test for `object`. It fails when `test` returns `false` for the parsed object. With a `path`, the message is the error at that property in the object's `errors`; a list of names reaches into nested objects, such as `['shipping', 'zip']`. Without a `path`, the message is the object's own `message`. The parsed object is provided to the message as `value`.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                                                       |
+| :-------- | :----------------- | :---------------------------------------------------------------- |
+| `path`    | string or string[] | Optional. The property, or the path into nested objects, to fail. |
+| `test`    | function           | Gets the parsed object and returns `true` when it is valid.       |
+| `message` | string or function | The validation error message.                                     |
+
+</details>
 
 #### email(message)
 
@@ -483,6 +515,7 @@ Custom validation types and validators can be created and used as needed. There 
 - [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
 - [valid({ value, field })](#valid-value-field-)
 - [invalid({ message, value, field, errors, extras })](#invalid-message-value-field-errors-extras-)
+- [standard(validator)](#standardvalidator)
 
 #### formatMessage(template, params)
 
@@ -535,6 +568,22 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
 
+#### standard(validator)
+
+Adds the [Standard Schema][standard-schema] interface to a validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged.
+
+```ts
+const schema = standard(object({ email: string(email('Must be an email.')) }));
+
+await schema['~standard'].validate({ email: 'nope' });
+// { issues: [{ message: 'Must be an email.', path: ['email'] }] }
+```
+
+- `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
+- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type or `null` or `undefined`, as in a valid result.
+- An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
+- An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
+
 ## Supported environments
 
 Supports Node versions in active or maintenance LTS at release time. Dropping one waits for the next major release.
@@ -555,6 +604,7 @@ To support older environments, transpile or polyfill these:
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: #documentation
 [github]: https://github.com/smonn/validator-fns
+[standard-schema]: https://standardschema.dev
 [yup]: https://github.com/jquense/yup
 [bcd]: https://github.com/mdn/browser-compat-data
 [date-fns]: https://date-fns.org

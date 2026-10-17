@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # Lists the open pull requests that share this head commit.
+  pull-requests: read
 
 jobs:
   decisions:
@@ -17,16 +19,30 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+
+      # A status check attaches to a commit, so this result shows on every
+      # open pull request with the same head commit (#611). List them so the
+      # check covers all of their descriptions. A failed request fails the job.
+      - name: List open pull requests with this head commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100"
+          --jq '.[] | select(.head.sha == env.HEAD_SHA) | {number, body}'
+          > "$RUNNER_TEMP/same-head-prs.jsonl"
 
       # The description goes through an environment variable, never into the
       # script text, so its content can't run as shell.
       - name: Check for open decisions
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SAME_HEAD_PRS: ${{ runner.temp }}/same-head-prs.jsonl
         run: node scripts/check-decisions.mjs

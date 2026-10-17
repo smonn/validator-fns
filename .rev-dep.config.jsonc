@@ -51,7 +51,7 @@
         },
         {
           "name": "validators",
-          "pattern": "src/{booleans,common,limits}.ts",
+          "pattern": "src/{booleans,check,common,limits}.ts",
           "allow": ["src/shared.ts", "src/factories.ts"],
         },
         {
@@ -72,6 +72,17 @@
           "name": "dates",
           "pattern": "src/dates.ts",
           "allow": ["src/shared.ts", "src/factories.ts", "src/parse-date.ts"],
+        },
+        {
+          // Types copied from @standard-schema/spec, with no imports.
+          "name": "standard-schema",
+          "pattern": "src/standard-schema.ts",
+          "deny": ["src/**"],
+        },
+        {
+          "name": "standard",
+          "pattern": "src/standard.ts",
+          "allow": ["src/shared.ts", "src/standard-schema.ts"],
         },
         {
           "name": "entry",
@@ -99,6 +110,11 @@
           "@types/node",
           "@vitest/coverage-v8",
           "oxlint-tsgolint",
+          // Stryker loads it by the name in stryker.config.mjs's plugins, which
+          // rev-dep doesn't read as a use. Approved in #634. Remove it if rev-dep
+          // starts to, or if Stryker stops needing the plugin named (see
+          // stryker.config.mjs).
+          "@stryker-mutator/vitest-runner",
         ],
       },
       "missingNodeModulesDetection": { "enabled": true },
