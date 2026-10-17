@@ -95,7 +95,7 @@ Calling a validator directly. It resolves to a result and never throws for inval
 _Avoid_: safeParse, validate
 
 **Parse**:
-The entry point that resolves to the parsed value, or throws the failure when the input is invalid. Not to be confused with a parser.
+The entry point that resolves to the parsed value, or throws a `FailureError` carrying the failure when the input is invalid. Not to be confused with a parser.
 _Avoid_: assert, validateOrThrow
 
 ## Messages
