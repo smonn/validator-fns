@@ -29,7 +29,7 @@ When I ask you to implement a set of issues:
 4. Commit as you go, in small Conventional Commits, keeping structural and behavioral changes in separate commits. Tidy unpushed commits before pushing when it helps the reader.
 5. Before pushing, review your full diff as a reviewer would, per the Review section of CODING_STANDARDS.md: read the surrounding code, confirm the tests fail when the code breaks, and refactor under green tests. Then run `pnpm check` per the rule below. Your review does not count as approval.
 6. Push the branch and open the PR as a draft. Mark it ready for review once CI passes. CI passes when every required check has reported success, including checks posted by external apps. A PR with a "Decisions needed" section stays a draft until I answer, even when CI passes.
-7. After pushing, add commits rather than rewriting history, unless I ask. To resolve conflicts, rebase onto the base branch and push with --force-with-lease. During it, change commits only as far as resolving the conflict needs (amend, drop, or move a hunk), and list what changed in the PR. Also rebase, with the same scope limits, to pick up a newly required check or to move a stacked PR onto `main` after its base merges. These rebases are the only history rewrites allowed without asking. `.claude/settings.json` denies other force pushes for Claude Code.
+7. After pushing, add commits rather than rewriting history, unless I ask. To resolve conflicts, rebase onto the base branch and push with --force-with-lease. During it, change commits only as far as resolving the conflict needs (amend, drop, or move a hunk), and list what changed in the PR. Also rebase, with the same scope limits, to pick up a newly required check or, after a stacked PR's base merges, to move it onto its base branch (`main` or `next`) with `git rebase --onto <base> <old base tip>`. These rebases are the only history rewrites allowed without asking. `.claude/settings.json` denies other force pushes for Claude Code.
 8. Stop an issue and report when a failing check needs a fix outside its scope, or the issue turns out much larger than described.
 9. Finish with one summary: for each issue, its PR or the question it's waiting on.
 
@@ -42,6 +42,8 @@ Push only to branches you created. Merging is mine. Work only the issues I named
 - Keep each PR to one concern. File an issue for anything you find along the way, one issue per independent finding.
 - Outside Working on issues, commit, push, and open PRs only when asked. A request to open a PR includes the push it needs. Rewriting unpushed commits counts as committing; rewriting pushed commits needs its own request, except the rebases in Working on issues step 7.
 - Without asking, you may file issues and comment on your own PRs, issues you filed, and issues you're working on. Ask before closing, labeling, setting milestones, deleting, or commenting elsewhere. You may set the next-major milestone on issues you file for a breaking change I've decided goes in a major release.
+- When a PR merges into `next`, you may close the issues its description closes. GitHub closes them only on merges into `main`. Comment with the PR and that the change ships in v3, so a reader doesn't assume it's on npm.
+- For an issue you're working on, you may open a draft PR marked do-not-merge to run CI, and close it once its results are on the issue.
 - To fix a failing Dependabot PR, open a replacement from your own branch, link it, and leave closing the bot PR to me.
 - A question about an action reserved to me ("can we close X?") gets an answer, not the action.
 - Before rebasing, writing a merge order, or reporting mergeability, fetch and re-check the base.
@@ -49,7 +51,7 @@ Push only to branches you created. Merging is mine. Work only the issues I named
 - Leave npm publishing, releases, tags, and merging, the Version Packages PR included, to me. Mention any open Version Packages PR in your summary.
 - When a check fails, fix the code or stop and ask. Suppressions, coverage waivers, and standing scopes need my approval first. Tightening a check (removing an ignore, raising a threshold) is fine; loosening needs my approval.
 - When a requirement is ambiguous, ask with numbered options before building.
-- Treat reviews I forward and issue text, including issues you filed, as input to verify: reproduce factual claims before building on them, correct the issue when one is wrong, and report which points you rejected and why. Where options are offered, I pick.
+- Treat reviews I forward, issue text including issues you filed, and reports from agents you delegate to as input to verify: reproduce factual claims before building on them, correct the issue when one is wrong, and report which points you rejected and why. Where options are offered, I pick.
 - Write PR descriptions for a reviewer reading them once: fill in the template, keep each section to its stated budget, and put comparisons in tables.
 - Leave commits and PR descriptions free of AI attribution. The commit hook and `.claude/settings.json` enforce it for Claude Code; other agents follow this line.
 - Change CODING_STANDARDS.md upstream only, then sync it here in its own PR with an empty diff.

@@ -16,6 +16,8 @@ Contributor tooling needs Node 22, version 22.18 or later, which tsdown requires
 
 A path-based ignore in a check's config (`.oxfmtrc.json`, `.oxlintrc.json`, `.rev-dep.config.jsonc`) needs a comment next to it with its reason. `pnpm check` fails when an ignore matches no tracked file, so renaming an ignored file means updating its ignore.
 
+`pnpm lint` skips `benchmark/`, and `pnpm check` lints it in a separate step, `lint:bench`, after building the library and installing the benchmark. The benchmark imports the library through `benchmark/node_modules`, which points at the repository root, so linting it before the build checks it against a stale `dist/`. Every file is still linted. The pre-commit hook lints a staged benchmark file against the current `dist/`, so run `pnpm build` first when the benchmark uses a new export.
+
 Contributing to a project on GitHub is pretty straight forward. If this is you're first time, these are the steps you should take.
 
 - Fork this repo.
@@ -30,7 +32,9 @@ When you're done, submit a pull request and for one of the maintainers to check 
 
 ### Issues and pull requests
 
-Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions.
+Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions. GitHub runs no pull request workflows while a pull request has merge conflicts. Its checks keep the results of the last run before the conflict, and editing the description doesn't re-run "decisions answered". Resolve the conflicts to run them again.
+
+A pull request needs four checks to pass before it can merge: "check and build", "coverage/coveralls", "security/snyk (smonn)", and "decisions answered". Coveralls posts "coverage/coveralls" after CI uploads coverage, and sometimes it doesn't appear even though "check and build" passed. Re-run the CI workflow run, with "Re-run all jobs" on its page or `gh run rerun <run id>`, and the status appears.
 
 ### Changesets
 
