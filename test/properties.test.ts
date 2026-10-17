@@ -149,16 +149,15 @@ const fixedResult =
       ? valid({ value, field })
       : invalid({ message: `${String(field)} failed`, value, field });
 
-// fc.string makes names like __proto__ and constructor on purpose. object()
-// mishandles those today: #597 (keys inherited from Object.prototype) and #598
-// (__proto__). Each issue removes its part of this filter.
-const knownBadKeys = new Set(Object.getOwnPropertyNames(Object.prototype));
-const schemaKey = fc
-  .string({ minLength: 1 })
-  .filter((key) => !knownBadKeys.has(key));
+// fc.string makes names like __proto__ and constructor on purpose.
+const schemaKey = fc.string({ minLength: 1 });
+
+// object() drops a __proto__ key from errors today (#598), which removes this
+// filter.
+const writableKey = schemaKey.filter((key) => key !== '__proto__');
 
 test('object() reports errors for exactly the invalid fields', async () => {
-  const schemas = fc.dictionary(schemaKey, fc.boolean(), {
+  const schemas = fc.dictionary(writableKey, fc.boolean(), {
     noNullPrototype: true,
   });
 
