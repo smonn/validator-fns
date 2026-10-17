@@ -204,8 +204,8 @@ test('number', async () => {
   });
   assert.deepEqual(await validate({}), {
     state: 'invalid',
-    message: 'Must enter a value.',
-    value: Number.NaN,
+    message: 'Failed to parse value to number.',
+    value: {},
     errors: undefined,
     field: undefined,
   });
@@ -265,43 +265,50 @@ test('number default', async () => {
   });
 });
 
-// Pins today's coercion of non-primitive input. #579 changes it in v3 to
-// return an invalid result instead.
-test('number coerces non-primitive input through its string form', async () => {
-  const coerced: [unknown, number][] = [
-    [[1], 1],
-    [[[1, 2]], 1],
+test('number accepts primitives, dates, and boxed primitives', async () => {
+  const accepted: [unknown, number][] = [
+    ['1.5', 1.5],
     [1n, 1],
-    [new Number(3), 3],
-    [[], Number.NaN],
-    [['a', 'b'], Number.NaN],
-    [{}, Number.NaN],
-    [new Map(), Number.NaN],
-    [Symbol('s'), Number.NaN],
     [true, Number.NaN],
-    [() => 1, Number.NaN],
+    [new Number(3), 3],
+    [new String('4'), 4],
+    [new Date(5), 5],
   ];
   const validate = number();
-  for (const [value, expected] of coerced) {
+  for (const [value, expected] of accepted) {
     assert.deepEqual(parseNumber(value), expected, String(expected));
-    assert.deepEqual(
-      await validate(value),
-      { state: 'valid', field: undefined, value: expected },
-      String(expected),
-    );
+    const result = await validate(value);
+    assert.equal(result.state, 'valid', String(expected));
+    assert.deepEqual(result.value, expected, String(expected));
   }
+});
 
-  const nullPrototype: unknown = Object.create(null);
-  assert.throws(
-    () => parseNumber(nullPrototype),
-    TypeError,
-    'Cannot convert object to primitive value',
-  );
-  assert.deepEqual(await validate(nullPrototype), {
-    state: 'invalid',
-    field: undefined,
-    value: nullPrototype as number,
-    message: 'Cannot convert object to primitive value',
-    errors: undefined,
-  });
+test('number returns an invalid result for non-primitive and symbol input', async () => {
+  const rejected: [unknown, string][] = [
+    [[1], 'array'],
+    [[[1, 2]], 'nested array'],
+    [[], 'empty array'],
+    [{}, 'plain object'],
+    [Object.create(null), 'null-prototype object'],
+    [new Map(), 'Map'],
+    [() => 1, 'function'],
+    [Symbol('s'), 'symbol'],
+  ];
+  const validate = number();
+  for (const [value, label] of rejected) {
+    assert.throws(
+      () => parseNumber(value),
+      TypeError,
+      'Failed to parse value to number.',
+      label,
+    );
+    const result = await validate(value);
+    assert.equal(result.state, 'invalid', label);
+    assert.equal(
+      result.state === 'invalid' && result.message,
+      'Failed to parse value to number.',
+      label,
+    );
+    assert.equal(result.value, value, label);
+  }
 });

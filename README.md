@@ -257,6 +257,8 @@ The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso86
 
 Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional.
 
+The default parser accepts numbers, strings (with `parseFloat`), bigints, booleans (as `NaN`), dates (as their timestamp), and `Number`, `String`, or `Boolean` objects. Any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to number.`
+
 Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `required`.
 
 <details><summary>config</summary>
@@ -282,6 +284,8 @@ To use this with a library such as [Formik][formik], you can use the resulting `
 #### string(config?, ...tests)
 
 Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional.
+
+The default parser accepts strings, numbers, bigints, booleans, dates (as an ISO string), and `String`, `Number`, or `Boolean` objects. Any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to string.`
 
 Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, `url`, and `uuid`.
 
