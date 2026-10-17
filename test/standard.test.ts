@@ -1,15 +1,22 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
   array,
+  boolean,
+  createTypeValidatorTest,
+  date,
   email,
   invalid,
   matches,
   max,
   min,
+  number,
   object,
   optional,
+  parseNumber,
   standard,
   string,
+  valid,
+  type TypeValidator,
 } from '../src/index.js';
 
 /** The same type as StandardSchemaV1.InferOutput, without importing it. */
@@ -100,20 +107,87 @@ test('should give a fallback message when an error is not a string', async () =>
   });
 });
 
-test('should leave the wrapped validator unchanged when wrapping it', async () => {
-  const validate = string();
-  const schema = standard(validate);
+const passThrough = async (value: unknown, field?: string) =>
+  valid({ value, field });
 
-  assert.notProperty(validate, '~standard');
-  assert.deepEqual(await schema('a', 'name'), await validate('a', 'name'));
+test('should leave a custom validator unchanged when wrapping it', async () => {
+  const schema = standard(passThrough);
+
+  assert.notStrictEqual(schema, passThrough);
+  assert.notProperty(passThrough, '~standard');
+  assert.deepEqual(await schema('a', 'name'), await passThrough('a', 'name'));
 });
 
-test('should type the output as the valid result value when wrapped', () => {
+test('should return a type validator as it is', () => {
+  const validate = string();
+
+  assert.strictEqual(standard(validate), validate);
+  assert.strictEqual(standard(optional(validate)), optional(validate));
+});
+
+const money = createTypeValidatorTest(
+  { parser: parseNumber },
+  (value, config) => config.parser(value),
+);
+
+// Every kind of type validator, with an input it accepts and one it rejects.
+const typeValidators: [
+  string,
+  TypeValidator<unknown, unknown>,
+  unknown,
+  unknown,
+][] = [
+  ['string', string(), 'a', ''],
+  ['number', number(), '1', 'x'],
+  ['boolean', boolean(), true, null],
+  ['date', date(), '2020-01-01', undefined],
+  ['array', array(string()), ['a'], ['']],
+  ['object', object({ name: string() }), { name: 'a' }, {}],
+  ['createTypeValidatorTest', money(), 1, null],
+  ['optional()', optional(string(min(2, 'short'))), undefined, 'a'],
+  [
+    'optional() of a custom validator',
+    optional(async () =>
+      invalid({ message: 'no', value: 1, field: undefined }),
+    ),
+    null,
+    1,
+  ],
+];
+
+test('should be a Standard Schema without standard() for every type validator', async () => {
+  const results = await Promise.all(
+    typeValidators.map(async ([label, schema, accepted, rejected]) => ({
+      label,
+      props: schema['~standard'],
+      ok: await schema['~standard'].validate(accepted),
+      failed: await schema['~standard'].validate(rejected),
+    })),
+  );
+
+  for (const { label, props, ok, failed } of results) {
+    assert.strictEqual(props.version, 1, label);
+    assert.strictEqual(props.vendor, 'validator-fns', label);
+    assert.notProperty(ok, 'issues', label);
+    assert.property(failed, 'issues', label);
+  }
+});
+
+test('should type the output as the valid result value', () => {
   const schema = standard(object({ name: string() }));
   expectTypeOf<InferOutput<typeof schema>>().toEqualTypeOf<{ name: string }>();
+
+  expectTypeOf<
+    InferOutput<ReturnType<typeof string>>
+  >().toEqualTypeOf<string>();
+  expectTypeOf<InferOutput<typeof optionalString>>().toEqualTypeOf<
+    string | null | undefined
+  >();
 
   const optionalSchema = standard(optional(string()));
   expectTypeOf<InferOutput<typeof optionalSchema>>().toEqualTypeOf<
     string | null | undefined
   >();
 });
+
+const optionalString = optional(string());

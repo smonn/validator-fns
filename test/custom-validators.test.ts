@@ -3,7 +3,7 @@ import {
   type ConfigBase,
   createTypeValidatorTest,
   parseNumber,
-  type ValidatorTest,
+  type TypeValidator,
 } from '../src/index.js';
 
 // The custom type validator from the README's createTypeValidatorTest section.
@@ -29,7 +29,7 @@ const money = createTypeValidatorTest(
 
 test('custom type validator accepts its own config options', async () => {
   expectTypeOf(money({ cents: true })).toEqualTypeOf<
-    ValidatorTest<number, string>
+    TypeValidator<number, string>
   >();
   assert.deepEqual(await money({ cents: true })('12.5'), {
     state: 'valid',

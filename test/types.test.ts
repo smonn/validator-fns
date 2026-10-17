@@ -16,6 +16,7 @@ import {
   string,
   valid,
   type ExtractValue,
+  type TypeValidator,
   type ValidatorResult,
   type ValidatorTest,
 } from '../src/index.js';
@@ -31,12 +32,12 @@ test('validator types default to unknown', () => {
 });
 
 test('type validators carry their value type and string errors', () => {
-  expectTypeOf(string()).toEqualTypeOf<ValidatorTest<string, string>>();
+  expectTypeOf(string()).toEqualTypeOf<TypeValidator<string, string>>();
   expectTypeOf(number({ requiredMessage: 'required' })).toEqualTypeOf<
-    ValidatorTest<number, string>
+    TypeValidator<number, string>
   >();
-  expectTypeOf(boolean()).toEqualTypeOf<ValidatorTest<boolean, string>>();
-  expectTypeOf(date()).toEqualTypeOf<ValidatorTest<Date, string>>();
+  expectTypeOf(boolean()).toEqualTypeOf<TypeValidator<boolean, string>>();
+  expectTypeOf(date()).toEqualTypeOf<TypeValidator<Date, string>>();
 });
 
 test('built-in tests and results without errors have never as the error type', () => {
@@ -62,19 +63,19 @@ test('type validators reject tests whose errors are not strings', () => {
 
 test('optional() adds null and undefined to the value type', () => {
   expectTypeOf(optional(string())).toEqualTypeOf<
-    ValidatorTest<string | null | undefined, string>
+    TypeValidator<string | null | undefined, string>
   >();
   expectTypeOf(optional(object({ name: string() }))).toEqualTypeOf<
-    ValidatorTest<{ name: string } | null | undefined, { name?: string }>
+    TypeValidator<{ name: string } | null | undefined, { name?: string }>
   >();
   expectTypeOf(optional(array(number()))).toEqualTypeOf<
-    ValidatorTest<
+    TypeValidator<
       number[] | null | undefined,
       string | ArrayItemValidatorResult<string>[]
     >
   >();
   expectTypeOf(optional(numericErrors)).toEqualTypeOf<
-    ValidatorTest<unknown, number>
+    TypeValidator<unknown, number>
   >();
 });
 
@@ -95,7 +96,7 @@ test('object() makes keys optional only for optional() validators', () => {
   expectTypeOf(
     object({ name: string(), age: optional(number()) }),
   ).toEqualTypeOf<
-    ValidatorTest<
+    TypeValidator<
       { name: string; age?: number | null | undefined },
       { name?: string; age?: string }
     >
@@ -107,7 +108,7 @@ const maybe: ValidatorTest<string | undefined> = async () =>
 
 test('object() makes keys optional for validators whose type includes undefined', () => {
   expectTypeOf(object({ maybe, any: numericErrors })).toEqualTypeOf<
-    ValidatorTest<
+    TypeValidator<
       { maybe?: string | undefined; any?: unknown },
       { maybe?: unknown; any?: string | number }
     >
@@ -116,7 +117,7 @@ test('object() makes keys optional for validators whose type includes undefined'
 
 test('object() types a nested field error as its message or its errors', () => {
   expectTypeOf(object({ address: object({ zip: string() }) })).toEqualTypeOf<
-    ValidatorTest<
+    TypeValidator<
       { address: { zip: string } },
       { address?: string | { zip?: string } }
     >
@@ -134,7 +135,7 @@ test('object() accepts its value with undefined for a missing optional key', () 
 test('object() takes a config object or a test as its second argument', () => {
   expectTypeOf(
     object({ name: string() }, { requiredMessage: 'required' }),
-  ).toEqualTypeOf<ValidatorTest<{ name: string }, { name?: string }>>();
+  ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
   expectTypeOf(
     object(
       { name: string() },
@@ -143,15 +144,15 @@ test('object() takes a config object or a test as its second argument', () => {
         return true;
       }, 'message'),
     ),
-  ).toEqualTypeOf<ValidatorTest<{ name: string }, { name?: string }>>();
+  ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
 });
 
 test('array() carries the item value and error types', () => {
   expectTypeOf(array(string())).toEqualTypeOf<
-    ValidatorTest<string[], string | ArrayItemValidatorResult<string>[]>
+    TypeValidator<string[], string | ArrayItemValidatorResult<string>[]>
   >();
   expectTypeOf(array(optional(string()))).toEqualTypeOf<
-    ValidatorTest<
+    TypeValidator<
       (string | null | undefined)[],
       string | ArrayItemValidatorResult<string>[]
     >

@@ -5,6 +5,7 @@ import {
   type ValidatorResult,
   type ValidatorTest,
 } from './shared.js';
+import { type TypeValidator, withStandard } from './standard.js';
 
 /**
  * Message for a missing value when the validator's config sets none.
@@ -21,7 +22,7 @@ const optionalTwin = Symbol('optional');
 
 /** @internal */
 type OptionalTwin<T, E> = {
-  readonly [optionalTwin]?: ValidatorTest<T | null | undefined, E>;
+  readonly [optionalTwin]?: TypeValidator<T | null | undefined, E>;
 };
 
 /**
@@ -55,7 +56,7 @@ export function requirable<T, E>(
       field: string | undefined,
     ) => ValidatorResult<V, E>,
   ) => Promise<ValidatorResult<T | V, E>>,
-): ValidatorTest<T, E> {
+): TypeValidator<T, E> {
   const message =
     requiredMessage === undefined ? defaultRequiredMessage : requiredMessage;
   const reject = (parsed: T | null | undefined, field: string | undefined) =>
@@ -67,7 +68,9 @@ export function requirable<T, E>(
   const twin: ValidatorTest<T | null | undefined, E> = (value, field) =>
     validate(value, field, accept);
 
-  return Object.assign(required, { [optionalTwin]: twin });
+  return Object.assign(withStandard(required), {
+    [optionalTwin]: withStandard(twin),
+  });
 }
 
 /**
@@ -80,14 +83,15 @@ export function requirable<T, E>(
  */
 export function optional<T, E>(
   validator: ValidatorTest<T, E> & OptionalTwin<T, E>,
-): ValidatorTest<T | null | undefined, E> {
+): TypeValidator<T | null | undefined, E> {
   const twin = validator[optionalTwin];
   if (twin !== undefined) {
     return twin;
   }
 
-  return async (value, field) =>
+  return withStandard(async (value?: unknown, field?: string) =>
     value === null || value === undefined
-      ? validResult({ value, field })
-      : validator(value, field);
+      ? validResult<T | null | undefined, E>({ value, field })
+      : validator(value, field),
+  );
 }

@@ -1,5 +1,6 @@
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import { requirable } from './optional.js';
+import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
   type ExtractValue,
@@ -87,7 +88,7 @@ export function object<
   // inferring V and E.
   config?: ObjectConfig | ValidatorTest<ObjectValue<P>, ObjectErrors<P>>,
   ...tests: ValidatorTest<ObjectValue<P>, ObjectErrors<P>>[]
-): ValidatorTest<V, E> {
+): TypeValidator<V, E> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');
   }
