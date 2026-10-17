@@ -1,12 +1,26 @@
 import {
   type ConfigBase,
   invalid,
-  valid,
+  invalidResult,
+  validResult,
   type ValidatorFactory,
   type ValidatorMessage,
   type ValidatorMessageParameters,
+  type ValidatorResult,
   type ValidatorTest,
 } from './shared.js';
+
+/**
+ * Synchronous twins of the tests `createValidatorTest` makes. A type validator
+ * runs a test's twin when it has one, which skips the promise and await around
+ * every built-in test (#523). The tests themselves stay async.
+ * @internal
+ */
+const syncTests = new WeakMap<
+  ValidatorTest,
+  // The twins never set errors, so their error type is never.
+  (value: unknown, field: string | undefined) => ValidatorResult<unknown, never>
+>();
 
 /**
  * Creates a type validator.
@@ -41,13 +55,21 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       try {
         const parsedValue = applyConfig(value, finalConfig);
         for (const validatorTest of allTests) {
-          const result = await validatorTest(parsedValue, field);
+          const syncTest = syncTests.get(validatorTest);
+          // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
+          // await in a ternary arm a negative count.
+          let result: ValidatorResult<unknown, string>;
+          if (syncTest) {
+            result = syncTest(parsedValue, field);
+          } else {
+            result = await validatorTest(parsedValue, field);
+          }
           if (result.state === 'invalid') {
             return result;
           }
         }
 
-        return await valid({ value: parsedValue, field });
+        return validResult({ value: parsedValue, field });
       } catch (error) {
         return invalid({
           message: error instanceof Error ? error.message : String(error),
@@ -74,16 +96,24 @@ export function createValidatorTest<
   message: ValidatorMessage<T, P>,
   getExtras?: (value: T | null | undefined) => Omit<P, 'value' | 'field'>,
 ): ValidatorTest<T, E> {
-  return async (value, field) => {
+  const syncTest = (
+    value: unknown,
+    field: string | undefined,
+  ): ValidatorResult<T, never> => {
     if (test(value, field)) {
-      return valid({ value: value as T, field });
+      return validResult({ value: value as T, field });
     }
 
-    return invalid({
+    return invalidResult({
       message,
       value,
       field,
       extras: getExtras ? getExtras(value as T) : undefined,
     });
   };
+  const validatorTest: ValidatorTest<T, E> = async (value, field) =>
+    syncTest(value, field);
+  syncTests.set(validatorTest, syncTest);
+
+  return validatorTest;
 }

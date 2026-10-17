@@ -14,33 +14,22 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      # Standing scope: two kinds of PR skip the changeset check.
-      # - Dependabot PRs. The library has no runtime dependencies, so their
-      #   changeset would always be empty, and pushing one onto the branch stops
-      #   Dependabot from rebasing it. Keyed on the PR author, which nobody else
-      #   can use. Revisit if the library takes a runtime dependency.
-      # - The Version Packages PR. It consumes the changesets it releases, so the
-      #   check always fails on it. Keyed on a changeset-release/* branch in this
-      #   repository, which only maintainers can push.
-      CHANGESET_SCOPE: ${{ github.event.pull_request.user.login == 'dependabot[bot]' || (github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'changeset-release/')) }}
-
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The changeset check diffs against the PR's base branch.
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
       # engines.node claims >=22, so the packed package is also loaded on the
       # lowest version it claims. Set up Node 22.0.0 first and keep its path, so
       # the .nvmrc version set up next stays first on PATH for the tooling.
       # Update this with engines.node.
       - name: Setup Node.js 22.0.0
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22.0.0
 
@@ -48,7 +37,7 @@ jobs:
         run: echo "NODE_LOWEST=$(command -v node)" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
@@ -57,12 +46,58 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Standing scope: two kinds of PR skip the changeset check.
+      # - Dependabot PRs. The library has no runtime dependencies, so their
+      #   changeset would always be empty, and pushing one onto the branch stops
+      #   Dependabot from rebasing it. Revisit if the library takes a runtime
+      #   dependency. Anyone with write access can push to a Dependabot branch,
+      #   so the scope applies only while every commit on the PR is Dependabot's:
+      #   authored by dependabot[bot] and committed and signed by GitHub, as
+      #   Dependabot's commits are. A commit pushed by anyone else, or a failed
+      #   lookup, runs the full check. This step runs again on every push.
+      # - The Version Packages PR. It consumes the changesets it releases, so the
+      #   check always fails on it. Keyed on a changeset-release/* branch in this
+      #   repository, which only maintainers can push.
+      - name: Select the check suite
+        id: suite
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          scope=false
+          if [ "$SAME_REPO" = true ] && [[ "$HEAD_REF" == changeset-release/* ]]; then
+            scope=true
+            reason='Version Packages PR'
+          elif [ "$PR_AUTHOR" = 'dependabot[bot]' ]; then
+            if others=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits" \
+              --jq '.[] | select(.author.login != "dependabot[bot]" or .committer.login != "web-flow" or .commit.verification.verified != true) | .sha'); then
+              if [ -z "$others" ]; then
+                scope=true
+                reason='Dependabot PR with only Dependabot commits'
+              else
+                reason="Dependabot PR with other commits: $(echo $others)"
+              fi
+            else
+              reason='Dependabot PR whose commits could not be read'
+            fi
+          fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+          if [ "$scope" = true ]; then
+            echo "Suite: pnpm check:code, without the changeset check (standing scope: $reason)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Suite: pnpm check${reason:+ ($reason)}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Check
-        if: env.CHANGESET_SCOPE != 'true'
+        if: steps.suite.outputs.scope != 'true'
         run: pnpm check
 
       - name: Check without the changeset (standing scope)
-        if: env.CHANGESET_SCOPE == 'true'
+        if: steps.suite.outputs.scope == 'true'
         run: pnpm check:code
 
       # Runs after Check, which builds dist. The script packs and installs with
@@ -74,6 +109,6 @@ jobs:
         run: pnpm build
 
       - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+        uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329 # v2.3.8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

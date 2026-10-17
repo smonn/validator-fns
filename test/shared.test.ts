@@ -3,6 +3,8 @@ import {
   exact,
   formatMessage,
   isObject,
+  invalid,
+  min,
   number,
   oneOf,
   required,
@@ -232,4 +234,33 @@ test('isObject is true only for objects tagged Object', () => {
   for (const [value, label] of others) {
     assert.isFalse(isObject(value), label);
   }
+});
+
+test('should return a promise when a built-in test is called directly', async () => {
+  const result = required('required')('');
+  assert.instanceOf(result, Promise);
+  assert.strictEqual((await result).state, 'invalid');
+});
+
+test('should stop at a custom test when it fails between built-in tests', async () => {
+  const validate = string(
+    required('required'),
+    async (value, field) => invalid({ message: 'custom', value, field }),
+    min(10, 'min'),
+  );
+
+  assert.deepInclude(await validate('abc'), {
+    state: 'invalid',
+    message: 'custom',
+  });
+});
+
+test('should return an invalid result when a built-in test message throws', async () => {
+  const validate = string(
+    required(() => {
+      throw new Error('boom');
+    }),
+  );
+
+  assert.deepInclude(await validate(''), { state: 'invalid', message: 'boom' });
 });
