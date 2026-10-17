@@ -14,7 +14,7 @@ import type {
 export function required<T, P extends ValidatorMessageParameters<T>>(
   message: ValidatorMessage<T, P>,
   nullable?: boolean,
-): ValidatorTest<T> {
+): ValidatorTest<T, never> {
   return createValidatorTest(
     (value) =>
       (nullable && value === null) ||
@@ -42,7 +42,7 @@ export interface OneOfValidatorMessageParameters<
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
   message: ValidatorMessage<T, OneOfValidatorMessageParameters<T>>,
-): ValidatorTest<T> {
+): ValidatorTest<T, never> {
   const allowed: readonly unknown[] = values;
   return createValidatorTest(
     (value) =>

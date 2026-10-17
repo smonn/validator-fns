@@ -49,7 +49,7 @@ export function minDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MinDateValidatorMessageParameters>,
   exclusive?: boolean,
-): ValidatorTest<Date, null> {
+): ValidatorTest<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value) =>
@@ -85,7 +85,7 @@ export function maxDate(
   limit: SharedDateValueType,
   message: ValidatorMessage<Date, MaxDateValidatorMessageParameters>,
   exclusive?: boolean,
-): ValidatorTest<Date> {
+): ValidatorTest<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value) =>

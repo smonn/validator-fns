@@ -35,7 +35,7 @@ export type InvalidResult<E> = {
  * @typeParam T The value type
  * @category Types
  */
-export type ValidatorResult<T = any, E = any> =
+export type ValidatorResult<T = unknown, E = unknown> =
   | ValidResult<T>
   | InvalidResult<E>;
 
@@ -44,7 +44,7 @@ export type ValidatorResult<T = any, E = any> =
  * @typeParam T The value type
  * @category Types
  */
-export type ValidatorTest<T = any, E = any> = (
+export type ValidatorTest<T = unknown, E = unknown> = (
   value?: unknown,
   field?: string,
 ) => Promise<ValidatorResult<T, E>>;
@@ -55,7 +55,7 @@ export type ValidatorTest<T = any, E = any> = (
  * @category Types
  */
 export type ExtractError<T extends ValidatorTest> =
-  T extends ValidatorTest<any, infer E> ? E : unknown;
+  T extends ValidatorTest<unknown, infer E> ? E : unknown;
 
 /**
  * Extracts the generic value type from a ValidatorTest.
@@ -80,8 +80,8 @@ export type DeepPartial<T> = {
  * @category Types
  */
 export type ValidatorFactory<C, T, E> = (
-  config?: Partial<C> | ValidatorTest,
-  ...tests: ValidatorTest[]
+  config?: Partial<C> | ValidatorTest<unknown, E>,
+  ...tests: ValidatorTest<unknown, E>[]
 ) => ValidatorTest<T, E>;
 
 /**
@@ -196,7 +196,7 @@ export async function valid<T, E = never>({
  */
 export async function invalid<
   T,
-  E,
+  E = never,
   P extends ValidatorMessageParameters<T> = ValidatorMessageParameters<T>,
 >({
   errors,

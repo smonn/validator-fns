@@ -7,7 +7,7 @@ import {
   type ValidatorTest,
 } from './shared.js';
 
-export type ObjectParameter = Record<string, ValidatorTest<unknown, unknown>>;
+export type ObjectParameter = Record<string, ValidatorTest>;
 
 /**
  * Validates an object.

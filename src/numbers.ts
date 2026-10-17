@@ -83,7 +83,7 @@ export function applyNumberConfig(
  */
 export function integer(
   message: ValidatorMessage<number>,
-): ValidatorTest<number> {
+): ValidatorTest<number, never> {
   return async (value, field) => {
     if (
       value === undefined ||
