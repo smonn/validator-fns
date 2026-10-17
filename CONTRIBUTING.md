@@ -34,7 +34,7 @@ Report bugs and request features with the [issue forms](https://github.com/smonn
 
 ### Changesets
 
-Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, and the Version Packages pull request, which consumes the changesets it releases.
+Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, as long as every commit on it is Dependabot's, and the Version Packages pull request, which consumes the changesets it releases.
 
 - Run `pnpm changeset` and pick the bump: `major` for a change that breaks the exported API or `package.json` `exports`, `types`, or `engines`, `minor` for a new feature, `patch` for a fix. Write the summary for library users.
 - For tooling, tests, and docs-only changes, README included, run `pnpm changeset --empty`. The npm page updates with the next release. A security warning is the exception: give it a `patch` so the warning reaches npm now.
