@@ -221,7 +221,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    createValidator(async (value, field) => valid({ value, field }));
    ```
 
-7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
+7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out.
 
 ## API Reference
 
