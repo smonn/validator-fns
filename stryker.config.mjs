@@ -1,10 +1,11 @@
 export default {
   mutate: ['src/**/*.ts'],
-  // Runs the whole suite for each mutant. #607 tracks switching to
-  // @stryker-mutator/vitest-runner, which runs only the tests that cover each
-  // mutant.
-  testRunner: 'command',
-  commandRunner: { command: 'pnpm exec vitest run' },
+  // Runs only the tests that cover each mutant, and reports mutants no test
+  // reaches as NoCoverage.
+  testRunner: 'vitest',
+  // Stryker finds plugins next to its own install, which pnpm keeps apart from
+  // the project's node_modules, so name the runner here.
+  plugins: ['@stryker-mutator/vitest-runner'],
   reporters: ['clear-text', 'progress'],
   thresholds: {
     // Four runs when this check was added scored 89.38 to 90.03; the score
