@@ -41,7 +41,7 @@ export type Failure<E> = {
 };
 
 /**
- * The result of a validation, valid or a failure.
+ * The result of a validation.
  * @typeParam T The value type
  * @typeParam E The error type
  * @category Types
@@ -49,8 +49,7 @@ export type Failure<E> = {
 export type Result<T = any, E = any> = Valid<T> | Failure<E>;
 
 /**
- * A validator: takes a value and an optional field name, and resolves to a
- * result.
+ * Validator function.
  * @typeParam T The value type
  * @typeParam E The error type
  * @category Types
