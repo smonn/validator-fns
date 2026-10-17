@@ -75,6 +75,10 @@
           "@types/node",
           "@vitest/coverage-v8",
           "oxlint-tsgolint",
+          // Stryker loads it by the name in stryker.config.mjs's plugins, which
+          // rev-dep doesn't read as a use. Remove it if rev-dep starts to, or if
+          // Stryker stops needing the plugin named (see stryker.config.mjs).
+          "@stryker-mutator/vitest-runner",
         ],
       },
       "missingNodeModulesDetection": { "enabled": true },
