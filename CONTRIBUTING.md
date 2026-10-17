@@ -34,6 +34,8 @@ When you're done, submit a pull request and for one of the maintainers to check 
 
 Report bugs and request features with the [issue forms](https://github.com/smonn/validator-fns/issues/new/choose), and ask questions in [Discussions](https://github.com/smonn/validator-fns/discussions). A pull request starts from the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): fill in each section, and run `pnpm check` before you open it. The "decisions answered" check fails while the description's "Decisions needed" section has content, and it re-runs when you edit the description. Checks attach to a commit, so it also fails while another open pull request with the same head commit has open decisions. GitHub runs no pull request workflows while a pull request has merge conflicts. Its checks keep the results of the last run before the conflict, and editing the description doesn't re-run "decisions answered". Resolve the conflicts to run them again.
 
+A pull request needs four checks to pass before it can merge: "check and build", "coverage/coveralls", "security/snyk (smonn)", and "decisions answered". Coveralls posts "coverage/coveralls" after CI uploads coverage, and sometimes it doesn't appear even though "check and build" passed. Re-run the CI workflow run, with "Re-run all jobs" on its page or `gh run rerun <run id>`, and the status appears.
+
 ### Changesets
 
 Every pull request adds a changeset, a small file in `.changeset/` that records the version bump and the changelog entry. `pnpm check` fails without one. CI skips the check for two kinds of pull request: Dependabot's, which only touch dev tooling, as long as every commit on it is Dependabot's, and the Version Packages pull request, which consumes the changesets it releases.
