@@ -137,13 +137,13 @@ export function uuid(
 /**
  * Ensures a string value is a valid URL
  * @param message Error message
- * @param protocols Optional list of protocols to allow. Without it, `javascript:`
- * and `data:` URLs are valid; use `['http:', 'https:']` for values rendered as links.
+ * @param protocols Protocols to allow. Defaults to `['http:', 'https:']`; a list
+ * replaces the default.
  * @category Validation Tests
  */
 export function url(
   message: ValidatorMessage<string>,
-  protocols?: string[],
+  protocols: string[] = ['http:', 'https:'],
 ): ValidatorTest<string, never> {
   return createValidatorTest(
     (value) => {
@@ -155,7 +155,7 @@ export function url(
           value === '' ||
           (typeof value === 'string' && (parsed = new URL(value)))
         ) {
-          return !(parsed && protocols && !protocols.includes(parsed.protocol));
+          return !parsed || protocols.includes(parsed.protocol);
         }
       } catch {
         // Do nothing
