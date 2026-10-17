@@ -15,7 +15,8 @@ export type ObjectParameter = Record<string, ValidatorTest>;
  */
 export function object<
   P extends ObjectParameter,
-  V extends { [K in keyof P]?: ExtractValue<P[K]> },
+  // A field's validator passes null through unless a test rejects it.
+  V extends { [K in keyof P]?: ExtractValue<P[K]> | null },
   E extends { [K in keyof P]?: ExtractError<P[K]> },
 >(properties: P): ValidatorTest<V, E> {
   if (typeof properties !== 'object' || properties === null) {

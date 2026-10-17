@@ -277,6 +277,8 @@ The only validation type that does not cast the entered value, meaning it does n
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
+In TypeScript, every field of the valid value is optional and can be `null`, as in `{ name?: string | null }`: a field's validator passes `null` and `undefined` through unless a test such as `required` rejects them.
+
 Unlike yup, this API does not (yet at least) have a ref option.
 
 To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
