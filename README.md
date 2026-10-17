@@ -10,9 +10,11 @@ Small asynchronous validation library. Tries to be as small as possible and use 
 
 - [Install](#install)
 - [Usage](#usage)
+- [Migrating from 2.x](#migrating-from-2x)
 - [API Reference](#api-reference)
   - [Validation result](#validation-result)
   - [Validation error message](#validation-error-message)
+  - [Required and optional values](#required-and-optional-values)
   - [Validation types](#validation-types)
   - [Validation tests](#validation-tests)
   - [Custom validation](#custom-validation)
@@ -30,7 +32,9 @@ yarn add validator-fns
 
 ## Usage
 
-This is a fairly exhaustive example of what's possible with `validator-fns`.
+> **Upgrading from 2.x?** Every validator is now required unless you wrap it in `optional()`, and `required()` is gone. See [Migrating from 2.x](#migrating-from-2x).
+
+Every type validator rejects a missing value unless it's wrapped in `optional()`. This is a fairly exhaustive example of what's possible with `validator-fns`.
 
 <details><summary>example</summary>
 
@@ -50,7 +54,7 @@ import {
   number,
   object,
   oneOf,
-  required,
+  optional,
   string,
   url,
   valid,
@@ -76,21 +80,20 @@ function customValidator(value, field) {
 }
 
 const validate = object({
-  firstName: string(
-    { default: '', trim: true },
-    required('First name is required.'),
-  ),
+  firstName: string({
+    trim: true,
+    requiredMessage: 'First name is required.',
+  }),
   emailAddress: string(
-    required('Email address is required.'),
+    { requiredMessage: 'Email address is required.' },
     email('Must be a valid email address.'),
   ),
   age: number(
-    { round: 'floor' },
-    required('Age is required.'),
+    { round: 'floor', requiredMessage: 'Age is required.' },
     integer('Age must be a whole number.'),
     min(18, 'Must be at least {min} years old.'),
   ),
-  homepage: string(url('Must be a valid URL.', ['http:', 'https:'])),
+  homepage: optional(string(url('Must be a valid URL.', ['http:', 'https:']))),
   fruit: string(
     { default: 'apple' },
     oneOf(
@@ -101,7 +104,7 @@ const validate = object({
   favoriteCarMakers: array(
     { default: [] },
     string(
-      required('Car brand is required.'),
+      { requiredMessage: 'Car brand is required.' },
       oneOf(
         [
           'BMW',
@@ -122,16 +125,20 @@ const validate = object({
     min(2, 'Must pick at least two.'),
     max(4, 'Must pick at most four.'),
   ),
-  startDate: date(
-    minDate(now, 'Must be on or after today.'),
-    maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+  startDate: optional(
+    date(
+      minDate(now, 'Must be on or after today.'),
+      maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
+    ),
   ),
-  optIn: boolean(required('Must decide to opt in or out.')),
+  optIn: boolean({ requiredMessage: 'Must decide to opt in or out.' }),
   notRobot: number(
-    required('Must enter the correct answer.'),
+    { requiredMessage: 'Must enter the correct answer.' },
     exact(42, 'This is the answer.'),
   ),
-  postalCode: string(matches(/^[0-9]{5}$/, 'Must be a five-digit number.')),
+  postalCode: optional(
+    string(matches(/^[0-9]{5}$/, 'Must be a five-digit number.')),
+  ),
   custom: customValidator,
 });
 
@@ -161,6 +168,38 @@ if (result.state === 'valid') {
 
 </details>
 
+## Migrating from 2.x
+
+Version 3 makes every type validator required by default. In 2.x, a validator without `required()` accepted `undefined`, `null` and the other missing values; in 3.x, it rejects them with `'Required.'`.
+
+1. **Move each `required(message)` into the config as `requiredMessage`**, merging it into a config object that's already there:
+
+   ```js
+   // 2.x
+   string(required('Enter a name.'), min(2, 'Too short.'));
+   number({ round: 'floor' }, required('Enter your age.'));
+   array(string(), required('Pick some.'));
+
+   // 3.x
+   string({ requiredMessage: 'Enter a name.' }, min(2, 'Too short.'));
+   number({ round: 'floor', requiredMessage: 'Enter your age.' });
+   array({ requiredMessage: 'Pick some.' }, string());
+   ```
+
+2. **Wrap each validator that had no `required()` in `optional()`**, or it now rejects a missing value:
+
+   ```js
+   // 2.x
+   string(email('Must be an email.'));
+
+   // 3.x
+   optional(string(email('Must be an email.')));
+   ```
+
+3. **Replace `required(message, true)`** (nullable): `optional()` accepts `null`, as well as the other missing values.
+4. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { requiredMessage }, ...tests)`. A missing object now fails with its `requiredMessage` instead of reporting each field as missing; wrap it in `optional()` to accept one.
+5. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
+
 ## API Reference
 
 ### Validation result
@@ -187,24 +226,55 @@ The `message` argument in the validation tests must be a static string, a templa
 
 The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available.
 
+### Required and optional values
+
+Every validation type rejects a missing value: `undefined`, `null`, an empty string `''`, `NaN`, or an invalid date. It checks after parsing and `default`, so `string({ trim: true })` treats `'  '` as missing, `number()` treats a blank string as missing, and a `default` fills a missing value before the check. The tests only run on present values.
+
+The message is `'Required.'` unless the config sets `requiredMessage`, which takes a [validation error message](#validation-error-message):
+
+```js
+await string()('');
+// { state: 'invalid', message: 'Required.', value: '', ... }
+
+await number({ requiredMessage: '{field} is required.' })(undefined, 'age');
+// { state: 'invalid', message: 'age is required.', ... }
+```
+
+#### optional(validator)
+
+Returns a validator that accepts a missing value. The missing value skips the tests and becomes the result's `value` as parsed, so `optional(number())('')` is valid with `NaN`. Present values go through `validator` as usual. The validator passed in is unchanged.
+
+```js
+const nickname = optional(string(min(2, 'Too short.')));
+
+await nickname(undefined); // { state: 'valid', value: undefined, ... }
+await nickname('a'); // { state: 'invalid', message: 'Too short.', ... }
+```
+
+For a custom validator, `optional()` accepts `undefined` and `null` without calling it, and passes every other value to it.
+
+In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and `undefined`. In `object()`, a key is optional when its validator's value type includes `undefined`, so `object({ name: string(), age: optional(number()) })` is typed `{ name: string; age?: number | null | undefined }`.
+
+Put `optional()` inside `standard()`, as in `standard(optional(string()))`: `standard()` returns a new validator that `optional()` treats as a custom one.
+
 ### Validation types
 
-A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
+A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, and rejects a missing value unless wrapped in [`optional()`](#optionalvalidator). It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
 
 - [array(config?, itemTest, ...tests)](#arrayconfig-itemtest-tests)
 - [boolean(config?, ...tests)](#booleanconfig-tests)
 - [date(config?, ...tests)](#dateconfig-tests)
 - [number(config?, ...tests)](#numberconfig-tests)
-- [object(schema, ...tests)](#objectschema-tests)
+- [object(schema, config?, ...tests)](#objectschema-config-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
 
 #### array(config?, itemTest, ...tests)
 
-Casts value to an array, `null` or `undefined` if using the default date parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
+Casts value to an array, or keeps `null` or `undefined` if using the default array parser. `config` is optional. `itemTest` is the validation type or test to be applied on each value within the array value. All remaining `tests` are applied to the array as a whole.
 
 A valid result's `value` holds each item as `itemTest` returned it, so `array(number())` turns `['1', '2.5']` into `[1, 2.5]`, and `array(string({ trim: true }))` trims each item.
 
-Supported validation tests: `max`, `min`, and `required`.
+Supported validation tests: `max` and `min`.
 
 For invalid results, errors are in the `errors` property. It is an array of type:
 
@@ -216,40 +286,43 @@ Where valid entries are represented as `null` and invalid entries with the error
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                             |
-| :-------- | :------- | :-------------------------------------------------------------------------------------- |
-| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string.                     |
+| option            | type               | description                                                                             |
+| :---------------- | :----------------- | :-------------------------------------------------------------------------------------- |
+| `default`         | string             | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
+| `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                       |
+| `parser`          | function           | Optional. Used to customize how a value is converted into a string.                     |
 
 </details>
 
 #### boolean(config?, ...tests)
 
-Casts value to a boolean, `null` or `undefined` if using the default boolean parser. `config` is optional.
+Casts value to a boolean, or keeps `null` or `undefined` if using the default boolean parser. `config` is optional.
 
-Supported validation tests: `oneOf` and `required`.
+Supported validation tests: `oneOf`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                          |
-| :-------- | :------- | :------------------------------------------------------------------- |
-| `default` | boolean  | Optional. Value used if the parser returns `undefined` or `null`.    |
-| `parser`  | function | Optional. Used to customize how a value is converted into a boolean. |
+| option            | type               | description                                                          |
+| :---------------- | :----------------- | :------------------------------------------------------------------- |
+| `default`         | boolean            | Optional. Value used if the parser returns `undefined` or `null`.    |
+| `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.    |
+| `parser`          | function           | Optional. Used to customize how a value is converted into a boolean. |
 
 </details>
 
 #### date(config?, ...tests)
 
-Casts value to a date, `null` or `undefined` if using the default date parser. `config` is optional.
+Casts value to a date, or keeps `null` or `undefined` if using the default date parser. An input the parser can't read becomes an invalid date, which counts as missing. `config` is optional.
 
-Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
+Supported validation tests: `maxDate`, `minDate`, and `oneOf`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                         |
-| :-------- | :------- | :---------------------------------------------------------------------------------- |
-| `default` | date     | Optional. Value used if the parser returns `undefined`, `null`, or an invalid date. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a date.                   |
+| option            | type               | description                                                                         |
+| :---------------- | :----------------- | :---------------------------------------------------------------------------------- |
+| `default`         | date               | Optional. Value used if the parser returns `undefined`, `null`, or an invalid date. |
+| `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                   |
+| `parser`          | function           | Optional. Used to customize how a value is converted into a date.                   |
 
 The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso8601] formatted strings (excludes week formats). If you want to allow other or more complex formats you should use a third-party library such as [date-fns][date-fns].
 
@@ -257,37 +330,38 @@ The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso86
 
 #### number(config?, ...tests)
 
-Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional.
+Casts value to a number, or keeps `null` or `undefined` if using the default number parser. `config` is optional.
 
-The default parser accepts numbers, bigints, dates (as their timestamp), strings that start with a number (read with `parseFloat`, so `'12px'` is `12`), and `Number` or `String` objects holding one. A blank string (`''` or only whitespace) gives `NaN`, which `required` treats as empty and `default` replaces. Any other input gives an invalid result with the message `Failed to parse value to number.`: strings without a leading number, such as `'abc'`, booleans, symbols, and objects other than the ones above, arrays and functions included.
+The default parser accepts numbers, bigints, dates (as their timestamp), strings that start with a number (read with `parseFloat`, so `'12px'` is `12`), and `Number` or `String` objects holding one. A blank string (`''` or only whitespace) gives `NaN`, which counts as missing and which `default` replaces. Any other input gives an invalid result with the message `Failed to parse value to number.`: strings without a leading number, such as `'abc'`, booleans, symbols, and objects other than the ones above, arrays and functions included.
 
-Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `required`.
+Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                                |
-| :-------- | :------- | :----------------------------------------------------------------------------------------- |
-| `round`   | string   | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor`                        |
-| `default` | number   | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a number.                        |
+| option            | type               | description                                                                                |
+| :---------------- | :----------------- | :----------------------------------------------------------------------------------------- |
+| `round`           | string             | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor`                        |
+| `default`         | number             | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`. |
+| `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                          |
+| `parser`          | function           | Optional. Used to customize how a value is converted into a number.                        |
 
 </details>
 
-#### object(schema, ...tests)
+#### object(schema, config?, ...tests)
 
-The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
+The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. `config` is optional; when the second argument is a function, it's the first of the `tests`. A missing object, `undefined` or `null`, fails with `config.requiredMessage`, or `'Required.'`, without checking its fields. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
-In TypeScript, every field of the valid value is optional and can be `null`, as in `{ name?: string | null }`: a field's validator passes `null` and `undefined` through unless a test such as `required` rejects them.
+In TypeScript, a field of the valid value is required unless its validator is wrapped in `optional()`, as in `{ name: string; age?: number | null | undefined }`. A missing optional field is still set on the value, as `undefined`.
 
 The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Use [`check`](#checkpath-test-message) to compare fields and put the error on one of them:
 
 ```ts
 const signup = object(
   {
-    password: string(required('Required.')),
-    confirm: string(required('Required.')),
+    password: string(),
+    confirm: string(),
   },
   check('confirm', (value) => value.confirm === value.password, 'Must match.'),
 );
@@ -298,29 +372,38 @@ await signup({ password: 'secret', confirm: 'other' });
 
 A field's own error takes precedence: object-level tests don't run while any property is invalid, so they always compare valid, parsed values.
 
+<details><summary>config</summary>
+
+| option            | type               | description                                                        |
+| :---------------- | :----------------- | :----------------------------------------------------------------- |
+| `requiredMessage` | string or function | Optional. Message for a missing object. Defaults to `'Required.'`. |
+
+</details>
+
 To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
 
 #### string(config?, ...tests)
 
-Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional.
+Casts value to a string, or keeps `null` or `undefined` if using the default string parser. `config` is optional.
 
 The default parser accepts strings, numbers, bigints, booleans, dates (as an ISO string), and `String`, `Number`, or `Boolean` objects. Any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to string.`
 
-Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, `url`, and `uuid`.
+Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `url`, and `uuid`.
 
 <details><summary>config</summary>
 
-| option    | type     | description                                                                              |
-| :-------- | :------- | :--------------------------------------------------------------------------------------- |
-| `trim`    | boolean  | Optional. If true, clears whitespace from the start and end of the string.               |
-| `default` | string   | Optional. Value used if the parser returns `undefined`, `null`, or an empty string `''`. |
-| `parser`  | function | Optional. Used to customize how a value is converted into a string.                      |
+| option            | type               | description                                                                              |
+| :---------------- | :----------------- | :--------------------------------------------------------------------------------------- |
+| `trim`            | boolean            | Optional. If true, clears whitespace from the start and end of the string.               |
+| `default`         | string             | Optional. Value used if the parser returns `undefined`, `null`, or an empty string `''`. |
+| `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                        |
+| `parser`          | function           | Optional. Used to customize how a value is converted into a string.                      |
 
 </details>
 
 ### Validation tests
 
-A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
+A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values; called directly, the built-in tests pass `null` and `undefined` through. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
 - [check(path?, test, message)](#checkpath-test-message)
 - [email(message)](#emailmessage)
@@ -332,7 +415,6 @@ A **validation test** is a simplified version of a validation type. It accepts a
 - [min(limit, message, exclusive?)](#minlimit-message-exclusive)
 - [minDate(limit, message, exclusive?)](#mindatelimit-message-exclusive)
 - [oneOf(values, message)](#oneofvalues-message)
-- [required(message, nullable?)](#requiredmessage-nullable)
 - [url(message, protocols?)](#urlmessage-protocols)
 - [uuid(message)](#uuidmessage)
 
@@ -469,19 +551,6 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 
 </details>
 
-#### required(message, nullable?)
-
-Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date. Works with all types.
-
-<details><summary>arguments</summary>
-
-| name       | type               | description                       |
-| :--------- | :----------------- | :-------------------------------- |
-| `message`  | string or function | The validation error message.     |
-| `nullable` | boolean            | Optional. If true, allows `null`. |
-
-</details>
-
 #### url(message, protocols?)
 
 Ensures value is a valid URL with an allowed protocol. Works with strings. `protocols` defaults to `['http:', 'https:']`, so `javascript:` and `data:` URLs, which can run script when used as a link, are invalid. A list replaces the default, so `['mailto:']` allows only `mailto:`. `protocols` is provided to the message.
@@ -523,7 +592,7 @@ Formats a string for use as an error message. `template` can be a plain string w
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, and works with `optional()`, like the built-in ones.
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
@@ -562,7 +631,7 @@ const result = await money({ cents: true })('12.5');
 
 #### valid({ value, field })
 
-Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property.
+Formats a successful validation result. `value` is the parsed value and `field` is the name of the object schema property. In TypeScript, `value` has the validator's value type, so a custom validator that can return `null` or `undefined` needs them in that type.
 
 #### invalid({ message, value, field, errors, extras })
 
@@ -580,7 +649,7 @@ await schema['~standard'].validate({ email: 'nope' });
 ```
 
 - `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
-- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type or `null` or `undefined`, as in a valid result.
+- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type, which includes `null` and `undefined` only for `optional()` validators.
 - An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
 - An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
 
