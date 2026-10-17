@@ -17,15 +17,19 @@ The part of a type validator that turns unknown input into its type, or reports 
 _Avoid_: cast, coercer
 
 **Test**:
-A check on a value that has already been parsed, such as `min()` or `check()`.
+A check on a value that has already been parsed, such as `min()` or `check()`. Its valid value is passed to the next test, so a test can also change the value.
 _Avoid_: rule, validation test, ValidationTest
+
+**Transform**:
+A test that changes the value and never fails, such as one that trims a string.
+_Avoid_: modifier, sanitizer, coercion
 
 **Optional**:
 A wrapper that lets a validator accept missing input instead of failing with `required`.
 _Avoid_: nullable
 
 **Missing**:
-Input that counts as absent for a type validator. It fails with `required` unless the validator is optional or has a default.
+Input, or a value a test changes it to, that counts as absent for a type validator. It fails with `required` unless the validator is optional or has a default.
 _Avoid_: blank, empty, nullish
 
 **Default**:
