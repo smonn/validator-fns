@@ -16,6 +16,8 @@ Contributor tooling needs Node 22, version 22.18 or later, which tsdown requires
 
 A path-based ignore in a check's config (`.oxfmtrc.json`, `.oxlintrc.json`, `.rev-dep.config.jsonc`) needs a comment next to it with its reason. `pnpm check` fails when an ignore matches no tracked file, so renaming an ignored file means updating its ignore.
 
+`pnpm lint` skips `benchmark/`, and `pnpm check` lints it in a separate step, `lint:bench`, after building the library and installing the benchmark. The benchmark imports the library through `benchmark/node_modules`, which points at the repository root, so linting it before the build checks it against a stale `dist/`. Every file is still linted. The pre-commit hook lints a staged benchmark file against the current `dist/`, so run `pnpm build` first when the benchmark uses a new export.
+
 Contributing to a project on GitHub is pretty straight forward. If this is you're first time, these are the steps you should take.
 
 - Fork this repo.
