@@ -43,7 +43,10 @@ for (const [name, edits] of Object.entries(variants[branch])) {
       if (count !== 1) {
         throw new Error(`${name}: expected one match in ${file}, got ${count}`);
       }
-      writeFileSync(path, text.replace(from, () => to));
+      writeFileSync(
+        path,
+        text.replace(from, () => to),
+      );
     }
     build(name);
   } finally {
