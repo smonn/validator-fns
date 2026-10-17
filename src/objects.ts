@@ -32,10 +32,9 @@ export function object<
         const validator = properties[key];
         // Object() boxes primitives and turns null and undefined into {}.
         const value: unknown = Reflect.get(Object(values), key);
-        const result =
-          typeof validator === 'function'
-            ? await validator(value, key)
-            : await invalid({ field: key, message: 'No validator set', value });
+        const result = await (typeof validator === 'function'
+          ? validator(value, key)
+          : invalid({ field: key, message: 'No validator set', value }));
 
         resolvedValues[key] = result.value as V[Extract<keyof P, string>];
 

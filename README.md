@@ -537,24 +537,23 @@ Formats a failed validation result. `message` is the same as the `formatMessage`
 Supports Node versions in active or maintenance LTS at release time. Dropping one waits for the next major release.
 
 - Node.js 22 and later.
-- [ES2019 compatible browsers][compat], which essentially is all modern evergreen browsers and Safari 13.1+. If you need to target IE11, for example, ensure you use a compiler such as Babel.js.
+- Chrome and Edge 85+, Firefox 77+, and Safari 13.1+ (iOS 13.4+): the first versions with every feature below, per [MDN's browser compatibility data][bcd] 8.1.6.
 
-Older environments may require polyfill or transpile for the following:
+To support older environments, transpile or polyfill these:
 
-- `Promise`
-- `async`, `await`
-- `Array.prototype.find`
-- `URL`
-- Rest (`...`) parameters
-- Object spread (`...`) operators
-- Optional catch binding
-- And possibly others
+- `String.prototype.replaceAll` (ES2021)
+- Nullish coalescing (`??`, ES2020)
+- Optional catch binding (ES2019)
+- Object spread (`...`, ES2018)
+- `async`, `await` (ES2017)
+- `Array.prototype.includes` (ES2016)
+- `Promise`, `URL`, and the rest of ES2015
 
 [npm]: https://www.npmjs.com/package/validator-fns
 [docs]: #documentation
 [github]: https://github.com/smonn/validator-fns
 [yup]: https://github.com/jquense/yup
-[compat]: https://kangax.github.io/compat-table/es2016plus/
+[bcd]: https://github.com/mdn/browser-compat-data
 [date-fns]: https://date-fns.org
 [formik]: https://formik.org
 [iso8601]: https://en.wikipedia.org/wiki/ISO_8601
