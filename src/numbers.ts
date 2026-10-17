@@ -11,6 +11,7 @@ import {
  * Parses a value into a number.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this. In v3, use `coerce.number()` for text input.
  */
 export function parseNumber(value: unknown): number | null | undefined {
   if (value === null || value === undefined) {
@@ -38,6 +39,7 @@ export function parseNumber(value: unknown): number | null | undefined {
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function applyNumberConfig(
   value: unknown,
@@ -106,7 +108,11 @@ export function integer(message: ValidatorMessage<number>): Validator<number> {
  * @category Types
  */
 export interface NumberConfig extends ConfigBase<number> {
-  /** Apply rounding mechanism before validation. */
+  /**
+   * Apply rounding mechanism before validation.
+   * @deprecated v3 removes this option. Use `integer()` instead, or, in v3,
+   * `transform(Math.round)`.
+   */
   round?: 'nearest' | 'floor' | 'ceil';
 }
 

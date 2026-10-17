@@ -1,4 +1,7 @@
-/** Badly formatted date for internal use. */
+/**
+ * Badly formatted date for internal use.
+ * @deprecated v3 removes this, with no replacement.
+ */
 export const invalidDate = new Date('');
 
 /** @internal */
@@ -54,6 +57,7 @@ const dateParts = [
  * Parses a value into a date.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this. In v3, use `coerce.date()` for text input.
  */
 export function parseDate(value: unknown): Date | null | undefined {
   if (value === null || value === undefined) {

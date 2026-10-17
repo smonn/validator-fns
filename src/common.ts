@@ -10,6 +10,8 @@ import type {
  * @param message Error message
  * @param nullable Allow null values
  * @category Validation Tests
+ * @deprecated v3 removes this. v3 validators are required by default; wrap the
+ * others in `optional()`.
  */
 export function required<T, P extends ValidatorMessageParameters<T>>(
   message: ValidatorMessage<T, P>,

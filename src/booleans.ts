@@ -5,6 +5,7 @@ import type { ConfigBase } from './shared.js';
  * Parses a value into a boolean.
  * @param value Value to parse
  * @category Parsers
+ * @deprecated v3 removes this. In v3, use `coerce.boolean()` for text input.
  */
 export function parseBoolean(value: unknown): boolean | null | undefined {
   if (value === undefined || value === null) {
@@ -23,6 +24,7 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  * @param value Value to modify
  * @param config Configuration to apply
  * @category Helpers
+ * @deprecated v3 removes this, with no replacement.
  */
 export function applyBooleanConfig(
   value: unknown,
