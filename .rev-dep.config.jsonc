@@ -41,7 +41,7 @@
         },
         {
           "name": "validators",
-          "pattern": "src/{arrays,booleans,common,limits,numbers,objects,strings}.ts",
+          "pattern": "src/{arrays,booleans,check,common,limits,numbers,objects,strings}.ts",
           "allow": ["src/shared.ts", "src/factories.ts"],
         },
         {

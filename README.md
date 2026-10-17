@@ -196,7 +196,7 @@ A **validation type** is expected to parse and prepare the value for the provide
 - [boolean(config?, ...tests)](#booleanconfig-tests)
 - [date(config?, ...tests)](#dateconfig-tests)
 - [number(config?, ...tests)](#numberconfig-tests)
-- [object(schema)](#objectschema)
+- [object(schema, ...tests)](#objectschema-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
 
 #### array(config?, itemTest, ...tests)
@@ -272,13 +272,28 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `requ
 
 </details>
 
-#### object(schema)
+#### object(schema, ...tests)
 
 The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages.
 
-Unlike yup, this API does not (yet at least) have a ref option.
+The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Use [`check`](#checkpath-test-message) to compare fields and put the error on one of them:
+
+```ts
+const signup = object(
+  {
+    password: string(required('Required.')),
+    confirm: string(required('Required.')),
+  },
+  check('confirm', (value) => value.confirm === value.password, 'Must match.'),
+);
+
+await signup({ password: 'secret', confirm: 'other' });
+// { state: 'invalid', message: '', errors: { confirm: 'Must match.' }, ... }
+```
+
+A field's own error takes precedence: object-level tests don't run while any property is invalid, so they always compare valid, parsed values.
 
 To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
 
@@ -302,6 +317,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type including `null` and `undefined` and then returns a promise that resolves to a validation result. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
+- [check(path?, test, message)](#checkpath-test-message)
 - [email(message)](#emailmessage)
 - [exact(limit, message)](#exactlimit-message)
 - [integer(message)](#integermessage)
@@ -314,6 +330,20 @@ A **validation test** is a simplified version of a validation type. It accepts a
 - [required(message, nullable?)](#requiredmessage-nullable)
 - [url(message, protocols?)](#urlmessage-protocols)
 - [uuid(message)](#uuidmessage)
+
+#### check(path?, test, message)
+
+An object-level test for `object`. It fails when `test` returns `false` for the parsed object. With a `path`, the message is the error at that property in the object's `errors`; a list of names reaches into nested objects, such as `['shipping', 'zip']`. Without a `path`, the message is the object's own `message`. The parsed object is provided to the message as `value`.
+
+<details><summary>arguments</summary>
+
+| name      | type               | description                                                       |
+| :-------- | :----------------- | :---------------------------------------------------------------- |
+| `path`    | string or string[] | Optional. The property, or the path into nested objects, to fail. |
+| `test`    | function           | Gets the parsed object and returns `true` when it is valid.       |
+| `message` | string or function | The validation error message.                                     |
+
+</details>
 
 #### email(message)
 

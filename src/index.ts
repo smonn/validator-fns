@@ -12,6 +12,7 @@ export type {
 export { applyNumberConfig, integer, number, parseNumber } from './numbers';
 export { invalidDate, parseDate } from './parse-date';
 export type { NumberConfig } from './numbers';
+export { check } from './check';
 export { object } from './objects';
 export type { ObjectParameter as ObjectParam } from './objects';
 export { oneOf, required } from './common';
