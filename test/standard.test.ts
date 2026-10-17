@@ -1,8 +1,10 @@
 import { assert, expectTypeOf, test } from 'vitest';
+import * as validatorFns from '../src/index.js';
 import {
   array,
   boolean,
   createTypeValidatorTest,
+  createValidator,
   date,
   email,
   invalid,
@@ -13,10 +15,10 @@ import {
   object,
   optional,
   parseNumber,
-  standard,
   string,
   valid,
   type TypeValidator,
+  type ValidatorResult,
 } from '../src/index.js';
 
 /** The same type as StandardSchemaV1.InferOutput, without importing it. */
@@ -26,32 +28,27 @@ type InferOutput<S> = S extends {
   ? O
   : never;
 
-test('should describe the library when wrapped', () => {
-  const schema = standard(string());
+test('should describe the library', () => {
+  const schema = string();
 
   assert.strictEqual(schema['~standard'].version, 1);
   assert.strictEqual(schema['~standard'].vendor, 'validator-fns');
 });
 
 test('should return the parsed value when the input is valid', async () => {
-  const schema = standard(string({ trim: true }));
+  const schema = string({ trim: true });
 
   assert.deepEqual(await schema['~standard'].validate(' a '), { value: 'a' });
 });
 
 test('should report each nested error with its path when an object fails', async () => {
-  const schema = standard(
-    object({
-      email: string(email('Must be an email.')),
-      tags: array(
-        string(min(2, 'Tag too short.')),
-        max(2, 'At most two tags.'),
-      ),
-      address: object({ zip: string(matches(/^\d{5}$/, 'Five digits.')) }),
-      silent: async (value: unknown, field?: string) =>
-        invalid({ message: '', value, field }),
-    }),
-  );
+  const schema = object({
+    email: string(email('Must be an email.')),
+    tags: array(string(min(2, 'Tag too short.')), max(2, 'At most two tags.')),
+    address: object({ zip: string(matches(/^\d{5}$/, 'Five digits.')) }),
+    silent: async (value: unknown, field?: string) =>
+      invalid({ message: '', value, field }),
+  });
 
   const result = await schema['~standard'].validate({
     email: 'nope',
@@ -71,9 +68,7 @@ test('should report each nested error with its path when an object fails', async
 });
 
 test('should report the array message and each item error when an array fails', async () => {
-  const schema = standard(
-    array(string(min(2, 'short')), max(2, 'At most two.')),
-  );
+  const schema = array(string(min(2, 'short')), max(2, 'At most two.'));
 
   assert.deepEqual(await schema['~standard'].validate(['a', 'bb', 'c']), {
     issues: [
@@ -85,7 +80,7 @@ test('should report the array message and each item error when an array fails', 
 });
 
 test('should report one issue when a validator fails without a message', async () => {
-  const schema = standard(async (value: unknown, field?: string) =>
+  const schema = createValidator(async (value: unknown, field?: string) =>
     invalid({ message: '', value, field }),
   );
 
@@ -95,12 +90,10 @@ test('should report one issue when a validator fails without a message', async (
 });
 
 test('should give a fallback message when an error is not a string', async () => {
-  const schema = standard(
-    object({
-      code: async (value: unknown, field?: string) =>
-        invalid({ message: '', value, field, errors: 42 }),
-    }),
-  );
+  const schema = object({
+    code: async (value: unknown, field?: string) =>
+      invalid({ message: '', value, field, errors: 42 }),
+  });
 
   assert.deepEqual(await schema['~standard'].validate({ code: 1 }), {
     issues: [{ message: 'Invalid value.', path: ['code'] }],
@@ -110,19 +103,78 @@ test('should give a fallback message when an error is not a string', async () =>
 const passThrough = async (value: unknown, field?: string) =>
   valid({ value, field });
 
-test('should leave a custom validator unchanged when wrapping it', async () => {
-  const schema = standard(passThrough);
+const hello = async (
+  value: unknown,
+  field?: string,
+): Promise<ValidatorResult<'hello', { code: number }>> =>
+  value === 'hello'
+    ? valid({ value, field })
+    : invalid({
+        message: 'Must be "hello".',
+        value,
+        field,
+        errors: { code: 1 },
+      });
 
-  assert.notStrictEqual(schema, passThrough);
-  assert.notProperty(passThrough, '~standard');
-  assert.deepEqual(await schema('a', 'name'), await passThrough('a', 'name'));
+test('should add ~standard to a function and keep its results and field', async () => {
+  const schema = createValidator(hello);
+
+  assert.notStrictEqual(schema, hello);
+  assert.notProperty(hello, '~standard');
+  assert.strictEqual(schema['~standard'].version, 1);
+  assert.strictEqual(schema['~standard'].vendor, 'validator-fns');
+  assert.deepEqual(await schema('hello', 'greeting'), {
+    state: 'valid',
+    value: 'hello',
+    field: 'greeting',
+  });
+  assert.deepEqual(await schema('hi', 'greeting'), {
+    state: 'invalid',
+    message: 'Must be "hello".',
+    value: 'hi',
+    field: 'greeting',
+    errors: { code: 1 },
+  });
+  assert.deepEqual(await schema['~standard'].validate('hello'), {
+    value: 'hello',
+  });
+  assert.deepEqual(await schema['~standard'].validate('hi'), {
+    issues: [
+      { message: 'Must be "hello".' },
+      { message: 'Invalid value.', path: ['code'] },
+    ],
+  });
 });
 
-test('should return a type validator as it is', () => {
+test('should return a validator that already has ~standard as it is', () => {
   const validate = string();
+  const wrapped = createValidator(passThrough);
 
-  assert.strictEqual(standard(validate), validate);
-  assert.strictEqual(standard(optional(validate)), optional(validate));
+  assert.strictEqual(createValidator(validate), validate);
+  assert.strictEqual(createValidator(optional(validate)), optional(validate));
+  assert.strictEqual(createValidator(wrapped), wrapped);
+});
+
+test('should infer the value and error types from the function', () => {
+  expectTypeOf(createValidator(hello)).toEqualTypeOf<
+    TypeValidator<'hello', { code: number }>
+  >();
+  expectTypeOf(createValidator(passThrough)).toEqualTypeOf<
+    TypeValidator<unknown, never>
+  >();
+  expectTypeOf(createValidator(string())).toEqualTypeOf<
+    TypeValidator<string, string>
+  >();
+});
+
+test('should take only async functions', () => {
+  expectTypeOf<
+    (value: unknown) => ValidatorResult<string, never>
+  >().not.toExtend<Parameters<typeof createValidator<string, never>>[0]>();
+});
+
+test('should not export standard()', () => {
+  assert.notProperty(validatorFns, 'standard');
 });
 
 const money = createTypeValidatorTest(
@@ -155,7 +207,7 @@ const typeValidators: [
   ],
 ];
 
-test('should be a Standard Schema without standard() for every type validator', async () => {
+test('should be a Standard Schema for every type validator', async () => {
   const results = await Promise.all(
     typeValidators.map(async ([label, schema, accepted, rejected]) => ({
       label,
@@ -174,7 +226,7 @@ test('should be a Standard Schema without standard() for every type validator', 
 });
 
 test('should type the output as the valid result value', () => {
-  const schema = standard(object({ name: string() }));
+  const schema = object({ name: string() });
   expectTypeOf<InferOutput<typeof schema>>().toEqualTypeOf<{ name: string }>();
 
   expectTypeOf<
@@ -184,10 +236,8 @@ test('should type the output as the valid result value', () => {
     string | null | undefined
   >();
 
-  const optionalSchema = standard(optional(string()));
-  expectTypeOf<InferOutput<typeof optionalSchema>>().toEqualTypeOf<
-    string | null | undefined
-  >();
+  const custom = createValidator(hello);
+  expectTypeOf<InferOutput<typeof custom>>().toEqualTypeOf<'hello'>();
 });
 
 const optionalString = optional(string());
