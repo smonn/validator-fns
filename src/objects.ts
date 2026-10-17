@@ -5,7 +5,8 @@ import {
   type ExtractError,
   type ExtractValue,
   hasOwnProperty,
-  invalid,
+  invalidResult,
+  setOwn,
   valid,
   type ValidatorMessage,
   type ValidatorTest,
@@ -45,20 +46,6 @@ type ObjectValue<P extends ObjectParameter> = Flatten<
 type ObjectErrors<P extends ObjectParameter> = {
   [K in keyof P]?: string | ExtractError<P[K]>;
 };
-
-/**
- * Sets an own property. Plain assignment of `__proto__` calls the
- * `Object.prototype.__proto__` setter instead of creating the property.
- * @internal
- */
-function setOwn(target: object, key: string, value: unknown) {
-  Object.defineProperty(target, key, {
-    value,
-    enumerable: true,
-    writable: true,
-    configurable: true,
-  });
-}
 
 /**
  * The parsed object, typed from the validators. The only type assertion in
@@ -127,7 +114,11 @@ export function object<P extends ObjectParameter>(
             : undefined;
           const result = await (typeof validator === 'function'
             ? validator(value, key)
-            : invalid({ field: key, message: 'No validator set', value }));
+            : invalidResult({
+                field: key,
+                message: 'No validator set',
+                value,
+              }));
 
           setOwn(resolvedValues, key, result.value);
 
@@ -139,7 +130,7 @@ export function object<P extends ObjectParameter>(
       }
 
       if (!isValid) {
-        return invalid({ message: '', value: values, field, errors });
+        return invalidResult({ message: '', value: values, field, errors });
       }
 
       const parsed = asObjectValue<P>(resolvedValues);
@@ -149,7 +140,7 @@ export function object<P extends ObjectParameter>(
         field,
       );
       if (objectInvalidResult) {
-        return invalid({
+        return invalidResult({
           message: objectInvalidResult.message,
           value: values,
           field,

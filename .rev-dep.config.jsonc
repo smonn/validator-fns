@@ -40,6 +40,11 @@
           "deny": ["src/**"],
         },
         {
+          "name": "invalid",
+          "pattern": "src/invalid.ts",
+          "allow": ["src/shared.ts"],
+        },
+        {
           "name": "invalid-detail",
           "pattern": "src/invalid-detail.ts",
           "allow": ["src/shared.ts"],

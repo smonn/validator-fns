@@ -7,7 +7,7 @@ import {
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
-  invalid,
+  invalidResult,
   isIterable,
   valid,
   type ConfigBase,
@@ -108,7 +108,7 @@ function arrayOf<T, E>(
         return valid({ value: items.values, field });
       }
 
-      return invalid<T[], ArrayItemValidatorResult<E>[]>({
+      return invalidResult<T[], ArrayItemValidatorResult<E>[]>({
         message: arrayInvalidResult ? arrayInvalidResult.message : '',
         value,
         field,
