@@ -1,13 +1,13 @@
 export default {
   mutate: ['src/**/*.ts'],
-  // Runs the whole suite for each mutant. @stryker-mutator/vitest-runner is
-  // faster, but it needs vitest 2 or later; #607 switches to it after #575
-  // upgrades vitest.
+  // Runs the whole suite for each mutant. #607 tracks switching to
+  // @stryker-mutator/vitest-runner, which runs only the tests that cover each
+  // mutant.
   testRunner: 'command',
   commandRunner: { command: 'pnpm exec vitest run' },
   reporters: ['clear-text', 'progress'],
   thresholds: {
-    // Three runs when this check was added scored 89.38 to 90.03; the score
+    // Four runs when this check was added scored 89.38 to 90.03; the score
     // moves with fast-check's seed and with timeouts under load. 88 keeps
     // about 10 mutants of margin below the lowest. Raise it as the score
     // improves; lowering it loosens the check and needs approval.
