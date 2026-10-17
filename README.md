@@ -542,7 +542,6 @@ Supports Node versions in active or maintenance LTS at release time. Dropping on
 To support older environments, transpile or polyfill these:
 
 - `String.prototype.replaceAll` (ES2021)
-- Nullish coalescing (`??`, ES2020)
 - Optional catch binding (ES2019)
 - Object spread (`...`, ES2018)
 - `async`, `await` (ES2017)
