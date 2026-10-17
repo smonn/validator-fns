@@ -14,7 +14,7 @@ Decided in #692:
 
 - **Missing is `undefined` or `null`, for every type.** `''`, `0`, `false`, `NaN`, `[]` and `{}` are present. A parser that can't read a present value, such as `''` or `NaN` given to `number()`, fails it with `type`.
 - **The missing check runs once, on the input.** A parser never sees missing input. A step keeps type T, so it can't make a value missing, and ADR 0003's re-check is dropped.
-- **Built-in parsers accept only their own type.** Coercion, such as `'42'` to `42`, is a separate, explicit step. #736 decides its shape.
+- **Built-in parsers accept only their own type.** Coercion, such as `'42'` to `42`, is a separate, explicit step. In #736, it became `coerce.number()`, `coerce.date()` and `coerce.boolean()`. Each one coerces the input before the missing check, so blank text becomes `undefined` and an empty form field is missing, then runs the strict built-in.
 - **`default` fills missing input only.** The parser is skipped, and the tests and transforms run on the default. It's a plain value, with no function form, and it applies before `optional()`.
 - **`object()` builds its default from its children.** For missing input, each child runs on `undefined`. If all of them are valid, that object is the value, and its collection tests run on it. Otherwise the object fails with `required`.
 
@@ -29,7 +29,7 @@ Decided in #692:
 
 ## Consequences
 
-- An empty form field fails `number()` and `date()` with `type`, not `required`, unless coercion turns `''` into `undefined` first. A translation words the failure.
+- An empty form field fails `number()` and `date()` with `type`, not `required`, unless a coerce twin such as `coerce.number()` turns `''` into `undefined` first. A translation words the failure.
 - `string()` accepts `''`. `min(1)` rejects it.
 - `array({ default })` no longer replaces `[]`.
 - Do not make another value missing for one type. That is the per-type definition this replaces.
