@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-In 2.x, `createTypeValidatorTest`, `array()` and `object()` each run their own parse, default, missing, test-loop and throw handling, and they drift (#684, #685). `optional()` reads a twin that every built-in builds and stores. v3 adds coerce twins, `withMessages()` translations that must reach nested failures, and custom types built from a parser, and each of them has to work with `optional()` in either wrapping order. Valibot and Zod give every schema an internal run protocol and pass a context down the call, so messages are resolved when a failure is created.
+In 2.x, `createTypeValidatorTest`, `array()` and `object()` each run their own parse, default, missing, test-loop and throw handling, and they drift (#684, #685). `optional()` reads a twin that every built-in builds and stores. v3 adds coerce twins, `withMessages()` translations that must reach nested failures, and custom types built from a parser, and each of them has to work with `optional()` in either wrapping order. Valibot 1.5.0 and Zod 4.1.12 give every schema an internal run protocol and pass a context down the call. Valibot resolves a message when it creates the issue. Zod collects raw issues, keeping their input, and resolves the messages after the run, when it finalizes the issues.
 
 ## Decision
 
@@ -19,7 +19,7 @@ Decided in #693:
 
 ## Considered options
 
-- **A run protocol and context on every validator, as in Valibot and Zod.** Messages would resolve at creation with the value at hand. But validators written by users don't carry the protocol, so their failures would still need a fill-in walk, which leaves two mechanisms.
+- **A run protocol and context on every validator, as in Valibot and Zod.** With Valibot's timing, messages would resolve when each failure is created, with the value at hand. But validators written by users don't carry the protocol, so their failures would still need a fill-in walk, which leaves two mechanisms. Zod 4 also resolves messages after the run, so the timing isn't what sets this option apart. The protocol is.
 - **A list of same-shaped stages compiled into a validator.** Best for future wrappers, but every type module has to learn the phase rules, and a fill rule exists only for `default` and the object build.
 - **Built-ins made only with the public factory.** It dogfoods `createTypeValidator`, but `object()` would need two pipelines to build its default from its children.
 - **"No message supplied" read as `message === code`.** No bookkeeping, but a supplied message equal to its code, as in `min(2, 'min')`, would be translated over.
