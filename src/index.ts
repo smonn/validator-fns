@@ -15,7 +15,7 @@ export type { NumberConfig } from './numbers';
 export { check } from './check';
 export { object } from './objects';
 export { optional } from './optional';
-export { standard } from './standard';
+export { createValidator } from './standard';
 export type { TypeValidator } from './standard';
 export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';
 export { oneOf } from './common';

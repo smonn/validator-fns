@@ -44,8 +44,8 @@ export type TypeValidator<T, E> = ValidatorTest<T, E> &
   StandardSchemaV1<unknown, T>;
 
 /**
- * Validators that carry this library's `~standard`, so `standard()` returns
- * them as they are.
+ * Validators that carry this library's `~standard`, so `createValidator()`
+ * returns them as they are.
  * @internal
  */
 const carriers = new WeakSet<object>();
@@ -96,21 +96,20 @@ export function withStandard<T, E>(
 }
 
 /**
- * Adds the Standard Schema interface (https://standardschema.dev) to a
- * validator, so libraries that accept any Standard Schema can use it. Type
- * validators already have it and are returned as they are; any other validator
- * gets a new validator, and the one passed in is unchanged. `validate` always
- * returns a promise, since every validator here is async.
+ * Makes a custom validator from an async function that takes a value and a
+ * field name and returns a validation result. The validator is also a Standard
+ * Schema (https://standardschema.dev), like the built-in ones, and `fn` itself
+ * is unchanged. A validator that already has this library's `~standard`, such
+ * as a type validator, is returned as it is.
+ * @param fn Function that validates a value
  * @category Helpers
  */
-export function standard<T, E>(
-  validator: ValidatorTest<T, E>,
+export function createValidator<T, E>(
+  fn: ValidatorTest<T, E>,
 ): TypeValidator<T, E> {
-  if (isTypeValidator(validator)) {
-    return validator;
+  if (isTypeValidator(fn)) {
+    return fn;
   }
 
-  return withStandard((value?: unknown, field?: string) =>
-    validator(value, field),
-  );
+  return withStandard((value?: unknown, field?: string) => fn(value, field));
 }

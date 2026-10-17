@@ -42,6 +42,7 @@ Every type validator rejects a missing value unless it's wrapped in `optional()`
 import {
   array,
   boolean,
+  createValidator,
   date,
   email,
   exact,
@@ -68,7 +69,7 @@ const TEN_DAYS = ONE_DAY * 10;
 const now = new Date();
 const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
-function customValidator(value, field) {
+const customValidator = createValidator(async (value, field) => {
   if (value === 'hello') {
     return valid({ value, field });
   }
@@ -77,7 +78,7 @@ function customValidator(value, field) {
     value,
     field,
   });
-}
+});
 
 const validate = object({
   firstName: string({
@@ -198,7 +199,19 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 3. **Replace `required(message, true)`** (nullable): `optional()` accepts `null`, as well as the other missing values.
 4. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { requiredMessage }, ...tests)`. A missing object now fails with its `requiredMessage` instead of reporting each field as missing; wrap it in `optional()` to accept one.
-5. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
+5. **Replace `standard()`**: remove it around built-in validators, which are Standard Schemas themselves, and change `standard(fn)` to `createValidator(fn)`:
+
+   ```js
+   // 2.x
+   standard(object({ email: string() }));
+   standard(async (value, field) => valid({ value, field }));
+
+   // 3.x
+   object({ email: string() });
+   createValidator(async (value, field) => valid({ value, field }));
+   ```
+
+6. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`.
 
 ## API Reference
 
@@ -266,7 +279,7 @@ A **validation type** is expected to parse and prepare the value for the provide
 - [object(schema, config?, ...tests)](#objectschema-config-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
 
-Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [standard(validator)](#standardvalidator) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `ValidatorTest<T, E>` with a `~standard` property.
+Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [createValidator(fn)](#createvalidatorfn) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `ValidatorTest<T, E>` with a `~standard` property.
 
 #### array(config?, itemTest, ...tests)
 
@@ -580,11 +593,39 @@ Ensures the value is a UUID as defined by [RFC 9562](https://www.rfc-editor.org/
 
 Custom validation types and validators can be created and used as needed. There are some helpers that, while used internally, are considered part of the public API.
 
+- [createValidator(fn)](#createvalidatorfn)
 - [formatMessage(template, params)](#formatmessagetemplate-params)
 - [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
 - [valid({ value, field })](#valid-value-field-)
 - [invalid({ message, value, field, errors, extras })](#invalid-message-value-field-errors-extras-)
-- [standard(validator)](#standardvalidator)
+
+#### createValidator(fn)
+
+Makes a custom validator from `fn`, an async function that takes a value and a field name and returns a result made with `valid()` or `invalid()`. The validator gives the same results as `fn`, works with `optional()` and inside `object()` and `array()`, and is a [Standard Schema][standard-schema] like the validation types. `fn` itself is unchanged. A validator that's already a Standard Schema from this library, such as `string()`, is returned as it is. In TypeScript, its type is `TypeValidator<T, E>`, with `T` and `E` inferred from `fn`'s return type.
+
+`fn` must return a promise. A synchronous function is a type error.
+
+```ts
+const hello = createValidator(async (value, field) =>
+  value === 'hello'
+    ? valid({ value, field })
+    : invalid({ message: 'Must be "hello".', value, field }),
+);
+
+await hello['~standard'].validate('hi');
+// { issues: [{ message: 'Must be "hello".' }] }
+
+const schema = object({ email: string(email('Must be an email.')) });
+await schema['~standard'].validate({ email: 'nope' });
+// { issues: [{ message: 'Must be an email.', path: ['email'] }] }
+```
+
+How a validator's results map to Standard Schema results:
+
+- `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
+- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type, which includes `null` and `undefined` only for `optional()` validators.
+- An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
+- An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
 
 #### formatMessage(template, params)
 
@@ -636,24 +677,6 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 #### invalid({ message, value, field, errors, extras })
 
 Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
-
-#### standard(validator)
-
-Adds the [Standard Schema][standard-schema] interface to a custom validator, for libraries that accept any Standard Schema. It returns a new validator with a `~standard` property and leaves the one passed in unchanged. Validation types already have the interface, so `standard()` returns them as they are.
-
-```ts
-const schema = object({ email: string(email('Must be an email.')) });
-
-await schema['~standard'].validate({ email: 'nope' });
-// { issues: [{ message: 'Must be an email.', path: ['email'] }] }
-
-const custom = standard(async (value, field) => valid({ value, field }));
-```
-
-- `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
-- A valid result gives `{ value }`, the parsed value. Its type is the validator's value type, which includes `null` and `undefined` only for `optional()` validators.
-- An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
-- An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
 
 ## Supported environments
 
