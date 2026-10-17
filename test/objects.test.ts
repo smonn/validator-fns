@@ -1,6 +1,7 @@
 import { assert, test } from 'vitest';
 import {
   integer,
+  invalid,
   max,
   min,
   number,
@@ -159,4 +160,19 @@ test('invalid configuration', async () => {
 
   const validate = object({ test: 'test' } as any);
   await validate(null);
+});
+
+// Fails with an empty message and no errors, which built-in tests never do.
+const silent: ValidatorTest = async (value, field) =>
+  invalid({ message: '', value, field });
+
+test('object records an empty message for a field that fails without one', async () => {
+  const result = await object({ silent, name: string() })({
+    silent: 1,
+    name: 'x',
+  });
+  assert.equal(result.state, 'invalid');
+  assert.deepEqual(result.state === 'invalid' && result.errors, {
+    silent: '',
+  });
 });
