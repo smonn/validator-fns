@@ -36,7 +36,6 @@ test('object', async () => {
         username: 'hello',
         age: 20,
       },
-      isValid: true,
       field: undefined,
     },
   );
@@ -48,7 +47,6 @@ test('object', async () => {
     }),
     {
       state: 'invalid',
-      isValid: false,
       field: undefined,
       message: '',
       value: {
@@ -68,19 +66,16 @@ test('empty object config is always valid', async () => {
   assert.deepEqual(await validate({ foo: 'bar' }), {
     state: 'valid',
     value: {},
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(null), {
     state: 'valid',
     value: {},
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: {},
-    isValid: true,
     field: undefined,
   });
 });
@@ -95,7 +90,6 @@ test('inherited properties of the config are not validated', async () => {
   assert.deepEqual(await validate({ name: undefined, age: 22 }), {
     state: 'valid',
     value: { age: 22 },
-    isValid: true,
     field: undefined,
   });
 });
@@ -126,7 +120,6 @@ test('nested object', async () => {
           age: undefined as unknown as number,
         },
       },
-      isValid: true,
       field: undefined,
     },
   );
@@ -152,7 +145,6 @@ test('nested object', async () => {
           lastName: 'required',
         },
       },
-      isValid: false,
       field: undefined,
     },
   );

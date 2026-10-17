@@ -189,7 +189,7 @@ const invalidComplexObject = {
 
 add('complex (invalid values)', async () => {
   const result = await complexValidate(invalidComplexObject);
-  if (result.isValid) {
+  if (result.state === 'valid') {
     throw new Error('Expected an invalid result.');
   }
 });

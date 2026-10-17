@@ -167,14 +167,13 @@ if (result.state === 'valid') {
 
 All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `ValidatorResult<T, E>` and a validation test is `ValidatorTest<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
 
-| property      | type    | description                                                                |
-| :------------ | :------ | :------------------------------------------------------------------------- |
-| `state`       | string  | Either `valid` or `invalid`.                                               |
-| `field`       | string  | Either the field name or `undefined`.                                      |
-| `value`       | `T`     | The parsed value.                                                          |
-| `message`     | string  | The error message unless `state` is `valid`.                               |
-| `errors`      | `E`     | Only if `state` is `invalid` and using the `object` or `array` validators. |
-| ~~`isValid`~~ | boolean | Deprecated. Use `state` instead.                                           |
+| property  | type   | description                                                                |
+| :-------- | :----- | :------------------------------------------------------------------------- |
+| `state`   | string | Either `valid` or `invalid`.                                               |
+| `field`   | string | Either the field name or `undefined`.                                      |
+| `value`   | `T`    | The parsed value.                                                          |
+| `message` | string | The error message unless `state` is `valid`.                               |
+| `errors`  | `E`    | Only if `state` is `invalid` and using the `object` or `array` validators. |
 
 ### Validation error message
 

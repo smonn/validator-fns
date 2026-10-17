@@ -33,13 +33,11 @@ test('custom type validator accepts its own config options', async () => {
   >();
   assert.deepEqual(await money({ cents: true })('12.5'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 1250,
   });
   assert.deepEqual(await money()('12.5'), {
     state: 'valid',
-    isValid: true,
     field: undefined,
     value: 12.5,
   });

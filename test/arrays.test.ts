@@ -19,7 +19,6 @@ test('array', async () => {
   assert.deepEqual(await validate(['foo', 'bar', 'baz']), {
     state: 'valid',
     value: ['foo', 'bar', 'baz'],
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(null), {
@@ -27,7 +26,6 @@ test('array', async () => {
     value: null,
     message: 'required',
     errors: [],
-    isValid: false,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
@@ -35,7 +33,6 @@ test('array', async () => {
     value: undefined,
     message: 'required',
     errors: [],
-    isValid: false,
     field: undefined,
   });
   assert.deepEqual(await validate([]), {
@@ -43,7 +40,6 @@ test('array', async () => {
     value: [],
     message: 'min:1',
     errors: [],
-    isValid: false,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
@@ -51,7 +47,6 @@ test('array', async () => {
     value: '',
     message: 'min:1',
     errors: [],
-    isValid: false,
     field: undefined,
   });
   assert.deepEqual(await validate({}), {
@@ -59,7 +54,6 @@ test('array', async () => {
     value: {},
     message: 'min:1',
     errors: [],
-    isValid: false,
     field: undefined,
   });
   assert.deepEqual(await validate(['foo', 'ba']), {
@@ -67,7 +61,6 @@ test('array', async () => {
     value: ['foo', 'ba'],
     message: '',
     errors: [null, 'min:3'],
-    isValid: false,
     field: undefined,
   });
 });
@@ -95,7 +88,6 @@ test('array with object', async () => {
           username: 'min:3',
         },
       ],
-      isValid: false,
       field: undefined,
     },
   );
@@ -109,7 +101,6 @@ test('nested array', async () => {
     message: '',
     value: [['', 'foo', null]],
     errors: [['required', null, 'required']],
-    isValid: false,
     field: undefined,
   });
 });
@@ -119,25 +110,21 @@ test('array default', async () => {
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: ['hello'],
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(null), {
     state: 'valid',
     value: ['hello'],
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate([]), {
     state: 'valid',
     value: ['hello'],
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(['other']), {
     state: 'valid',
     value: ['other'],
-    isValid: true,
     field: undefined,
   });
 });
@@ -147,13 +134,11 @@ test('array without validation', async () => {
   assert.deepEqual(await validate([]), {
     state: 'valid',
     value: [],
-    isValid: true,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'valid',
     value: undefined,
-    isValid: true,
     field: undefined,
   });
 });

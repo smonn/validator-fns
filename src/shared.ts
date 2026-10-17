@@ -1,10 +1,5 @@
 export type ValidResult<T> = {
-  /**
-   * True if the original value is valid according to all validation tests
-   * @deprecated Use `state` instead.
-   */
-  isValid: true;
-  /** This is preferred to use over `isValid` as it works better for type guards. */
+  /** `valid` if the value passed every validation test. */
   state: 'valid';
   /** The parsed value. Note that may be different than the original value. */
   value: T | null | undefined;
@@ -13,12 +8,7 @@ export type ValidResult<T> = {
 };
 
 export type InvalidResult<E> = {
-  /**
-   * True if the original value is valid according to all validation tests.
-   * @deprecated Use `state` instead.
-   */
-  isValid: false;
-  /** This is preferred to use over `isValid` as it works better for type guards. */
+  /** `invalid` if the value failed a validation test. */
   state: 'invalid';
   /** The parsed value. Note that may be different than the original value. */
   value: unknown;
@@ -177,7 +167,6 @@ export async function valid<T, E = never>({
   field: string | undefined;
 }): Promise<ValidatorResult<T, E>> {
   return {
-    isValid: true,
     state: 'valid',
     value,
     field,
@@ -212,7 +201,6 @@ export async function invalid<
   extras?: Omit<P, 'field' | 'value'> | undefined;
 }): Promise<ValidatorResult<T, E>> {
   return {
-    isValid: false,
     state: 'invalid',
     message: formatMessage(message, { ...extras, value, field } as P),
     value,
