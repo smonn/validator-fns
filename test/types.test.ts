@@ -1,6 +1,8 @@
 import { expectTypeOf, test } from 'vitest';
 import {
+  applyArrayConfig,
   array,
+  type ArrayConfig,
   type ArrayItemValidatorResult,
   boolean,
   createValidatorTest,
@@ -75,4 +77,10 @@ test('array() carries the item value and error types', () => {
 
 test('results have no isValid property', () => {
   expectTypeOf<ValidatorResult>().not.toHaveProperty('isValid');
+});
+
+test('applyArrayConfig returns unknown items and takes no type argument', () => {
+  expectTypeOf(applyArrayConfig).toEqualTypeOf<
+    (config: ArrayConfig, value: unknown) => unknown[] | null | undefined
+  >();
 });
