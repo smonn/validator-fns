@@ -14,6 +14,7 @@ const timezonePattern = /^([+-])([0-2]\d):?([0-5]\d)$/;
 /**
  * Parses a timezone string.
  * @param timezone Timezone to parse
+ * @returns Minutes ahead of UTC, so `+02:00` gives 120
  * @internal
  */
 function parseTimezone(timezone: string): number {
@@ -110,7 +111,7 @@ function parseIsoDate(value: string): Date {
       month,
       day,
       hour,
-      minute + parseTimezone(timezone),
+      minute - parseTimezone(timezone),
       second,
       millisecond,
     ),
