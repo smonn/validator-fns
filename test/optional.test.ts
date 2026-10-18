@@ -39,11 +39,17 @@ const runMissing = async (wrap: (validate: Validator) => Validator) =>
     ),
   );
 
-test('type validators reject a missing value with the built-in message', async () => {
+test('type validators reject a missing value with the required code', async () => {
   for (const { label, result } of await runMissing((validate) => validate)) {
     assert.deepInclude(
       result,
-      { state: 'invalid', message: 'Required.', field: 'field' },
+      {
+        state: 'invalid',
+        code: 'required',
+        params: {},
+        message: 'required',
+        field: 'field',
+      },
       label,
     );
   }
@@ -72,36 +78,48 @@ test('type validators accept present values that look empty', async () => {
   assert.deepInclude(await array()(''), { state: 'valid', value: [] });
 });
 
-test('requiredMessage sets the message for a missing value', async () => {
-  assert.deepInclude(await string({ requiredMessage: 'Enter a name.' })(''), {
-    message: 'Enter a name.',
-  });
+test('the messages config words a missing value', async () => {
   assert.deepInclude(
-    await number({ requiredMessage: ({ field }) => `${String(field)}?` })(
-      undefined,
-      'age',
-    ),
+    await string({ messages: { required: 'Enter a name.' } })(''),
+    {
+      message: 'Enter a name.',
+    },
+  );
+  assert.deepInclude(
+    await number({
+      messages: { required: ({ field }) => `${String(field)}?` },
+    })(undefined, 'age'),
     { message: 'age?' },
   );
   assert.deepInclude(
-    await number({ requiredMessage: '{field} is required.' })(null, 'age'),
+    await number({ messages: { required: '{field} is required.' } })(
+      null,
+      'age',
+    ),
     { message: 'age is required.' },
   );
-  assert.deepInclude(await array({ requiredMessage: 'Pick some.' })(null), {
-    message: 'Pick some.',
-  });
+  assert.deepInclude(
+    await array({ messages: { required: 'Pick some.' } })(null),
+    {
+      message: 'Pick some.',
+    },
+  );
 });
 
 test('should fail without errors or a value when required input is missing', async () => {
   assert.deepEqual(await number()('', 'age'), {
     state: 'invalid',
-    message: 'Required.',
+    code: 'required',
+    params: {},
+    message: 'required',
     field: 'age',
     errors: undefined,
   });
   assert.deepEqual(await array(string())(null), {
     state: 'invalid',
-    message: 'Required.',
+    code: 'required',
+    params: {},
+    message: 'required',
     field: undefined,
     errors: undefined,
   });
@@ -139,7 +157,7 @@ test('optional() accepts only undefined and null for a custom validator', async 
     seen.push(value);
     return value === 'ok'
       ? valid({ value, field })
-      : invalid({ message: 'not ok', value, field });
+      : invalid({ code: 'custom', message: 'not ok', value, field });
   };
   const validate = optional(custom);
 
@@ -175,8 +193,8 @@ test('validators from createTypeValidatorTest are required unless optional()', a
     (value) => (typeof value === 'string' ? value.toUpperCase() : value),
   );
 
-  assert.deepInclude(await upper()(1), { message: 'Required.' });
-  assert.deepInclude(await upper({ requiredMessage: 'Text.' })(''), {
+  assert.deepInclude(await upper()(1), { message: 'required' });
+  assert.deepInclude(await upper({ messages: { required: 'Text.' } })(''), {
     message: 'Text.',
   });
   assert.deepInclude(await optional(upper())(1), { state: 'valid' });
@@ -186,12 +204,14 @@ test('validators from createTypeValidatorTest are required unless optional()', a
 test('object() takes a config object as its second argument', async () => {
   const validate = object(
     { name: string() },
-    { requiredMessage: 'Enter a person.' },
-    check((value) => value.name !== 'x', 'Not x.'),
+    { messages: { required: 'Enter a person.' } },
+    check((value) => value.name !== 'x', 'x', 'Not x.'),
   );
 
   assert.deepEqual(await validate(null, 'person'), {
     state: 'invalid',
+    code: 'required',
+    params: {},
     message: 'Enter a person.',
     field: 'person',
     errors: undefined,
@@ -203,11 +223,11 @@ test('object() takes a config object as its second argument', async () => {
 test('object() takes a test as its second argument', async () => {
   const validate = object(
     { name: string() },
-    check((value) => value.name !== 'x', 'Not x.'),
-    check((value) => value.name !== 'y', 'Not y.'),
+    check((value) => value.name !== 'x', 'x', 'Not x.'),
+    check((value) => value.name !== 'y', 'y', 'Not y.'),
   );
 
-  assert.deepInclude(await validate(undefined), { message: 'Required.' });
+  assert.deepInclude(await validate(undefined), { message: 'required' });
   assert.deepInclude(await validate({ name: 'x' }), { message: 'Not x.' });
   assert.deepInclude(await validate({ name: 'y' }), { message: 'Not y.' });
 });
@@ -222,7 +242,7 @@ test('object() requires nested objects and fields unless optional()', async () =
 
   assert.deepInclude(await validate({}), {
     state: 'invalid',
-    errors: { name: 'Required.', address: 'Required.' },
+    errors: { name: 'required', address: 'required' },
   });
   assert.deepEqual(await validate({ name: 'a', address: { zip: '1' } }), {
     state: 'valid',
@@ -236,14 +256,14 @@ test('object() requires nested objects and fields unless optional()', async () =
   });
   assert.deepInclude(
     await validate({ name: 'a', address: { zip: '1' }, billing: {} }),
-    { errors: { billing: { zip: 'Required.' } } },
+    { errors: { billing: { zip: 'required' } } },
   );
 });
 
 test('array() requires each item unless the item validator is optional()', async () => {
   assert.deepInclude(await array(string())(['a', '', null]), {
     state: 'invalid',
-    errors: [null, 'Required.', 'Required.'],
+    errors: [null, 'required', 'required'],
   });
   assert.deepInclude(await array(optional(string()))(['a', '', null]), {
     state: 'valid',

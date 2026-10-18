@@ -1,42 +1,60 @@
 import { failure } from './failures/index.js';
-import { formatMessage, type ValidatorMessage, type Result } from './shared.js';
+import type { Result, ValidatorMessage } from './shared.js';
 
 /** @internal */
 type InvalidFields<E> = {
+  code: string;
   value?: unknown;
   field: string | undefined;
   errors?: E | undefined;
 };
 
 /**
- * Creates an invalid result. A message function gets the value as `unknown`,
- * and `extras` must hold the extra parameters it reads.
+ * Creates an invalid result with `code`. A message function gets the value
+ * as `unknown`, and `params` must hold the parameters it reads. Without a
+ * message, the message is the code.
  * @param result Result fields
- * @param result.message Error message, formatted with `formatMessage`
+ * @param result.code What failed, such as `taken`
+ * @param result.params The code's parameters, `{}` if left out
+ * @param result.message Error message, a template or a function
  * @param result.value Value for the message only; the result has none
  * @param result.field Field name
  * @param result.errors Extra error details, such as per-field errors from `object` and `array`
- * @param result.extras Extra message params
  * @category Helpers
  */
 export function invalid<T, E = never>(
-  result: InvalidFields<E> & { message: ValidatorMessage<unknown> },
+  result: InvalidFields<E> & { message?: ValidatorMessage<unknown> },
 ): Promise<Result<T, E>>;
-export function invalid<T, E, X extends object>(
+export function invalid<T, E, P extends Record<string, unknown>>(
   result: InvalidFields<E> & {
-    message: ValidatorMessage<unknown, X>;
-    extras: X;
+    params: P;
+    message?: ValidatorMessage<unknown, P>;
   },
 ): Promise<Result<T, E>>;
-export async function invalid<T, E, X extends object>(
+export async function invalid<T, E, P extends Record<string, unknown>>(
   result:
-    | (InvalidFields<E> & { message: ValidatorMessage<unknown> })
-    | (InvalidFields<E> & { message: ValidatorMessage<unknown, X>; extras: X }),
+    | (InvalidFields<E> & { message?: ValidatorMessage<unknown> })
+    | (InvalidFields<E> & {
+        params: P;
+        message?: ValidatorMessage<unknown, P>;
+      }),
 ): Promise<Result<T, E>> {
-  const { value, field, errors } = result;
-  const message =
-    'extras' in result
-      ? formatMessage(result.message, { ...result.extras, value, field })
-      : formatMessage<unknown>(result.message, { value, field });
-  return failure({ message, field, errors });
+  const { code, value, field, errors } = result;
+  return 'params' in result
+    ? failure({
+        code,
+        params: result.params,
+        message: result.message,
+        value,
+        field,
+        errors,
+      })
+    : failure({
+        code,
+        params: {},
+        message: result.message,
+        value,
+        field,
+        errors,
+      });
 }

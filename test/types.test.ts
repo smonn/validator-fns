@@ -1,8 +1,11 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
   array,
+  type ArrayConfig,
   type ArrayItemValidatorResult,
   boolean,
+  type BooleanConfig,
+  type BuiltInCode,
   check,
   createValidatorTest,
   date,
@@ -16,14 +19,19 @@ import {
   optional,
   string,
   valid,
+  type DateConfig,
+  type ExactValidatorMessageParameters,
   type ExtractValue,
   type Failure,
+  type Messages,
   type MaxDateValidatorMessageParameters,
   type MaxValidatorMessageParameters,
   type MinDateValidatorMessageParameters,
   type MinValidatorMessageParameters,
   type NumberConfig,
+  type ObjectConfig,
   type Result,
+  type StringConfig,
   type Test,
   type TypeValidator,
   type Valid,
@@ -42,7 +50,7 @@ test('validator types default to unknown', () => {
 
 test('type validators carry their value type and string errors', () => {
   expectTypeOf(string()).toEqualTypeOf<TypeValidator<string, string>>();
-  expectTypeOf(number({ requiredMessage: 'required' })).toEqualTypeOf<
+  expectTypeOf(number({ messages: { required: 'required' } })).toEqualTypeOf<
     TypeValidator<number, string>
   >();
   expectTypeOf(boolean()).toEqualTypeOf<TypeValidator<boolean, string>>();
@@ -53,16 +61,16 @@ test('built-in tests and results without errors have never as the error type', (
   expectTypeOf(min(1, 'min')).toEqualTypeOf<
     Test<string | number | unknown[], never>
   >();
-  expectTypeOf(createValidatorTest(() => true, 'message')).toEqualTypeOf<
+  expectTypeOf(createValidatorTest('code', () => true)).toEqualTypeOf<
     Test<unknown, never>
   >();
   expectTypeOf(
-    invalid({ message: 'message', value: 1, field: undefined }),
+    invalid({ code: 'custom', message: 'message', value: 1, field: undefined }),
   ).toEqualTypeOf<Promise<Result<unknown, never>>>();
 });
 
 const numericErrors: Validator<unknown, number> = async (value, field) =>
-  invalid({ message: 'message', value, field, errors: 1 });
+  invalid({ code: 'custom', message: 'message', value, field, errors: 1 });
 
 test('type validators reject tests whose errors are not strings', () => {
   expectTypeOf<
@@ -143,7 +151,7 @@ test('object() accepts its value with undefined for a missing optional key', () 
 
 test('object() takes a config object or a test as its second argument', () => {
   expectTypeOf(
-    object({ name: string() }, { requiredMessage: 'required' }),
+    object({ name: string() }, { messages: { required: 'required' } }),
   ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
   expectTypeOf(
     object(
@@ -158,11 +166,11 @@ test('object() takes a config object or a test as its second argument', () => {
 
 test('array() takes its config after the item validator', () => {
   expectTypeOf(
-    array(string(), { requiredMessage: 'Pick some.' }, max(2, 'max')),
+    array(string(), { messages: { required: 'Pick some.' } }, max(2, 'max')),
   ).toEqualTypeOf<
     TypeValidator<string[], string | ArrayItemValidatorResult<string>[]>
   >();
-  expectTypeOf(array({ requiredMessage: 'Pick some.' })).toEqualTypeOf<
+  expectTypeOf(array({ messages: { required: 'Pick some.' } })).toEqualTypeOf<
     TypeValidator<unknown[], string | ArrayItemValidatorResult[]>
   >();
   expectTypeOf(array()).toEqualTypeOf<
@@ -193,9 +201,9 @@ test('a failure has no value key, so reading value needs the valid state', () =>
 });
 
 test('invalid() takes value only for the message, and may leave it out', () => {
-  expectTypeOf(invalid({ message: 'message', field: undefined })).toEqualTypeOf<
-    Promise<Result<unknown, never>>
-  >();
+  expectTypeOf(
+    invalid({ code: 'custom', message: 'message', field: undefined }),
+  ).toEqualTypeOf<Promise<Result<unknown, never>>>();
 });
 
 test('number() takes no round option', () => {
@@ -203,10 +211,10 @@ test('number() takes no round option', () => {
 });
 
 test('min(), max(), minDate() and maxDate() take no exclusive argument', () => {
-  expectTypeOf<Parameters<typeof min>['length']>().toEqualTypeOf<2>();
-  expectTypeOf<Parameters<typeof max>['length']>().toEqualTypeOf<2>();
-  expectTypeOf<Parameters<typeof minDate>['length']>().toEqualTypeOf<2>();
-  expectTypeOf<Parameters<typeof maxDate>['length']>().toEqualTypeOf<2>();
+  expectTypeOf<Parameters<typeof min>['length']>().toEqualTypeOf<1 | 2>();
+  expectTypeOf<Parameters<typeof max>['length']>().toEqualTypeOf<1 | 2>();
+  expectTypeOf<Parameters<typeof minDate>['length']>().toEqualTypeOf<1 | 2>();
+  expectTypeOf<Parameters<typeof maxDate>['length']>().toEqualTypeOf<1 | 2>();
   expectTypeOf<MinValidatorMessageParameters>().not.toHaveProperty('exclusive');
   expectTypeOf<MaxValidatorMessageParameters>().not.toHaveProperty('exclusive');
   expectTypeOf<MinDateValidatorMessageParameters>().not.toHaveProperty(
@@ -229,7 +237,7 @@ test('validation tests take the parsed value', () => {
   ).toEqualTypeOf<Test<{ name: string }, never>>();
 
   // A test for another type doesn't fit, and a test on unknown fits any type.
-  const isTrue = createValidatorTest((value: boolean) => value, 'true');
+  const isTrue = createValidatorTest('true', (value: boolean) => value);
   expectTypeOf(isTrue).not.toExtend<Test<string, string>>();
   expectTypeOf(isTrue).toExtend<Test<boolean, string>>();
   expectTypeOf(anyValue).toExtend<Test<string, string>>();
@@ -253,8 +261,8 @@ test('messages get their extras with the value and field', async () => {
   // A message annotated with the exported parameters type still fits.
   min(1, annotated);
 
-  // A message that reads extras isn't a plain message, so invalid() takes
-  // one only with its extras, and a plain message reads value as unknown.
+  // A message that reads params isn't a plain message, so invalid() takes
+  // one only with its params, and a plain message reads value as unknown.
   type ExtrasMessage = (
     parameters: { count: number } & ValidatorMessageParameters<unknown>,
   ) => string;
@@ -262,13 +270,14 @@ test('messages get their extras with the value and field', async () => {
   expectTypeOf<
     (parameters: ValidatorMessageParameters<string>) => string
   >().not.toExtend<ValidatorMessage<unknown>>();
-  const withExtras = await invalid({
+  const withParams = await invalid({
+    code: 'custom',
     message: ({ count }: { count: number }) => `count ${count}`,
     value: 1,
     field: undefined,
-    extras: { count: 1 },
+    params: { count: 1 },
   });
-  assert.deepInclude(withExtras, { message: 'count 1' });
+  assert.deepInclude(withParams, { message: 'count 1' });
 });
 
 type Signup = { password: string; confirm: string };
@@ -279,6 +288,7 @@ test('check() types its errors from the path', () => {
     check(
       'confirm',
       (value: Signup) => value.confirm === value.password,
+      'match',
       'Must match.',
     ),
   ).toEqualTypeOf<Test<Signup, { confirm?: string }>>();
@@ -286,11 +296,12 @@ test('check() types its errors from the path', () => {
     check(
       ['shipping', 'zip'],
       (value: Addresses) => value.shipping.zip === value.billing.zip,
+      'match',
       'Must match.',
     ),
   ).toEqualTypeOf<Test<Addresses, { shipping?: { zip?: string } }>>();
   expectTypeOf(
-    check(['password'], (value: Signup) => value.password !== '', 'Empty.'),
+    check(['password'], (value: Signup) => value.password !== '', 'empty'),
   ).toEqualTypeOf<Test<Signup, { password?: string }>>();
 });
 
@@ -301,10 +312,65 @@ test('check() infers the object and path inside object()', () => {
       check(
         'confirm',
         (value) => value.confirm === value.password,
+        'match',
         'Must match.',
       ),
     ),
   ).toEqualTypeOf<
     TypeValidator<Signup, { password?: string; confirm?: string }>
   >();
+});
+
+test('a failure carries its code and params', () => {
+  expectTypeOf<Failure<unknown>['code']>().toEqualTypeOf<string>();
+  expectTypeOf<Failure<unknown>['params']>().toEqualTypeOf<
+    Record<string, unknown>
+  >();
+});
+
+test('configs take messages, not requiredMessage', () => {
+  expectTypeOf<StringConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<NumberConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<BooleanConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<DateConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<ArrayConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<ObjectConfig>().not.toHaveProperty('requiredMessage');
+  expectTypeOf<StringConfig['messages']>().toEqualTypeOf<
+    Messages | undefined
+  >();
+  expectTypeOf<ObjectConfig['messages']>().toEqualTypeOf<
+    Messages | undefined
+  >();
+});
+
+test('message parameters have no limit key', () => {
+  expectTypeOf<MinValidatorMessageParameters>().not.toHaveProperty('limit');
+  expectTypeOf<MaxValidatorMessageParameters>().not.toHaveProperty('limit');
+  expectTypeOf<ExactValidatorMessageParameters>().not.toHaveProperty('limit');
+  expectTypeOf<MinDateValidatorMessageParameters>().not.toHaveProperty('limit');
+  expectTypeOf<MaxDateValidatorMessageParameters>().not.toHaveProperty('limit');
+});
+
+test('a translation of the built-in codes needs every code', () => {
+  expectTypeOf<{ min: string }>().not.toExtend<Messages<BuiltInCode>>();
+  expectTypeOf<Record<BuiltInCode, string>>().toExtend<Messages<BuiltInCode>>();
+  expectTypeOf<{ min: string }>().toExtend<Messages>();
+  expectTypeOf<'min' | 'required' | 'type'>().toExtend<BuiltInCode>();
+});
+
+test('createValidatorTest() gives its params to the message', () => {
+  createValidatorTest(
+    'between',
+    (value: number) => value > 1,
+    (parameters) => {
+      expectTypeOf(parameters.low).toEqualTypeOf<number>();
+      expectTypeOf(parameters.value).toEqualTypeOf<number | null | undefined>();
+      return '';
+    },
+    () => ({ low: 1 }),
+  );
+  // Without getParams, a message can't read params.
+  expectTypeOf<
+    (parameters: { low: number } & ValidatorMessageParameters<number>) => string
+  >().not.toExtend<Parameters<typeof createValidatorTest<number>>[2]>();
 });

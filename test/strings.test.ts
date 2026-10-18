@@ -11,12 +11,16 @@ test('min', async () => {
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
+    code: 'min',
+    params: { min: 5, amount: 0 },
     message: 'min:5',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
+    code: 'min',
+    params: { min: 5, amount: 3 },
     message: 'min:5',
     field: undefined,
     errors: undefined,
@@ -37,6 +41,8 @@ test('max', async () => {
   });
   assert.deepEqual(await validate('foo bar'), {
     state: 'invalid',
+    code: 'max',
+    params: { max: 5, amount: 7 },
     message: 'max:5',
     field: undefined,
     errors: undefined,
@@ -66,18 +72,24 @@ test('email', async () => {
   });
   assert.deepEqual(await validate('@example.com'), {
     state: 'invalid',
+    code: 'email',
+    params: {},
     field: undefined,
     errors: undefined,
     message: 'invalid email',
   });
   assert.deepEqual(await validate('name.com'), {
     state: 'invalid',
+    code: 'email',
+    params: {},
     field: undefined,
     errors: undefined,
     message: 'invalid email',
   });
   assert.deepEqual(await validate('name@.com'), {
     state: 'invalid',
+    code: 'email',
+    params: {},
     field: undefined,
     errors: undefined,
     message: 'invalid email',
@@ -98,18 +110,24 @@ test('url', async () => {
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
+    code: 'url',
+    params: { protocols: ['http:', 'mailto:', 'https:'] },
     field: undefined,
     errors: undefined,
     message: 'invalid url',
   });
   assert.deepEqual(await validate('/foo'), {
     state: 'invalid',
+    code: 'url',
+    params: { protocols: ['http:', 'mailto:', 'https:'] },
     field: undefined,
     errors: undefined,
     message: 'invalid url',
   });
   assert.deepEqual(await validate('unknown://path'), {
     state: 'invalid',
+    code: 'url',
+    params: { protocols: ['http:', 'mailto:', 'https:'] },
     field: undefined,
     errors: undefined,
     message: 'invalid url',
@@ -148,7 +166,7 @@ test('url passes the default protocols to the message', async () => {
 
 test('string', async () => {
   const validate = string(
-    { trim: true, requiredMessage: 'Must enter a value.' },
+    { trim: true, messages: { required: 'Must enter a value.' } },
     min(5, 'At least five characters.'),
     max(10, 'At most ten characters.'),
   );
@@ -165,31 +183,41 @@ test('string', async () => {
   });
   assert.deepEqual(await validate('  test  '), {
     state: 'invalid',
+    code: 'min',
+    params: { min: 5, amount: 4 },
     message: 'At least five characters.',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate('hello world'), {
     state: 'invalid',
+    code: 'max',
+    params: { max: 10, amount: 11 },
     message: 'At most ten characters.',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
+    code: 'required',
+    params: {},
     message: 'Must enter a value.',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(new Date(0)), {
     state: 'invalid',
+    code: 'max',
+    params: { max: 10, amount: 24 },
     message: 'At most ten characters.',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate({ name: 'August' }), {
     state: 'invalid',
-    message: 'Failed to parse value to string.',
+    code: 'type',
+    params: { expected: 'string' },
+    message: 'type',
     field: undefined,
     errors: undefined,
   });
@@ -302,6 +330,8 @@ test('uuid', async () => {
       await validate(value),
       {
         state: 'invalid',
+        code: 'uuid',
+        params: {},
         field: undefined,
         errors: undefined,
         message: 'invalid uuid',
@@ -352,10 +382,6 @@ test('string returns an invalid result for non-primitive and symbol input', asyn
   for (const [value, label] of rejected) {
     const result = await validate(value);
     assert.equal(result.state, 'invalid', label);
-    assert.equal(
-      result.state === 'invalid' && result.message,
-      'Failed to parse value to string.',
-      label,
-    );
+    assert.equal(result.state === 'invalid' && result.message, 'type', label);
   }
 });

@@ -8,6 +8,7 @@ import {
   date,
   integer,
   invalid,
+  max,
   min,
   number,
   object,
@@ -19,10 +20,10 @@ import {
 } from '../src/index.js';
 
 const failing = createValidator(async (value, field) =>
-  invalid({ message: 'custom', value, field }),
+  invalid({ code: 'custom', message: 'custom', value, field }),
 );
 const unreadable = async (value: unknown, field?: string) =>
-  invalid<never>({ message: 'parser', value, field });
+  invalid<never>({ code: 'custom', message: 'parser', value, field });
 
 // Each validator with an input it fails, one per way a failure is made.
 const failures: [string, Validator, unknown][] = [
@@ -58,6 +59,20 @@ const failures: [string, Validator, unknown][] = [
     ),
     { a: 'x' },
   ],
+  [
+    'string, worded by the config',
+    string({ messages: { min: 'min' } }, min(5)),
+    'abc',
+  ],
+  [
+    'string, parser worded by the config',
+    string({
+      parser: async (value, field) => invalid({ code: 'type', value, field }),
+      messages: { type: 'type' },
+    }),
+    'x',
+  ],
+  ['array, test and item', array(number(), max(1)), ['a', 'b']],
   ['optional', optional(number(min(5, 'min'))), '3'],
   ['optional custom validator', optional(failing), 'x'],
   ['createValidator', failing, 'x'],
@@ -75,7 +90,7 @@ test('should leave value off a failure when a test fails on its own', async () =
   const tests: [string, Promise<Result>][] = [
     ['min', min(5, 'min')('abc')],
     ['oneOf', oneOf<string>(['a'], 'oneOf')('b')],
-    ['createValidatorTest', createValidatorTest(() => false, 'test')(1)],
+    ['createValidatorTest', createValidatorTest('test', () => false)(1)],
     ['check', check(() => false, 'check')({ a: 1 })],
     [
       'check with a key',
@@ -89,7 +104,10 @@ test('should leave value off a failure when a test fails on its own', async () =
         'check',
       )({ a: { b: 1 } }),
     ],
-    ['invalid', invalid({ message: 'm', value: 1, field: undefined })],
+    [
+      'invalid',
+      invalid({ code: 'custom', message: 'm', value: 1, field: undefined }),
+    ],
   ];
   for (const [label, promise] of tests) {
     const result = await promise;
@@ -101,8 +119,10 @@ test('should leave value off a failure when a test fails on its own', async () =
 test('should give the value to a message when a failure leaves it off', async () => {
   const messages: [string, Promise<Result>, string][] = [
     [
-      'requiredMessage',
-      number({ requiredMessage: ({ value }) => `got ${String(value)}` })('  '),
+      'required message',
+      number({ messages: { required: ({ value }) => `got ${String(value)}` } })(
+        '  ',
+      ),
       'got NaN',
     ],
     ['test template', number(min(5, '{value} < {min}'))('3'), '3 < 5'],
@@ -115,6 +135,7 @@ test('should give the value to a message when a failure leaves it off', async ()
       'check',
       check(
         (value: { a: number }) => value.a > 1,
+        'check',
         ({ value }) => `a is ${String(value?.a)}`,
       )({ a: 1 }),
       'a is 1',
@@ -122,6 +143,7 @@ test('should give the value to a message when a failure leaves it off', async ()
     [
       'invalid',
       invalid({
+        code: 'custom',
         message: ({ value }) => `got ${String(value)}`,
         value: 7,
         field: undefined,
@@ -137,9 +159,15 @@ test('should give the value to a message when a failure leaves it off', async ()
 });
 
 test('should format a message without a value when invalid() gets none', async () => {
-  const result = await invalid({ message: 'got {value}', field: 'a' });
+  const result = await invalid({
+    code: 'custom',
+    message: 'got {value}',
+    field: 'a',
+  });
   assert.deepEqual(result, {
     state: 'invalid',
+    code: 'custom',
+    params: {},
     message: 'got undefined',
     field: 'a',
     errors: undefined,

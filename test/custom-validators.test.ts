@@ -2,10 +2,10 @@ import { assert, expectTypeOf, test } from 'vitest';
 import {
   createTypeValidatorTest,
   invalid,
+  type Messages,
   type Result,
   type TypeValidator,
   valid,
-  type ValidatorMessage,
 } from '../src/index.js';
 
 // The custom type validator from the README's createTypeValidatorTest section.
@@ -14,7 +14,7 @@ interface MoneyConfig {
     value: unknown,
     field?: string,
   ) => Promise<Result<number | null | undefined>>;
-  requiredMessage?: ValidatorMessage<number>;
+  messages?: Messages;
   /** Convert the amount to cents. */
   cents?: boolean;
 }
@@ -29,7 +29,7 @@ async function parseAmount(
     return valid({ value: amount, field });
   }
 
-  return invalid({ message: 'Must be an amount.', field });
+  return invalid({ code: 'type', message: 'Must be an amount.', field });
 }
 
 function applyMoneyConfig(
@@ -61,7 +61,7 @@ test('custom type validator accepts its own config options', async () => {
     value: 12.5,
   });
   assert.deepInclude(
-    await money({ requiredMessage: 'Enter an amount.' })(undefined),
+    await money({ messages: { required: 'Enter an amount.' } })(undefined),
     { state: 'invalid', message: 'Enter an amount.' },
   );
   assert.deepInclude(await money()({}), {

@@ -1,4 +1,4 @@
-import { failure } from './failures/index.js';
+import { failure, fillAsOwn } from './failures/index.js';
 import {
   type ArrayTest,
   findInvalidResult,
@@ -86,11 +86,11 @@ function arrayOf<T, E>(
   };
 
   return requirable<T[], string | ArrayItemValidatorResult<E>[]>(
-    finalConfig.requiredMessage,
+    finalConfig.messages,
     async (value, field, onEmpty) => {
       const parsed = await finalConfig.parser(value, field);
       if (parsed.state === 'invalid') {
-        return failure({ message: parsed.message, field });
+        return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
       }
 
       const arrayValue = applyArrayConfig(finalConfig, parsed.value);
@@ -105,15 +105,14 @@ function arrayOf<T, E>(
       );
       const items = await checkItems(arrayValue, field);
 
-      if (!arrayInvalidResult && items.isValid) {
-        return valid({ value: items.values, field });
+      if (arrayInvalidResult || !items.isValid) {
+        const own =
+          arrayInvalidResult ??
+          failure({ code: 'items', params: {}, value: arrayValue, field });
+        return fillAsOwn(own, items.errors, finalConfig.messages);
       }
 
-      return failure({
-        message: arrayInvalidResult ? arrayInvalidResult.message : '',
-        field,
-        errors: items.errors,
-      });
+      return valid({ value: items.values, field });
     },
   );
 }

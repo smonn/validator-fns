@@ -45,15 +45,15 @@ test('should report each nested error with its path when an object fails', async
     email: string(email('Must be an email.')),
     tags: array(string(min(2, 'Tag too short.')), max(2, 'At most two tags.')),
     address: object({ zip: string(matches(/^\d{5}$/, 'Five digits.')) }),
-    silent: async (value: unknown, field?: string) =>
-      invalid({ message: '', value, field }),
+    unworded: async (value: unknown, field?: string) =>
+      invalid({ code: 'custom', value, field }),
   });
 
   const result = await schema['~standard'].validate({
     email: 'nope',
     tags: ['a', 'bb', 'c'],
     address: { zip: '1' },
-    silent: 1,
+    unworded: 1,
   });
 
   assert.deepEqual(result, {
@@ -61,7 +61,7 @@ test('should report each nested error with its path when an object fails', async
       { message: 'Must be an email.', path: ['email'] },
       { message: 'At most two tags.', path: ['tags'] },
       { message: 'Five digits.', path: ['address', 'zip'] },
-      { message: 'Invalid value.', path: ['silent'] },
+      { message: 'custom', path: ['unworded'] },
     ],
   });
 });
@@ -69,33 +69,48 @@ test('should report each nested error with its path when an object fails', async
 test('should report the array message and each item error when an array fails', async () => {
   const schema = array(string(min(2, 'short')), max(2, 'At most two.'));
 
-  assert.deepEqual(await schema['~standard'].validate(['a', 'bb', 'c']), {
+  assert.deepEqual<unknown>(
+    await schema['~standard'].validate(['a', 'bb', 'c']),
+    {
+      issues: [
+        { message: 'At most two.', code: 'max', params: { max: 2, amount: 3 } },
+        { message: 'short', path: [0] },
+        { message: 'short', path: [2] },
+      ],
+    },
+  );
+});
+
+test('should report one issue with the code as the message when a validator fails without one', async () => {
+  const schema = createValidator(async (value: unknown, field?: string) =>
+    invalid({ code: 'custom', value, field }),
+  );
+
+  assert.deepEqual<unknown>(await schema['~standard'].validate('x'), {
+    issues: [{ message: 'custom', code: 'custom', params: {} }],
+  });
+});
+
+test('should give the code as the message when an error is not a string', async () => {
+  const schema = createValidator(async (value: unknown, field?: string) =>
+    invalid({ code: 'odd', value, field, errors: { count: 42 } }),
+  );
+
+  assert.deepEqual<unknown>(await schema['~standard'].validate('x'), {
     issues: [
-      { message: 'At most two.' },
-      { message: 'short', path: [0] },
-      { message: 'short', path: [2] },
+      { message: 'odd', code: 'odd', params: {} },
+      { message: 'odd', path: ['count'] },
     ],
   });
 });
 
-test('should report one issue when a validator fails without a message', async () => {
+test('should report the container itself when its errors hold no issue', async () => {
   const schema = createValidator(async (value: unknown, field?: string) =>
-    invalid({ message: '', value, field }),
+    invalid({ code: 'items', value, field, errors: [null] }),
   );
 
-  assert.deepEqual(await schema['~standard'].validate('x'), {
-    issues: [{ message: 'Invalid value.' }],
-  });
-});
-
-test('should give a fallback message when an error is not a string', async () => {
-  const schema = object({
-    code: async (value: unknown, field?: string) =>
-      invalid({ message: '', value, field, errors: 42 }),
-  });
-
-  assert.deepEqual(await schema['~standard'].validate({ code: 1 }), {
-    issues: [{ message: 'Invalid value.', path: ['code'] }],
+  assert.deepEqual<unknown>(await schema['~standard'].validate([1]), {
+    issues: [{ message: 'items', code: 'items', params: {} }],
   });
 });
 
@@ -109,6 +124,7 @@ const hello = async (
   value === 'hello'
     ? valid({ value, field })
     : invalid({
+        code: 'hello',
         message: 'Must be "hello".',
         value,
         field,
@@ -129,6 +145,8 @@ test('should add ~standard to a function and keep its results and field', async 
   });
   assert.deepEqual(await schema('hi', 'greeting'), {
     state: 'invalid',
+    code: 'hello',
+    params: {},
     message: 'Must be "hello".',
     field: 'greeting',
     errors: { code: 1 },
@@ -136,10 +154,10 @@ test('should add ~standard to a function and keep its results and field', async 
   assert.deepEqual(await schema['~standard'].validate('hello'), {
     value: 'hello',
   });
-  assert.deepEqual(await schema['~standard'].validate('hi'), {
+  assert.deepEqual<unknown>(await schema['~standard'].validate('hi'), {
     issues: [
-      { message: 'Must be "hello".' },
-      { message: 'Invalid value.', path: ['code'] },
+      { message: 'Must be "hello".', code: 'hello', params: {} },
+      { message: 'hello', path: ['code'] },
     ],
   });
 });
@@ -226,7 +244,7 @@ const typeValidators: [
   [
     'optional() of a custom validator',
     optional(async () =>
-      invalid({ message: 'no', value: 1, field: undefined }),
+      invalid({ code: 'custom', message: 'no', value: 1, field: undefined }),
     ),
     null,
     1,

@@ -28,9 +28,11 @@ export type {
 export { invalid } from './invalid';
 export { valid } from './shared';
 export type {
+  BuiltInCode,
   ExtractError,
   ExtractValue,
   Failure,
+  Messages,
   Result,
   Test,
   Valid,

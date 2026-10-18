@@ -12,15 +12,12 @@ import type {
 } from './shared.js';
 import { readDate } from './parse-date.js';
 
-/** @internal */
-const parseErrorMessage = 'Failed to parse value to date.';
-
 /**
  * Parses a value into a date. Fails a non-blank string that isn't ISO 8601,
  * and input that isn't a date, number, or string.
  * @internal
  */
-const parseDate = createParser(readDate, parseErrorMessage);
+const parseDate = createParser(readDate, 'date');
 
 /**
  * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
@@ -31,7 +28,7 @@ function parseLimit(limit: SharedDateValueType): Date | null | undefined {
   const parsed =
     limit === null || limit === undefined ? limit : readDate(limit);
   if (parsed === undefined && limit !== undefined) {
-    throw new TypeError(parseErrorMessage);
+    throw new TypeError('Failed to parse value to date.');
   }
 
   return parsed;
@@ -62,61 +59,55 @@ type SharedDateValueType = Date | string | number;
 
 export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
-  limit: Date | null | undefined;
 }
 
 /**
  * Ensures a date value is on or after a date.
  * @param limit Minimum date
- * @param message Error message
+ * @param message Error message, or else the code
  * @category Validation Tests
  */
 export function minDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<
+  message?: ValidatorMessage<
     Date,
     MessageExtras<MinDateValidatorMessageParameters>
   >,
 ): Test<Date, never> {
   const parsedDate = parseLimit(limit);
   return createValidatorTest(
+    'minDate',
     (value: Date) =>
       parsedDate !== null && parsedDate !== undefined && value >= parsedDate,
     message,
-    () => ({
-      min: parsedDate,
-      limit: parsedDate,
-    }),
+    () => ({ min: parsedDate }),
   );
 }
 
 export interface MaxDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   max: Date | null | undefined;
-  limit: Date | null | undefined;
 }
 
 /**
  * Ensures a date value is on or before a date.
  * @param limit Maximum date
- * @param message Error message
+ * @param message Error message, or else the code
  * @category Validation Tests
  */
 export function maxDate(
   limit: SharedDateValueType,
-  message: ValidatorMessage<
+  message?: ValidatorMessage<
     Date,
     MessageExtras<MaxDateValidatorMessageParameters>
   >,
 ): Test<Date, never> {
   const parsedDate = parseLimit(limit);
   return createValidatorTest(
+    'maxDate',
     (value: Date) =>
       parsedDate !== null && parsedDate !== undefined && value <= parsedDate,
     message,
-    () => ({
-      max: parsedDate,
-      limit: parsedDate,
-    }),
+    () => ({ max: parsedDate }),
   );
 }
 

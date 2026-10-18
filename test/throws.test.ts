@@ -33,7 +33,13 @@ const custom = createTypeValidatorTest(
 );
 
 const unreadable = async (value: unknown, field?: string) =>
-  invalid<never>({ message: 'Unreadable.', value, field });
+  invalid<never, never, { expected: string }>({
+    code: 'type',
+    params: { expected: 'thing' },
+    message: 'Unreadable.',
+    value,
+    field,
+  });
 
 /** What the promise rejects with, or `'resolved'`. */
 const rejection = async (promise: Promise<unknown>) =>
@@ -52,23 +58,39 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   ['an object() test', object({ a: string() }, throwBug), { a: 'a' }],
   ['a custom type test', custom(throwBug), 'a'],
   ['a built-in test message', string(min(5, throwBug)), 'abc'],
-  ['a string() requiredMessage', string({ requiredMessage: throwBug }), ''],
-  ['a number() requiredMessage', number({ requiredMessage: throwBug }), null],
-  ['a boolean() requiredMessage', boolean({ requiredMessage: throwBug }), null],
-  ['a date() requiredMessage', date({ requiredMessage: throwBug }), null],
   [
-    'an array() requiredMessage',
-    array(string(), { requiredMessage: throwBug }),
+    'a string() required message',
+    string({ messages: { required: throwBug } }),
+    '',
+  ],
+  [
+    'a number() required message',
+    number({ messages: { required: throwBug } }),
     null,
   ],
   [
-    'an object() requiredMessage',
-    object({}, { requiredMessage: throwBug }),
+    'a boolean() required message',
+    boolean({ messages: { required: throwBug } }),
     null,
   ],
   [
-    'a custom type requiredMessage',
-    custom({ requiredMessage: throwBug }),
+    'a date() required message',
+    date({ messages: { required: throwBug } }),
+    null,
+  ],
+  [
+    'an array() required message',
+    array(string(), { messages: { required: throwBug } }),
+    null,
+  ],
+  [
+    'an object() required message',
+    object({}, { messages: { required: throwBug } }),
+    null,
+  ],
+  [
+    'a custom type required message',
+    custom({ messages: { required: throwBug } }),
     null,
   ],
   ['a string() parser', string({ parser: throwBug }), 'a'],
@@ -114,25 +136,21 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   },
 );
 
-// [label, validator, unreadable input, message]
-test.each<[string, TypeValidator<unknown, unknown>, unknown, string]>([
-  ['string()', string(), Symbol('s'), 'Failed to parse value to string.'],
-  ['string() with an object', string(), {}, 'Failed to parse value to string.'],
+// [label, validator, unreadable input, message, expected type]
+test.each<[string, TypeValidator<unknown, unknown>, unknown, string, string?]>([
+  ['string()', string(), Symbol('s'), 'type', 'string'],
+  ['string() with an object', string(), {}, 'type', 'string'],
   [
     'string() with an invalid date',
     string(),
     new Date(Number.NaN),
-    'Failed to parse value to string.',
+    'type',
+    'string',
   ],
-  ['number()', number(), 'abc', 'Failed to parse value to number.'],
-  ['date()', date(), 'tomorrow', 'Failed to parse value to date.'],
-  ['date() with a boolean', date(), true, 'Failed to parse value to date.'],
-  [
-    'optional(date())',
-    optional(date()),
-    'tomorrow',
-    'Failed to parse value to date.',
-  ],
+  ['number()', number(), 'abc', 'type', 'number'],
+  ['date()', date(), 'tomorrow', 'type', 'date'],
+  ['date() with a boolean', date(), true, 'type', 'date'],
+  ['optional(date())', optional(date()), 'tomorrow', 'type', 'date'],
   ['a string() parser', string({ parser: unreadable }), 'x', 'Unreadable.'],
   ['a number() parser', number({ parser: unreadable }), 'x', 'Unreadable.'],
   ['a boolean() parser', boolean({ parser: unreadable }), 'x', 'Unreadable.'],
@@ -153,14 +171,16 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown, string]>([
   ['createValidator()', createValidator(unreadable), 'x', 'Unreadable.'],
 ])(
   'should resolve to a failure when %s gets unreadable input',
-  async (_label, validate, input, message) => {
-    const expected: Failure<unknown> = {
+  async (_label, validate, input, message, expected = 'thing') => {
+    const failure: Failure<unknown> = {
       state: 'invalid',
+      code: 'type',
+      params: { expected },
       message,
       field: 'f',
       errors: undefined,
     };
-    assert.deepEqual(await validate(input, 'f'), expected);
+    assert.deepEqual(await validate(input, 'f'), failure);
   },
 );
 

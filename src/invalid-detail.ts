@@ -1,3 +1,4 @@
+import { isContainer } from './failures/index.js';
 import type { Failure, Test, Validator } from './shared.js';
 
 /**
@@ -25,15 +26,14 @@ export async function findInvalidResult<V, E>(
 
 /**
  * The error that `array()` and `object()` record for a failed item or field:
- * its message, or its `errors` when the message is empty. With neither, the
- * empty message, so the failure never reads as `undefined`.
+ * a container's `errors`, such as a nested object's, or else its message.
  * @param result Failed result
  * @internal
  */
 export function invalidDetail<E>(result: Failure<E>): string | E {
-  return result.message || result.errors === undefined
-    ? result.message
-    : result.errors;
+  return isContainer(result) && result.errors !== undefined
+    ? result.errors
+    : result.message;
 }
 
 /**

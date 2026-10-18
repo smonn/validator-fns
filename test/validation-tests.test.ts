@@ -40,19 +40,21 @@ const builtInTests: [string, (...args: never[]) => unknown][] = [
 
 test('a built-in test fails a missing value it is called with directly', async () => {
   const results = await Promise.all(
-    builtInTests.flatMap(([label, validate]) =>
+    builtInTests.flatMap(([code, validate]) =>
       [null, undefined].map(async (value) => ({
-        label: `${label}(${String(value)})`,
+        code,
+        label: `${code}(${String(value)})`,
         result: await callUntyped(validate, value),
       })),
     ),
   );
 
-  for (const { label, result } of results) {
-    assert.deepEqual(
+  for (const { code, label, result } of results) {
+    assert.deepInclude(
       result,
       {
         state: 'invalid',
+        code,
         message: 'failed',
         field: undefined,
         errors: undefined,
