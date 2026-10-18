@@ -217,3 +217,11 @@ test('array() rejects the 2.x order, config before the item validator', () => {
     'array(item, config?, ...tests)',
   );
 });
+
+test('should read the items of an iterable that is not an array', async () => {
+  assert.deepEqual(await array(string())(new Set(['a', 'b'])), {
+    state: 'valid',
+    value: ['a', 'b'],
+    field: undefined,
+  });
+});
