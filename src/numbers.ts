@@ -1,4 +1,4 @@
-import { isDate } from './date-check.js';
+import { isDate, timeOf } from './date-check.js';
 import { createTypeValidatorTest } from './factories.js';
 import {
   type ConfigBase,
@@ -24,7 +24,7 @@ export function parseNumber(value: unknown): number | null | undefined {
   }
 
   if (isDate(value)) {
-    return value.getTime();
+    return timeOf(value);
   }
 
   if (typeof value === 'string') {

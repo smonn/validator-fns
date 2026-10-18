@@ -5,7 +5,7 @@ import type {
   ValidatorMessageParameters,
   Validator,
 } from './shared.js';
-import { isDate } from './date-check.js';
+import { isDate, timeOf } from './date-check.js';
 import { parseDate } from './parse-date.js';
 
 /**
@@ -24,7 +24,7 @@ export function applyDateConfig(
     config.default !== undefined &&
     (parsedValue === undefined ||
       parsedValue === null ||
-      Number.isNaN(parsedValue.getTime()))
+      Number.isNaN(timeOf(parsedValue)))
   ) {
     parsedValue = config.default;
   }
@@ -80,7 +80,9 @@ export function minDate(
       (value === null ||
         value === undefined ||
         (isDate(value) &&
-          (exclusive ? value > parsedDate : value >= parsedDate))),
+          (exclusive
+            ? timeOf(value) > timeOf(parsedDate)
+            : timeOf(value) >= timeOf(parsedDate)))),
     message,
     () => ({
       min: parsedDate,
@@ -135,7 +137,9 @@ export function maxDate(
       (value === null ||
         value === undefined ||
         (isDate(value) &&
-          (exclusive ? value < parsedDate : value <= parsedDate))),
+          (exclusive
+            ? timeOf(value) < timeOf(parsedDate)
+            : timeOf(value) <= timeOf(parsedDate)))),
     message,
     () => ({
       max: parsedDate,

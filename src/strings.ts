@@ -49,7 +49,7 @@ export function parseString(value: unknown): string | null | undefined {
   }
 
   if (isDate(value)) {
-    return value.toISOString();
+    return Date.prototype.toISOString.call(value);
   }
 
   if (isObject(value)) {
