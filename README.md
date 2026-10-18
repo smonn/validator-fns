@@ -244,7 +244,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    // { state: 'invalid', message: 'Too small.', value: 3, ... }
 
    // 3.x
-   await number(min(5, 'Too small.'))('3');
+   await number(min(5, 'Too small.'))(3);
    // { state: 'invalid', code: 'min', params: { min: 5, amount: 3 }, message: 'Too small.', ... }
    ```
 
