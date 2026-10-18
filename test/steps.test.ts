@@ -125,7 +125,7 @@ test('transform() makes a test that never fails', async () => {
   });
 });
 
-test('each array test sees the input array, as array tests only check until #757', async () => {
+test('an array length check sees the input array, not an earlier test value', async () => {
   const validate = array(
     number(),
     transform(() => [1, 2]),
