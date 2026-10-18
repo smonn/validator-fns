@@ -256,6 +256,31 @@ test.each<[string, Record<string, string>]>([
   });
 });
 
+test('should skip a translation key when an earlier getter deletes it', async () => {
+  const messages = {
+    get first(): string {
+      Reflect.deleteProperty(messages, 'min');
+      return 'First.';
+    },
+    min: 'Own.',
+  };
+  Object.setPrototypeOf(messages, { min: 'Inherited.' });
+  assert.deepInclude(await withMessages(string(min(2)), messages)('x'), {
+    message: 'min',
+  });
+});
+
+test('should word a code from a translation getter, as spread reads it', async () => {
+  const messages = {
+    get min(): string {
+      return 'From a getter.';
+    },
+  };
+  assert.deepInclude(await withMessages(string(min(2)), messages)('x'), {
+    message: 'From a getter.',
+  });
+});
+
 test('should read the translation once, when it is made', async () => {
   const messages = { min: 'before' };
   const name = withMessages(string(min(2)), messages);

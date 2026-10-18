@@ -18,6 +18,11 @@ function translationOf(messages: Messages): Translation {
 
   const translation = new Map<string, Messages[string]>();
   for (const code of Object.keys(messages)) {
+    // An earlier getter can delete a later key, which spread then skips.
+    if (!Object.getOwnPropertyDescriptor(messages, code)?.enumerable) {
+      continue;
+    }
+
     const message = messages[code];
     if (typeof message !== 'string' && typeof message !== 'function') {
       throw new TypeError(`\`messages.${code}\` must be a message`);
