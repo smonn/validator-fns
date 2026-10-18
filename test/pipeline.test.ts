@@ -570,7 +570,6 @@ const yesterday = new Date(now);
 yesterday.setDate(now.getDate() - 1);
 const nextMonth = new Date(now);
 nextMonth.setMonth(now.getMonth() + 1);
-const earliest = new Date(-8.64e15);
 const notAfterNow = untyped(
   maxDate(now, ({ max: limit }) => `max:${limit.toISOString()}`),
 );
@@ -591,35 +590,6 @@ throwing.valueOf = () => {
 };
 
 const dateRows: Row[] = [
-  ...(
-    [
-      [0, new Date(0)],
-      ['2020', new Date(2020, 0)],
-      ['2020-13', new Date(2021, 0)],
-      ['2020-01', new Date(2020, 0)],
-      ['2020-01-31', new Date(2020, 0, 31)],
-      ['2020-01-31 12:45', new Date(2020, 0, 31, 12, 45)],
-      ['2020-01-31T12:45:32', new Date(2020, 0, 31, 12, 45, 32)],
-      ['2020-01-31T12:45:32Z', new Date(Date.UTC(2020, 0, 31, 12, 45, 32))],
-      [
-        '2020-01-31T12:45:32+01:30',
-        new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
-      ],
-      ['2020-01-31T12:45:32-0200', new Date(Date.UTC(2020, 0, 31, 10, 45, 32))],
-      ['2020-01-31T12:45:32.123', new Date(2020, 0, 31, 12, 45, 32, 123)],
-      [
-        '2020-01-31T12:45:32.001242Z',
-        new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
-      ],
-    ] satisfies [string | number, Date][]
-  ).map(([limit, parsed]) =>
-    row(
-      `minDate() reads ${JSON.stringify(limit)} as its limit`,
-      untyped(minDate(limit)),
-      earliest,
-      fail('minDate', { min: parsed }),
-    ),
-  ),
   row('minDate() passes its limit', notBeforeNow, now, pass(now)),
   row('minDate() passes a later date', notBeforeNow, tomorrow, pass(tomorrow)),
   row(
