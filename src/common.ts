@@ -42,9 +42,16 @@ export function oneOf<T extends string | number | boolean | Date>(
   return createValidatorTest(
     'oneOf',
     (value: T) => {
-      // NaN equals nothing, so only a valid date matches by its time.
+      if (values.includes(value)) {
+        return true;
+      }
+      if (typeof value !== 'object') {
+        return false;
+      }
+      // Primitives stay off timeOf, whose throw is slow. NaN equals nothing, so
+      // only a valid date matches by its time.
       const time = timeOf(value);
-      return values.includes(value) || values.some((x) => timeOf(x) === time);
+      return values.some((x) => typeof x === 'object' && timeOf(x) === time);
     },
     message,
     () => ({ values }),
