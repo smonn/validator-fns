@@ -13,6 +13,20 @@ export interface OneOfValidatorMessageParameters<
 }
 
 /**
+ * Whether a value is a `Date`, from any realm. `getTime` throws unless `this`
+ * is a `Date`, which `instanceof` can't tell across realms.
+ * @internal
+ */
+function isDate(value: unknown): value is Date {
+  try {
+    Date.prototype.getTime.call(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Ensures a value is one in a predefined list.
  * @param values List of allowed values.
  * @param message Error message, or else the code
@@ -29,8 +43,7 @@ export function oneOf<T extends string | number | boolean | Date>(
     'oneOf',
     (value: T) =>
       values.includes(value) ||
-      (value instanceof Date &&
-        values.some((x) => x.valueOf() === value.valueOf())),
+      (isDate(value) && values.some((x) => x.valueOf() === value.valueOf())),
     message,
     () => ({ values }),
   );

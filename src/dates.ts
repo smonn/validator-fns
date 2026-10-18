@@ -37,7 +37,9 @@ const parseDate = createParser('date', isValidDate);
  */
 function parseLimit(limit: SharedDateValueType): Date | null | undefined {
   const parsed =
-    limit === null || limit === undefined ? limit : readDate(limit);
+    limit === null || limit === undefined || isValidDate(limit)
+      ? limit
+      : readDate(limit);
   if (parsed === undefined && limit !== undefined) {
     throw new TypeError('Failed to parse value to date.');
   }

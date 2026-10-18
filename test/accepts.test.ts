@@ -7,6 +7,7 @@ import {
   date,
   number,
   object,
+  oneOf,
   optional,
   string,
   valid,
@@ -193,4 +194,14 @@ test('a custom parser is never called with undefined or null', async () => {
   );
   assert.deepInclude(await validate(''), { state: 'valid', value: '' });
   assert.deepEqual(seen, ['']);
+});
+
+test('oneOf() matches a date from another realm', async () => {
+  const validate = date(oneOf([new Date(0)]));
+  assert.deepInclude(await validate(runInNewContext('new Date(0)')), {
+    state: 'valid',
+  });
+  assert.deepInclude(await validate(runInNewContext('new Date(1)')), {
+    code: 'oneOf',
+  });
 });
