@@ -151,7 +151,16 @@ test('built-ins keep the value they accept as it is', async () => {
   assert.deepInclude(await string()(''), { value: '' });
 });
 
-test.each(types)(
+// object({}) builds {} from its children for missing input, so the object
+// here has a child that fails on undefined.
+const required = types.map(
+  ([label, validate]): [string, TypeValidator<unknown, unknown>] => [
+    label,
+    label === 'object()' ? object({ a: string() }) : validate,
+  ],
+);
+
+test.each(required)(
   '%s fails undefined and null with required, and optional() returns them',
   async (label, validate) => {
     for (const input of [undefined, null]) {
