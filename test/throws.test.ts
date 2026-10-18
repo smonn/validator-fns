@@ -281,6 +281,14 @@ test('should take a result with a `then` that is not a function as a result', as
   });
 });
 
+test('should name the parser in the TypeError for one that is not a function', () => {
+  assert.throws(
+    () => createTypeValidator(JSON.parse('"parser"')),
+    TypeError,
+    '`parser` must be a validator',
+  );
+});
+
 // [label, builds a validator or test from bad configuration]
 test.each<[string, () => unknown]>([
   // JSON.parse returns any, which lets the test pass values the types reject.
