@@ -213,7 +213,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    array(string(), { default: [] }, min(2, 'Pick two.'));
    ```
 
-5. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { messages }, ...tests)`. A missing object is still built from its properties when they all accept a missing value, such as ones with a `default` or wrapped in `optional()`. When one doesn't, the object now fails with `required` instead of reporting each field as missing; wrap it in `optional()` to accept one. The object-level tests run on a built object, inside `optional()` too, so a check that needs at least one field fails a missing object:
+5. **Check `object()` calls with a second argument**: it's a config object or the first collection test, as in `object(schema, { messages }, ...tests)`. A missing object is still built from its properties when they all accept a missing value, such as ones with a `default` or wrapped in `optional()`. When one doesn't, the object now fails with `required` instead of reporting each field as missing; wrap it in `optional()` to accept one. The collection tests run on a built object, inside `optional()` too, so a check that needs at least one field fails a missing object:
 
    ```js
    const contact = optional(
@@ -228,7 +228,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    await contact(undefined); // { state: 'invalid', code: 'contact', ... }
    ```
 
-   To accept a missing object, let the check pass the object built from it, where every field is `undefined`. To reject it, drop `optional()`.
+   Dropping `optional()` doesn't change this: when every property accepts `undefined`, `object()` builds the same value and runs the same check without it. To reject a missing contact, keep the check as shown. To accept one, let the check pass the object built from it, where every field is `undefined`.
 
 6. **Replace `standard()`**: remove it around built-in validators, which are Standard Schemas themselves, and change `standard(fn)` to `createValidator(fn)`:
 
@@ -684,7 +684,7 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 Accepts an object other than an array, a function or a boxed primitive, such as `new String('a')`, except a boxed Symbol or BigInt whose prototype was replaced, which `object()` can't tell from a plain object without a throwing check. Class instances, such as a `Map`, count, but only own properties are read, so a getter on a class's prototype reads as missing. Anything else fails with the `type` code. It has no parser and no `default` option. `config` is optional; when the second argument is a function, it's the first of the `tests`. The schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit. A schema property that isn't a validator throws a `TypeError` naming its key when the validator is built.
 
-A missing object, `undefined` or `null`, is built from its properties: each property's validator runs on `undefined`. When every one is valid, such as one with a `default` or wrapped in `optional()`, the built object is the value, and the object-level tests run on it. Otherwise the object fails with `required`, without its properties' errors. `optional()` of it gives the built object when there is one, and the missing value otherwise:
+A missing object, `undefined` or `null`, is built from its properties: each property's validator runs on `undefined`. When every one is valid, such as one with a `default` or wrapped in `optional()`, the built object is the value, and the collection tests run on it. Otherwise the object fails with `required`, without its properties' errors. `optional()` of it gives the built object when there is one, and the missing value otherwise:
 
 ```js
 await object({ theme: string({ default: 'light' }) })(undefined);
