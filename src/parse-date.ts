@@ -4,11 +4,11 @@ const isoDatePattern =
 
 /**
  * Reads a timezone that `isoDatePattern` matched, `Z` or an offset such as
- * `+02:00` or `-0530`, in minutes.
+ * `+02:00` or `-0530`, in minutes. Without one, the offset is 0.
  * @param timezone Timezone to read
  * @internal
  */
-function parseTimezone(timezone: string): number {
+function parseTimezone(timezone = 'Z'): number {
   if (timezone === 'Z') {
     return 0;
   }
@@ -31,23 +31,44 @@ export function readDate(value: unknown): Date | undefined {
     return undefined;
   }
 
-  return parseIsoDate(value);
+  const parts = isoDatePattern.exec(value);
+  return parts === null ? undefined : parseIsoDate(parts);
 }
 
 /**
- * Parses an ISO 8601 string into a date. Without a timezone, the date is local.
- * Returns `undefined` for a string that isn't ISO 8601, or has a part out of
- * its range.
- * @param value String to parse
+ * The fields of a date, in the order `Date.UTC()` takes them.
  * @internal
  */
-function parseIsoDate(value: string): Date | undefined {
-  const parts = isoDatePattern.exec(value);
+type DateFields = Readonly<Required<Parameters<typeof Date.UTC>>>;
 
-  if (parts === null) {
-    return undefined;
+/**
+ * Builds a date from its fields, in UTC or in local time.
+ * @param fields Fields of the date, with the year as written
+ * @param utc Whether the fields are in UTC
+ * @internal
+ */
+function buildDate(fields: DateFields, utc: boolean): Date {
+  if (fields[0] >= 100) {
+    return utc ? new Date(Date.UTC(...fields)) : new Date(...fields);
   }
 
+  // `new Date()` and `Date.UTC()` read the years 0 to 99 as 1900 to 1999, so
+  // those are built 400 years later and moved back. The calendar repeats every
+  // 400 years, and both eras predate time zone rules, so the local offset is
+  // the same.
+  const [year, ...rest] = fields;
+  const date = buildDate([year + 400, ...rest], utc);
+  date.setUTCFullYear(date.getUTCFullYear() - 400);
+  return date;
+}
+
+/**
+ * Reads a date from the parts `isoDatePattern` matched. Without a timezone, the
+ * date is local. Returns `undefined` for a day past the end of its month.
+ * @param parts Parts the pattern matched
+ * @internal
+ */
+function parseIsoDate(parts: RegExpExecArray): Date | undefined {
   const [
     ,
     year,
@@ -62,23 +83,28 @@ function parseIsoDate(value: string): Date | undefined {
   const fullYear = Number(year);
   const monthIndex = Number(month) - 1;
   const dayOfMonth = Number(day);
-  // Set by part, since `new Date()` and `Date.UTC()` read the years 0 to 99
-  // as 1900 to 1999.
-  const date = new Date(0);
-  date.setUTCFullYear(fullYear, monthIndex, dayOfMonth);
   // A day past the end of its month, such as 30 February, rolls over. The
-  // pattern checks every other part's range.
-  if (date.getUTCDate() !== dayOfMonth) {
+  // pattern checks every other part's range, and every month has 28 days. The
+  // calendar repeats every 400 years, so the month is read 400 years later,
+  // past the years `Date.UTC()` reads as 1900 to 1999.
+  if (
+    dayOfMonth > 28 &&
+    dayOfMonth >
+      new Date(Date.UTC(fullYear + 400, monthIndex + 1, 0)).getUTCDate()
+  ) {
     return undefined;
   }
 
-  const milliseconds = Number(fraction) * 1e3;
-  if (timezone) {
-    const minutes = Number(minute) + parseTimezone(timezone);
-    date.setUTCHours(Number(hour), minutes, Number(second), milliseconds);
-  } else {
-    date.setFullYear(fullYear, monthIndex, dayOfMonth);
-    date.setHours(Number(hour), Number(minute), Number(second), milliseconds);
-  }
-  return date;
+  return buildDate(
+    [
+      fullYear,
+      monthIndex,
+      dayOfMonth,
+      Number(hour),
+      Number(minute) + parseTimezone(timezone),
+      Number(second),
+      Number(fraction) * 1e3,
+    ],
+    timezone !== undefined,
+  );
 }
