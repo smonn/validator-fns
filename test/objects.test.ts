@@ -216,15 +216,15 @@ test('nested object', async () => {
   );
 });
 
-test('invalid configuration', async () => {
+test('invalid configuration', () => {
   // JSON.parse returns any, which lets the test pass values the types reject.
   assert.throws(() => object(JSON.parse('"bad value"')));
 
-  const validate = object(JSON.parse('{ "test": "test" }'));
-  assert.deepInclude(await validate({}), {
-    state: 'invalid',
-    errors: { test: 'No validator set' },
-  });
+  assert.throws(
+    () => object(JSON.parse('{ "name": "test" }')),
+    TypeError,
+    '`name`',
+  );
 });
 
 // Fails with an empty message and no errors, which built-in tests never do.
