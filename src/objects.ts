@@ -1,3 +1,4 @@
+import { failure } from './failures/index.js';
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
@@ -5,7 +6,6 @@ import {
   type ExtractError,
   type ExtractValue,
   hasOwnProperty,
-  invalidResult,
   setOwn,
   valid,
   type Test,
@@ -118,7 +118,7 @@ export function object<P extends ObjectParameter>(
             : undefined;
           const result = await (typeof validator === 'function'
             ? validator(value, key)
-            : invalidResult({ field: key, message: 'No validator set' }));
+            : failure({ field: key, message: 'No validator set' }));
 
           if (result.state === 'invalid') {
             isValid = false;
@@ -130,7 +130,7 @@ export function object<P extends ObjectParameter>(
       }
 
       if (!isValid) {
-        return invalidResult({ message: '', field, errors });
+        return failure({ message: '', field, errors });
       }
 
       const parsed = asObjectValue<P>(resolvedValues);
@@ -140,7 +140,7 @@ export function object<P extends ObjectParameter>(
         field,
       );
       if (objectInvalidResult) {
-        return invalidResult({
+        return failure({
           message: objectInvalidResult.message,
           field,
           errors: objectInvalidResult.errors,
