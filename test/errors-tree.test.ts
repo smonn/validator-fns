@@ -492,6 +492,31 @@ test('should type the message tree from the error type', async () => {
   >();
 });
 
+const readonlyItems: readonly Failure<never>[] = [];
+
+interface NamedChildren {
+  child?: Failure<never>;
+}
+
+const namedChildren: NamedChildren = {};
+
+test('should type the message tree of a readonly array or an interface', async () => {
+  expectTypeOf(
+    messageTree(
+      await invalid({ code: 'items', field: undefined, errors: readonlyItems }),
+    ),
+  ).toEqualTypeOf<string | string[] | undefined>();
+  expectTypeOf(
+    messageTree(
+      await invalid({
+        code: 'properties',
+        field: undefined,
+        errors: namedChildren,
+      }),
+    ),
+  ).toEqualTypeOf<string | { child?: string } | undefined>();
+});
+
 // A hand-built container whose errors aren't a tree is a bug (ADR 0001).
 test.each<[string, unknown]>([
   ['a number', 5],
