@@ -318,6 +318,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 16. **Read `min`, `max` or `exact` instead of `limit`** in the messages of `min()`, `max()`, `exact()`, `minDate()` and `maxDate()`. `email()` and `uuid()` no longer give their `pattern` to the message.
 17. **Expect codes in Standard Schema issues.** An issue for a failure carries its `code` and `params`, and an `array()` or `object()` whose children failed reports only their issues. An error without a message no longer gets `'Invalid value.'`. In this prerelease, a nested child's issue has only its message and path.
+18. **Give every schema property a validator.** `object()` throws a `TypeError` naming the key when it's built with a property that isn't a function, instead of failing that field with `'No validator set'` on every call.
 
 ## API Reference
 
@@ -530,7 +531,7 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 #### object(schema, config?, ...tests)
 
-The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. `config` is optional; when the second argument is a function, it's the first of the `tests`. A missing object, `undefined` or `null`, fails with `required` without checking its fields. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit.
+The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. `config` is optional; when the second argument is a function, it's the first of the `tests`. A missing object, `undefined` or `null`, fails with `required` without checking its fields. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit. A schema property that isn't a validator throws a `TypeError` naming its key when the validator is built.
 
 For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages. When fields fail, the object's own failure has the `properties` code.
 
