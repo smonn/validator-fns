@@ -24,6 +24,7 @@ test('minDate() reads dates, timestamps and ISO 8601 strings as its limit', asyn
   assert.strictEqual(await parsedDate(foreign), foreign);
   assert.deepEqual(await parsedDate(0), new Date(0));
   assert.deepEqual(await parsedDate(''), invalidDate);
+  assert.deepEqual(await parsedDate('  '), invalidDate);
   assert.deepEqual(await parsedDate('2020'), new Date(2020, 0));
   assert.deepEqual(await parsedDate('2020-13'), new Date(2021, 0));
   assert.deepEqual(await parsedDate('2020-01'), new Date(2020, 0));
@@ -211,8 +212,17 @@ test('minDate() and maxDate() throw for a limit they cannot read', () => {
   ];
   for (const limit of unreadable) {
     // Reflect.apply lets the test pass limits the types reject.
-    assert.throws(() => Reflect.apply(minDate, undefined, [limit]), TypeError);
-    assert.throws(() => Reflect.apply(maxDate, undefined, [limit]), TypeError);
+    // The message tells this throw apart from a crash while reading the limit.
+    assert.throws(
+      () => Reflect.apply(minDate, undefined, [limit]),
+      TypeError,
+      'Failed to parse value to date.',
+    );
+    assert.throws(
+      () => Reflect.apply(maxDate, undefined, [limit]),
+      TypeError,
+      'Failed to parse value to date.',
+    );
   }
 });
 

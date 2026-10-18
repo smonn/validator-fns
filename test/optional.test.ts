@@ -16,7 +16,7 @@ import {
   type Validator,
 } from '../src/index.js';
 
-// Each validator, for the missing inputs.
+// Each type validator, run on undefined and null.
 const missing: [string, Validator][] = [
   ['string', string()],
   ['trimmed string', string({ trim: true })],

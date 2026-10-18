@@ -204,4 +204,8 @@ test('oneOf() matches a date from another realm', async () => {
   assert.deepInclude(await validate(runInNewContext('new Date(1)')), {
     code: 'oneOf',
   });
+  // Only a date matches by time, not its timestamp.
+  assert.deepInclude(await oneOf<number | Date>([new Date(0)])(0), {
+    code: 'oneOf',
+  });
 });
