@@ -82,6 +82,12 @@ const silent = createValidator(async (value: unknown, field?: string) =>
   invalid({ code: 'custom', message: '', value, field }),
 );
 
+/** A custom container failure with the message `Empty.` and `errors`. */
+const emptyContainer = (code: 'items' | 'properties', errors: object) =>
+  createValidator(async (value: unknown, field?: string) =>
+    invalid({ code, message: 'Empty.', value, field, errors }),
+  );
+
 const noTags = createValidator(async (value: unknown, field?: string) =>
   invalid({
     code: 'items',
@@ -402,6 +408,37 @@ const rows: Row[] = [
       },
     ],
     messages: { tags: [null], name: 'min' },
+  },
+  {
+    label: 'a properties failure with an empty tree',
+    validator: emptyContainer('properties', {}),
+    input: {},
+    failure: failed('properties', undefined, { message: 'Empty.', errors: {} }),
+    issues: [{ message: 'Empty.', code: 'properties', params: {} }],
+    messages: {},
+  },
+  {
+    label: 'an empty properties failure nested in an array',
+    validator: array(emptyContainer('properties', {})),
+    input: [1],
+    failure: items(undefined, [
+      failed('properties', '[0]', { message: 'Empty.', errors: {} }),
+    ]),
+    issues: [{ message: 'Empty.', code: 'properties', params: {}, path: [0] }],
+    messages: [{}],
+  },
+  {
+    label: 'an items failure of valid items nested in an object',
+    validator: object({ tags: emptyContainer('items', [null, null]) }),
+    input: {},
+    failure: properties(undefined, {
+      tags: failed('items', 'tags', {
+        message: 'Empty.',
+        errors: [null, null],
+      }),
+    }),
+    issues: [{ message: 'Empty.', code: 'items', params: {}, path: ['tags'] }],
+    messages: { tags: [null, null] },
   },
   {
     label: 'a container with an empty tree',
