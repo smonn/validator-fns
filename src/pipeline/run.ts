@@ -4,7 +4,7 @@ import { own, present } from './present.js';
 import { isThenable, type Maybe } from './steps.js';
 
 /**
- * Whether `isType` takes value. Input such as a revoked Proxy, on which
+ * Whether `isType` accepts `value`. Input such as a revoked Proxy, on which
  * `Array.isArray` throws, isn't of the type.
  * @internal
  */
