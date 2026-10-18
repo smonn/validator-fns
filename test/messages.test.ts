@@ -256,6 +256,21 @@ test.each<[string, Record<string, string>]>([
   });
 });
 
+test('should keep a __proto__ key own in the errors tree it words', async () => {
+  const schema = Object.fromEntries([['__proto__', string()]]);
+  const result = await withMessages(object(schema), { required: 'Required.' })(
+    {},
+  );
+  assert.deepEqual(
+    result.state === 'invalid' && Object.keys(result.errors ?? {}),
+    ['__proto__'],
+  );
+  assert.deepEqual(
+    messageTree(result),
+    Object.fromEntries([['__proto__', 'Required.']]),
+  );
+});
+
 test('should skip a translation key when an earlier getter deletes it', async () => {
   const messages = {
     get first(): string {
