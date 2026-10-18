@@ -22,6 +22,16 @@ export function isContainer(made: Failure<unknown>): boolean {
 const maxDepth = 1000;
 
 /**
+ * Throws when a container sits `depth` containers deep, past `maxDepth`.
+ * @internal
+ */
+export function checkDepth(depth: number): void {
+  if (depth >= maxDepth) {
+    throw new TypeError(`An errors tree is deeper than ${maxDepth} levels`);
+  }
+}
+
+/**
  * How many entries one decode may visit. A child shared by several entries
  * is visited once for each, so a tree of a few failures can expand
  * exponentially; the bound caps that work.
@@ -50,10 +60,7 @@ export function entriesOf(
   depth: number,
   visits: Visits,
 ): [PropertyKey, Failure<unknown> | null][] {
-  if (depth >= maxDepth) {
-    throw new TypeError(`An errors tree is deeper than ${maxDepth} levels`);
-  }
-
+  checkDepth(depth);
   if (typeof errors !== 'object' || errors === null) {
     throw new TypeError('An errors tree must be an object');
   }
