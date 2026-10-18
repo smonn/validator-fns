@@ -23,7 +23,7 @@ function attempt(
  * A value as text for a message template. Input such as `Object.create(null)`
  * or a boxed symbol has no string form, so it reads as its tag, such as
  * `[object Object]`, and a revoked Proxy, which has no tag either, as its
- * `typeof`: wording a failure never throws.
+ * `typeof`: wording a template never throws.
  * @internal
  */
 function toText(value: unknown): string {

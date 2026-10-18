@@ -6,9 +6,9 @@ import type { TypeValidator } from './standard.js';
 import { fromRun, runOf } from './twins.js';
 
 /**
- * Reads a translation's own enumerable messages once. A translation that isn't an
- * object, or a message that is neither a string nor a function, throws a
- * `TypeError`.
+ * Reads a translation's own enumerable messages once. A translation that
+ * isn't an object, or a message that is neither a string nor a function,
+ * throws a `TypeError`.
  * @internal
  */
 function translationOf(messages: Messages): Translation {
