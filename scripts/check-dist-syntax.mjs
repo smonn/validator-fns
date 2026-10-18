@@ -18,6 +18,8 @@ import { fileURLToPath } from 'node:url';
  *   value: string,
  *   start: number,
  *   end: number,
+ *   slashStartsRegex?: boolean,
+ *   unterminated?: boolean,
  * }} Token
  * @typedef {{ start: number, feature: string }} Finding
  * @typedef {{
@@ -67,6 +69,7 @@ const logicalAssignments = new Set(['||=', '&&=', '??=']);
 const keywordsBeforeExpression = new Set([
   'await',
   'case',
+  'default',
   'delete',
   'do',
   'else',
@@ -80,16 +83,19 @@ const keywordsBeforeExpression = new Set([
   'void',
   'yield',
 ]);
+// A slash after the `)` that closes these conditions starts a regex.
+const conditionKeywords = new Set(['for', 'if', 'while', 'with']);
 const supportedRegexFlags = new Set(['g', 'i', 'm', 'u', 'y']);
+const newerRegexEscapes = ['\\p{', '\\P{', '\\k<'];
 
 /**
- * Whether a slash after `previous` starts a regex. After `)` and `}` it's
- * read as a division: a regex misread that way shows up as stray tokens,
- * while a division misread as a regex would hide code up to the next slash.
+ * Whether a slash after `previous` starts a regex. A `)` or `}` decides by
+ * what it closes: a condition or a block means a regex.
  * @param {Token | undefined} previous
  */
 function startsRegex(previous) {
   if (!previous) return true;
+  if (previous.slashStartsRegex !== undefined) return previous.slashStartsRegex;
   if (previous.type === 'name') {
     return keywordsBeforeExpression.has(previous.value);
   }
@@ -100,8 +106,24 @@ function startsRegex(previous) {
 }
 
 /**
+ * Whether a `{` after `previous` opens a block rather than an object literal.
+ * @param {Token | undefined} previous
+ */
+function opensBlock(previous) {
+  if (!previous) return true;
+  if (previous.type === 'name') {
+    return !keywordsBeforeExpression.has(previous.value);
+  }
+  return (
+    previous.type === 'punct' &&
+    [')', ';', '{', '}', '=>'].includes(previous.value)
+  );
+}
+
+/**
  * Returns the index after the string or regex body that starts at `start`,
- * which ends at an unescaped `close` outside a character class.
+ * which ends at an unescaped `close` outside a character class, or -1 if the
+ * code ends first.
  * @param {string} code
  * @param {number} start
  * @param {string} close
@@ -115,7 +137,7 @@ function quotedEnd(code, start, close) {
     else if (char === ']') inClass = false;
     else if (!inClass && char === close) return i + 1;
   }
-  return code.length;
+  return -1;
 }
 
 /**
@@ -144,10 +166,10 @@ function triviaEnd(code, start) {
  * follows.
  * @param {string} code
  * @param {number} start
- * @param {string[]} braces open braces, innermost last
+ * @param {string[]} brackets open brackets, innermost last
  * @returns {Token[]}
  */
-function readTemplate(code, start, braces) {
+function readTemplate(code, start, brackets) {
   for (let i = start; i < code.length; i += 1) {
     if (code[i] === '\\') {
       i += 1;
@@ -155,7 +177,7 @@ function readTemplate(code, start, braces) {
       const value = code.slice(start, i);
       return [{ type: 'template', value, start, end: i + 1 }];
     } else if (code.startsWith('${', i)) {
-      braces.push('${');
+      brackets.push('${');
       const value = code.slice(start, i);
       return [
         { type: 'template', value, start, end: i },
@@ -164,34 +186,58 @@ function readTemplate(code, start, braces) {
     }
   }
   const value = code.slice(start);
-  return [{ type: 'template', value, start, end: code.length }];
+  const end = code.length;
+  return [{ type: 'template', value, start, end, unterminated: true }];
+}
+
+/**
+ * Tracks the bracket `token` opens or closes, and on a closing bracket
+ * records whether a slash after it starts a regex.
+ * @param {Token} token
+ * @param {Token | undefined} previous
+ * @param {string[]} brackets open brackets, innermost last
+ */
+function trackBracket(token, previous, brackets) {
+  if (token.value === '{') {
+    brackets.push(opensBlock(previous) ? 'block' : 'object');
+  } else if (token.value === '(') {
+    const condition =
+      previous?.type === 'name' && conditionKeywords.has(previous.value);
+    brackets.push(condition ? 'condition' : 'group');
+  } else if (token.value === '}' || token.value === ')') {
+    const closed = brackets.pop() ?? '';
+    token.slashStartsRegex = ['block', 'condition'].includes(closed);
+  }
 }
 
 /**
  * @param {string} code
  * @param {number} start
- * @param {string[]} braces open braces, innermost last
+ * @param {Token | undefined} previous
+ * @param {string[]} brackets open brackets, innermost last
  * @returns {Token}
  */
-function readPunctuator(code, start, braces) {
+function readPunctuator(code, start, previous, brackets) {
   const rest = code.slice(start);
   // In `a?.5:1`, the `?` is a conditional on a decimal.
   const optionalChain = /^\?\.(?!\d)/.test(rest) ? '?.' : undefined;
   const value =
     optionalChain ?? punctuators.find((p) => rest.startsWith(p)) ?? rest[0];
-  if (value === '{') braces.push('{');
-  if (value === '}') braces.pop();
   const text = value ?? '';
-  return { type: 'punct', value: text, start, end: start + text.length };
+  /** @type {Token} */
+  const token = { type: 'punct', value: text, start, end: start + text.length };
+  trackBracket(token, previous, brackets);
+  return token;
 }
 
 /**
  * @param {string} code
  * @param {number} start
- * @param {string[]} braces open braces, innermost last
+ * @param {Token | undefined} previous
+ * @param {string[]} brackets open brackets, innermost last
  * @returns {Token}
  */
-function readWord(code, start, braces) {
+function readWord(code, start, previous, brackets) {
   const rest = code.slice(start);
   const name = /^#?[\p{ID_Start}$_][\p{ID_Continue}$]*/u.exec(rest)?.[0];
   if (name)
@@ -200,7 +246,30 @@ function readWord(code, start, braces) {
   if (number) {
     return { type: 'number', value: number, start, end: start + number.length };
   }
-  return readPunctuator(code, start, braces);
+  return readPunctuator(code, start, previous, brackets);
+}
+
+/**
+ * Reads the string or regex that starts at `start`.
+ * @param {string} code
+ * @param {number} start
+ * @param {'string' | 'regex'} type
+ * @returns {Token}
+ */
+function readQuoted(code, start, type) {
+  const close = type === 'regex' ? '/' : (code[start] ?? '');
+  const quoteEnd = quotedEnd(code, start, close);
+  if (quoteEnd === -1) {
+    const value = code.slice(start);
+    return { type, value, start, end: code.length, unterminated: true };
+  }
+  if (type === 'string') {
+    const value = code.slice(start + 1, quoteEnd - 1);
+    return { type, value, start, end: quoteEnd };
+  }
+  const flags = /^\w*/.exec(code.slice(quoteEnd))?.[0] ?? '';
+  const end = quoteEnd + flags.length;
+  return { type, value: code.slice(start, end), start, end };
 }
 
 /**
@@ -208,33 +277,25 @@ function readWord(code, start, braces) {
  * @param {string} code
  * @param {number} start
  * @param {Token | undefined} previous
- * @param {string[]} braces open braces, innermost last
+ * @param {string[]} brackets open brackets, innermost last
  * @returns {Token[]}
  */
-function readTokens(code, start, previous, braces) {
+function readTokens(code, start, previous, brackets) {
   const char = code[start];
-  if (char === '`') return readTemplate(code, start + 1, braces);
-  if (char === '}' && braces.at(-1) === '${') {
-    braces.pop();
+  if (char === '`') return readTemplate(code, start + 1, brackets);
+  if (char === '}' && brackets.at(-1) === '${') {
+    brackets.pop();
     const close = { type: 'punct', value: '}', start, end: start + 1 };
     return [
       /** @type {Token} */ (close),
-      ...readTemplate(code, start + 1, braces),
+      ...readTemplate(code, start + 1, brackets),
     ];
   }
-  if (char === '"' || char === "'") {
-    const end = quotedEnd(code, start, char);
-    return [
-      { type: 'string', value: code.slice(start + 1, end - 1), start, end },
-    ];
-  }
+  if (char === '"' || char === "'") return [readQuoted(code, start, 'string')];
   if (char === '/' && startsRegex(previous)) {
-    const bodyEnd = quotedEnd(code, start, '/');
-    const flags = /^\w*/.exec(code.slice(bodyEnd))?.[0] ?? '';
-    const end = bodyEnd + flags.length;
-    return [{ type: 'regex', value: code.slice(start, end), start, end }];
+    return [readQuoted(code, start, 'regex')];
   }
-  return [readWord(code, start, braces)];
+  return [readWord(code, start, previous, brackets)];
 }
 
 /**
@@ -244,19 +305,55 @@ function tokenize(code) {
   /** @type {Token[]} */
   const tokens = [];
   /** @type {string[]} */
-  const braces = [];
+  const brackets = [];
   let i = 0;
   while (i < code.length) {
     const afterTrivia = triviaEnd(code, i);
     if (afterTrivia > i) {
       i = afterTrivia;
     } else {
-      const read = readTokens(code, i, tokens.at(-1), braces);
+      const read = readTokens(code, i, tokens.at(-1), brackets);
       tokens.push(...read);
       i = read.at(-1)?.end ?? code.length;
     }
   }
   return tokens;
+}
+
+/**
+ * Returns the feature of the group that opens at `index` in a regex pattern,
+ * if the README's browsers lack it.
+ * @param {string} pattern
+ * @param {number} index
+ */
+function groupFeature(pattern, index) {
+  if (!pattern.startsWith('(?', index)) return undefined;
+  const next = pattern[index + 2] ?? '';
+  if (next === '<') return 'regex `(?<` (named group or lookbehind)';
+  return /[a-z-]/.test(next) ? 'regex modifiers' : undefined;
+}
+
+/**
+ * Returns the first regex feature in `pattern` that the README's browsers
+ * lack.
+ * @param {string} pattern
+ */
+function patternFeature(pattern) {
+  let inClass = false;
+  for (let i = 0; i < pattern.length; i += 1) {
+    const char = pattern[i];
+    const escape = pattern.slice(i, i + 3);
+    if (newerRegexEscapes.includes(escape)) {
+      return `regex escape \`${escape}\``;
+    }
+    if (char === '\\') i += 1;
+    else if (char === '[') inClass = true;
+    else if (char === ']') inClass = false;
+    else if (!inClass && groupFeature(pattern, i)) {
+      return groupFeature(pattern, i);
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -267,20 +364,7 @@ function tokenize(code) {
  */
 function regexFeature(pattern, flags) {
   const flag = flags.split('').find((f) => !supportedRegexFlags.has(f));
-  if (flag) return `regex flag ${flag}`;
-  for (let i = 0; i < pattern.length; i += 1) {
-    if (pattern.startsWith('(?<', i)) {
-      return 'regex `(?<` (named group or lookbehind)';
-    }
-    if (pattern[i] === '\\') {
-      const escape = pattern.slice(i, i + 3);
-      if (['\\p{', '\\P{', '\\k<'].includes(escape)) {
-        return `regex escape \`${escape}\``;
-      }
-      i += 1;
-    }
-  }
-  return undefined;
+  return flag ? `regex flag ${flag}` : patternFeature(pattern);
 }
 
 /**
@@ -308,27 +392,48 @@ function regexCallFeature(tokens, index) {
 }
 
 /**
- * Returns the feature of the token at `index` that the README's browsers
- * lack, apart from class fields.
+ * Returns the feature of a name at `index`: a private member, or a RegExp
+ * call with newer regex syntax.
+ * @param {Token} token
+ * @param {Token[]} tokens
+ * @param {number} index
+ */
+function nameFeature(token, tokens, index) {
+  if (token.value.startsWith('#')) {
+    return `private class member \`${token.value}\``;
+  }
+  return token.value === 'RegExp' ? regexCallFeature(tokens, index) : undefined;
+}
+
+/**
+ * The feature each kind of token can have that the README's browsers lack,
+ * apart from class fields.
+ * @type {Partial<Record<Token['type'], (token: Token, tokens: Token[], index: number) => string | undefined>>}
+ */
+const featureByType = {
+  regex({ value }) {
+    const close = value.lastIndexOf('/');
+    return regexFeature(value.slice(1, close), value.slice(close + 1));
+  },
+  number: ({ value }) => (value.endsWith('n') ? 'BigInt literal' : undefined),
+  punct({ value }) {
+    if (logicalAssignments.has(value)) return `logical assignment \`${value}\``;
+    return value === '@' ? 'decorator' : undefined;
+  },
+  name: nameFeature,
+};
+
+/**
  * @param {Token[]} tokens
  * @param {number} index
  */
 function tokenFeature(tokens, index) {
   const token = tokens[index];
-  if (token?.type === 'regex') {
-    const close = token.value.lastIndexOf('/');
-    const pattern = token.value.slice(1, close);
-    return regexFeature(pattern, token.value.slice(close + 1));
+  if (!token) return undefined;
+  if (token.unterminated) {
+    return `unterminated ${token.type}, so the rest of the file went unchecked`;
   }
-  if (token?.type === 'punct') {
-    const assignment = logicalAssignments.has(token.value);
-    return assignment ? `logical assignment \`${token.value}\`` : undefined;
-  }
-  if (token?.type !== 'name') return undefined;
-  if (token.value.startsWith('#')) {
-    return `private class member \`${token.value}\``;
-  }
-  return token.value === 'RegExp' ? regexCallFeature(tokens, index) : undefined;
+  return featureByType[token.type]?.(token, tokens, index);
 }
 
 /**
