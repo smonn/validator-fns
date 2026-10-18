@@ -130,27 +130,34 @@ test('finds syntax after a regex that follows a block', () => {
   assert.include(result.stderr, 'logical assignment');
 });
 
+/**
+ * Builds `source` with tsdown.config.ts, the way `pnpm build` builds dist,
+ * and returns the ESM and CJS output as dist files.
+ */
+function build(source: string) {
+  const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-build-'));
+  const entry = path.join(root, 'entry.ts');
+  const outDir = path.join(root, 'out');
+  writeFileSync(entry, source);
+  const built = spawnSync(
+    process.execPath,
+    [tsdown, entry, '-d', outDir, '--no-dts', '--no-sourcemap'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.strictEqual(built.status, 0, built.stderr);
+  return {
+    'index.js': readFileSync(path.join(outDir, 'entry.js'), 'utf8'),
+    'index.cjs': readFileSync(path.join(outDir, 'entry.cjs'), 'utf8'),
+  };
+}
+
 test.each(['/a,b/s', '/a(b)./s'])(
   'finds the flags of %s in the build output',
   (regex) => {
-    // Builds with tsdown.config.ts, so its target turns the regex into a
-    // RegExp call.
-    const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-build-'));
-    const entry = path.join(root, 'entry.ts');
-    const outDir = path.join(root, 'out');
-    writeFileSync(entry, `export const pattern = ${regex};\n`);
-    const built = spawnSync(
-      process.execPath,
-      [tsdown, entry, '-d', outDir, '--no-dts', '--no-sourcemap'],
-      { cwd: repoRoot, encoding: 'utf8' },
-    );
-    assert.strictEqual(built.status, 0, built.stderr);
-    const esm = readFileSync(path.join(outDir, 'entry.js'), 'utf8');
-    assert.include(esm, 'RegExp(');
-    const result = run({
-      'index.js': esm,
-      'index.cjs': readFileSync(path.join(outDir, 'entry.cjs'), 'utf8'),
-    });
+    // The target turns the regex into a RegExp call.
+    const files = build(`export const pattern = ${regex};\n`);
+    assert.include(files['index.js'], 'RegExp(');
+    const result = run(files);
     assert.strictEqual(result.status, 1);
     assert.include(result.stderr, 'index.js:1:');
     assert.include(result.stderr, 'index.cjs:1:');
