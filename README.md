@@ -1228,9 +1228,9 @@ Supports Node versions in active or maintenance LTS at release time. Dropping on
 To support older environments, transpile or polyfill these:
 
 - `String.prototype.replaceAll` (ES2021)
-- Optional catch binding (ES2019)
+- `Object.fromEntries` and optional catch binding (ES2019)
 - Object spread (`...`, ES2018)
-- `async`, `await` (ES2017)
+- `Object.entries`, `async`, `await` (ES2017)
 - `Array.prototype.includes` (ES2016)
 - `Promise`, `URL`, and the rest of ES2015
 
