@@ -131,7 +131,7 @@ function stillExported(tsc, cwd) {
     const output = stdoutOf(error);
     const missing = new Set(
       Array.from(
-        // A name the declarations keep for their own use is declared locally.
+        // tsc reports a name the declarations keep unexported as declared locally.
         output.matchAll(
           /(?:has no exported member (?:named )?|declares )'(\w+)'/g,
         ),
