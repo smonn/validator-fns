@@ -670,3 +670,46 @@ test('should throw when decoding a cyclic errors tree', async () => {
     assert.include(String(error), 'deeper than 1000 levels');
   }
 });
+
+/** A validator whose `items` failure holds `entries` valid items. */
+const flatValidator = (entries: number) =>
+  createValidator(async () =>
+    invalid({
+      code: 'items',
+      field: undefined,
+      errors: Array.from({ length: entries }, () => null),
+    }),
+  );
+
+test('should decode an errors tree with 1000000 entries', async () => {
+  const flat = flatValidator(1_000_000);
+  assert.lengthOf(Object(messageTree(await flat({}))), 1_000_000);
+  const result = await flat['~standard'].validate({});
+  assert.lengthOf(result.issues ?? [], 1);
+});
+
+test('should throw before decoding an errors tree with 1000001 entries', async () => {
+  for (const error of await decoderErrors(flatValidator(1_000_001))) {
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), 'more than 1000000 entries');
+  }
+});
+
+// Shared children are walked once per reference, doubling the work per level.
+test('should throw when shared children multiply past 1000000 entries', async () => {
+  const doubling = createValidator(async () => {
+    let made: Result = await invalid({ code: 'min', field: undefined });
+    for (let level = 0; level < 20; level++) {
+      made = await invalid({
+        code: 'properties',
+        field: undefined,
+        errors: { a: made, b: made },
+      });
+    }
+    return made;
+  });
+  for (const error of await decoderErrors(doubling)) {
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), 'more than 1000000 entries');
+  }
+});

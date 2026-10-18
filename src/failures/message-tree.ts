@@ -1,5 +1,5 @@
 import { type Failure, type Result, setOwn } from '../shared.js';
-import { entriesOf, isContainer } from './walk.js';
+import { entriesOf, isContainer, type Visits } from './walk.js';
 import { readFailure } from './read.js';
 
 /**
@@ -30,16 +30,21 @@ type ChildMessages<E> = unknown extends E
 
 /**
  * @param depth How many containers hold `made`
+ * @param visits The decode's visits so far
  * @internal
  */
-function messagesOf(made: Failure<unknown>, depth: number): unknown {
+function messagesOf(
+  made: Failure<unknown>,
+  depth: number,
+  visits: Visits,
+): unknown {
   if (!isContainer(made)) {
     return made.message;
   }
 
   const tree = Array.isArray(made.errors) ? [] : {};
-  for (const [key, child] of entriesOf(made.errors, depth)) {
-    setOwn(tree, key, child && messagesOf(child, depth + 1));
+  for (const [key, child] of entriesOf(made.errors, depth, visits)) {
+    setOwn(tree, key, child && messagesOf(child, depth + 1, visits));
   }
 
   return tree;
@@ -59,5 +64,7 @@ export function messageTree<T, E>(
 export function messageTree(result: Result): unknown {
   return result.state === 'valid'
     ? undefined
-    : messagesOf(readFailure(result, "A validator's result"), 0);
+    : messagesOf(readFailure(result, "A validator's result"), 0, {
+        entries: 0,
+      });
 }
