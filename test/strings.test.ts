@@ -1,6 +1,15 @@
 import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
-import { email, matches, max, min, string, url, uuid } from '../src/index';
+import {
+  email,
+  matches,
+  max,
+  min,
+  string,
+  transform,
+  url,
+  uuid,
+} from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -166,7 +175,8 @@ test('url passes the default protocols to the message', async () => {
 
 test('string', async () => {
   const validate = string(
-    { trim: true, messages: { required: 'Must enter a value.' } },
+    { messages: { required: 'Must enter a value.' } },
+    transform((value) => value.trim()),
     min(5, 'At least five characters.'),
     max(10, 'At most ten characters.'),
   );
@@ -364,4 +374,9 @@ test('string fails anything but a string', async () => {
     assert.equal(result.state, 'invalid', label);
     assert.equal(result.state === 'invalid' && result.message, 'type', label);
   }
+});
+
+test('string() ignores a trim option from JavaScript', async () => {
+  const untrimmed = string(JSON.parse('{ "trim": true }'));
+  assert.deepInclude(await untrimmed(' a '), { state: 'valid', value: ' a ' });
 });

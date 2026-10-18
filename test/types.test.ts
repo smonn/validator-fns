@@ -273,6 +273,12 @@ test('transform() keeps the type and takes only a synchronous function', () => {
   string(transform((value) => value.length));
 });
 
+test('string() has no trim option', () => {
+  // @ts-expect-error trim is gone; use transform((s) => s.trim()).
+  string({ trim: true });
+  expectTypeOf<StringConfig>().not.toHaveProperty('trim');
+});
+
 const annotated = (parameters: MinValidatorMessageParameters) =>
   `at least ${parameters.min}`;
 

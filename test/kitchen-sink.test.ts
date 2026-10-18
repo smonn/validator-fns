@@ -18,6 +18,7 @@ import {
   oneOf,
   optional,
   string,
+  transform,
   url,
   valid,
   type Validator,
@@ -43,7 +44,8 @@ const customValidator: Validator<string, string> = async (value, field) => {
 
 const validate = object({
   firstName: string(
-    { trim: true, messages: { required: 'First name is required.' } },
+    { messages: { required: 'First name is required.' } },
+    transform((value) => value.trim()),
     min(1, 'First name is required.'),
   ),
   emailAddress: string(

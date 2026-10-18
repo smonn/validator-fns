@@ -12,6 +12,7 @@ import {
   object,
   optional,
   string,
+  transform,
   valid,
   type Result,
   type TypeValidator,
@@ -32,7 +33,7 @@ test('should describe the library', () => {
 });
 
 test('should return the parsed value when the input is valid', async () => {
-  const schema = string({ trim: true });
+  const schema = string(transform((value) => value.trim()));
 
   assert.deepEqual(await schema['~standard'].validate(' a '), { value: 'a' });
 });

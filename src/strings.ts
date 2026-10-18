@@ -33,10 +33,7 @@ const isUuid = (value: string) => uuidPattern.test(value);
  * Configuration for string validation.
  * @category Types
  */
-export interface StringConfig extends ConfigBase<string> {
-  /** Apply trim to string before validation. */
-  trim?: boolean;
-}
+export type StringConfig = ConfigBase<string>;
 
 /**
  * Parses a value into a string. Fails anything but a string.
@@ -54,16 +51,8 @@ function applyStringConfig(
   value: string | null | undefined,
   config: StringConfig,
 ): string | null | undefined {
-  const parsedValue =
-    value === undefined || value === null ? config.default : value;
   // Missing input without a default stays as it is.
-  if (parsedValue === undefined || parsedValue === null) {
-    return value;
-  }
-
-  return config.trim && typeof parsedValue === 'string'
-    ? parsedValue.trim()
-    : parsedValue;
+  return value ?? config.default ?? value;
 }
 
 export interface MatchesValidatorMessageParameters extends ValidatorMessageParameters<string> {
