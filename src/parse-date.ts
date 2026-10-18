@@ -84,10 +84,11 @@ function parseIsoDate(parts: RegExpExecArray): Date | undefined {
   const fullYear = Number(year);
   const monthIndex = Number(month) - 1;
   const dayOfMonth = Number(day);
-  // A day past the end of its month, such as 30 February, rolls over. The
-  // pattern checks every other part's range, and every month has 28 days. The
-  // calendar repeats every 400 years, so the month is read 400 years later,
-  // past the years `Date.UTC()` reads as 1900 to 1999.
+  // `Date.UTC()` would roll a day past the end of its month, such as 30
+  // February, over, so it's rejected. The pattern checks every other part's
+  // range, and no month has fewer than 28 days. The calendar repeats every 400
+  // years, so the month is read 400 years later, past the years `Date.UTC()`
+  // reads as 1900 to 1999.
   if (
     dayOfMonth > 28 &&
     dayOfMonth >
