@@ -7,7 +7,7 @@ import {
   validResult,
 } from '../shared.js';
 import type { Shape } from './def.js';
-import { runOf } from './define.js';
+import { runOf } from './twins.js';
 import type { Run } from './promises.js';
 
 /**

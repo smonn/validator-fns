@@ -8,7 +8,7 @@ import {
 import { runEach } from './children.js';
 import type { Children } from './def.js';
 import { andThen } from './promises.js';
-import { runOf } from './define.js';
+import { runOf } from './twins.js';
 
 /**
  * The items as the item validator parsed them, or an `items` failure whose

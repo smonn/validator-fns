@@ -1,6 +1,6 @@
 import { failure } from '../failures/index.js';
 import { type Test, type Validator, validResult } from '../shared.js';
-import type { Twin, Twinned } from './twins.js';
+import type { Twin, Twinned } from './sync.js';
 
 /**
  * The built-in `min()`, `max()` and `exact()` tests, which `array()` runs on

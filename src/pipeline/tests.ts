@@ -1,7 +1,7 @@
 import { failure } from '../failures/index.js';
 import { type Test, validResult, type ValidatorMessage } from '../shared.js';
 import { isMissing } from './def.js';
-import { withSyncTwin } from './twins.js';
+import { withSyncTwin } from './sync.js';
 
 /**
  * Captures basic validator test pattern. The test gets the parsed value, and

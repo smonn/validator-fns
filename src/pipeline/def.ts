@@ -7,7 +7,7 @@ import {
   validResult,
 } from '../shared.js';
 import type { MaybePromise } from './promises.js';
-import type { Twin } from './twins.js';
+import type { Twin } from './sync.js';
 
 /**
  * Turns present input into a type validator's type, `P`: a built-in's strict

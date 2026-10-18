@@ -1,7 +1,7 @@
 import type { ConfigBase, Test, Validator } from '../shared.js';
 import { configAndTests } from './config.js';
 import { keepValue, type Parser } from './def.js';
-import { defineType, runOf } from './define.js';
+import { defineType, runOf } from './twins.js';
 import type { TypeValidator } from './standard.js';
 
 /**
