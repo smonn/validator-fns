@@ -1,7 +1,8 @@
 /**
  * Whether a value is a date from any realm. `getTime` throws unless `this` is a
- * `Date`, which `instanceof` can't tell across realms. Primitives and arrays
- * return early so they don't pay for the throw.
+ * `Date`, which `instanceof` can't tell across realms. Primitives, arrays and
+ * plain objects return early so they don't pay for the throw, which means a
+ * real date given `Object.prototype` or a `null` prototype doesn't count.
  * @internal
  */
 export function isDate(value: unknown): value is Date {
@@ -9,9 +10,14 @@ export function isDate(value: unknown): value is Date {
     return false;
   }
 
-  // Array.isArray throws for a revoked Proxy.
+  // Array.isArray and Object.getPrototypeOf throw for a revoked Proxy.
   try {
-    if (Array.isArray(value)) {
+    const prototype: unknown = Object.getPrototypeOf(value);
+    if (
+      Array.isArray(value) ||
+      prototype === Object.prototype ||
+      prototype === null
+    ) {
       return false;
     }
 
