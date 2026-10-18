@@ -113,13 +113,13 @@ test('transform() makes a test that never fails', async () => {
     value: -2,
     field: 'n',
   });
-  assert.deepInclude(
-    await object(
-      { count: number() },
-      transform(({ count }) => ({ count: count * 10 })),
-    )({
-      count: 2,
-    }),
-    { state: 'valid', value: { count: 20 } },
+  const tenfold = object(
+    { count: number() },
+    transform(({ count }) => ({ count: count * 10 })),
   );
+
+  assert.deepInclude(await tenfold({ count: 2 }), {
+    state: 'valid',
+    value: { count: 20 },
+  });
 });
