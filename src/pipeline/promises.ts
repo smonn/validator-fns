@@ -17,27 +17,39 @@ export type Run<T, E> = (
 ) => MaybePromise<Result<T, E>>;
 
 /**
- * Whether a step or child returned a promise: a value with a `then` function,
- * as a promise from another realm isn't an instance of this realm's Promise.
+ * Whether a step or child returned a promise: a value with a `then`, as a
+ * promise from another realm isn't an instance of this realm's Promise. `in`
+ * calls no getter, so only `await` reads `then`.
  * @internal
  */
 export function isThenable<T extends object>(
   value: MaybePromise<T>,
 ): value is PromiseLike<T> {
-  return 'then' in value && typeof value.then === 'function';
+  return 'then' in value;
 }
 
 /**
- * Runs `next` on a result, once it settles when it's a promise. A promise is
- * adopted as `await` would, so a thenable that isn't a Promise is called once,
- * and its first callback alone counts.
+ * Runs `next` on a promised result once it settles. `await` adopts it: a
+ * Promise without reading its own `then`, and any other value through its
+ * `then`, read once, whose first callback alone counts.
+ * @internal
+ */
+export async function afterPromise<T, R>(
+  promise: PromiseLike<T>,
+  next: (done: T) => MaybePromise<R>,
+): Promise<R> {
+  return next(await promise);
+}
+
+/**
+ * Runs `next` on a result, once it settles when it's a promise.
  * @internal
  */
 export function andThen<T extends object, R>(
   result: MaybePromise<T>,
   next: (done: T) => MaybePromise<R>,
 ): MaybePromise<R> {
-  return isThenable(result) ? Promise.resolve(result).then(next) : next(result);
+  return isThenable(result) ? afterPromise(result, next) : next(result);
 }
 
 /**

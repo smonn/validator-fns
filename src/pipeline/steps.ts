@@ -1,5 +1,5 @@
 import { type Result, type Test, validResult } from '../shared.js';
-import { isThenable, type MaybePromise } from './promises.js';
+import { afterPromise, isThenable, type MaybePromise } from './promises.js';
 import { runStep, type Twinned } from './sync.js';
 
 /**
@@ -65,7 +65,7 @@ export function runSteps<T, E>(
       // A promise from the last step needs one callback, which costs less
       // than the async loop.
       return index === steps.length
-        ? Promise.resolve(result).then((done) => endSteps(done, field))
+        ? afterPromise(result, (done) => endSteps(done, field))
         : finishSteps(steps, index, result, field);
     }
     if (result.state === 'invalid') {
