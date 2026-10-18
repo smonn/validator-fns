@@ -7,7 +7,7 @@ import {
 } from '../shared.js';
 import { runEach } from './children.js';
 import type { Children } from './def.js';
-import { isThenable } from './steps.js';
+import { andThen } from './steps.js';
 import { runOf } from './define.js';
 
 /**
@@ -44,8 +44,6 @@ export function items<T, E>(
     const results = runEach(value.entries(), (child, index) =>
       run(child, childField(field, index)),
     );
-    return isThenable(results)
-      ? results.then((done) => itemsResult(done, value, field))
-      : itemsResult(results, value, field);
+    return andThen(results, (done) => itemsResult(done, value, field));
   };
 }

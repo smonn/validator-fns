@@ -1,7 +1,7 @@
 import type { Result } from '../shared.js';
 import { type Def, type Exit, isMissing, typeFailure } from './def.js';
 import { runPresent, wordOwn } from './present.js';
-import { isThenable, type MaybePromise } from './steps.js';
+import { andThen, type MaybePromise } from './steps.js';
 
 /**
  * Whether `isType` accepts `value`. Input such as a revoked Proxy, on which
@@ -79,8 +79,7 @@ export function runType<T, E, P, V>(
       : wordOwn(def.messages, typeFailure(def.expected, input, field));
   }
 
-  const parsed = def.parser(input, field);
-  return isThenable(parsed)
-    ? parsed.then((done) => runParsed(def, exit, done, field))
-    : runParsed(def, exit, parsed, field);
+  return andThen(def.parser(input, field), (done) =>
+    runParsed(def, exit, done, field),
+  );
 }

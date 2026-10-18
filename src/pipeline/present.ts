@@ -1,7 +1,7 @@
 import { fillOwn } from '../failures/index.js';
 import type { Messages, Result } from '../shared.js';
 import { type Def, type Exit, isMissing } from './def.js';
-import { isThenable, type MaybePromise, runSteps } from './steps.js';
+import { andThen, type MaybePromise, runSteps } from './steps.js';
 
 /**
  * A type validator's own result, a failure worded by its `messages`.
@@ -35,10 +35,9 @@ function runTests<T, E, P, V>(
     return children;
   }
 
-  const result = runSteps(def.steps, children.value, field);
-  return isThenable(result)
-    ? result.then((done) => wordOwn(def.messages, done))
-    : wordOwn(def.messages, result);
+  return andThen(runSteps(def.steps, children.value, field), (done) =>
+    wordOwn(def.messages, done),
+  );
 }
 
 /**
@@ -60,8 +59,7 @@ export function runPresent<T, E, P, V>(
     }
   }
 
-  const children = def.children(value, field);
-  return isThenable(children)
-    ? children.then((done) => runTests(def, exit, done, field, input))
-    : runTests(def, exit, children, field, input);
+  return andThen(def.children(value, field), (done) =>
+    runTests(def, exit, done, field, input),
+  );
 }
