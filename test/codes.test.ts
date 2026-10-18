@@ -239,6 +239,34 @@ test.each<[string, Record<string, unknown>]>([
   );
 });
 
+/** What a promise rejects with, or `'resolved'`. */
+const rejection = async (promise: unknown) =>
+  Promise.resolve(promise).then(
+    () => 'resolved',
+    (error: unknown) => error,
+  );
+
+// Reflect.apply lets the test pass a message function the types reject.
+const shortWithNumber: Validator = string(
+  Reflect.apply(min, undefined, [3, () => 42]),
+);
+const requiredWithNumber: Validator = Reflect.apply(withMessages, undefined, [
+  string(),
+  { required: () => 42 },
+]);
+
+test.each<[string, Validator, unknown, string]>([
+  ['a test', shortWithNumber, 'ab', 'min'],
+  ['a translation', requiredWithNumber, undefined, 'required'],
+])(
+  'should reject with a TypeError naming the code when a message function in %s returns a number',
+  async (_, validate, input, code) => {
+    const error = await rejection(validate(input));
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), `\`${code}\` must return a string`);
+  },
+);
+
 test('should prefer the message passed to a test over the messages config', async () => {
   const result = await string(
     { messages: { min: 'config' } },
