@@ -39,13 +39,15 @@ const unsupported = [
 
 // APIs from the README's versions or later. Each comment gives the first
 // Chrome, Firefox and Safari versions, per MDN's browser compatibility data
-// 8.1.6. `replaceAll` arrived in exactly the README's versions, so it is one
-// that sets them. A method name that several APIs share needs them all
-// listed, as the receiver isn't known.
+// 8.1.6. `replaceAll` is the newest API the README lists, so it sets those
+// versions. A method name that several APIs share needs them all listed, as
+// the receiver isn't known, and this library's own `.with(`, `.union(` or
+// `.difference(` would fail too.
 //
 // Only calls, `new`, `instanceof` and member access match, so a name in a
 // message doesn't. Code quoted in a string, such as 'Object.hasOwn(', still
-// fails, and so does a call behind a feature check.
+// fails, and so does a call behind a feature check. Error options passed in a
+// variable, aliases and computed members aren't seen.
 const notMember = String.raw`(?<![\w$])(?<!(?<!\b(?:globalThis|self|window))\.)`;
 // `)` covers the target's lowering of `a.at?.(1)` to `(t=a.at)==null?...`.
 const called = String.raw`(?:\s*(?:\?\.\s*)?\(|\.(?:call|apply|bind)\b|\))`;
