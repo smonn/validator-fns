@@ -59,9 +59,8 @@ export function parametersOf(
   } catch {
     const parameters: Record<string, unknown> = {};
     const descriptors = descriptorsOf(params);
-    for (const key of Object.keys(descriptors)) {
-      const descriptor = descriptors[key];
-      if (descriptor?.enumerable && 'value' in descriptor) {
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor.enumerable && 'value' in descriptor) {
         setOwn(parameters, key, descriptor.value);
       }
     }
