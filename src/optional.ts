@@ -27,7 +27,7 @@ type OptionalTwin<T, E> = {
  * realms.
  * @internal
  */
-export function isRecordLike(value: unknown): value is object {
+function isRecordLike(value: unknown): value is object {
   return (
     typeof value === 'object' &&
     !Array.isArray(value) &&
@@ -41,6 +41,36 @@ export function isRecordLike(value: unknown): value is object {
     })
   );
 }
+
+/**
+ * Makes a built-in parser, which accepts a value of its own type as it is and
+ * fails any other with a `type` failure with the `expected` type. `isType`
+ * defaults to a `typeof` check for `expected`. It never gets a missing value.
+ * @internal
+ */
+export function createParser<T>(
+  expected: string,
+  isType = (value: unknown): value is T => typeof value === expected,
+): (value: unknown, field?: string) => Result<T, never> {
+  return (value, field) => {
+    try {
+      if (isType(value)) {
+        return validResult({ value, field });
+      }
+    } catch {
+      // Input such as a revoked Proxy, on which Array.isArray throws, isn't of
+      // the type.
+    }
+    return failure({ code: 'type', params: { expected }, value, field });
+  };
+}
+
+/**
+ * Parses a present value for `object()`. Fails an array, a function, a boxed
+ * primitive or a primitive.
+ * @internal
+ */
+export const parseRecord = createParser('object', isRecordLike);
 
 /**
  * Runs `parser` on a present value. A missing value, `undefined` or `null`,

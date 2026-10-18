@@ -9,6 +9,10 @@ import {
   type Result,
 } from './shared.js';
 
+// Lives in optional.ts so object()'s parser can be built there. Re-exported
+// until #758 deletes this file.
+export { createParser } from './optional.js';
+
 /**
  * Key for the synchronous twin of each test `createValidatorTest` makes. A
  * type validator runs a test's twin when it has one, which skips the promise
@@ -134,27 +138,4 @@ export function createValidatorTest<T, E>(
   const validationTest: Test<T, E> = async (value, field) => twin(value, field);
 
   return Object.assign(validationTest, { [syncTwin]: twin });
-}
-
-/**
- * Makes a built-in parser, which accepts a value of its own type as it is and
- * fails any other with a `type` failure with the `expected` type. `isType`
- * defaults to a `typeof` check for `expected`. It never gets a missing value.
- * @internal
- */
-export function createParser<T>(
-  expected: string,
-  isType = (value: unknown): value is T => typeof value === expected,
-): (value: unknown, field?: string) => Result<T, never> {
-  return (value, field) => {
-    try {
-      if (isType(value)) {
-        return validResult({ value, field });
-      }
-    } catch {
-      // Input such as a revoked Proxy, on which Array.isArray throws, isn't of
-      // the type.
-    }
-    return failure({ code: 'type', params: { expected }, value, field });
-  };
 }
