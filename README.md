@@ -615,11 +615,11 @@ In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and
 
 ### Unreadable input and throws
 
-Input of another type, or that a custom type's parser can't read, gives an invalid result. For example, `number()` fails `'42'` with the `type` code and `{ expected: 'number' }`. A validator never rejects for its input, except for input nested deeper than a recursive schema can reach, below.
+Input of another type, or that a custom type's parser can't read, gives an invalid result. For example, `number()` fails `'42'` with the `type` code and `{ expected: 'number' }`. A validator never rejects for its input.
 
 A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a custom type's parser, and a validator passed to `array()` or `object()`. `parse()` and `~standard.validate` reject the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
 
-A recursive schema, whose custom validator calls the schema again, runs synchronously until a step returns a promise, so each level of nesting uses the stack. On Node 22's default stack, input nested deeper than about 650 levels of `array()` or 1,500 of `object()` makes the validator reject with a `RangeError`; it never throws out of the call. A custom validator that awaits before it recurses, such as `async (value, field) => { await null; return node(value, field); }`, unwinds the stack at each level and has no such limit.
+A recursive schema, whose custom validator calls the schema again, validates input nested to any depth: past 100 nested calls, a validator starts on a later microtask, so the stack never overflows.
 
 A custom type's parser, the validator passed to [createTypeValidator(parser)](#createtypevalidatorparser), takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. It never gets `undefined` or `null`, which skip the parser as missing. A parsed `undefined` or `null` counts as missing too.
 
