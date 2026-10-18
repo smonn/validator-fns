@@ -9,9 +9,10 @@ export default defineConfig({
   // Keeps index.js for ESM, as package.json's exports expect, instead of
   // index.mjs.
   fixedExtension: false,
-  // The README's supported environments. Without this, tsdown targets
-  // engines.node, and both the transform and the minifier emit syntax those
-  // browsers can't parse, such as `||=`.
+  // The README's supported environments, which scripts/check-dist-syntax.mjs
+  // checks dist against. Without this, tsdown targets engines.node, and both
+  // the transform and the minifier emit syntax those browsers can't parse,
+  // such as `||=`.
   target: [
     'chrome85',
     'edge85',
