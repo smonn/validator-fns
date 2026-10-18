@@ -176,11 +176,6 @@ test('string', async () => {
     field: undefined,
     value: 'hello',
   });
-  assert.deepEqual(await validate(12_345), {
-    state: 'valid',
-    field: undefined,
-    value: '12345',
-  });
   assert.deepEqual(await validate('  test  '), {
     state: 'invalid',
     code: 'min',
@@ -197,7 +192,7 @@ test('string', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.deepEqual(await validate(''), {
+  assert.deepEqual(await validate(undefined), {
     state: 'invalid',
     code: 'required',
     params: {},
@@ -205,11 +200,11 @@ test('string', async () => {
     field: undefined,
     errors: undefined,
   });
-  assert.deepEqual(await validate(new Date(0)), {
+  assert.deepEqual(await validate('  '), {
     state: 'invalid',
-    code: 'max',
-    params: { max: 10, amount: 24 },
-    message: 'At most ten characters.',
+    code: 'min',
+    params: { min: 5, amount: 0 },
+    message: 'At least five characters.',
     field: undefined,
     errors: undefined,
   });
@@ -235,24 +230,9 @@ test('string default', async () => {
     field: undefined,
     value: 'other',
   });
-  // Will cast 123 to '123'
-  assert.deepEqual(await validate(123), {
-    state: 'valid',
-    field: undefined,
-    value: '123',
-  });
-  // Will cast 0 to '0'
-  assert.deepEqual(await validate(0), {
-    state: 'valid',
-    field: undefined,
-    value: '0',
-  });
-  // Will cast false to 'false'
-  assert.deepEqual(await validate(false), {
-    state: 'valid',
-    field: undefined,
-    value: 'false',
-  });
+  for (const value of [123, 0, false]) {
+    assert.deepInclude(await validate(value), { code: 'type' });
+  }
 });
 
 test('should pass each matching value when the pattern has the global flag', async () => {
@@ -341,31 +321,19 @@ test('uuid', async () => {
   }
 });
 
-test('string accepts primitives, dates, and boxed primitives', async () => {
-  const date = new Date('2020-01-02T03:04:05.000Z');
-  const accepted: [unknown, string][] = [
-    [1, '1'],
-    [1n, '1'],
-    [true, 'true'],
-    [new String('x'), 'x'],
-    [new Number(3), '3'],
-    [new Boolean(false), 'false'],
-    [runInNewContext('new String("y")'), 'y'],
-    [date, '2020-01-02T03:04:05.000Z'],
-  ];
-  const validate = string();
-  for (const [value, expected] of accepted) {
-    const result = await validate(value);
-    assert(result.state === 'valid', expected);
-    assert.equal(result.value, expected, expected);
-  }
-});
-
-test('string returns an invalid result for non-primitive and symbol input', async () => {
+test('string fails anything but a string', async () => {
   class Point {
     x = 1;
   }
   const rejected: [unknown, string][] = [
+    [1, 'number'],
+    [1n, 'bigint'],
+    [true, 'boolean'],
+    [new String('x'), 'String object'],
+    [new Number(3), 'Number object'],
+    [new Boolean(false), 'Boolean object'],
+    [runInNewContext('new String("y")'), 'String object from another realm'],
+    [new Date(0), 'date'],
     [[1], 'array'],
     [[], 'empty array'],
     [new Map(), 'Map'],

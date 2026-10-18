@@ -13,11 +13,22 @@ import type {
 import { readDate } from './parse-date.js';
 
 /**
- * Parses a value into a date. Fails a non-blank string that isn't ISO 8601,
- * and input that isn't a date, number, or string.
+ * Whether a value is a valid date, from any realm. `getTime` throws unless
+ * `this` is a `Date`, which `instanceof` can't tell across realms.
+ */
+function isValidDate(value: unknown): value is Date {
+  try {
+    return !Number.isNaN(Date.prototype.getTime.call(value));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Parses a value into a date. Fails anything but a valid date.
  * @internal
  */
-const parseDate = createParser(readDate, 'date');
+const parseDate = createParser('date', isValidDate);
 
 /**
  * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
@@ -44,10 +55,7 @@ function applyDateConfig(
   value: Date | null | undefined,
   config: DateConfig,
 ): Date | null | undefined {
-  if (
-    config.default !== undefined &&
-    (value === undefined || value === null || Number.isNaN(value.getTime()))
-  ) {
+  if (config.default !== undefined && (value === undefined || value === null)) {
     return config.default;
   }
 

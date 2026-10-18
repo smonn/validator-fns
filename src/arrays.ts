@@ -1,3 +1,4 @@
+import { createParser } from './factories.js';
 import { failure, fillAsOwn } from './failures/index.js';
 import {
   type ArrayTest,
@@ -9,12 +10,10 @@ import {
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
-  isIterable,
   valid,
   validResult,
   type ConfigBase,
   type Failure,
-  type Result,
   type Validator,
 } from './shared.js';
 
@@ -25,22 +24,12 @@ import {
 export type ArrayConfig = ConfigBase<unknown[]>;
 
 /**
- * Parses a value into an array: an array as it is, the items of an iterable,
- * or no items for anything else. It never fails.
- * @param value Value to parse
- * @param field Field name
+ * Parses a value into an array. Fails anything but an array.
  * @internal
  */
-function parseArray(
-  value: unknown,
-  field?: string,
-): Result<unknown[] | null | undefined, never> {
-  if (value === null || value === undefined || Array.isArray(value)) {
-    return validResult({ value, field });
-  }
-
-  return validResult({ value: isIterable(value) ? [...value] : [], field });
-}
+const parseArray = createParser('array', (value): value is unknown[] =>
+  Array.isArray(value),
+);
 
 /**
  * Applies a configuration to the parsed array value.
@@ -83,7 +72,11 @@ function arrayOf<T, E>(
   return requirable<T[], (Failure<E> | null)[]>(
     finalConfig.messages,
     async (value, field, onEmpty) => {
-      const parsed = await finalConfig.parser(value, field);
+      // A parser never sees a missing value.
+      const parsed =
+        value === null || value === undefined
+          ? validResult({ value, field })
+          : await finalConfig.parser(value, field);
       if (parsed.state === 'invalid') {
         return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
       }

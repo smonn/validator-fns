@@ -33,8 +33,8 @@ const codes: [string, Validator, unknown, Record<string, unknown>][] = [
   ['min', string(min(3)), 'ab', { min: 3, amount: 2 }],
   ['max', number(max(3)), 5, { max: 3, amount: 5 }],
   ['exact', array(number(), exact(2)), [1], { exact: 2, amount: 1 }],
-  ['minDate', date(minDate(new Date(10))), 5, { min: new Date(10) }],
-  ['maxDate', date(maxDate(new Date(10))), 15, { max: new Date(10) }],
+  ['minDate', date(minDate(new Date(10))), new Date(5), { min: new Date(10) }],
+  ['maxDate', date(maxDate(new Date(10))), new Date(15), { max: new Date(10) }],
   ['oneOf', boolean(oneOf([true])), false, { values: [true] }],
   ['matches', string(matches(/^a/)), 'b', { pattern: /^a/ }],
   ['url', string(url()), 'x', { protocols: ['http:', 'https:'] }],
@@ -45,6 +45,9 @@ const codes: [string, Validator, unknown, Record<string, unknown>][] = [
   ['type', number(), 'abc', { expected: 'number' }],
   ['type', string(), {}, { expected: 'string' }],
   ['type', date(), 'tomorrow', { expected: 'date' }],
+  ['type', boolean(), 'false', { expected: 'boolean' }],
+  ['type', array(), 'abc', { expected: 'array' }],
+  ['type', object({}), [], { expected: 'object' }],
   ['items', array(number()), ['abc'], {}],
   ['properties', object({ a: string() }), {}, {}],
 ];
@@ -91,7 +94,7 @@ test('should word a validator own failures from its messages config', async () =
   const messages: [string, Promise<Result>, string][] = [
     [
       'required',
-      string({ messages: { required: 'Enter it.' } })(''),
+      string({ messages: { required: 'Enter it.' } })(undefined),
       'Enter it.',
     ],
     [
@@ -118,6 +121,11 @@ test('should word a validator own failures from its messages config', async () =
       'properties',
       object({ a: string() }, { messages: { properties: 'Fix it.' } })({}),
       'Fix it.',
+    ],
+    [
+      'object type',
+      object({ a: string() }, { messages: { type: 'Not an {expected}.' } })([]),
+      'Not an object.',
     ],
     [
       'object required',

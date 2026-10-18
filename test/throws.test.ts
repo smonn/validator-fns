@@ -62,7 +62,7 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   [
     'a string() required message',
     string({ messages: { required: throwBug } }),
-    '',
+    undefined,
   ],
   [
     'a number() required message',

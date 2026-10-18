@@ -91,10 +91,10 @@ export type ExtractValue<T extends Validator> =
  */
 export interface ConfigBase<T> {
   /**
-   * Converts the input into the designated type. It returns a result: valid
-   * with the parsed value, made with `valid()`, or a failure for input it
-   * can't read, made with `invalid()`. A throw is a bug, and the validator
-   * rejects with it.
+   * Converts the input into the designated type. It never gets `undefined` or
+   * `null`, which are missing. It returns a result: valid with the parsed
+   * value, made with `valid()`, or a failure for input it can't read, made
+   * with `invalid()`. A throw is a bug, and the validator rejects with it.
    */
   parser: (
     value: unknown,
@@ -104,8 +104,8 @@ export interface ConfigBase<T> {
   default?: T;
   /**
    * Messages for the validator's own failures, keyed by code, such as
-   * `required` for a missing value: `undefined`, `null`, an empty string,
-   * `NaN` or an invalid date after parsing and `default`.
+   * `required` for a missing value, `undefined` or `null`, that `default`
+   * doesn't fill.
    */
   messages?: Messages;
 }
@@ -197,14 +197,6 @@ export function setOwn(target: object, key: PropertyKey, value: unknown) {
 }
 
 /**
- * Checks for a truthy `Symbol.iterator` property, boxing primitives so strings
- * count as iterable.
- * @internal
- */
-export function isIterable(value: unknown): value is Iterable<unknown> {
-  return Boolean(Reflect.get(Object(value), Symbol.iterator));
-}
-
 /** @internal */
 const formatPattern = /{(\w+)}/g;
 

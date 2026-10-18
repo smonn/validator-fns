@@ -1,5 +1,5 @@
 import { failure, fillAsOwn, fillOwn } from './failures/index.js';
-import { isBlank, requirable } from './optional.js';
+import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
@@ -57,7 +57,11 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     return requirable<T, string>(
       finalConfig.messages,
       async (value, field, onEmpty) => {
-        const parsing = finalConfig.parser(value, field);
+        // A parser never sees a missing value.
+        const parsing =
+          value === null || value === undefined
+            ? validResult({ value, field })
+            : finalConfig.parser(value, field);
         // Built-in parsers return a result synchronously, which skips an
         // await. Checks for `then`, as a promise from another realm isn't an
         // instance of this realm's Promise.
@@ -67,11 +71,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         }
 
         const parsedValue = applyConfig(parsed.value, finalConfig);
-        if (
-          parsedValue === null ||
-          parsedValue === undefined ||
-          isBlank(parsedValue)
-        ) {
+        if (parsedValue === null || parsedValue === undefined) {
           return onEmpty(parsedValue, field);
         }
 
@@ -141,20 +141,17 @@ export function createValidatorTest<T, E>(
 }
 
 /**
- * Makes a built-in parser from `read`, which converts a present value and
- * returns `undefined` for input it can't read, a `type` failure with the
- * `expected` type. `undefined` and `null` stay as they are, for the missing
- * check.
+ * Makes a built-in parser, which accepts a value of its own type as it is and
+ * fails any other with a `type` failure with the `expected` type. `isType`
+ * defaults to a `typeof` check for `expected`. It never gets a missing value.
  * @internal
  */
 export function createParser<T>(
-  read: (value: unknown) => T | undefined,
   expected: string,
-): (value: unknown, field?: string) => Result<T | null | undefined, never> {
-  return (value, field) => {
-    const parsed = value === null || value === undefined ? value : read(value);
-    return parsed === undefined && value !== undefined
-      ? failure({ code: 'type', params: { expected }, value, field })
-      : validResult({ value: parsed, field });
-  };
+  isType = (value: unknown): value is T => typeof value === expected,
+): (value: unknown, field?: string) => Result<T, never> {
+  return (value, field) =>
+    isType(value)
+      ? validResult({ value, field })
+      : failure({ code: 'type', params: { expected }, value, field });
 }

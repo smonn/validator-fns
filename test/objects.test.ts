@@ -11,6 +11,7 @@ import {
   object,
   optional,
   string,
+  valid,
 } from '../src/index.js';
 
 test('object', async () => {
@@ -31,7 +32,7 @@ test('object', async () => {
   assert.deepEqual(
     await validate({
       username: 'hello',
-      age: '20',
+      age: 20,
     }),
     {
       state: 'valid',
@@ -62,10 +63,18 @@ test('empty object config accepts any object', async () => {
     value: {},
     field: undefined,
   });
-  assert.deepEqual(await validate(1), {
+  assert.deepEqual(await validate(new Date(0)), {
     state: 'valid',
     value: {},
     field: undefined,
+  });
+  assert.deepEqual(await validate(1), {
+    state: 'invalid',
+    code: 'type',
+    params: { expected: 'object' },
+    message: 'type',
+    field: undefined,
+    errors: undefined,
   });
 });
 
@@ -175,7 +184,7 @@ test('nested object', async () => {
   );
 
   assert.deepEqual(
-    messageTree(await validate({ person: { firstName: 'foo', age: '22' } })),
+    messageTree(await validate({ person: { firstName: 'foo', age: 22 } })),
     { person: { lastName: 'required' } },
   );
 });
@@ -239,8 +248,12 @@ test('should skip object-level tests when a field is invalid', async () => {
 });
 
 test('should compare parsed values when an object-level test runs', async () => {
+  const isoDate = date({
+    parser: async (value, field) =>
+      valid({ value: new Date(String(value)), field }),
+  });
   const validate = object(
-    { start: date(), end: date() },
+    { start: isoDate, end: isoDate },
     check(
       'end',
       (value) => (value.end ?? 0) > (value.start ?? 0),

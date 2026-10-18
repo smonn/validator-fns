@@ -1,3 +1,4 @@
+import { createParser } from './factories.js';
 import {
   childField,
   failure,
@@ -5,7 +6,7 @@ import {
   propertiesTree,
 } from './failures/index.js';
 import { findInvalidResult } from './invalid-detail.js';
-import { requirable } from './optional.js';
+import { isObject, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
@@ -21,6 +22,13 @@ import {
 } from './shared.js';
 
 export type ObjectParameter = Record<string, Validator>;
+
+/**
+ * Parses a present value into an object. Fails an array, a function, a boxed
+ * primitive or a primitive.
+ * @internal
+ */
+const parseObject = createParser('object', isObject);
 
 /**
  * Flattens an intersection into one object type, keeping optional keys.
@@ -118,16 +126,19 @@ export function object<P extends ObjectParameter>(
         return onEmpty(values, field);
       }
 
-      // Object() boxes primitives.
-      const source: object = Object(values);
+      const parsed = parseObject(values, field);
+      if (parsed.state === 'invalid') {
+        return fillOwn(parsed, messages);
+      }
+
       const results: [key: string, result: Result][] = [];
       const resolvedValues: Partial<Record<keyof P, unknown>> = {};
 
       for (const [key, validator] of validators) {
         // Only own properties, so a missing key named like an inherited one,
         // such as `constructor`, reads as missing.
-        const value: unknown = hasOwnProperty(source, key)
-          ? Reflect.get(source, key)
+        const value: unknown = hasOwnProperty(parsed.value, key)
+          ? Reflect.get(parsed.value, key)
           : undefined;
         const result = await validator(value, childField(field, key));
         results.push([key, result]);
@@ -136,7 +147,7 @@ export function object<P extends ObjectParameter>(
         }
       }
 
-      const parsed = asObjectValue<P>(resolvedValues);
+      const value = asObjectValue<P>(resolvedValues);
       const errors = propertiesTree<ObjectErrors<P>>(results, {});
       if (errors) {
         const container = failure({
@@ -149,8 +160,8 @@ export function object<P extends ObjectParameter>(
         return fillOwn(container, messages);
       }
 
-      const own = await findInvalidResult(allTests, parsed, field);
-      return own ? fillOwn(own, messages) : valid({ value: parsed, field });
+      const own = await findInvalidResult(allTests, value, field);
+      return own ? fillOwn(own, messages) : valid({ value, field });
     },
   );
 }

@@ -3,38 +3,15 @@ import {
   createTypeValidatorTest,
   createValidatorTest,
 } from './factories.js';
-import { primitiveToString } from './primitives.js';
 import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 
 /**
- * Reads a number from a present value, or `undefined` if it can't.
- * @param value Value to read
- */
-function readNumber(value: unknown): number | undefined {
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  if (value instanceof Date) {
-    return value.getTime();
-  }
-
-  const text = primitiveToString(value);
-  if (text === undefined) {
-    return undefined;
-  }
-
-  const parsed = Number.parseFloat(text);
-  // Blank input stays empty, as NaN, for `required` and `default` to handle.
-  return Number.isNaN(parsed) && text.trim() !== '' ? undefined : parsed;
-}
-
-/**
- * Parses a value into a number. Fails input with no leading number, other
- * than blank text.
+ * Parses a value into a number. Fails anything but a finite number.
  * @internal
  */
-const parseNumber = createParser(readNumber, 'number');
+const parseNumber = createParser('number', (value): value is number =>
+  Number.isFinite(value),
+);
 
 /**
  * Applies a configuration to the parsed number value.
@@ -46,10 +23,7 @@ function applyNumberConfig(
   value: number | null | undefined,
   config: NumberConfig,
 ): number | null | undefined {
-  if (
-    config.default !== undefined &&
-    (value === undefined || value === null || Number.isNaN(value))
-  ) {
+  if (config.default !== undefined && (value === undefined || value === null)) {
     return config.default;
   }
 
