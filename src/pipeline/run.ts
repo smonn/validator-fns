@@ -1,7 +1,7 @@
 import type { Result } from '../shared.js';
 import { type Def, type Exit, isMissing, typeFailure } from './def.js';
 import { runPresent, wordOwn } from './present.js';
-import { andThen, type MaybePromise } from './steps.js';
+import { andThen, type MaybePromise } from './promises.js';
 
 /**
  * Whether `isType` accepts `value`. Input such as a revoked Proxy, on which

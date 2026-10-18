@@ -6,7 +6,8 @@ import {
   type Test,
   validResult,
 } from '../shared.js';
-import type { MaybePromise, Twin } from './steps.js';
+import type { MaybePromise } from './promises.js';
+import type { Twin } from './twins.js';
 
 /**
  * Turns present input into a type validator's type, `P`: a built-in's strict
@@ -37,6 +38,16 @@ export type Children<P, T, E> = (
   value: P,
   field: string | undefined,
 ) => MaybePromise<Result<T, E>>;
+
+/**
+ * How `object()` types its errors tree, made fresh for each failure, and its
+ * value from the properties' values.
+ * @internal
+ */
+export type Shape<V, Tree> = {
+  tree: () => Tree;
+  value: (values: Record<string, unknown>) => V;
+};
 
 /**
  * What a type validator supplies to the pipeline. `P` is the type its parser
