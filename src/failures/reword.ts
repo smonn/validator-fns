@@ -40,8 +40,7 @@ export function fillOwn<E>(
   // Own keys only, so a code such as `constructor` isn't read from the
   // prototype.
   const message =
-    messages !== undefined &&
-    Object.prototype.hasOwnProperty.call(messages, made.code)
+    messages !== undefined && Object.hasOwn(messages, made.code)
       ? messages[made.code]
       : undefined;
   return reword(made, message, made.errors);
