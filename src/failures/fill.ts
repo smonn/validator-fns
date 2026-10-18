@@ -1,5 +1,5 @@
 import type { Failure, ValidatorMessage } from '../types.js';
-import { treeOf } from './own.js';
+import { setOwn } from './own.js';
 import { reword } from './reword.js';
 import { checkDepth, entriesOf, isContainer, type Visits } from './walk.js';
 
@@ -70,12 +70,12 @@ function fillErrors(
   depth: number,
   fill: Fill,
 ): { errors: unknown; height: number } {
-  const entries: [PropertyKey, unknown][] = [];
+  const tree = Array.isArray(errors) ? [] : {};
   let changed = false;
   let height = 1;
   for (const [key, child] of entriesOf(errors, depth, fill.visits)) {
     if (child === null) {
-      entries.push([key, null]);
+      setOwn(tree, key, null);
       continue;
     }
 
@@ -86,8 +86,8 @@ function fillErrors(
     if (filled.made !== child) {
       changed = true;
     }
-    entries.push([key, filled.made]);
+    setOwn(tree, key, filled.made);
   }
 
-  return { errors: changed ? treeOf(errors, entries) : errors, height };
+  return { errors: changed ? tree : errors, height };
 }
