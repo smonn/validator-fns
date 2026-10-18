@@ -29,10 +29,15 @@ function build<T, E, P, V>(
   exit: Exit<V, E>,
 ): TypeValidator<T | V, E> & Built<T | V, E> {
   const run: Run<T | V, E> = (value, field) => runType(def, exit, value, field);
-  // An async function, so a throw rejects rather than escapes the call.
-  const validator = withStandard<T | V, E>(async (value, field) =>
-    run(value, field),
-  );
+  // A throw rejects rather than escapes the call. Not an async function,
+  // which would wait extra ticks for the promise a run returns.
+  const validator = withStandard<T | V, E>((value, field) => {
+    try {
+      return Promise.resolve(run(value, field));
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  });
   // Rebuilt once, on the first optional() call, so each call returns it.
   let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
   const rebuild = () => {
