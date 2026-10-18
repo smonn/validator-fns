@@ -934,6 +934,8 @@ const coerceRows: Row[] = [
       [8.64e15, new Date(8.64e15)],
       [now, now],
       [foreignDate, foreignDate],
+      ['2024-02-29', new Date(2024, 1, 29)],
+      ['2000-02-29', new Date(2000, 1, 29)],
     ] satisfies [unknown, unknown][]
   ).map(([input, value]) =>
     row(
@@ -948,6 +950,17 @@ const coerceRows: Row[] = [
     '17/10/2026',
     '20261017',
     '2026-10-17T',
+    // A part out of its range (#787)
+    '2026-02-30',
+    '2025-02-29',
+    '1900-02-29',
+    '2026-04-31',
+    '2026-13-01',
+    '2026-00-10',
+    '2026-01-00',
+    '2026-01-32',
+    '2026-01-01T24:00',
+    '2026-01-01T00:00:00+24:00',
     '2026-01-01T23:60',
     '2026-01-01T23:59:60',
     '0',
@@ -968,13 +981,6 @@ const coerceRows: Row[] = [
       input,
       typeFail('date'),
     ),
-  ),
-  // Today's parser rolls a day past the end of its month over (#787).
-  row(
-    'coerce.date() reads 30 February as 2 March, as minDate() does (#787)',
-    coerce.date(),
-    '2026-02-30',
-    pass(new Date(2026, 2, 2)),
   ),
   row(
     'coerce.date() runs its tests on what it reads',
