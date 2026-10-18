@@ -1,10 +1,5 @@
-import {
-  childField,
-  failure,
-  fillOwn,
-  propertiesTree,
-} from './failures/index.js';
-import { runTests } from './invalid-detail.js';
+import { failure, fillOwn } from './failures/index.js';
+import { runTests, validateProperties } from './invalid-detail.js';
 import { parseRecord, requirable } from './optional.js';
 import { ownValue, propertiesOf } from './properties.js';
 import type { TypeValidator } from './standard.js';
@@ -13,8 +8,6 @@ import {
   type ExtractValue,
   type Failure,
   type Messages,
-  type Result,
-  setOwn,
   type Test,
   type Validator,
 } from './shared.js';
@@ -61,7 +54,7 @@ type ObjectErrors<P extends ObjectParameter> = {
  * @internal
  */
 function asObjectValue<P extends ObjectParameter>(
-  values: Partial<Record<keyof P, unknown>>,
+  values: Record<string, unknown>,
 ): ObjectValue<P> {
   // Permanent, approved in #657 (2.5a). Reconsider if TypeScript can check a
   // mapped type built key by key.
@@ -112,21 +105,9 @@ export function object<P extends ObjectParameter>(
         return fillOwn(parsed, messages);
       }
 
-      const results: [key: string, result: Result][] = [];
-      const resolvedValues: Partial<Record<keyof P, unknown>> = {};
-
-      for (const [key, validator] of validators) {
-        const result = await validator(
-          ownValue(parsed.value, key),
-          childField(field, key),
-        );
-        results.push([key, result]);
-        if (result.state === 'valid') {
-          setOwn(resolvedValues, key, result.value);
-        }
-      }
-
-      const errors = propertiesTree<ObjectErrors<P>>(results, {});
+      const { errors, values: resolvedValues } = await validateProperties<
+        ObjectErrors<P>
+      >(validators, (key) => ownValue(parsed.value, key), field, {});
       if (errors && isMissing) {
         return onEmpty(values, field);
       }

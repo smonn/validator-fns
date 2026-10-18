@@ -1,7 +1,13 @@
-import { childField, failure, itemsTree } from './failures/index.js';
+import {
+  childField,
+  failure,
+  itemsTree,
+  propertiesTree,
+} from './failures/index.js';
 import {
   type Failure,
   type Result,
+  setOwn,
   type Test,
   type Validator,
   validResult,
@@ -82,4 +88,31 @@ export async function keepItems(
   field: string | undefined,
 ): Promise<ItemsResult<unknown, unknown>> {
   return validResult({ value: arrayValue, field });
+}
+
+/**
+ * Runs each property's validator on the value `read` gives for its key, with
+ * the key's full field. Gives the errors tree, each failed property's failure
+ * set on `tree`, or `undefined` when every property is valid, and each valid
+ * property's value.
+ * @internal
+ */
+export async function validateProperties<Tree extends object>(
+  validators: [key: string, validator: Validator][],
+  read: (key: string) => unknown,
+  field: string | undefined,
+  tree: Tree,
+): Promise<{ errors: Tree | undefined; values: Record<string, unknown> }> {
+  const results: [key: string, result: Result][] = [];
+  const values: Record<string, unknown> = {};
+
+  for (const [key, validator] of validators) {
+    const result = await validator(read(key), childField(field, key));
+    results.push([key, result]);
+    if (result.state === 'valid') {
+      setOwn(values, key, result.value);
+    }
+  }
+
+  return { errors: propertiesTree(results, tree), values };
 }
