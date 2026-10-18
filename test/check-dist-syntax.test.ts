@@ -225,6 +225,9 @@ test.each([
     'throw Error(`a${b.map((c)=>JSON.stringify(c))}`,{cause:b});',
   ],
   [['Error.cause'], 'throw Error(a,{b:{c:1},cause:d});'],
+  [['Error.cause'], "throw Error('a;b',{cause:c});"],
+  [['Error.cause'], 'throw Error("a\\";b",{cause:c});'],
+  [['Error.cause'], 'throw Error(`a\\`;b`,{cause:c});'],
   [
     ['Error.cause'],
     'class A extends Error{constructor(a,b){super(a,{cause:b})}}',
@@ -262,6 +265,7 @@ test.each([
   ['a cause passed to another call', 'let a=f(`a`,{cause:b});'],
   ['an Error option named like cause', 'throw Error(`a`,{causes:b});'],
   ['a function named like an Error', 'let a=formatError(b,{cause:c});'],
+  ['a cause after the Error statement', 'throw Error(a);let b={cause:c};'],
 ])('passes %s', (_, code) => {
   const result = run({ 'index.js': code });
   assert.strictEqual(result.status, 0, result.stderr);
@@ -272,9 +276,23 @@ test('fails on code quoted in a string', () => {
   assert.strictEqual(result.status, 1);
 });
 
-test('scans unclosed Error options in linear time', () => {
+test('finds a cause after a semicolon in the built message', () => {
+  const files = build(
+    "export const fail = (e: unknown) => {\n  throw new Error('Could not validate; parser rejected input', { cause: e });\n};\n",
+  );
+  assert.include(files['index.js'], 'validate; parser');
+  const result = run(files);
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, '`Error.cause`');
+});
+
+test.each([
+  ['nested `,{`', `Error(a${',{'.repeat(1e6)}`],
+  ['unclosed quotes', `Error(a,'${'b'.repeat(299)}`.repeat(7000)],
+  ['quotes of every kind', `Error(a${',\'"`'.repeat(5e5)}`],
+])('scans Error options with %s in linear time', (_, code) => {
   const started = performance.now();
-  const result = run({ 'index.js': `Error(a${',{'.repeat(1e6)}` });
+  const result = run({ 'index.js': code });
   assert.strictEqual(result.status, 0, result.stderr);
   assert.isBelow(performance.now() - started, 5000);
 });
