@@ -269,6 +269,13 @@ test('transform() keeps the type and takes only a synchronous function', () => {
   string(transform(async (value) => value));
   // @ts-expect-error So is one with an annotated parameter.
   transform(async (value: string) => value);
+  object(
+    {},
+    // @ts-expect-error And one on a broad type, which a promise would fit.
+    transform(async (value) => value),
+  );
+  // @ts-expect-error The same for unknown.
+  transform(async (value: unknown) => value);
   // @ts-expect-error A transform can't change the type.
   string(transform((value) => value.length));
 });

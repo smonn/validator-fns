@@ -167,8 +167,11 @@ const removedCalls = [
   // A test is typed by the validator it's passed to (#756), so one built
   // apart needs the type, as in min<string>(2).
   'const atLeastTwo = min(2); string(atLeastTwo);',
+  // A transform is synchronous, even on a type a promise would fit (#756).
+  'object({}, transform(async (value) => value));',
+  'transform(async (value: unknown) => value);',
 ];
-const removedCallsFixture = `import { max, maxDate, min, minDate, number, string } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
+const removedCallsFixture = `import { max, maxDate, min, minDate, number, object, string, transform } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
 
 /**
  * @param {unknown} error
