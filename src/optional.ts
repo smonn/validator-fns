@@ -27,7 +27,7 @@ type OptionalTwin<T, E> = {
  * realms.
  * @internal
  */
-export function isObject(value: unknown): value is object {
+export function isRecordLike(value: unknown): value is object {
   return (
     typeof value === 'object' &&
     !Array.isArray(value) &&

@@ -6,7 +6,7 @@ import {
   propertiesTree,
 } from './failures/index.js';
 import { findInvalidResult } from './invalid-detail.js';
-import { isObject, requirable } from './optional.js';
+import { isRecordLike, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
@@ -28,7 +28,7 @@ export type ObjectParameter = Record<string, Validator>;
  * primitive or a primitive.
  * @internal
  */
-const parseObject = createParser('object', isObject);
+const parseObject = createParser('object', isRecordLike);
 
 /**
  * Flattens an intersection into one object type, keeping optional keys.
