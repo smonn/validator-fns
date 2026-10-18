@@ -20,6 +20,10 @@ _Avoid_: cast, coercer
 Turning input of another type, such as text from a form field, into a type validator's type before its missing check. Blank text becomes missing.
 _Avoid_: cast, preprocess
 
+**Coerce twin**:
+A built-in type validator's counterpart that coerces its input first, then validates it as the built-in does: `coerce.number()`, `coerce.boolean()` or `coerce.date()`.
+_Avoid_: lenient validator, coercer
+
 **Test**:
 A check on a value that has already been parsed, such as `min()` or `check()`. Its valid value is passed to the next test, so a test can also change the value.
 _Avoid_: rule, validation test, ValidationTest

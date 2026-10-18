@@ -27,8 +27,9 @@ function isFiniteNumber(value: unknown): value is number {
 }
 
 /**
- * Whole decimal text: an optional sign, digits, and an optional fraction and
- * exponent.
+ * Whole decimal text: HTML's valid floating-point number, which an
+ * `<input type="number">` submits, with an optional `+`. A fraction needs
+ * digits after the point, and `'.5'` needs none before it.
  */
 const decimal = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d+)?$/i;
 
