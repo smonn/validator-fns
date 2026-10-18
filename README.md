@@ -267,7 +267,7 @@ The `message` argument in the validation tests must be a static string, a templa
 | template string | `'Password must be at least {min} characters.'`                                        |
 | function        | `` ({ value, field, max }) => `${field} must be less than ${max} but was ${value}.` `` |
 
-The parsed `value` is always provided, even though the failure the message goes into has none. If available, `field` is also provided. Depending on the validator, additional fields may be available, such as `min` for `min()`.
+A message always gets the parsed `value`, although the failure has none. If available, `field` is also provided. Depending on the validator, additional fields may be available, such as `min` for `min()`.
 
 In TypeScript, a message function's parameters are typed: `ValidatorMessage<T, X>` gets the value and field, `X & ValidatorMessageParameters<T>`, where `X` holds the test's extra parameters. Each test's exported parameters type, such as `MinValidatorMessageParameters`, still describes everything a message gets, so a message annotated with it fits.
 
