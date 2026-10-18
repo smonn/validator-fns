@@ -230,6 +230,23 @@ test('should keep the params own enumerable data when a getter in them throws', 
   );
 });
 
+test('should keep the params own __proto__ data when a getter in them throws', async () => {
+  const params = Object.defineProperty(
+    Object.fromEntries([['__proto__', 'own']]),
+    'n',
+    {
+      enumerable: true,
+      get(): never {
+        throw new Error('getter');
+      },
+    },
+  );
+  assert.deepInclude(
+    await invalid({ code: 'x', params, message: '{__proto__}', field: 'f' }),
+    { message: 'own' },
+  );
+});
+
 const kept = Symbol('kept');
 const hidden = Symbol('hidden');
 
@@ -497,6 +514,18 @@ test('should nest a check() failure at its path in a properties failure', async 
   )(input);
   assert.deepInclude(worded, { message: 'Fix the form.' });
   assert.deepEqual(messageTree(worded), { confirm: 'Must match.' });
+});
+
+test('should nest a check() failure at a __proto__ key as an own key', async () => {
+  const made = await check(
+    '__proto__',
+    (value: Record<string, unknown>) => Object.keys(value).length > 1,
+    'bad',
+  )(JSON.parse('{"__proto__": {}}'));
+  assert.deepEqual(
+    messageTree(made),
+    Object.fromEntries([['__proto__', 'bad']]),
+  );
 });
 
 let getterReads = 0;
