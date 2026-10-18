@@ -51,3 +51,4 @@ export type {
   MatchesValidatorMessageParameters,
   StringConfig,
 } from './strings';
+export { coerce } from './coerce';

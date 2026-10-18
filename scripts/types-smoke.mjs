@@ -2,7 +2,7 @@
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
 // the README's createTypeValidator example, without type arguments, and a
-// check() at a path read through messageTree(), and parse() with a
+// check() at a path read through messageTree(), a coerce twin, and parse() with a
 // FailureError told from a bug. A second fixture imports the
 // 2.x type names v3 removes, and must fail on each, and a third makes calls
 // with the options v3 removes, from 2.x and from its prereleases, and other
@@ -35,6 +35,7 @@ const compilers = [
 
 const fixture = `import {
   check,
+  coerce,
   createTypeValidator,
   type ExtractValue,
   FailureError,
@@ -74,9 +75,14 @@ export const order = object({
   name: string({ messages: { required: 'Required.' } }),
   note: optional(string()),
   price,
+  quantity: coerce.number(min(1)),
 });
 // note is optional and name required, on every TypeScript version.
-export const minimal: ExtractValue<typeof order> = { name: 'a', price: 1 };
+export const minimal: ExtractValue<typeof order> = {
+  name: 'a',
+  price: 1,
+  quantity: 1,
+};
 
 export const shipping = object(
   { billing: object({ zip: string() }), shipping: object({ zip: string() }) },

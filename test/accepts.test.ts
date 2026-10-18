@@ -4,6 +4,7 @@ import { assert, test, vi } from 'vitest';
 import {
   array,
   boolean,
+  coerce,
   createTypeValidator,
   date,
   messageTree,
@@ -78,6 +79,34 @@ const types: [
     'date',
     [new Date(0), runInNewContext('new Date(0)')],
     [0, '2026-10-17', '', Number.NaN, invalidDate, {}],
+  ],
+  [
+    'coerce.number()',
+    coerce.number(),
+    'number',
+    [0, -0, ' 42 ', '-1.5', '1e3', '.5'],
+    ['12px', '0x10', 'Infinity', '1,5', '1e400', true, 10n, new Date(0)],
+  ],
+  [
+    'coerce.boolean()',
+    coerce.boolean(),
+    'boolean',
+    [true, false, 'TRUE', ' off ', '1', '0', 'on'],
+    ['yes', 1, 0, new Boolean(true), new String('true'), 'constructor'],
+  ],
+  [
+    'coerce.date()',
+    coerce.date(),
+    'date',
+    [new Date(0), runInNewContext('new Date(0)'), '2026-10-17', 0],
+    [
+      'tomorrow',
+      true,
+      Number.NaN,
+      invalidDate,
+      new String('2026-10-17'),
+      runInNewContext('new String("2026-10-17")'),
+    ],
   ],
   [
     'array()',

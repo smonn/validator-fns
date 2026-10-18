@@ -98,6 +98,12 @@
           ],
         },
         {
+          // Only the coerce namespace; each twin lives in its type's module.
+          "name": "coerce",
+          "pattern": "src/coerce.ts",
+          "allow": ["src/{booleans,dates,numbers}.ts"],
+        },
+        {
           // Types copied from @standard-schema/spec, with no imports.
           "name": "standard-schema",
           "pattern": "src/standard-schema.ts",
