@@ -1,32 +1,41 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
   createTypeValidatorTest,
+  invalid,
+  type Result,
   type TypeValidator,
+  valid,
   type ValidatorMessage,
 } from '../src/index.js';
 
 // The custom type validator from the README's createTypeValidatorTest section.
 interface MoneyConfig {
-  parser: (value: unknown) => number | null | undefined;
+  parser: (
+    value: unknown,
+    field?: string,
+  ) => Promise<Result<number | null | undefined>>;
   requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
 }
 
-/** Reads a number or a numeric string. Anything else is missing. */
-function parseAmount(value: unknown): number | undefined {
-  if (typeof value === 'string') {
-    return Number.parseFloat(value);
+/** Reads a number or a numeric string, and fails anything else present. */
+async function parseAmount(
+  value: unknown,
+  field?: string,
+): Promise<Result<number | null | undefined>> {
+  const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (typeof amount === 'number' || amount === null || amount === undefined) {
+    return valid({ value: amount, field });
   }
 
-  return typeof value === 'number' ? value : undefined;
+  return invalid({ message: 'Must be an amount.', field });
 }
 
 function applyMoneyConfig(
-  value: unknown,
+  amount: number | null | undefined,
   config: MoneyConfig,
 ): number | null | undefined {
-  const amount = config.parser(value);
   return config.cents && typeof amount === 'number'
     ? Math.round(amount * 100)
     : amount;
@@ -51,8 +60,12 @@ test('custom type validator accepts its own config options', async () => {
     field: undefined,
     value: 12.5,
   });
-  assert.deepInclude(await money({ requiredMessage: 'Enter an amount.' })({}), {
+  assert.deepInclude(
+    await money({ requiredMessage: 'Enter an amount.' })(undefined),
+    { state: 'invalid', message: 'Enter an amount.' },
+  );
+  assert.deepInclude(await money()({}), {
     state: 'invalid',
-    message: 'Enter an amount.',
+    message: 'Must be an amount.',
   });
 });

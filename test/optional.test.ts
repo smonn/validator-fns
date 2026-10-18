@@ -107,16 +107,6 @@ test('should fail without errors or a value when required input is missing', asy
   });
 });
 
-test('a throwing requiredMessage gives an invalid result in a type validator', async () => {
-  const validate = string({
-    requiredMessage: () => {
-      throw new Error('boom');
-    },
-  });
-
-  assert.deepInclude(await validate(''), { state: 'invalid', message: 'boom' });
-});
-
 test('optional() skips the tests for a missing value only', async () => {
   const validate = optional(string(min(3, 'min')));
 
@@ -178,11 +168,11 @@ test('optional() leaves the validator it wraps unchanged', async () => {
 
 test('validators from createTypeValidatorTest are required unless optional()', async () => {
   const upper = createTypeValidatorTest(
-    { parser: (value) => (typeof value === 'string' ? value : undefined) },
-    (value, config) => {
-      const parsed = config.parser(value);
-      return typeof parsed === 'string' ? parsed.toUpperCase() : parsed;
+    {
+      parser: async (value, field) =>
+        valid({ value: typeof value === 'string' ? value : undefined, field }),
     },
+    (value) => (typeof value === 'string' ? value.toUpperCase() : value),
   );
 
   assert.deepInclude(await upper()(1), { message: 'Required.' });

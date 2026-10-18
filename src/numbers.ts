@@ -1,4 +1,8 @@
-import { createTypeValidatorTest, createValidatorTest } from './factories.js';
+import {
+  createParser,
+  createTypeValidatorTest,
+  createValidatorTest,
+} from './factories.js';
 import { primitiveToString } from './primitives.js';
 import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 
@@ -26,44 +30,33 @@ function readNumber(value: unknown): number | undefined {
 }
 
 /**
- * Parses a value into a number.
- * @param value Value to parse
+ * Parses a value into a number. Fails input with no leading number, other
+ * than blank text.
  * @internal
  */
-function parseNumber(value: unknown): number | null | undefined {
-  if (value === null || value === undefined) {
-    return value;
-  }
-
-  const parsed = readNumber(value);
-  if (parsed === undefined) {
-    throw new TypeError('Failed to parse value to number.');
-  }
-
-  return parsed;
-}
+const parseNumber = createParser(
+  readNumber,
+  'Failed to parse value to number.',
+);
 
 /**
- * Applies a configuration to the number value.
- * @param value Value to modify
+ * Applies a configuration to the parsed number value.
+ * @param value Parsed value
  * @param config Configuration to apply
  * @internal
  */
 function applyNumberConfig(
-  value: unknown,
+  value: number | null | undefined,
   config: NumberConfig,
 ): number | null | undefined {
-  let parsedValue = config.parser(value);
   if (
     config.default !== undefined &&
-    (parsedValue === undefined ||
-      parsedValue === null ||
-      Number.isNaN(parsedValue))
+    (value === undefined || value === null || Number.isNaN(value))
   ) {
-    parsedValue = config.default;
+    return config.default;
   }
 
-  return parsedValue;
+  return value;
 }
 
 /**

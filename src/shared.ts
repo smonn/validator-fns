@@ -86,8 +86,16 @@ export type ExtractValue<T extends Validator> =
  * @internal
  */
 export interface ConfigBase<T> {
-  /** Parser to convert value into the designated type. */
-  parser: (value: unknown) => T | null | undefined;
+  /**
+   * Converts the input into the designated type. It returns a result: valid
+   * with the parsed value, made with `valid()`, or a failure for input it
+   * can't read, made with `invalid()`. A throw is a bug, and the validator
+   * rejects with it.
+   */
+  parser: (
+    value: unknown,
+    field?: string,
+  ) => Result<T | null | undefined> | Promise<Result<T | null | undefined>>;
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
   /**

@@ -11,7 +11,9 @@ import {
   invalidResult,
   isIterable,
   valid,
+  validResult,
   type ConfigBase,
+  type Result,
   type Validator,
 } from './shared.js';
 
@@ -28,48 +30,41 @@ export type ArrayItemValidatorResult<E = unknown> = null | string | E;
 export type ArrayConfig = ConfigBase<unknown[]>;
 
 /**
- * Parses a value into an array.
+ * Parses a value into an array: an array as it is, the items of an iterable,
+ * or no items for anything else. It never fails.
  * @param value Value to parse
+ * @param field Field name
  * @internal
  */
-function parseArray(value: unknown): unknown[] | null | undefined {
-  if (Array.isArray(value)) {
-    const items: unknown[] = value;
-    return items;
+function parseArray(
+  value: unknown,
+  field?: string,
+): Result<unknown[] | null | undefined, never> {
+  if (value === null || value === undefined || Array.isArray(value)) {
+    return validResult({ value, field });
   }
 
-  if (value === null || value === undefined) {
-    return value;
-  }
-
-  if (isIterable(value)) {
-    return [...value];
-  }
-
-  return [];
+  return validResult({ value: isIterable(value) ? [...value] : [], field });
 }
 
 /**
- * Applies a configuration to the array value.
- * @param value Value to modify
+ * Applies a configuration to the parsed array value.
  * @param config Configuration to apply
+ * @param value Parsed value
  * @internal
  */
 function applyArrayConfig(
   config: ArrayConfig,
-  value: unknown,
+  value: unknown[] | null | undefined,
 ): unknown[] | null | undefined {
-  let parsedValue = config.parser(value);
   if (
     config.default !== undefined &&
-    (parsedValue === undefined ||
-      parsedValue === null ||
-      parsedValue.length === 0)
+    (value === undefined || value === null || value.length === 0)
   ) {
-    parsedValue = config.default;
+    return config.default;
   }
 
-  return parsedValue;
+  return value;
 }
 
 /**
@@ -93,7 +88,12 @@ function arrayOf<T, E>(
   return requirable<T[], string | ArrayItemValidatorResult<E>[]>(
     finalConfig.requiredMessage,
     async (value, field, onEmpty) => {
-      const arrayValue = applyArrayConfig(finalConfig, value);
+      const parsed = await finalConfig.parser(value, field);
+      if (parsed.state === 'invalid') {
+        return invalidResult({ message: parsed.message, field });
+      }
+
+      const arrayValue = applyArrayConfig(finalConfig, parsed.value);
       if (arrayValue === null || arrayValue === undefined) {
         return onEmpty(arrayValue, field);
       }
