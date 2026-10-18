@@ -11,9 +11,7 @@ import type { Run } from './promises.js';
  * @internal
  */
 export function ownValue(value: object, key: string): unknown {
-  return Object.prototype.hasOwnProperty.call(value, key)
-    ? Reflect.get(value, key)
-    : undefined;
+  return Object.hasOwn(value, key) ? Reflect.get(value, key) : undefined;
 }
 
 /**
