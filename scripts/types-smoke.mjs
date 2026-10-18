@@ -1,7 +1,8 @@
 // Type-checks a consumer project against the packed package's declarations,
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
-// the README's createTypeValidatorTest example, without type arguments.
+// the README's createTypeValidatorTest example, without type arguments. A
+// second fixture imports the 2.x type names v3 removes, and must fail on each.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -83,6 +84,16 @@ const tsconfig = {
   include: ['index.ts'],
 };
 
+/** The 2.x type names v3 removes, with no aliases. */
+const removedNames = [
+  'InvalidResult',
+  'ValidationTest',
+  'ValidatorResult',
+  'ValidatorTest',
+  'ValidResult',
+];
+const removedFixture = `import type { ${removedNames.join(', ')} } from 'validator-fns';\n`;
+
 /**
  * @param {unknown} error
  */
@@ -90,6 +101,28 @@ function stdoutOf(error) {
   return error && typeof error === 'object' && 'stdout' in error
     ? String(error.stdout)
     : '';
+}
+
+/**
+ * Returns the removed names the declarations still export, by compiling the
+ * removed-names fixture.
+ * @param {string} tsc
+ * @param {string} cwd
+ */
+function stillExported(tsc, cwd) {
+  try {
+    run(process.execPath, [tsc, '--project', 'tsconfig.removed.json'], cwd);
+    return removedNames;
+  } catch (error) {
+    const output = stdoutOf(error);
+    const missing = new Set(
+      Array.from(
+        output.matchAll(/has no exported member (?:named )?'(\w+)'/g),
+        (match) => match[1],
+      ),
+    );
+    return removedNames.filter((name) => !missing.has(name));
+  }
 }
 
 /**
@@ -122,6 +155,11 @@ try {
   );
   writeFileSync(join(consumer, 'tsconfig.json'), JSON.stringify(tsconfig));
   writeFileSync(join(consumer, 'index.ts'), fixture);
+  writeFileSync(
+    join(consumer, 'tsconfig.removed.json'),
+    JSON.stringify({ ...tsconfig, include: ['removed.ts'] }),
+  );
+  writeFileSync(join(consumer, 'removed.ts'), removedFixture);
   run(
     'npm',
     ['install', '--offline', '--no-audit', '--no-fund', join(workDir, tarball)],
@@ -136,6 +174,13 @@ try {
       throw new Error(
         `The declarations fail to type-check on the ${name} TypeScript (${version}):\n${stdoutOf(error)}`,
         { cause: error },
+      );
+    }
+
+    const exported = stillExported(tsc, consumer);
+    if (exported.length > 0) {
+      throw new Error(
+        `The declarations still export ${exported.join(', ')} on the ${name} TypeScript (${version}).`,
       );
     }
 
