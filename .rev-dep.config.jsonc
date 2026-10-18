@@ -24,10 +24,10 @@
         "scripts/*.mjs",
       ],
       // The layout decided in #744. Imports flow one way: types.ts, then
-      // failures/, results.ts, pipeline/, the type modules and tests, and
-      // index.ts last. A folder imports anything inside itself, and from
-      // outside only its index.ts is imported. Every other file lists exactly
-      // what it imports.
+      // failures/, results.ts, pipeline/, the type modules and tests, plus
+      // parse.ts and coerce.ts, and index.ts last. A folder imports anything
+      // inside itself, and from outside only its index.ts is imported. Every
+      // other file lists exactly what it imports.
       "moduleBoundaries": [
         {
           // The public types. No runtime code.
