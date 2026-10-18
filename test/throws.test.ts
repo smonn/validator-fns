@@ -198,21 +198,37 @@ test('should await a parser promise from another realm', async () => {
   assert.deepInclude(await validate('x'), { state: 'valid', value: 'parsed' });
 });
 
-// Thenables that aren't Promises, as JavaScript code can return from a test,
-// child or parser. Each `then` returns nothing, where a Promise's returns a
-// new Promise. Made from source in another realm, as a promise from another
-// realm is; their types are the Promises they stand in for.
-const resolving = <R>(result: R): Promise<R> =>
-  runInNewContext('({ then(resolve) { resolve(result); } })', { result });
-const rejectingLater = (reason: unknown): Promise<never> =>
-  runInNewContext(
-    '({ then(resolve, reject) { setTimeout(() => reject(reason)); } })',
-    { reason, setTimeout },
-  );
-const resolvingTwice = <R>(first: R, second: R): Promise<R> =>
-  runInNewContext('({ then(resolve) { resolve(first); resolve(second); } })', {
-    first,
-    second,
+/** Settles a thenable, as the executor of a Promise does. */
+type Settle<R> = (
+  resolve: (value: R) => void,
+  reject: (reason: unknown) => void,
+) => void;
+
+/**
+ * A thenable that isn't a Promise, as JavaScript code can return from a test,
+ * child or parser. Its `then` is `settle`, so it returns nothing, where a
+ * Promise's returns a new Promise. Typed as the Promise it stands in for.
+ */
+function thenable<R>(settle: Settle<R>): Promise<R>;
+function thenable(settle: Settle<unknown>): object {
+  // oxlint-disable-next-line unicorn/no-thenable -- these tests need a thenable that isn't a Promise
+  return { then: settle };
+}
+
+const resolving = <R>(result: R) =>
+  thenable<R>((resolve) => {
+    resolve(result);
+  });
+const rejectingLater = (reason: unknown) =>
+  thenable<never>((_resolve, reject) => {
+    setTimeout(() => {
+      reject(reason);
+    });
+  });
+const resolvingTwice = <R>(first: R, second: R) =>
+  thenable<R>((resolve) => {
+    resolve(first);
+    resolve(second);
   });
 
 const ok = <T>(value: T, field?: string): Result<T, never> => ({
