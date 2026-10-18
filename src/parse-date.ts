@@ -1,6 +1,6 @@
 /** @internal */
 const isoDatePattern =
-  /^(\d{4})(?:-([0-2]\d)(?:-([0-3]\d)(?:[ T]([0-2]\d):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-][0-2]\d:?[0-5]\d)?)?)?)?)?$/;
+  /^(\d{4})(?:-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01])(?:[ T]([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-](?:[01]\d|2[0-3]):?[0-5]\d)?)?)?)?)?$/;
 
 /** @internal */
 const timezonePattern = /^([+-])([0-2]\d):?([0-5]\d)$/;
@@ -45,7 +45,8 @@ export function readDate(value: unknown): Date | undefined {
 
 /**
  * Parses an ISO 8601 string into a date. Without a timezone, the date is local.
- * Returns `undefined` for a string that isn't ISO 8601.
+ * Returns `undefined` for a string that isn't ISO 8601, or has a part out of
+ * its range.
  * @param value String to parse
  * @internal
  */
@@ -67,6 +68,14 @@ function parseIsoDate(value: string): Date | undefined {
     fraction = '0',
     timezone,
   ] = parts;
+  const date = new Date(0);
+  date.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
+  // A day past the end of its month, such as 30 February, rolls over. The
+  // pattern checks every other part's range.
+  if (date.getUTCDate() !== Number(day)) {
+    return undefined;
+  }
+
   const milliseconds = Number(fraction) * 1e3;
 
   if (!timezone) {

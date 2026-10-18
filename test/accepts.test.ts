@@ -104,6 +104,7 @@ const types: [
       true,
       Number.NaN,
       invalidDate,
+      '2026-02-30',
       new String('2026-10-17'),
       runInNewContext('new String("2026-10-17")'),
     ],
