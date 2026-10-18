@@ -1,6 +1,6 @@
 import { inspect } from 'node:util';
 import { runInNewContext } from 'node:vm';
-import { assert, test } from 'vitest';
+import { assert, test, vi } from 'vitest';
 import {
   array,
   boolean,
@@ -244,5 +244,34 @@ test('object() accepts objects where BigInt is missing, as before Safari 14', as
     assert.deepInclude(await object({})(Object('a')), { code: 'type' });
   } finally {
     Reflect.set(globalThis, 'BigInt', bigInt);
+  }
+});
+
+test('oneOf() keeps a primitive off the date path', async () => {
+  const getTime = vi.spyOn(Date.prototype, 'getTime');
+  try {
+    assert.deepInclude(await oneOf<string>(['a', 'b'])('c'), { code: 'oneOf' });
+    assert.deepInclude(await oneOf([1, 2])(1), { state: 'valid' });
+    assert.deepInclude(await oneOf<string | Date>(['a', new Date(0)])('c'), {
+      code: 'oneOf',
+    });
+    assert.equal(getTime.mock.calls.length, 0);
+    // A date still matches by its time, and skips the primitives.
+    assert.deepInclude(
+      await oneOf<string | Date>(['a', new Date(0)])(new Date(0)),
+      { state: 'valid' },
+    );
+    assert.equal(getTime.mock.calls.length, 2);
+    // An object that isn't a date has no time, even with its own getTime.
+    // Reflect.apply lets the test pass a value the types reject.
+    const fake = { getTime: () => 0 };
+    for (const allowed of [new Date(0), { getTime: () => 0 }]) {
+      const validate: unknown = Reflect.apply(oneOf, undefined, [[allowed]]);
+      assert(typeof validate === 'function');
+      const result: unknown = await Reflect.apply(validate, undefined, [fake]);
+      assert.deepInclude(result, { code: 'oneOf' });
+    }
+  } finally {
+    getTime.mockRestore();
   }
 });
