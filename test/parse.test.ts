@@ -9,6 +9,7 @@ import {
   object,
   parse,
   string,
+  transform,
   type Validator,
 } from '../src/index.js';
 
@@ -19,7 +20,12 @@ const rejection = async (promise: Promise<unknown>) =>
     (error: unknown) => error,
   );
 
-const user = object({ name: string({ trim: true }, min(2)) });
+const user = object({
+  name: string(
+    transform((value) => value.trim()),
+    min(2),
+  ),
+});
 
 test('should resolve to the parsed value when the input is valid', async () => {
   assert.deepEqual(await parse(user, { name: ' ab ' }), { name: 'ab' });

@@ -7,6 +7,7 @@ import {
   object,
   optional,
   string,
+  transform,
   valid,
   type Validator,
 } from '../src/index.js';
@@ -154,7 +155,7 @@ test('should return the parsed items when the item validator parses', async () =
 });
 
 test('should return the transformed items when the item validator transforms', async () => {
-  const validate = array(string({ trim: true }));
+  const validate = array(string(transform((value) => value.trim())));
 
   assert.deepEqual(await validate([' a ', 'b ']), {
     state: 'valid',

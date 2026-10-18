@@ -12,6 +12,7 @@ import {
   object,
   optional,
   string,
+  transform,
   valid,
   type Validator,
 } from '../src/index.js';
@@ -19,7 +20,7 @@ import {
 // Each type validator, run on undefined and null.
 const missing: [string, Validator][] = [
   ['string', string()],
-  ['trimmed string', string({ trim: true })],
+  ['trimmed string', string(transform((value) => value.trim()))],
   ['number', number()],
   ['date', date()],
   ['boolean', boolean()],
@@ -66,7 +67,7 @@ test('type validators accept present values that look empty', async () => {
   assert.deepInclude(await number()(0), { state: 'valid', value: 0 });
   assert.deepInclude(await boolean()(false), { state: 'valid', value: false });
   assert.deepInclude(await string()(''), { state: 'valid', value: '' });
-  assert.deepInclude(await string({ trim: true })('  '), {
+  assert.deepInclude(await string(transform((value) => value.trim()))('  '), {
     state: 'valid',
     value: '',
   });
@@ -177,9 +178,11 @@ test('default skips the parser, and the tests run on it', async () => {
     state: 'invalid',
     code: 'min',
   });
-  assert.deepInclude(await string({ default: ' x ', trim: true })(null), {
-    value: 'x',
-  });
+  const trimmed = string(
+    { default: ' x ' },
+    transform((value) => value.trim()),
+  );
+  assert.deepInclude(await trimmed(null), { value: 'x' });
 });
 
 test('default applies before optional()', async () => {
