@@ -1,5 +1,5 @@
 import { failure, propertiesTree } from '../failures/index.js';
-import { hasOwnProperty, type Result, type Validator } from '../types.js';
+import type { Result, Validator } from '../types.js';
 import { validResult } from '../results.js';
 import type { Shape } from './def.js';
 import { runOf } from './twins.js';
@@ -11,7 +11,9 @@ import type { Run } from './promises.js';
  * @internal
  */
 export function ownValue(value: object, key: string): unknown {
-  return hasOwnProperty(value, key) ? Reflect.get(value, key) : undefined;
+  return Object.prototype.hasOwnProperty.call(value, key)
+    ? Reflect.get(value, key)
+    : undefined;
 }
 
 /**
