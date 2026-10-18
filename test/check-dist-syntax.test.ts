@@ -307,6 +307,7 @@ test.each([
     'dense calls among open quotes',
     `Error('"\`${'Error('.repeat(10)}`.repeat(15_000),
   ],
+  ['many calls with commas', 'Error(a,'.repeat(250_000)],
 ])('scans Error options with %s in linear time', (_, code) => {
   const started = performance.now();
   const result = run({ 'index.js': code });
