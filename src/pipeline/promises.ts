@@ -41,17 +41,34 @@ export function andThen<T extends object, R>(
 }
 
 /**
+ * How many validators made here run synchronously one inside another, as a
+ * recursive schema's custom validator calls the schema.
+ * @internal
+ */
+let nesting = 0;
+
+// Past this nesting, a validator starts on a later microtask, unwinding the stack.
+const maxNesting = 100;
+
+/**
  * Makes a validator from a run. A throw rejects rather than escapes the call.
  * Not an async function, which would wait extra ticks for the promise a run
  * returns.
  * @internal
  */
 export function toValidator<T, E>(run: Run<T, E>): Validator<T, E> {
-  return (value, field) => {
+  const validator: Validator<T, E> = (value, field) => {
+    if (nesting >= maxNesting) {
+      return Promise.resolve().then(() => validator(value, field));
+    }
+    nesting += 1;
     try {
       return Promise.resolve(run(value, field));
     } catch (error) {
       return Promise.reject(error);
+    } finally {
+      nesting -= 1;
     }
   };
+  return validator;
 }
