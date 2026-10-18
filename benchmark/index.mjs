@@ -88,7 +88,8 @@ const customValidator = (value, field) => {
 
 const complexValidate = V.object({
   firstName: V.string(
-    { trim: true, messages: { required: 'First name is required.' } },
+    { messages: { required: 'First name is required.' } },
+    V.transform((value) => value.trim()),
     V.min(1, 'First name is required.'),
   ),
   emailAddress: V.string(
