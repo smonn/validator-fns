@@ -91,6 +91,17 @@ export function object<P extends ObjectParameter>(
     throw new TypeError('`properties` must be a configuration object');
   }
 
+  const validators: [key: string, validator: Validator][] = [];
+  for (const key in properties) {
+    if (hasOwnProperty(properties, key)) {
+      const validator = properties[key];
+      if (typeof validator !== 'function') {
+        throw new TypeError(`\`${key}\` must be a validator`);
+      }
+      validators.push([key, validator]);
+    }
+  }
+
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const messages = typeof config === 'object' ? config.messages : undefined;
 
@@ -107,29 +118,19 @@ export function object<P extends ObjectParameter>(
       const resolvedValues: Partial<Record<keyof P, unknown>> = {};
       let isValid = true;
 
-      for (const key in properties) {
-        if (hasOwnProperty(properties, key)) {
-          const validator = properties[key];
-          // Only own properties, so a missing key named like an inherited one,
-          // such as `constructor`, reads as missing.
-          const value: unknown = hasOwnProperty(source, key)
-            ? Reflect.get(source, key)
-            : undefined;
-          const result = await (typeof validator === 'function'
-            ? validator(value, key)
-            : failure({
-                code: 'validator',
-                params: {},
-                message: 'No validator set',
-                field: key,
-              }));
+      for (const [key, validator] of validators) {
+        // Only own properties, so a missing key named like an inherited one,
+        // such as `constructor`, reads as missing.
+        const value: unknown = hasOwnProperty(source, key)
+          ? Reflect.get(source, key)
+          : undefined;
+        const result = await validator(value, key);
 
-          if (result.state === 'invalid') {
-            isValid = false;
-            setOwn(errors, key, invalidDetail(result));
-          } else {
-            setOwn(resolvedValues, key, result.value);
-          }
+        if (result.state === 'invalid') {
+          isValid = false;
+          setOwn(errors, key, invalidDetail(result));
+        } else {
+          setOwn(resolvedValues, key, result.value);
         }
       }
 
