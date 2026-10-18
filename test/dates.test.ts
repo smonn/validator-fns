@@ -6,15 +6,24 @@ const invalidDate = new Date('');
 
 /**
  * A date in the years 0 to 99, which `new Date()` and `Date.UTC()` read as
- * 1900 to 1999: local midnight, or with `utc`, UTC midnight.
+ * 1900 to 1999: local time, or with `utc`, UTC.
  */
-function earlyDate(year: number, month: number, day: number, utc = false) {
+function earlyDate(
+  [year, month, day, hours = 0, minutes = 0]: [
+    year: number,
+    month: number,
+    day: number,
+    hours?: number,
+    minutes?: number,
+  ],
+  utc = false,
+) {
   const early = new Date(0);
   if (utc) {
     early.setUTCFullYear(year, month, day);
   } else {
     early.setFullYear(year, month, day);
-    early.setHours(0, 0, 0, 0);
+    early.setHours(hours, minutes, 0, 0);
   }
   return early;
 }
@@ -45,9 +54,11 @@ test('minDate() reads timestamps and ISO 8601 strings as its limit', async () =>
     ['2000-02-29', new Date(2000, 1, 29)],
     ['2020-04-30', new Date(2020, 3, 30)],
     ['2020-12-31T23:59:59', new Date(2020, 11, 31, 23, 59, 59)],
-    ['0050-01-01', earlyDate(50, 0, 1)],
-    ['0000-02-29', earlyDate(0, 1, 29)],
-    ['0099-12-31T00:00:00Z', earlyDate(99, 11, 31, true)],
+    ['0050-01-01', earlyDate([50, 0, 1])],
+    ['0000-02-29', earlyDate([0, 1, 29])],
+    ['0000-01-01T00:00', earlyDate([0, 0, 1])],
+    ['0099-12-31T23:59', earlyDate([99, 11, 31, 23, 59])],
+    ['0099-12-31T00:00:00Z', earlyDate([99, 11, 31], true)],
     ['2020-01-31 12:45', new Date(2020, 0, 31, 12, 45)],
     ['2020-01-31T12:45:32', new Date(2020, 0, 31, 12, 45, 32)],
     ['2020-01-31T12:45:32Z', new Date(Date.UTC(2020, 0, 31, 12, 45, 32))],
