@@ -17,6 +17,7 @@ import {
   object,
   optional,
   string,
+  transform,
   valid,
   type DateConfig,
   type ExactValidatorMessageParameters,
@@ -254,6 +255,22 @@ test('validation tests take the parsed value', () => {
   expectTypeOf(anyValue).not.toExtend<Test<string, string>>();
   expectTypeOf(sameValue).toExtend<Test<string, string>>();
   string(min(1, 'min'), sameValue);
+});
+
+test('transform() keeps the type and takes only a synchronous function', () => {
+  expectTypeOf(transform((value: string) => value.trim())).toEqualTypeOf<
+    Test<string, never>
+  >();
+  expectTypeOf(string(transform((value) => value.trim()))).toEqualTypeOf<
+    TypeValidator<string, string>
+  >();
+
+  // @ts-expect-error A transform that returns a promise is a type error.
+  string(transform(async (value) => value));
+  // @ts-expect-error So is one with an annotated parameter.
+  transform(async (value: string) => value);
+  // @ts-expect-error A transform can't change the type.
+  string(transform((value) => value.length));
 });
 
 const annotated = (parameters: MinValidatorMessageParameters) =>
