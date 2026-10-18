@@ -16,7 +16,7 @@ export function properties<V, Tree extends object>(
 ): (value: object, field: string | undefined) => MaybePromise<Result<V, Tree>> {
   const runs = runsOf(schema);
   return (value, field) => {
-    const results = runEach(runs.values(), ([key, run]) => {
+    const results = runEach(runs, ([key, run]) => {
       const result = run(ownValue(value, key), childField(field, key));
       return andThen(result, (done): [string, Result] => [key, done]);
     });

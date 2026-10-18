@@ -41,7 +41,7 @@ export function items<T, E>(
 ): Children<unknown[], T[], (Failure<E> | null)[]> {
   const run = runOf(item);
   return (value, field) => {
-    const results = runEach(value.values(), (child, index) =>
+    const results = runEach(value, (child, index) =>
       run(child, childField(field, index)),
     );
     return andThen(results, (done) => itemsResult(done, value, field));
