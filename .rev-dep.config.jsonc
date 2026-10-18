@@ -33,9 +33,16 @@
           "deny": ["src/**"],
         },
         {
+          // The Date check every Date site shares. It imports nothing, so
+          // parse-date.ts and the validators can both use it.
+          "name": "date-check",
+          "pattern": "src/date-check.ts",
+          "deny": ["src/**"],
+        },
+        {
           "name": "parse-date",
           "pattern": "src/parse-date.ts",
-          "deny": ["src/**"],
+          "allow": ["src/date-check.ts"],
         },
         {
           "name": "factories",
@@ -45,12 +52,17 @@
         {
           "name": "validators",
           "pattern": "src/{arrays,booleans,check,common,limits,numbers,objects,strings}.ts",
-          "allow": ["src/shared.ts", "src/factories.ts"],
+          "allow": ["src/shared.ts", "src/factories.ts", "src/date-check.ts"],
         },
         {
           "name": "dates",
           "pattern": "src/dates.ts",
-          "allow": ["src/shared.ts", "src/factories.ts", "src/parse-date.ts"],
+          "allow": [
+            "src/shared.ts",
+            "src/factories.ts",
+            "src/parse-date.ts",
+            "src/date-check.ts",
+          ],
         },
         {
           // Types copied from @standard-schema/spec, with no imports.
