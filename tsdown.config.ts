@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/en.ts'],
   outDir: 'dist',
   format: ['esm', 'cjs'],
   // Keeps index.js for ESM, as package.json's exports expect, instead of

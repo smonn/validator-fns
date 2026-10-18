@@ -1,12 +1,13 @@
 // Type-checks a consumer project against the packed package's declarations,
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
-// the README's createTypeValidator example, without type arguments, and a
-// check() at a path read through messageTree(), a coerce twin, and parse() with a
-// FailureError told from a bug. A second fixture imports the
-// 2.x type names v3 removes, and must fail on each, and a third makes calls
-// with the options v3 removes, from 2.x and from its prereleases, and other
-// 2.x calls v3's types reject, and must fail on each line.
+// the README's createTypeValidator example, without type arguments, a check()
+// at a path read through messageTree(), a coerce twin, parse() with a
+// FailureError told from a bug, and withMessages() with validator-fns/en. A
+// second fixture imports the 2.x type names v3 removes, and must fail on each,
+// and a third makes calls with the options v3 removes, from 2.x and from its
+// prereleases, and other 2.x calls v3's types reject, and must fail on each
+// line.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -34,6 +35,7 @@ const compilers = [
 ];
 
 const fixture = `import {
+  type BuiltInCode,
   check,
   coerce,
   createTypeValidator,
@@ -48,8 +50,11 @@ const fixture = `import {
   string,
   uuid,
   valid,
+  type Messages,
   type Validator,
+  withMessages,
 } from 'validator-fns';
+import { en } from 'validator-fns/en';
 
 export const uuidString = createTypeValidator(string(uuid()));
 
@@ -107,6 +112,9 @@ export async function orderName(value: unknown): Promise<string> {
     throw error;
   }
 }
+export const english: Messages<BuiltInCode> = { ...en, min: 'Too short.' };
+export const translatedOrder: Validator<ExtractValue<typeof order>> =
+  withMessages(order, { ...english, taken: 'Taken.' });
 `;
 
 const tsconfig = {
