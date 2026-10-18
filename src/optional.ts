@@ -28,13 +28,21 @@ type OptionalTwin<T, E> = {
  * @internal
  */
 function isRecordLike(value: unknown): value is object {
+  if (typeof value !== 'object') {
+    return false;
+  }
+  // A plain object, the common case, skips the brand checks, whose throws are
+  // slow. Getting a revoked Proxy's prototype throws, and createParser fails it.
+  const proto: unknown = Object.getPrototypeOf(value);
+  if (proto === Object.prototype || proto === null) {
+    return true;
+  }
   // BigInt is missing before Safari 14, and no boxed BigInt exists without it.
   const wrappers =
     typeof BigInt === 'function'
       ? [String, Number, Boolean, Symbol, BigInt]
       : [String, Number, Boolean, Symbol];
   return (
-    typeof value === 'object' &&
     !Array.isArray(value) &&
     !wrappers.some(({ prototype }) => {
       try {
