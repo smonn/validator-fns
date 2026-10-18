@@ -45,6 +45,7 @@ Every type validator rejects a missing value unless it's wrapped in `optional()`
 import {
   array,
   boolean,
+  coerce,
   createValidator,
   date,
   email,
@@ -140,7 +141,8 @@ const validate = object({
     ),
   ),
   optIn: boolean({ messages: { required: 'Must decide to opt in or out.' } }),
-  notRobot: number(
+  // From a text field, so '42' reads as 42, and '' or '  ' is missing.
+  notRobot: coerce.number(
     { messages: { required: 'Must enter the correct answer.' } },
     exact(42, 'This is the answer.'),
   ),
@@ -159,7 +161,7 @@ const result = await validate({
   firstName: 'Bob',
   fruit: 'apple',
   homepage: 'https://www.example.com',
-  notRobot: 42,
+  notRobot: '42',
   optIn: false,
   postalCode: '12345',
   startDate: new Date(),
@@ -273,7 +275,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
     | 2.x                                                                         | 3.x                                                                                                                                        |
     | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
-    | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`.                                                                                                    |
+    | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`, or for text, a [coerce twin](#coercenumberconfig-tests) such as `coerce.number()`.                 |
     | `applyArrayConfig` and the other `apply…Config` functions                   | The type validator, with its config.                                                                                                       |
     | `formatMessage`                                                             | `invalid()` and `createValidatorTest()`, which format their message.                                                                       |
     | `hasOwnProperty`                                                            | `Object.prototype.hasOwnProperty.call(object, key)`.                                                                                       |
@@ -365,7 +367,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     ```
 
-22. **Pass each type validator its own type.** In 2.x, the built-in parsers converted input: `number('42')` was `42`, `string(42)` was `'42'`, `boolean('false')` was `true`, `array('abc')` was `['a', 'b', 'c']` and `array(new Set())` held the set's items. In 3.x, each accepts only its own type and fails anything else with `type`, until `coerce` arrives in a later 3.0 prerelease. Convert the input before validating it, or with a custom type's parser, in the meantime:
+22. **Pass each type validator its own type.** In 2.x, the built-in parsers converted input: `number('42')` was `42`, `string(42)` was `'42'`, `boolean('false')` was `true`, `array('abc')` was `['a', 'b', 'c']` and `array(new Set())` held the set's items. In 3.x, each accepts only its own type and fails anything else with `type`. For text, such as form fields and query strings, use a coerce twin; see item 28. Convert any other input before validating it, or with a custom type's parser:
 
     | Validator   | Accepts                                                                                                                                                                                                                  | Fails with `type`, for example       |
     | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------- |
@@ -419,6 +421,22 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     // the parser in the createTypeValidator(parser) example
     const amount = createTypeValidator(readAmount);
     amount(transform((value) => Math.round(value * 100)));
+    ```
+
+28. **Read text with `coerce.number()`, `coerce.boolean()` and `coerce.date()`**, which replace 2.x's lenient parsing. Each reads text before the missing check, so blank text, `''` or only whitespace, is missing: it fails with `required`, takes the `default`, or is valid `undefined` inside `optional()`. Text a twin can't read fails with `type`, as in the strict built-in. 2.x read numbers with `parseFloat`, so `'12px'` was `12`; `coerce.number()` reads only whole decimal text. 2.x read `boolean('false')` as `true`; `coerce.boolean()` reads it as `false`. See [coerce.number(config?, ...tests)](#coercenumberconfig-tests):
+
+    ```js
+    // A form field or query-string parameter
+    const page = coerce.number({ default: 1 }, integer(), min(1));
+    await page(new URLSearchParams('page=3').get('page')); // valid 3
+    await page(new URLSearchParams('').get('page')); // null: valid 1
+    await page('3px'); // { state: 'invalid', code: 'type', ... }
+
+    const subscribe = coerce.boolean({ default: false });
+    await subscribe(formData.get('subscribe')); // 'on' when checked: valid true
+
+    const age = optional(coerce.number(min(18)));
+    await age(''); // valid undefined
     ```
 
 ## API Reference
@@ -600,7 +618,7 @@ await number({ messages: { required: '{field} is required.' } })(
 
 #### optional(validator)
 
-Returns a validator that accepts a missing value, `undefined` or `null`. A `default` fills it first, so `optional(string({ default: 'x' }))(undefined)` is `'x'`. Otherwise the missing value skips the parser and the tests, and becomes the result's `value` as it is. Present values go through `validator` as usual, so `optional(number())('')` fails with `type`. The validator passed in is unchanged.
+Returns a validator that accepts a missing value, `undefined` or `null`. A `default` fills it first, so `optional(string({ default: 'x' }))(undefined)` is `'x'`. Otherwise the missing value skips the parser and the tests, and becomes the result's `value` as it is. Present values go through `validator` as usual, so `optional(number())('')` fails with `type`, while a coerce twin reads blank text as missing, so `optional(coerce.number())('')` is valid `undefined`. The validator passed in is unchanged.
 
 ```js
 const nickname = optional(string(min(2, 'Too short.')));
@@ -640,6 +658,7 @@ A **validation type** is expected to parse and prepare the value for the provide
 
 - [array(itemTest?, config?, ...tests)](#arrayitemtest-config-tests)
 - [boolean(config?, ...tests)](#booleanconfig-tests)
+- [coerce.number(config?, ...tests), coerce.boolean(config?, ...tests) and coerce.date(config?, ...tests)](#coercenumberconfig-tests)
 - [date(config?, ...tests)](#dateconfig-tests)
 - [number(config?, ...tests)](#numberconfig-tests)
 - [object(schema, config?, ...tests)](#objectschema-config-tests)
@@ -686,7 +705,7 @@ In TypeScript, a collection test takes the parsed items, such as `Test<number[]>
 
 #### boolean(config?, ...tests)
 
-Accepts `true` or `false`. Anything else, such as `'false'`, `0` or `''`, fails with the `type` code. `config` is optional.
+Accepts `true` or `false`. Anything else, such as `'false'`, `0` or `''`, fails with the `type` code; [`coerce.boolean()`](#coercenumberconfig-tests) reads text. `config` is optional.
 
 Supported validation tests: `oneOf`.
 
@@ -699,9 +718,35 @@ Supported validation tests: `oneOf`.
 
 </details>
 
+#### coerce.number(config?, ...tests)
+
+`coerce.number()`, `coerce.boolean()` and `coerce.date()` read text, such as form fields and query strings, then validate what they read as `number()`, `boolean()` and `date()` do, with the same `config` and tests. Each reads its input before the missing check:
+
+- Blank text, `''` or only whitespace (what `String.prototype.trim()` removes), is missing. It fails with `required`, takes the `default`, or is valid `undefined` inside `optional()`.
+- Text it reads becomes the value its tests get, so `coerce.number(min(1))('0')` fails with `min`.
+- Text it can't read, and input of any other type, passes on as it is, so it fails with `type`, as in the strict built-in.
+
+| Twin               | Reads                                                                                                                                                                                                              | Fails with `type`, for example                                              |
+| :----------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
+| `coerce.number()`  | Finite numbers, and decimal text, trimmed: an optional sign, digits or a fraction or both, and an optional exponent, such as `' -1.5 '`, `'.5'` or `'1e3'`, as HTML's number input submits it with an optional `+` | `'12px'`, `'1.'`, `'0x10'`, `'Infinity'`, `'1,5'`, `'1e400'`, `true`, `10n` |
+| `coerce.boolean()` | Booleans, and `true`/`false`, `1`/`0` and `on`/`off` as text, trimmed and in any case                                                                                                                              | `'yes'`, `1`, `new Boolean(true)`                                           |
+| `coerce.date()`    | Valid dates, [ISO 8601][iso8601] text, trimmed (without a timezone, local time, `'2026-10-17'` included), and numbers as timestamps                                                                                | `'tomorrow'`, `true`, `NaN`                                                 |
+
+Boxed primitives, such as `new String('42')`, aren't text, so every twin fails them with `type`. `coerce.number()` fails text past the largest number, such as `'1e400'`, but reads text below the smallest as `0`, through underflow, so `'1e-400'` is `0`. A `required` failure for blank text words `{value}` as `undefined`, since blank text becomes `undefined` before the missing check. `coerce.date()` reads text with `minDate()`'s parser, which rolls a day past the end of its month over, so `'2026-02-30'` is 2 March.
+
+```js
+await coerce.number(min(1))(' 42 '); // { state: 'valid', value: 42, ... }
+await coerce.number()(''); // { state: 'invalid', code: 'required', ... }
+await coerce.number({ default: 0 })('  '); // { state: 'valid', value: 0, ... }
+await optional(coerce.number())(''); // { state: 'valid', value: undefined, ... }
+await coerce.boolean({ default: false })('on'); // { state: 'valid', value: true, ... }
+await coerce.date()('2026-10-17'); // valid, local midnight
+await coerce.date()(0); // valid, the epoch
+```
+
 #### date(config?, ...tests)
 
-Accepts a valid `Date`, including one from another realm, such as an iframe. Anything else, such as a timestamp, an ISO 8601 string or an invalid `Date`, fails with the `type` code. `config` is optional.
+Accepts a valid `Date`, including one from another realm, such as an iframe. Anything else, such as a timestamp, an ISO 8601 string or an invalid `Date`, fails with the `type` code; [`coerce.date()`](#coercenumberconfig-tests) reads the first two. `config` is optional.
 
 Supported validation tests: `maxDate`, `minDate`, and `oneOf`.
 
@@ -712,13 +757,13 @@ Supported validation tests: `maxDate`, `minDate`, and `oneOf`.
 | `default`  | date   | Optional. Value used for `undefined` or `null`.                                                                          |
 | `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
-To read dates from other input, such as [ISO 8601][iso8601] strings or other formats, make a custom type with [createTypeValidator(parser)](#createtypevalidatorparser), for example with a third-party library such as [date-fns][date-fns].
+To read dates in other formats, make a custom type with [createTypeValidator(parser)](#createtypevalidatorparser), for example with a third-party library such as [date-fns][date-fns].
 
 </details>
 
 #### number(config?, ...tests)
 
-Accepts a finite number. Anything else, such as `'42'`, `''`, `NaN`, `Infinity`, a bigint or a `Number` object, fails with the `type` code. `config` is optional.
+Accepts a finite number. Anything else, such as `'42'`, `''`, `NaN`, `Infinity`, a bigint or a `Number` object, fails with the `type` code; [`coerce.number()`](#coercenumberconfig-tests) reads decimal text. `config` is optional.
 
 Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
@@ -1063,6 +1108,8 @@ How a validator's results map to Standard Schema results:
 Makes a custom validation type from `parser`, which can be any validator: a validation type with its tests, a custom validator, or one made with `createValidator()`. It returns a function with the validation types' call shape, `(config?, ...tests)`, where `config` takes `default` and `messages`. The resulting validator is required by default, runs its tests on the parsed value, works with `optional()`, and is a [Standard Schema][standard-schema], like the built-in ones.
 
 The parser reads present input only, with the field name: `undefined` and `null` skip it as missing, and a parsed `undefined` or `null` counts as missing too. Its valid value is the parsed value. Its failure is the custom type's own, with its own `code`, `params`, `message` and `errors`, and `messages` words it when it has no message. In TypeScript, the value and error types are the parser's, without `null` and `undefined`. A `parser` that isn't a function throws a `TypeError` when the custom type is made.
+
+To read blank text as missing in a custom type whose parser is a [coerce twin](#coercenumberconfig-tests), wrap the parser in `optional()`: `optional(createTypeValidator(optional(coerce.number()))())('')` is valid `undefined`. `optional(createTypeValidator(coerce.number())())('')` fails with `required`, because the custom type sees `''` as present, and its parser fails it.
 
 ```ts
 import {
