@@ -107,7 +107,6 @@ test.each(malformedZoneTexts)(
 const longFractionTexts: [text: string, instant: string][] = [
   ['2020-12-31T23:59:59.99999999999999999Z', '2020-12-31T23:59:59.999Z'],
   ['9999-12-31T23:59:59.99999999999999999Z', '9999-12-31T23:59:59.999Z'],
-  ['2020-01-31T12:45:32.1239Z', '2020-01-31T12:45:32.123Z'],
 ];
 
 test.each(longFractionTexts)(
@@ -116,6 +115,13 @@ test.each(longFractionTexts)(
     assert.equal(parseDate(text)?.toISOString(), instant);
   },
 );
+
+test('should truncate a fraction to milliseconds when it has more than 3 digits', () => {
+  assert.equal(
+    parseDate('2020-01-31T12:45:32.1239Z')?.toISOString(),
+    '2020-01-31T12:45:32.123Z',
+  );
+});
 
 test('should stay in the same second when local text has a long fraction of nines', () => {
   assert.deepEqual(
