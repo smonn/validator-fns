@@ -2,7 +2,7 @@
 
 ![current version](https://img.shields.io/npm/v/validator-fns?color=%23369&label=current%20version) ![minified size](https://img.shields.io/bundlephobia/min/validator-fns?color=%23369) ![minified plus gzip size](https://img.shields.io/bundlephobia/minzip/validator-fns?color=%23369&label=minified%20plus%20gzip%20size) ![supported node version](https://img.shields.io/node/v/validator-fns?color=%23369&label=supported%20node%20version) ![included types](https://img.shields.io/npm/types/validator-fns?color=%23369&label=included%20types) ![license](https://img.shields.io/npm/l/validator-fns?color=%23369) ![dev dependencies](https://img.shields.io/librariesio/release/npm/validator-fns?color=%23369&label=dev%20dependencies) ![code coverage](https://img.shields.io/coveralls/github/smonn/validator-fns?color=%23369&label=code%20coverage) ![total downloads](https://img.shields.io/npm/dt/validator-fns?color=%23369&label=total%20downloads)
 
-Small asynchronous validation library. Tries to be as small as possible and use no external dependencies. Note that this library does not include localized error messages. API inspired by [yup][yup]. Built using TypeScript and includes definition files. This library targets modern browsers only--configure your build accordingly.
+Small asynchronous validation library. Tries to be as small as possible and use no external dependencies. Failures carry codes rather than wording; English messages ship separately, at `validator-fns/en`. API inspired by [yup][yup]. Built using TypeScript and includes definition files. This library targets modern browsers only--configure your build accordingly.
 
 [npm][npm] | [github][github]
 
@@ -16,6 +16,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
   - [Errors tree](#errors-tree)
   - [Safe call and parse()](#safe-call-and-parse)
   - [Validation error message](#validation-error-message)
+  - [Translations](#translations)
   - [Required and optional values](#required-and-optional-values)
   - [Unreadable input and throws](#unreadable-input-and-throws)
   - [Validation types](#validation-types)
@@ -315,7 +316,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     )();
     ```
 
-14. **Read the code, not the wording.** Every failure has a `code`, such as `min` or `required`, and `params`, such as `{ min, amount }`, beside its `message`. See [Error codes](#error-codes). No English default remains: a message is optional on every built-in test, and a failure without one reads its code, until a translation arrives in a later 3.0 prerelease. `'Required.'` is now `'required'`, and `'Failed to parse value to number.'` is `'type'`, with `{ expected: 'number' }`.
+14. **Read the code, not the wording.** Every failure has a `code`, such as `min` or `required`, and `params`, such as `{ min, amount }`, beside its `message`. See [Error codes](#error-codes). No English default remains: a message is optional on every built-in test, and a failure without one reads its code. For English messages, wrap the schema in [`withMessages(schema, en)`](#withmessagesvalidator-messages), with `en` from `validator-fns/en`. `'Required.'` is now `'required'`, and `'Failed to parse value to number.'` is `'type'`, with `{ expected: 'number' }`.
 15. **Give each custom failure a code**: `createValidatorTest(code, test, message?, getParams?)`, `check(path?, test, code, message?)` and `invalid({ code, params?, message?, value?, field, errors? })`. `invalid()` takes `params` in place of `extras`. A 2.x `check(test, message)` still runs, but its message becomes the code:
 
     ```js
@@ -560,6 +561,8 @@ The `message` argument in the validation tests is optional. It's a static string
 
 A message always gets the parsed `value`, although the failure has none. If available, `field` is also provided. It also gets the failure's `params`, such as `min` for `min()`.
 
+A template's `{name}` reads only an own parameter, so `{constructor}` reads `undefined` rather than `Object.prototype`'s. A value without a string form, such as `Object.create(null)` or `Object(Symbol())`, reads as its tag, such as `[object Object]`, so wording a failure never throws.
+
 In TypeScript, a message function's parameters are typed: `ValidatorMessage<T, X>` gets the value and field, `X & ValidatorMessageParameters<T>`, where `X` holds the test's params. Each test's exported parameters type, such as `MinValidatorMessageParameters`, still describes everything a message gets, so a message annotated with it fits.
 
 ### Error codes
@@ -583,7 +586,7 @@ Every failure has a `code`, the name of what failed, and `params`, an object wit
 | `items`                    | an `array()` whose items failed                           | `{}`                               |
 | `properties`               | an `object()` whose fields failed, or `check()` at a path | `{}`                               |
 
-A custom test or validator names its own code, any string. The message is the first that applies: the one passed to the test, the one for the code in the validator's `messages` config, or the code itself. `messages` words only the validator's own failures: `required`, `type`, `unknownKeys`, `items` or `properties`, and its tests' codes. It leaves an array's items and an object's fields as they failed, so give their validators their own `messages`.
+A custom test or validator names its own code, any string. The message is the first that applies: the one passed to the test, the one for the code in the validator's `messages` config, the closest [translation](#translations) around the validator, or the code itself. `messages` words only the validator's own failures: `required`, `type`, `unknownKeys`, `items` or `properties`, and its tests' codes. It leaves an array's items and an object's fields as they failed, so give their validators their own `messages`.
 
 ```js
 await string(min(3))('ab');
@@ -598,6 +601,45 @@ await name(undefined); // { ..., message: 'Enter a name.' }
 ```
 
 In TypeScript, `Messages<C>` maps codes to messages, and `BuiltInCode` is the union of the codes above, so a `Messages<BuiltInCode>` needs a message for each.
+
+### Translations
+
+A translation is a `Messages` object, keyed by code like the `messages` config, that words a whole validator tree. `validator-fns/en` exports `en`, English messages for every built-in code. Partial translations are fine, and spread composes them:
+
+```js
+import {
+  createValidatorTest,
+  messageTree,
+  min,
+  object,
+  string,
+  withMessages,
+} from 'validator-fns';
+import { en } from 'validator-fns/en';
+
+const taken = createValidatorTest('taken', (name) => name !== 'admin');
+const signup = withMessages(
+  object({
+    name: string(min(2, 'Name is too short.')),
+    password: string(min(8)),
+    username: string(taken),
+  }),
+  { ...en, taken: 'That name is taken.' },
+);
+
+messageTree(await signup({ name: 'A', password: 'secret', username: 'admin' }));
+// { name: 'Name is too short.', password: 'Must be at least 8 characters.', username: 'That name is taken.' }
+```
+
+`en`'s `min`, `max` and `exact` messages word a string's length as characters and an array's as items, such as `'Must have at least 2 items.'`. `en` is frozen; copy it with spread to change a message.
+
+#### withMessages(validator, messages)
+
+Returns a validator that runs `validator`, then words each failure in its result's [errors tree](#errors-tree) that was made without a message, from `messages` by its code. A failure keeps the message passed to its test or set in its validator's `messages` config, and a failure copied with spread counts as worded. Translations nest: an inner `withMessages()` wins, and an outer one words the codes the inner one lacks. The result and `~standard` carry the messages, and `optional()` works around it in either order, so `optional(withMessages(v, en))` and `withMessages(optional(v), en)` both accept a missing value.
+
+`validator` is any validator, built-in or a plain async function. `messages` is read once, when `withMessages()` is called, and only its own keys count, so a code such as `constructor` isn't read from `Object.prototype`. A `messages` that isn't an object, or a message that is neither a string nor a function, throws a `TypeError`. The fill reads the errors tree as `messageTree()` does, so it rejects with the same `TypeError` for a tree that's a bug, including one more than 1000 levels deep. A failure shared by several entries is worded once, and the result shares the worded copy.
+
+In TypeScript, it returns a `TypeValidator<T, E>` with `validator`'s types.
 
 ### Required and optional values
 
@@ -878,7 +920,7 @@ Each test fails with its own [code](#error-codes), and its `message` is optional
 
 #### check(path?, test, code, message?)
 
-A collection test for `object`, or without a `path` for `array`. It fails with `code` when `test` returns `false` for the parsed value. With a `path`, a property name or a list of names into nested objects, such as `['shipping', 'zip']`, the failure sits at that path in the object's `errors` with the full field, such as `shipping.zip`, under a `properties` failure for the object and each name. Without a `path`, the failure is the collection's own. The parsed value is provided to the message as `value`.
+A collection test for `object`, or without a `path` for `array`. It fails with `code` when `test` returns `false` for the parsed value. With a `path`, a property name or a list of names into nested objects, such as `['shipping', 'zip']`, the failure sits at that path in the object's `errors` with the full field, such as `shipping.zip`, under a `properties` failure for the object and each name. Without a `path`, the failure is the collection's own. The parsed value is provided to the message as `value`. Each `properties` failure on the path gets the value at its level, the object's own for the outermost, for a translation's `properties` message.
 
 In TypeScript, `path` is checked against the parsed object's type, so a misspelled property is a type error, and the test's error type is the errors it produces, such as `{ shipping?: Failure<{ zip?: Failure<never> }> }`. A path ends at an array, a date or a function.
 
