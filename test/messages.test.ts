@@ -92,6 +92,19 @@ test('should let an outer translation word a container whose child an inner one 
   assert.deepEqual(messageTree(result), { a: 'inner' });
 });
 
+test('should keep a worded container message while wording its children', async () => {
+  const form = withMessages(
+    object(
+      { a: string(min(2)) },
+      { messages: { properties: 'Fix the form.' } },
+    ),
+    { min: 'Too short.', properties: 'translated' },
+  );
+  const result = await form({ a: 'x' });
+  assert.deepInclude(result, { message: 'Fix the form.' });
+  assert.deepEqual(messageTree(result), { a: 'Too short.' });
+});
+
 test('should word failures nested in arrays and objects', async () => {
   const tags = withMessages(array(object({ name: string(min(2)) })), {
     min: '{field} is short.',
@@ -124,6 +137,33 @@ test('should give each check() path level its own value', async () => {
       Reflect.get(Object(result.errors), 'shipping'),
     { message: JSON.stringify(input.shipping) },
   );
+});
+
+type Billing = { billing?: { zip?: string } | null };
+
+/** Fails every value, whatever its billing. */
+const never = (value: Billing) => value === undefined;
+
+const zipTest = check(['billing', 'zip'], never, 'match');
+
+test.each<[string, unknown]>([
+  ['undefined', undefined],
+  ['null', null],
+  ['an object without the key', {}],
+])('should give the check() path level of %s its value', async (_, billing) => {
+  const zipCheck = withMessages(
+    createValidator(async (value: unknown): Promise<Result> =>
+      Reflect.apply(zipTest, undefined, [value]),
+    ),
+    { properties: ({ value }) => `got ${String(value)}` },
+  );
+  const result = await zipCheck({ billing });
+  const level: unknown =
+    result.state === 'invalid' && Reflect.get(Object(result.errors), 'billing');
+  assert.deepInclude(level, { message: `got ${String(billing)}` });
+  assert.deepEqual(messageTree(result), {
+    billing: { zip: 'match' },
+  });
 });
 
 test('should word a custom validator failure made without a message', async () => {
