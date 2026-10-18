@@ -192,29 +192,6 @@ export function setOwn(target: object, key: PropertyKey, value: unknown) {
 }
 
 /**
-/** @internal */
-const formatPattern = /{(\w+)}/g;
-
-/**
- * Formats a message using a squiggly bracket `{}` template.
- * @param template Message template as string or function
- * @param parameters Params to inject into template
- * @internal
- */
-export function formatMessage<T, X extends object = object>(
-  template: ValidatorMessage<T, X>,
-  parameters: X & ValidatorMessageParameters<T>,
-): string {
-  if (typeof template === 'string') {
-    return template.replaceAll(formatPattern, (_, key: string) =>
-      String(Reflect.get(parameters, key)),
-    );
-  }
-
-  return template(parameters);
-}
-
-/**
  * Creates a valid result
  * @param result Result fields
  * @param result.value Parsed value
