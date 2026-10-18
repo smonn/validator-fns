@@ -219,6 +219,15 @@ test('should keep the params own enumerable data when a getter in them throws', 
     await invalid({ code: 'x', params, message: '{m} {k} {n}', field: 'f' }),
     { message: '1 undefined undefined' },
   );
+  assert.deepInclude(
+    await invalid({
+      code: 'x',
+      params,
+      message: (parameters) => Object.keys(parameters).join(),
+      field: 'f',
+    }),
+    { message: 'm,value,field' },
+  );
 });
 
 const kept = Symbol('kept');
