@@ -31,9 +31,8 @@ export type {
   MinValidatorMessageParameters,
 } from './limits';
 export { FailureError, messageTree } from './failures/index';
-export { invalid } from './results';
+export { invalid, valid } from './results';
 export { parse } from './parse';
-export { valid } from './types';
 export type {
   BuiltInCode,
   ExtractError,

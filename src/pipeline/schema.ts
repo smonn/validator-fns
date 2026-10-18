@@ -4,8 +4,8 @@ import {
   type Result,
   setOwn,
   type Validator,
-  validResult,
 } from '../types.js';
+import { validResult } from '../results.js';
 import type { Shape } from './def.js';
 import { runOf } from './twins.js';
 import type { Run } from './promises.js';

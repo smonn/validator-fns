@@ -1,10 +1,6 @@
 import { childField, failure, itemsTree } from '../failures/index.js';
-import {
-  type Failure,
-  type Result,
-  type Validator,
-  validResult,
-} from '../types.js';
+import type { Failure, Result, Validator } from '../types.js';
+import { validResult } from '../results.js';
 import { runEach } from './children.js';
 import type { Children } from './def.js';
 import { andThen } from './promises.js';

@@ -48,6 +48,7 @@
             "src/types.ts",
             "src/standard-schema.ts",
             "src/failures/index.ts",
+            "src/results.ts",
             "src/pipeline/**",
           ],
         },
@@ -66,6 +67,7 @@
             "src/types.ts",
             "src/pipeline/index.ts",
             "src/failures/index.ts",
+            "src/results.ts",
           ],
         },
         {

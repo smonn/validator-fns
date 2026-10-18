@@ -1,5 +1,6 @@
 import { failure } from '../failures/index.js';
-import { type Test, validResult, type ValidatorMessage } from '../types.js';
+import type { Test, ValidatorMessage } from '../types.js';
+import { validResult } from '../results.js';
 import { isMissing } from './def.js';
 import { withSyncTwin } from './sync.js';
 

@@ -1,10 +1,6 @@
 import { failure, fillOwn } from '../failures/index.js';
-import {
-  type Failure,
-  type Messages,
-  type Result,
-  validResult,
-} from '../types.js';
+import type { Failure, Messages, Result } from '../types.js';
+import { validResult } from '../results.js';
 import type { MaybePromise } from './promises.js';
 import type { Step, Twin } from './sync.js';
 
