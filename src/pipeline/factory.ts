@@ -1,6 +1,6 @@
 import type { ConfigBase, Test, Validator } from '../shared.js';
 import { configAndTests } from './config.js';
-import { keepValue, type Parser } from './def.js';
+import { type Def, keepValue, type Parser } from './def.js';
 import { defineType, runOf } from './twins.js';
 import type { TypeValidator } from './standard.js';
 
@@ -19,7 +19,9 @@ type TypeFactory<T, E> = (
  * with `parser`.
  * @internal
  */
-function typeFactory<T, E>(parser: Parser<T, E>): TypeFactory<T, E> {
+function typeFactory<T, E>(
+  parser: Parser<T, E> & Pick<Def<T, E, T>, 'coerce'>,
+): TypeFactory<T, E> {
   return (first, ...rest) => {
     const { config, tests } = configAndTests(first, rest);
     return defineType<T, E, T>({

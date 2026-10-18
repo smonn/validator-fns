@@ -15,6 +15,9 @@ type Built<T, E> = {
   optional: () => TypeValidator<T | null | undefined, E>;
 };
 
+/** Gives input as it is, in place of a coerce twin's reading. */
+const same = (input: unknown) => input;
+
 /**
  * Each type validator built here, by its identity, so a Proxy of one or a
  * function with one's properties assigned runs as itself.
@@ -23,15 +26,17 @@ type Built<T, E> = {
 const registry = new WeakMap<object, Built<unknown, unknown>>();
 
 /**
- * Builds a type validator from its def, with `exit` for missing input.
+ * Builds a type validator from its def, with `exit` for missing input. A
+ * coerce twin's run reads the input first.
  * @internal
  */
 function build<T, E, P, V>(
   def: Def<T, E, P>,
   exit: Exit<V, E>,
 ): TypeValidator<T | V, E> {
+  const { coerce = same } = def;
   const run: Run<T | V, E> = guardRun((value, field) =>
-    runType(def, exit, value, field),
+    runType(def, exit, coerce(value), field),
   );
   const validator = withStandard(toValidator(run));
   // Rebuilt once, on the first optional() call, so each call returns it.

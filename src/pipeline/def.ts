@@ -55,6 +55,11 @@ export type Shape<V, Tree> = {
  * @internal
  */
 export type Def<T, E, P> = Parser<P, E> & {
+  /**
+   * A coerce twin's reading of the input, before the missing check. It gives
+   * `undefined` for blank text, and passes on input it can't read as it is.
+   */
+  coerce?: ((input: unknown) => unknown) | undefined;
   /** Value for missing input. It skips the parser. */
   default?: P | undefined;
   /**
