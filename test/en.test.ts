@@ -96,8 +96,9 @@ test('should have a message for every built-in code and no other', () => {
   assert.deepEqual(Object.keys(en).toSorted(), [...codes].toSorted());
 });
 
-test('should type en as a message for each built-in code', () => {
-  expectTypeOf(en).toEqualTypeOf<Messages<BuiltInCode>>();
+test('should type en as a read-only message for each built-in code', () => {
+  expectTypeOf(en).toEqualTypeOf<Readonly<Messages<BuiltInCode>>>();
+  expectTypeOf(en).toExtend<Messages>();
 });
 
 const taken = createValidatorTest<string>('taken', (value) => value !== 'bob');

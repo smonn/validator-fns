@@ -6,7 +6,7 @@ import type { BuiltInCode, Messages } from './shared.js';
  * them with spread, such as `{ ...en, taken: 'Taken.' }`.
  * @category Helpers
  */
-export const en: Messages<BuiltInCode> = Object.freeze({
+export const en: Readonly<Messages<BuiltInCode>> = Object.freeze({
   min: amount('at least', 'min'),
   max: amount('at most', 'max'),
   exact: amount('exactly', 'exact'),
