@@ -1,4 +1,4 @@
-import { isThenable, type MaybePromise } from './promises.js';
+import { afterPromise, isThenable, type MaybePromise } from './promises.js';
 
 /**
  * Runs each child in order, sync until one returns a promise, and gives every
@@ -14,7 +14,7 @@ export function runEach<C, R extends object>(
   for (let next = children.next(); !next.done; next = children.next()) {
     const result = runOne(next.value, results.length);
     if (isThenable(result)) {
-      return Promise.resolve(result).then((done) => {
+      return afterPromise(result, (done) => {
         results.push(done);
         return runEach(children, runOne, results);
       });
