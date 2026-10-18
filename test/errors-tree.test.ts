@@ -82,6 +82,16 @@ const silent = createValidator(async (value: unknown, field?: string) =>
   invalid({ code: 'custom', message: '', value, field }),
 );
 
+const noTags = createValidator(async (value: unknown, field?: string) =>
+  invalid({
+    code: 'items',
+    message: 'Need tags.',
+    value,
+    field,
+    errors: [null],
+  }),
+);
+
 type Row = {
   label: string;
   validator: TypeValidator<unknown, unknown>;
@@ -373,6 +383,25 @@ const rows: Row[] = [
     failure: items(undefined, [null]),
     issues: [{ message: 'items', code: 'items', params: {} }],
     messages: [null],
+  },
+  {
+    label: 'a nested container whose tree holds no failure',
+    validator: object({ tags: noTags, name: string(min(2)) }),
+    input: { name: 'x' },
+    failure: properties(undefined, {
+      tags: failed('items', 'tags', { message: 'Need tags.', errors: [null] }),
+      name: tooShort('name'),
+    }),
+    issues: [
+      { message: 'Need tags.', code: 'items', params: {}, path: ['tags'] },
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['name'],
+      },
+    ],
+    messages: { tags: [null], name: 'min' },
   },
   {
     label: 'a container with an empty tree',

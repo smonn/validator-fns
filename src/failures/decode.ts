@@ -43,56 +43,63 @@ export function entriesOf(
   errors: unknown,
 ): [PropertyKey, Failure<unknown> | null][] {
   if (typeof errors !== 'object' || errors === null) {
-    throw new TypeError(
-      `An errors tree must be an object, not ${typeof errors}`,
-    );
+    throw new TypeError('An errors tree must be an object');
   }
 
   // Object.keys rather than Object.entries, which would add an ES2017
-  // built-in to the supported environments list.
-  const keys = Array.isArray(errors) ? [...errors.keys()] : Object.keys(errors);
-  return keys.map((key) => {
+  // built-in to the supported environments list. An array's keys are read
+  // one at a time, so a hole throws before the rest are listed.
+  const keys = Array.isArray(errors) ? errors.keys() : Object.keys(errors);
+  const entries: [PropertyKey, Failure<unknown> | null][] = [];
+  for (const key of keys) {
     const entry: unknown = Reflect.get(errors, key);
     if (entry !== null && !isFailure(entry)) {
       throw new TypeError(`The errors tree entry at ${key} isn't a failure`);
     }
 
-    return [key, entry];
-  });
+    entries.push([key, entry]);
+  }
+
+  return entries;
 }
 
-/** @internal */
+/**
+ * Adds a failure's issues to `found`: its children's for a container, or its
+ * own for a leaf and for a container whose tree holds no failure.
+ * @internal
+ */
 function collectIssues(
   made: Failure<unknown>,
   path: PropertyKey[],
   found: Issue[],
 ) {
-  if (!isContainer(made)) {
+  const before = found.length;
+  if (isContainer(made)) {
+    for (const [key, child] of entriesOf(made.errors)) {
+      if (child) {
+        collectIssues(child, [...path, key], found);
+      }
+    }
+  }
+
+  if (found.length === before) {
     const { message, code, params } = made;
     found.push(
       path.length > 0
         ? { message, code, params, path }
         : { message, code, params },
     );
-    return;
-  }
-
-  for (const [key, child] of entriesOf(made.errors)) {
-    if (child) {
-      collectIssues(child, [...path, key], found);
-    }
   }
 }
 
 /**
  * A failure's Standard Schema issues: one for each leaf in its errors tree,
  * with its code, params and path. A container whose tree holds no failure
- * reports itself.
+ * counts as a leaf.
  * @internal
  */
 export function issues(made: Failure<unknown>): Issue[] {
   const found: Issue[] = [];
   collectIssues(made, [], found);
-  const { message, code, params } = made;
-  return found.length > 0 ? found : [{ message, code, params }];
+  return found;
 }
