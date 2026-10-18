@@ -35,12 +35,14 @@ export interface StringConfig extends ConfigBase<string> {
 
 /**
  * Parses a value into a string. Fails anything but a string, number, bigint,
- * boolean, date or an object wrapping one.
+ * boolean, valid date or an object wrapping one.
  * @internal
  */
 const parseString = createParser(
   (value) =>
-    value instanceof Date ? value.toISOString() : primitiveToString(value),
+    value instanceof Date && !Number.isNaN(value.getTime())
+      ? value.toISOString()
+      : primitiveToString(value),
   'Failed to parse value to string.',
 );
 
