@@ -1002,6 +1002,10 @@ const threeLetterWords = array(
 const helloListByDefault = array(string(min(5, 'min:{min}')), {
   default: ['hello'],
 });
+// optional() also fails it: a default is present input.
+const badDefaultFailure = fail('items', {}, 'items', [
+  child('[0]', 'type', { expected: 'number' }),
+]);
 const oneItem = array(string(), max(1, 'max:{max}'), min(1, 'min:{min}'));
 const pickSome = array({ messages: { required: 'Pick some.' } });
 
@@ -1092,6 +1096,13 @@ const arrayRows: Row[] = [
     helloListByDefault,
     ['other'],
     pass(['other']),
+  ),
+  row(
+    'array() fails a default whose item fails, as present input',
+    array(number(), { default: ['a'] }),
+    undefined,
+    badDefaultFailure,
+    { optional: badDefaultFailure },
   ),
   row(
     'array() without an item validator fails undefined',
