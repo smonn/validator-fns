@@ -10,6 +10,13 @@ import type {
 type SharedValueType = string | number | unknown[];
 
 /**
+ * A message for a test on an amount, with the extras of its parameters type.
+ * @internal
+ */
+type AmountMessage<P extends ValidatorMessageParameters<SharedValueType>> =
+  ValidatorMessage<SharedValueType, MessageExtras<P>>;
+
+/**
  * Extracts a numeric amount from value, i.e. string length, array length, or number.
  * @internal
  */
@@ -38,10 +45,7 @@ export interface MaxValidatorMessageParameters extends ValidatorMessageParameter
  */
 export function max(
   limit: number,
-  message: ValidatorMessage<
-    SharedValueType,
-    MessageExtras<MaxValidatorMessageParameters>
-  >,
+  message: AmountMessage<MaxValidatorMessageParameters>,
 ): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => getAmount(value) <= limit,
@@ -68,10 +72,7 @@ export interface MinValidatorMessageParameters extends ValidatorMessageParameter
  */
 export function min(
   limit: number,
-  message: ValidatorMessage<
-    SharedValueType,
-    MessageExtras<MinValidatorMessageParameters>
-  >,
+  message: AmountMessage<MinValidatorMessageParameters>,
 ): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => getAmount(value) >= limit,
@@ -98,10 +99,7 @@ export interface ExactValidatorMessageParameters extends ValidatorMessageParamet
  */
 export function exact(
   limit: number,
-  message: ValidatorMessage<
-    SharedValueType,
-    MessageExtras<ExactValidatorMessageParameters>
-  >,
+  message: AmountMessage<ExactValidatorMessageParameters>,
 ): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => getAmount(value) === limit,
