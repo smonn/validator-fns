@@ -7,11 +7,10 @@ import {
   validateItems,
   type ValidatedItems,
 } from './invalid-detail.js';
-import { requirable } from './optional.js';
+import { parsePresent, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   valid,
-  validResult,
   type ConfigBase,
   type Failure,
   type Validator,
@@ -72,11 +71,7 @@ function arrayOf<T, E>(
   return requirable<T[], (Failure<E> | null)[]>(
     finalConfig.messages,
     async (value, field, onEmpty) => {
-      // A parser never sees a missing value.
-      const parsed =
-        value === null || value === undefined
-          ? validResult({ value, field })
-          : await finalConfig.parser(value, field);
+      const parsed = await parsePresent(finalConfig.parser, value, field);
       if (parsed.state === 'invalid') {
         return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
       }
