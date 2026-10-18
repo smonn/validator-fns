@@ -1,9 +1,9 @@
 // One table runs every input through each entry point (the safe call,
 // parse() and ~standard.validate), as is, in optional(), in withMessages()
-// and in both orders of the two. It stays one file
-// because its rows and runner have no other home: the rev-dep tests boundary
-// lets a test file import only src/index.ts, so a shared table module would
-// need that boundary widened.
+// and in both orders of the two. It stays one file because its rows and
+// runner have no other home: the rev-dep tests boundary lets a test file
+// import only src/index.ts and src/en.ts, so a shared table module would need
+// that boundary widened.
 import { inspect } from 'node:util';
 import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
