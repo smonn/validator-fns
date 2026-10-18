@@ -43,19 +43,22 @@ const wrappedMin: Test<number[], never> = async (value, field) =>
 
 // Fails numbers that aren't in ascending order.
 const ascending: Test<number[], never> = async (value, field) =>
-  value.every((item, index) => index === 0 || value[index - 1]! <= item)
+  value.slice(1).every((item, index) => {
+    const previous = value[index];
+    return previous !== undefined && previous <= item;
+  })
     ? valid({ value, field })
     : invalid({ code: 'ascending', field });
 
 test('array() checks max before any item runs, wherever max comes', async () => {
   const before = recorder<unknown[]>();
-  const items = [spy(), spy()];
-  const validators = [
-    array(items[0]!, max(5)),
-    array(items[1]!, before, max(5)),
+  const first = spy();
+  const second = spy();
+  const cases = [
+    { item: first, validate: array(first, max(5)) },
+    { item: second, validate: array(second, before, max(5)) },
   ];
-  for (const [index, validate] of validators.entries()) {
-    const item = items[index]!;
+  for (const { item, validate } of cases) {
     const result = await validate([1, 2, 3, 4, 5, 6], 'list');
     assert.deepEqual(result, {
       state: 'invalid',
