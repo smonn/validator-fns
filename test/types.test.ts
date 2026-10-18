@@ -2,7 +2,6 @@ import { assert, expectTypeOf, test } from 'vitest';
 import {
   array,
   type ArrayConfig,
-  type ArrayItemValidatorResult,
   boolean,
   type BooleanConfig,
   type BuiltInCode,
@@ -83,13 +82,13 @@ test('optional() adds null and undefined to the value type', () => {
     TypeValidator<string | null | undefined, string>
   >();
   expectTypeOf(optional(object({ name: string() }))).toEqualTypeOf<
-    TypeValidator<{ name: string } | null | undefined, { name?: string }>
+    TypeValidator<
+      { name: string } | null | undefined,
+      { name?: Failure<string> }
+    >
   >();
   expectTypeOf(optional(array(number()))).toEqualTypeOf<
-    TypeValidator<
-      number[] | null | undefined,
-      string | ArrayItemValidatorResult<string>[]
-    >
+    TypeValidator<number[] | null | undefined, (Failure<string> | null)[]>
   >();
   expectTypeOf(optional(numericErrors)).toEqualTypeOf<
     TypeValidator<unknown, number>
@@ -115,7 +114,7 @@ test('object() makes keys optional only for optional() validators', () => {
   ).toEqualTypeOf<
     TypeValidator<
       { name: string; age?: number | null | undefined },
-      { name?: string; age?: string }
+      { name?: Failure<string>; age?: Failure<string> }
     >
   >();
 });
@@ -127,16 +126,16 @@ test('object() makes keys optional for validators whose type includes undefined'
   expectTypeOf(object({ maybe, any: numericErrors })).toEqualTypeOf<
     TypeValidator<
       { maybe?: string | undefined; any?: unknown },
-      { maybe?: unknown; any?: string | number }
+      { maybe?: Failure<unknown>; any?: Failure<number> }
     >
   >();
 });
 
-test('object() types a nested field error as its message or its errors', () => {
+test('object() types a field error as the field validator failure', () => {
   expectTypeOf(object({ address: object({ zip: string() }) })).toEqualTypeOf<
     TypeValidator<
       { address: { zip: string } },
-      { address?: string | { zip?: string } }
+      { address?: Failure<{ zip?: Failure<string> }> }
     >
   >();
 });
@@ -152,7 +151,9 @@ test('object() accepts its value with undefined for a missing optional key', () 
 test('object() takes a config object or a test as its second argument', () => {
   expectTypeOf(
     object({ name: string() }, { messages: { required: 'required' } }),
-  ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
+  ).toEqualTypeOf<
+    TypeValidator<{ name: string }, { name?: Failure<string> }>
+  >();
   expectTypeOf(
     object(
       { name: string() },
@@ -161,32 +162,29 @@ test('object() takes a config object or a test as its second argument', () => {
         return true;
       }, 'message'),
     ),
-  ).toEqualTypeOf<TypeValidator<{ name: string }, { name?: string }>>();
+  ).toEqualTypeOf<
+    TypeValidator<{ name: string }, { name?: Failure<string> }>
+  >();
 });
 
 test('array() takes its config after the item validator', () => {
   expectTypeOf(
     array(string(), { messages: { required: 'Pick some.' } }, max(2, 'max')),
-  ).toEqualTypeOf<
-    TypeValidator<string[], string | ArrayItemValidatorResult<string>[]>
-  >();
+  ).toEqualTypeOf<TypeValidator<string[], (Failure<string> | null)[]>>();
   expectTypeOf(array({ messages: { required: 'Pick some.' } })).toEqualTypeOf<
-    TypeValidator<unknown[], string | ArrayItemValidatorResult[]>
+    TypeValidator<unknown[], (Failure<unknown> | null)[]>
   >();
   expectTypeOf(array()).toEqualTypeOf<
-    TypeValidator<unknown[], string | ArrayItemValidatorResult[]>
+    TypeValidator<unknown[], (Failure<unknown> | null)[]>
   >();
 });
 
 test('array() carries the item value and error types', () => {
   expectTypeOf(array(string())).toEqualTypeOf<
-    TypeValidator<string[], string | ArrayItemValidatorResult<string>[]>
+    TypeValidator<string[], (Failure<string> | null)[]>
   >();
   expectTypeOf(array(optional(string()))).toEqualTypeOf<
-    TypeValidator<
-      (string | null | undefined)[],
-      string | ArrayItemValidatorResult<string>[]
-    >
+    TypeValidator<(string | null | undefined)[], (Failure<string> | null)[]>
   >();
 });
 
@@ -291,7 +289,7 @@ test('check() types its errors from the path', () => {
       'match',
       'Must match.',
     ),
-  ).toEqualTypeOf<Test<Signup, { confirm?: string }>>();
+  ).toEqualTypeOf<Test<Signup, { confirm?: Failure<never> }>>();
   expectTypeOf(
     check(
       ['shipping', 'zip'],
@@ -299,10 +297,12 @@ test('check() types its errors from the path', () => {
       'match',
       'Must match.',
     ),
-  ).toEqualTypeOf<Test<Addresses, { shipping?: { zip?: string } }>>();
+  ).toEqualTypeOf<
+    Test<Addresses, { shipping?: Failure<{ zip?: Failure<never> }> }>
+  >();
   expectTypeOf(
     check(['password'], (value: Signup) => value.password !== '', 'empty'),
-  ).toEqualTypeOf<Test<Signup, { password?: string }>>();
+  ).toEqualTypeOf<Test<Signup, { password?: Failure<never> }>>();
 });
 
 test('check() infers the object and path inside object()', () => {
@@ -317,7 +317,10 @@ test('check() infers the object and path inside object()', () => {
       ),
     ),
   ).toEqualTypeOf<
-    TypeValidator<Signup, { password?: string; confirm?: string }>
+    TypeValidator<
+      Signup,
+      { password?: Failure<string>; confirm?: Failure<string> }
+    >
   >();
 });
 

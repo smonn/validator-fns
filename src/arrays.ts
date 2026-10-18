@@ -13,15 +13,10 @@ import {
   valid,
   validResult,
   type ConfigBase,
+  type Failure,
   type Result,
   type Validator,
 } from './shared.js';
-
-/**
- * Invalid validation result for an item in the array
- * @category Types
- */
-export type ArrayItemValidatorResult<E = unknown> = null | string | E;
 
 /**
  * Configuration for array validation.
@@ -78,14 +73,14 @@ function arrayOf<T, E>(
   ) => Promise<ValidatedItems<T, E>>,
   config: Partial<ArrayConfig> | ArrayTest | undefined,
   tests: ArrayTest[],
-): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]> {
+): TypeValidator<T[], (Failure<E> | null)[]> {
   const arrayTests = typeof config === 'function' ? [config, ...tests] : tests;
   const finalConfig: ArrayConfig = {
     parser: parseArray,
     ...(typeof config === 'function' ? undefined : config),
   };
 
-  return requirable<T[], string | ArrayItemValidatorResult<E>[]>(
+  return requirable<T[], (Failure<E> | null)[]>(
     finalConfig.messages,
     async (value, field, onEmpty) => {
       const parsed = await finalConfig.parser(value, field);
@@ -105,11 +100,13 @@ function arrayOf<T, E>(
       );
       const items = await checkItems(arrayValue, field);
 
-      if (arrayInvalidResult || !items.isValid) {
+      if (arrayInvalidResult || items.errors) {
         const own =
           arrayInvalidResult ??
           failure({ code: 'items', params: {}, value: arrayValue, field });
-        return fillAsOwn(own, items.errors, finalConfig.messages);
+        // An array test's failure is a leaf, without the items' failures.
+        const errors = arrayInvalidResult ? undefined : items.errors;
+        return fillAsOwn(own, errors, finalConfig.messages);
       }
 
       return valid({ value: items.values, field });
@@ -127,17 +124,17 @@ export function array<T, E>(
   item: Validator<T, E>,
   config?: Partial<ArrayConfig> | ArrayTest,
   ...tests: ArrayTest[]
-): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>;
+): TypeValidator<T[], (Failure<E> | null)[]>;
 export function array(
   config?: Partial<ArrayConfig>,
-): TypeValidator<unknown[], string | ArrayItemValidatorResult[]>;
+): TypeValidator<unknown[], (Failure<unknown> | null)[]>;
 export function array<T, E>(
   first?: Validator<T, E> | Partial<ArrayConfig>,
   second?: Partial<ArrayConfig> | ArrayTest,
   ...tests: ArrayTest[]
 ):
-  | TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>
-  | TypeValidator<unknown[], string | ArrayItemValidatorResult[]> {
+  | TypeValidator<T[], (Failure<E> | null)[]>
+  | TypeValidator<unknown[], (Failure<unknown> | null)[]> {
   if (typeof first === 'function') {
     return arrayOf(
       (arrayValue, field) => validateItems(first, arrayValue, field),

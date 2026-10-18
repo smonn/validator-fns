@@ -1,5 +1,5 @@
-import { isContainer } from './failures/index.js';
-import type { Failure, Test, Validator } from './shared.js';
+import { childField, itemsTree } from './failures/index.js';
+import type { Failure, Result, Test, Validator } from './shared.js';
 
 /**
  * Runs tests on a value in order, stopping at the first failure, for the
@@ -25,18 +25,6 @@ export async function findInvalidResult<V, E>(
 }
 
 /**
- * The error that `array()` and `object()` record for a failed item or field:
- * a container's `errors`, such as a nested object's, or else its message.
- * @param result Failed result
- * @internal
- */
-export function invalidDetail<E>(result: Failure<E>): string | E {
-  return isContainer(result) && result.errors !== undefined
-    ? result.errors
-    : result.message;
-}
-
-/**
  * A test on an array itself, such as `max()`. It runs on the parsed array,
  * before the item validator, so the items are `unknown`.
  * @internal
@@ -44,18 +32,17 @@ export function invalidDetail<E>(result: Failure<E>): string | E {
 export type ArrayTest = Test<unknown[]>;
 
 /**
- * Each item as the item validator parsed it, and each item's error: `null` for
- * a valid item, and the message or errors for an invalid one.
+ * Each valid item as the item validator parsed it, and the array's errors
+ * tree, `undefined` when every item is valid.
  * @internal
  */
 export type ValidatedItems<T, E> = {
-  isValid: boolean;
-  errors: (null | string | E)[];
+  errors: (Failure<E> | null)[] | undefined;
   values: T[];
 };
 
 /**
- * Runs the item validator on every item.
+ * Runs the item validator on every item, with the item's full field.
  * @param validateItem Item validator
  * @param arrayValue Parsed array
  * @param field Field name
@@ -66,24 +53,19 @@ export async function validateItems<T, E>(
   arrayValue: unknown[],
   field: string | undefined,
 ): Promise<ValidatedItems<T, E>> {
-  let isValid = true;
-  const errors: (null | string | E)[] = [];
+  const results: Result<T, E>[] = [];
   // Only valid items' values, which are only used when every item is valid.
   const values: T[] = [];
 
   for (const [index, item] of arrayValue.entries()) {
-    const result = await validateItem(item, `${field || ''}[${index}]`);
-
-    if (result.state === 'invalid') {
-      isValid = false;
-      errors.push(invalidDetail(result));
-    } else {
+    const result = await validateItem(item, childField(field, index));
+    results.push(result);
+    if (result.state === 'valid') {
       values.push(result.value);
-      errors.push(null);
     }
   }
 
-  return { isValid, errors, values };
+  return { errors: itemsTree(results), values };
 }
 
 /**
@@ -95,5 +77,5 @@ export async function validateItems<T, E>(
 export async function keepItems(
   arrayValue: unknown[],
 ): Promise<ValidatedItems<unknown, unknown>> {
-  return { isValid: true, errors: [], values: arrayValue };
+  return { errors: undefined, values: arrayValue };
 }

@@ -1,12 +1,19 @@
-import { failure, fillOwn } from './failures/index.js';
-import { findInvalidResult, invalidDetail } from './invalid-detail.js';
+import {
+  childField,
+  failure,
+  fillOwn,
+  propertiesTree,
+} from './failures/index.js';
+import { findInvalidResult } from './invalid-detail.js';
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
   type ExtractValue,
   hasOwnProperty,
+  type Failure,
   type Messages,
+  type Result,
   setOwn,
   valid,
   type Test,
@@ -40,12 +47,11 @@ type ObjectValue<P extends ObjectParameter> = Flatten<
 >;
 
 /**
- * A failed field records its message, such as a nested object's
- * `'Required.'`, or its errors when the message is empty.
+ * An object's errors tree: each failed property's failure, in schema order.
  * @internal
  */
 type ObjectErrors<P extends ObjectParameter> = {
-  [K in keyof P]?: string | ExtractError<P[K]>;
+  [K in keyof P]?: Failure<ExtractError<P[K]>>;
 };
 
 /**
@@ -114,9 +120,8 @@ export function object<P extends ObjectParameter>(
 
       // Object() boxes primitives.
       const source: object = Object(values);
-      const errors: ObjectErrors<P> = {};
+      const results: [key: string, result: Result][] = [];
       const resolvedValues: Partial<Record<keyof P, unknown>> = {};
-      let isValid = true;
 
       for (const [key, validator] of validators) {
         // Only own properties, so a missing key named like an inherited one,
@@ -124,31 +129,28 @@ export function object<P extends ObjectParameter>(
         const value: unknown = hasOwnProperty(source, key)
           ? Reflect.get(source, key)
           : undefined;
-        const result = await validator(value, key);
-
-        if (result.state === 'invalid') {
-          isValid = false;
-          setOwn(errors, key, invalidDetail(result));
-        } else {
+        const result = await validator(value, childField(field, key));
+        results.push([key, result]);
+        if (result.state === 'valid') {
           setOwn(resolvedValues, key, result.value);
         }
       }
 
       const parsed = asObjectValue<P>(resolvedValues);
-      const own = isValid
-        ? await findInvalidResult(allTests, parsed, field)
-        : failure({
-            code: 'properties',
-            params: {},
-            value: values,
-            field,
-            errors,
-          });
-      if (own) {
-        return fillOwn(own, messages);
+      const errors = propertiesTree<ObjectErrors<P>>(results, {});
+      if (errors) {
+        const container = failure({
+          code: 'properties',
+          params: {},
+          value: values,
+          field,
+          errors,
+        });
+        return fillOwn(container, messages);
       }
 
-      return valid({ value: parsed, field });
+      const own = await findInvalidResult(allTests, parsed, field);
+      return own ? fillOwn(own, messages) : valid({ value: parsed, field });
     },
   );
 }

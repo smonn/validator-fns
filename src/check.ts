@@ -1,12 +1,5 @@
-import { failure } from './failures/index.js';
-import {
-  type AtPath,
-  errorAt,
-  errorAtKey,
-  type Test,
-  validResult,
-  type ValidatorMessage,
-} from './shared.js';
+import { type AtPath, childField, failure, nestAt } from './failures/index.js';
+import { type Test, validResult, type ValidatorMessage } from './shared.js';
 
 /**
  * Paths into nested plain objects, as lists of property names, for `check()`.
@@ -34,30 +27,23 @@ type CheckArgs<T> = [
 ];
 
 /**
- * The test `check()` returns. `toErrors` turns the failure's message into the
- * object's errors, under a `properties` failure; without it, the failure is
- * the object's own.
+ * The test `check()` returns. Its failure has the full field and sits at the
+ * end of `path`, under a `properties` failure for each name; with an empty
+ * path, it's the object's own.
  * @internal
  */
-function checkWith<T, E>(
-  toErrors: ((message: string) => E) | undefined,
+function checkWith<T>(
+  path: readonly string[],
   ...[test, code, message]: CheckArgs<T>
-): Test<T, E> {
+): Test<T> {
   return async (value, field) => {
     if (test(value)) {
       return validResult({ value, field });
     }
 
-    const own = failure<E, T>({ code, params: {}, message, value, field });
-    return toErrors
-      ? failure({
-          code: 'properties',
-          params: {},
-          value,
-          field,
-          errors: toErrors(own.message),
-        })
-      : own;
+    const fullField = path.reduce(childField, field);
+    const own = failure({ code, params: {}, message, value, field: fullField });
+    return nestAt(path, own, field, value);
   };
 }
 
@@ -73,37 +59,30 @@ function isWithoutPath<T>(
 
 /**
  * An object-level test for `object()`. It fails with `code` when `test`
- * returns false for the parsed object. The message, or else the code, goes to
- * the error at `path`, a property name or a list of names into nested objects,
- * under a `properties` failure. Without a path, the failure is the object's
- * own. The message gets the parsed object as `value` and the object's
- * `field`. The path is checked against the object's type, and so are the
- * errors it produces.
+ * returns false for the parsed object. With a `path`, a property name or a
+ * list of names into nested objects, the failure sits at that path in the
+ * object's errors, with the full field, under a `properties` failure for the
+ * object and each name. Without a path, the failure is the object's own. The
+ * message gets the parsed object as `value`. The path is checked against the
+ * object's type, and so are the errors it produces.
  * @category Validation Tests
  */
 export function check<T>(...args: CheckArgs<T>): Test<T, never>;
 export function check<T, const K extends keyof T & string>(
   path: K,
   ...args: CheckArgs<T>
-): Test<T, { [P in K]?: string }>;
+): Test<T, AtPath<[K]>>;
 export function check<T, const Path extends KeyPath<T>>(
   path: Path,
   ...args: CheckArgs<T>
 ): Test<T, AtPath<Path>>;
-export function check<
-  T,
-  K extends keyof T & string,
-  // Not KeyPath<T>, which TypeScript can't expand for a generic T here.
-  Path extends readonly string[],
->(
-  ...args: CheckArgs<T> | [path: K | Path, ...CheckArgs<T>]
-): Test<T, never> | Test<T, { [P in K]?: string }> | Test<T, AtPath<Path>> {
+export function check<T>(
+  ...args: CheckArgs<T> | [path: string | readonly string[], ...CheckArgs<T>]
+): Test<T> {
   if (isWithoutPath(args)) {
-    return checkWith<T, never>(undefined, ...args);
+    return checkWith([], ...args);
   }
 
   const [path, ...rest] = args;
-  return typeof path === 'string'
-    ? checkWith((own) => errorAtKey(path, own), ...rest)
-    : checkWith((own) => errorAt(path, own), ...rest);
+  return checkWith(typeof path === 'string' ? [path] : path, ...rest);
 }

@@ -6,6 +6,7 @@ import {
   createTypeValidatorTest,
   date,
   invalid,
+  messageTree,
   min,
   number,
   object,
@@ -240,9 +241,9 @@ test('object() requires nested objects and fields unless optional()', async () =
     billing: optional(object({ zip: string() })),
   });
 
-  assert.deepInclude(await validate({}), {
-    state: 'invalid',
-    errors: { name: 'required', address: 'required' },
+  assert.deepEqual(messageTree(await validate({})), {
+    name: 'required',
+    address: 'required',
   });
   assert.deepEqual(await validate({ name: 'a', address: { zip: '1' } }), {
     state: 'valid',
@@ -254,17 +255,20 @@ test('object() requires nested objects and fields unless optional()', async () =
     },
     field: undefined,
   });
-  assert.deepInclude(
-    await validate({ name: 'a', address: { zip: '1' }, billing: {} }),
-    { errors: { billing: { zip: 'required' } } },
+  assert.deepEqual(
+    messageTree(
+      await validate({ name: 'a', address: { zip: '1' }, billing: {} }),
+    ),
+    { billing: { zip: 'required' } },
   );
 });
 
 test('array() requires each item unless the item validator is optional()', async () => {
-  assert.deepInclude(await array(string())(['a', '', null]), {
-    state: 'invalid',
-    errors: [null, 'required', 'required'],
-  });
+  assert.deepEqual(messageTree(await array(string())(['a', '', null])), [
+    null,
+    'required',
+    'required',
+  ]);
   assert.deepInclude(await array(optional(string()))(['a', '', null]), {
     state: 'valid',
     value: ['a', '', null],

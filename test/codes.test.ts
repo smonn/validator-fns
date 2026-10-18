@@ -13,6 +13,7 @@ import {
   matches,
   max,
   maxDate,
+  messageTree,
   min,
   minDate,
   number,
@@ -178,10 +179,10 @@ test('should leave children unworded by a container messages config', async () =
     { a: string(min(3)), b: string() },
     { messages },
   )({ a: 'ab' });
-  assert.deepInclude(objectResult, { errors: { a: 'min', b: 'required' } });
+  assert.deepEqual(messageTree(objectResult), { a: 'min', b: 'required' });
 
   const arrayResult = await array(number(), { messages })(['abc']);
-  assert.deepInclude(arrayResult, { errors: ['type'] });
+  assert.deepEqual(messageTree(arrayResult), ['type']);
 });
 
 test('should report the issues of a leaf failure with its code and params', async () => {
@@ -205,14 +206,24 @@ test('should report the issues of a leaf failure with its code and params', asyn
 });
 
 test('should report only the children of a container in its issues', async () => {
-  assert.deepEqual(
+  assert.deepEqual<unknown>(
     await object({ a: string(min(3)), b: array(number()) })[
       '~standard'
     ].validate({ a: 'ab', b: [1, 'x'] }),
     {
       issues: [
-        { message: 'min', path: ['a'] },
-        { message: 'type', path: ['b', 1] },
+        {
+          message: 'min',
+          code: 'min',
+          params: { min: 3, amount: 2 },
+          path: ['a'],
+        },
+        {
+          message: 'type',
+          code: 'type',
+          params: { expected: 'number' },
+          path: ['b', 1],
+        },
       ],
     },
   );
@@ -270,20 +281,21 @@ test('should fail check() with its own code', async () => {
 });
 
 test('should nest a check() failure at its path in a properties failure', async () => {
-  assert.deepInclude(await check('confirm', same, 'same')(input), {
+  const atKey = await check('confirm', same, 'same')(input);
+  assert.deepInclude(atKey, {
     code: 'properties',
     params: {},
     message: 'properties',
-    errors: { confirm: 'same' },
   });
-  assert.deepInclude(
-    await object(
-      { password: string(), confirm: string() },
-      { messages: { properties: 'Fix the form.' } },
-      check(['confirm'], same, 'same', 'Must match.'),
-    )(input),
-    { message: 'Fix the form.', errors: { confirm: 'Must match.' } },
-  );
+  assert.deepEqual(messageTree(atKey), { confirm: 'same' });
+
+  const worded = await object(
+    { password: string(), confirm: string() },
+    { messages: { properties: 'Fix the form.' } },
+    check(['confirm'], same, 'same', 'Must match.'),
+  )(input);
+  assert.deepInclude(worded, { message: 'Fix the form.' });
+  assert.deepEqual(messageTree(worded), { confirm: 'Must match.' });
 });
 
 test('should make a failure with a custom code through invalid()', async () => {

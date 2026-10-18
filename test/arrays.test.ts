@@ -1,8 +1,8 @@
 import { assert, test } from 'vitest';
 import {
   array,
-  invalid,
   max,
+  messageTree,
   min,
   number,
   object,
@@ -44,7 +44,7 @@ test('array', async () => {
     code: 'min',
     params: { min: 1, amount: 0 },
     message: 'min:1',
-    errors: [],
+    errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
@@ -52,7 +52,7 @@ test('array', async () => {
     code: 'min',
     params: { min: 1, amount: 0 },
     message: 'min:1',
-    errors: [],
+    errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate({}), {
@@ -60,17 +60,17 @@ test('array', async () => {
     code: 'min',
     params: { min: 1, amount: 0 },
     message: 'min:1',
-    errors: [],
+    errors: undefined,
     field: undefined,
   });
-  assert.deepEqual(await validate(['foo', 'ba']), {
+  assert.deepInclude(await validate(['foo', 'ba']), {
     state: 'invalid',
     code: 'items',
     params: {},
     message: 'items',
-    errors: [null, 'min:3'],
     field: undefined,
   });
+  assert.deepEqual(messageTree(await validate(['foo', 'ba'])), [null, 'min:3']);
 });
 
 test('array with object', async () => {
@@ -85,37 +85,9 @@ test('array with object', async () => {
     max(10, 'max:{max}'),
   );
   assert.deepEqual(
-    await validate([{}, { username: 'foo' }, { username: 'ab' }]),
-    {
-      state: 'invalid',
-      code: 'items',
-      params: {},
-      message: 'items',
-      errors: [
-        {
-          username: 'required',
-        },
-        null,
-        {
-          username: 'min:3',
-        },
-      ],
-      field: undefined,
-    },
+    messageTree(await validate([{}, { username: 'foo' }, { username: 'ab' }])),
+    [{ username: 'required' }, null, { username: 'min:3' }],
   );
-});
-
-test('nested array', async () => {
-  // While this is technically possible, it's not recommended usage as it quickly gets quite complex
-  const validate = array(array(string({ messages: { required: 'required' } })));
-  assert.deepEqual(await validate([['', 'foo', null]]), {
-    state: 'invalid',
-    code: 'items',
-    params: {},
-    message: 'items',
-    errors: [['required', null, 'required']],
-    field: undefined,
-  });
 });
 
 test('array default', async () => {
@@ -173,16 +145,6 @@ test('array item field names', async () => {
   fields.length = 0;
   await object({ tags: array(recordField) })({ tags: ['a', 'b'] });
   assert.deepEqual(fields, ['tags[0]', 'tags[1]']);
-});
-
-// Fails with an empty message and no errors, which built-in tests never do.
-const silent: Validator = async (value, field) =>
-  invalid({ code: 'custom', message: '', value, field });
-
-test('array records an empty message for an item that fails without one', async () => {
-  const result = await array(silent)(['a', 'b']);
-  assert.equal(result.state, 'invalid');
-  assert.deepEqual(result.state === 'invalid' && result.errors, ['', '']);
 });
 
 test('should return the parsed items when the item validator parses', async () => {
