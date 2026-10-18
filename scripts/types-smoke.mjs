@@ -2,7 +2,9 @@
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
 // the README's createTypeValidatorTest example, without type arguments. A
-// second fixture imports the 2.x type names v3 removes, and must fail on each.
+// second fixture imports the 2.x type names v3 removes, and must fail on each,
+// and a third makes calls with the 2.x options v3 removes, and must fail on
+// each line.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -109,6 +111,16 @@ const removedNames = [
 ];
 const removedFixture = `import type { ${removedNames.join(', ')} } from 'validator-fns';\n`;
 
+/** Calls with the 2.x options v3 removes, one per line after the import. */
+const removedCalls = [
+  "number({ round: 'floor' });",
+  "min(1, 'Too small.', true);",
+  "max(1, 'Too big.', true);",
+  "minDate(0, 'Too early.', true);",
+  "maxDate(0, 'Too late.', true);",
+];
+const removedCallsFixture = `import { max, maxDate, min, minDate, number } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
+
 /**
  * @param {unknown} error
  */
@@ -158,6 +170,26 @@ function stillExported(tsc, cwd) {
 }
 
 /**
+ * Returns the removed calls the declarations still accept.
+ * @param {string} tsc
+ * @param {string} cwd
+ */
+function stillAccepted(tsc, cwd) {
+  const output = typeErrors(tsc, cwd, 'tsconfig.calls.json');
+  if (output === undefined) {
+    return removedCalls;
+  }
+
+  const failingLines = new Set(
+    Array.from(output.matchAll(/removed-calls\.ts\((\d+),/g), (match) =>
+      Number(match[1]),
+    ),
+  );
+  // The import is line 1.
+  return removedCalls.filter((_, index) => !failingLines.has(index + 2));
+}
+
+/**
  * @param {string} command
  * @param {string[]} args
  * @param {string} cwd
@@ -192,6 +224,11 @@ try {
     JSON.stringify({ ...tsconfig, include: ['removed.ts'] }),
   );
   writeFileSync(join(consumer, 'removed.ts'), removedFixture);
+  writeFileSync(
+    join(consumer, 'tsconfig.calls.json'),
+    JSON.stringify({ ...tsconfig, include: ['removed-calls.ts'] }),
+  );
+  writeFileSync(join(consumer, 'removed-calls.ts'), removedCallsFixture);
   run(
     'npm',
     ['install', '--offline', '--no-audit', '--no-fund', join(workDir, tarball)],
@@ -213,6 +250,13 @@ try {
     if (exported.length > 0) {
       throw new Error(
         `The declarations still export ${exported.join(', ')} on the ${name} TypeScript (${version}).`,
+      );
+    }
+
+    const accepted = stillAccepted(tsc, consumer);
+    if (accepted.length > 0) {
+      throw new Error(
+        `The declarations still accept ${accepted.join(' ')} on the ${name} TypeScript (${version}).`,
       );
     }
 
