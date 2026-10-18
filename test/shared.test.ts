@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   exact,
@@ -264,4 +265,30 @@ test('should return an invalid result when a built-in test message throws', asyn
   );
 
   assert.deepInclude(await validate(''), { state: 'invalid', message: 'boom' });
+});
+
+test('should fail required when the value is an invalid date from another realm', async () => {
+  const validate = required('required');
+  assert.equal(
+    (await validate(runInNewContext('new Date(Number.NaN)'))).state,
+    'invalid',
+  );
+  assert.equal((await validate(runInNewContext('new Date(0)'))).state, 'valid');
+});
+
+test('should fail required when the value is an invalid date with its own valueOf', async () => {
+  const broken = new Date(Number.NaN);
+  Object.defineProperty(broken, 'valueOf', { value: () => 0 });
+  assert.equal((await required('required')(broken)).state, 'invalid');
+});
+
+test('should match a listed date when oneOf gets a date from another realm', async () => {
+  assert.equal(
+    (await oneOf([new Date(0)], 'oneOf')(runInNewContext('new Date(0)'))).state,
+    'valid',
+  );
+  assert.equal(
+    (await oneOf([runInNewContext('new Date(0)')], 'oneOf')(new Date(0))).state,
+    'valid',
+  );
 });

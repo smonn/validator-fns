@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   email,
@@ -465,4 +466,11 @@ test('string coerces non-primitive input other than plain objects', async () => 
       errors: undefined,
     });
   }
+});
+
+test('should give the ISO text when string() gets a date from another realm', async () => {
+  assert.equal(
+    (await string()(runInNewContext('new Date(0)'))).value,
+    '1970-01-01T00:00:00.000Z',
+  );
 });
