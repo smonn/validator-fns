@@ -1,4 +1,3 @@
-import { createParser } from './factories.js';
 import {
   childField,
   failure,
@@ -6,7 +5,7 @@ import {
   propertiesTree,
 } from './failures/index.js';
 import { findInvalidResult } from './invalid-detail.js';
-import { isRecordLike, requirable } from './optional.js';
+import { parseRecord, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
@@ -22,13 +21,6 @@ import {
 } from './shared.js';
 
 export type ObjectParameter = Record<string, Validator>;
-
-/**
- * Parses a present value into an object. Fails an array, a function, a boxed
- * primitive or a primitive.
- * @internal
- */
-const parseObject = createParser('object', isRecordLike);
 
 /**
  * Flattens an intersection into one object type, keeping optional keys.
@@ -126,7 +118,7 @@ export function object<P extends ObjectParameter>(
         return onEmpty(values, field);
       }
 
-      const parsed = parseObject(values, field);
+      const parsed = parseRecord(values, field);
       if (parsed.state === 'invalid') {
         return fillOwn(parsed, messages);
       }
