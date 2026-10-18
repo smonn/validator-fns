@@ -1,12 +1,14 @@
 import { assert, test } from 'vitest';
 import {
   array,
+  coerce,
   createValidator,
   object,
   optional,
   string,
   valid,
   type TypeValidator,
+  withMessages,
 } from '../src/index.js';
 
 // Type validators, built-in or custom, run this deep one inside another in one
@@ -20,6 +22,7 @@ type Wrap = (
 
 const inArray: Wrap = (inner) => array(inner);
 const inObject: Wrap = (inner) => object({ child: optional(inner) });
+const inTranslation: Wrap = (inner) => withMessages(inner, {});
 
 /** `depth` levels of `{ child }` around `leaf`, built without recursion. */
 function nestedObject(depth: number, leaf: unknown = {}): unknown {
@@ -64,6 +67,19 @@ function recursive(
     createValidator((value, field) => validator(value, field)),
     layers,
     wrap,
+  );
+  return validator;
+}
+
+/**
+ * A recursive `array()` validator inside `layers` `withMessages()` layers,
+ * whose items call the outermost layer again.
+ */
+function translatedArrays(layers: number): TypeValidator<unknown, unknown> {
+  const validator: TypeValidator<unknown, unknown> = wrapped(
+    array(createValidator((value, field) => validator(value, field))),
+    layers,
+    inTranslation,
   );
   return validator;
 }
@@ -145,6 +161,14 @@ test.each<[string, () => Promise<unknown>]>([
   [
     'a recursive array() validator 50,000 deep',
     async () => recursive(1, inArray)(nestedArray(50_000)),
+  ],
+  [
+    'a recursive array() validator inside 100 withMessages() layers 100 deep',
+    async () => translatedArrays(100)(nestedArray(100)),
+  ],
+  [
+    '10,000 withMessages() layers around coerce.number()',
+    async () => wrapped(coerce.number(), 10_000, inTranslation)('1'),
   ],
 ])(
   'should validate %s, with no unhandled rejection',

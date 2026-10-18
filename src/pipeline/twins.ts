@@ -26,14 +26,15 @@ const same = (input: unknown) => input;
 const registry = new WeakMap<object, Built<unknown, unknown>>();
 
 /**
- * Makes a type validator from its run, and registers the run and `rebuild`,
- * which `optional()` calls once and returns on every call.
+ * Makes a type validator from its run, guarded, and registers the run and
+ * `rebuild`, which `optional()` calls once and returns on every call.
  * @internal
  */
 export function fromRun<T, E>(
-  run: Run<T, E>,
+  unguarded: Run<T, E>,
   rebuild: () => TypeValidator<T | null | undefined, E>,
 ): TypeValidator<T, E> {
+  const run = guardRun(unguarded);
   const validator = withStandard(toValidator(run));
   let rebuilt: TypeValidator<T | null | undefined, E> | undefined;
   const optional = () => {
@@ -58,7 +59,7 @@ function build<T, E, P, V>(
 ): TypeValidator<T | V, E> {
   const { coerce = same } = def;
   return fromRun<T | V, E>(
-    guardRun((value, field) => runType(def, exit, coerce(value), field)),
+    (value, field) => runType(def, exit, coerce(value), field),
     () => build(def, keepValue),
   );
 }
