@@ -154,13 +154,13 @@ test('should reject with a TypeError for a cyclic errors tree', async () => {
   assert.include(String(error), 'deeper than 1000 levels');
 });
 
-/** An `object()` schema nested `levels` deep, with a string at the bottom. */
-const deepSchema = (levels: number): Validator => {
-  let schema: Validator = string(min(2));
+/** An `object()` validator nested `levels` deep, with a string at the bottom. */
+const deepValidator = (levels: number): Validator => {
+  let validator: Validator = string(min(2));
   for (let level = 0; level < levels; level++) {
-    schema = object({ a: schema });
+    validator = object({ a: validator });
   }
-  return schema;
+  return validator;
 };
 
 /** Input nested `levels` deep in `a`, with a short string at the bottom. */
@@ -173,7 +173,7 @@ const deepInput = (levels: number): unknown => {
 };
 
 test('should word a deep object() failure synchronously', async () => {
-  const result = await withMessages(deepSchema(300), { min: 'Too short.' })(
+  const result = await withMessages(deepValidator(300), { min: 'Too short.' })(
     deepInput(300),
   );
   let made: unknown = result;
@@ -183,7 +183,7 @@ test('should word a deep object() failure synchronously', async () => {
   assert.deepInclude(made, { message: 'Too short.' });
 });
 
-// Awaiting before it recurses, the schema nests past the fill's 1000 levels.
+// Awaiting before it recurses, the validator nests past the fill's 1000 levels.
 const node: Validator = createValidator(async (value, field) => {
   await Promise.resolve();
   return recursive(value, field);
