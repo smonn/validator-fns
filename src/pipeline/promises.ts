@@ -64,14 +64,35 @@ export function andThen<T extends object, R>(
 }
 
 /**
- * How many validators made here run synchronously one inside another, as a
- * recursive schema's custom validator calls the schema.
+ * How many type validators' runs, built-in or custom, are running one inside
+ * another, as a schema's children or a recursive schema's custom validator
+ * calling the schema.
  * @internal
  */
 let nesting = 0;
 
-// Past this nesting, a validator starts on a later microtask, unwinding the stack.
+// Past this nesting, a run starts on a later microtask, unwinding the stack.
 const maxNesting = 100;
+
+/**
+ * Guards a type validator's run, so a run nested past `maxNesting` starts on a
+ * later microtask instead, however the schema nests.
+ * @internal
+ */
+export function guardRun<T, E>(run: Run<T, E>): Run<T, E> {
+  const guarded: Run<T, E> = (value, field) => {
+    if (nesting >= maxNesting) {
+      return Promise.resolve().then(() => guarded(value, field));
+    }
+    nesting += 1;
+    try {
+      return run(value, field);
+    } finally {
+      nesting -= 1;
+    }
+  };
+  return guarded;
+}
 
 /**
  * Makes a validator from a run. A throw rejects rather than escapes the call.
@@ -80,18 +101,11 @@ const maxNesting = 100;
  * @internal
  */
 export function toValidator<T, E>(run: Run<T, E>): Validator<T, E> {
-  const validator: Validator<T, E> = (value, field) => {
-    if (nesting >= maxNesting) {
-      return Promise.resolve().then(() => validator(value, field));
-    }
-    nesting += 1;
+  return (value, field) => {
     try {
       return Promise.resolve(run(value, field));
     } catch (error) {
       return Promise.reject(error);
-    } finally {
-      nesting -= 1;
     }
   };
-  return validator;
 }

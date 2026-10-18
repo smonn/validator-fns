@@ -2,7 +2,7 @@ import type { Validator } from '../shared.js';
 import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';
-import { type Run, toValidator } from './promises.js';
+import { guardRun, type Run, toValidator } from './promises.js';
 
 /**
  * What the pipeline keeps for each type validator it builds: its run, and the
@@ -29,7 +29,9 @@ function build<T, E, P, V>(
   def: Def<T, E, P>,
   exit: Exit<V, E>,
 ): TypeValidator<T | V, E> {
-  const run: Run<T | V, E> = (value, field) => runType(def, exit, value, field);
+  const run: Run<T | V, E> = guardRun((value, field) =>
+    runType(def, exit, value, field),
+  );
   const validator = withStandard(toValidator(run));
   // Rebuilt once, on the first optional() call, so each call returns it.
   let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
