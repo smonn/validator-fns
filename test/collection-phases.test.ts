@@ -163,14 +163,25 @@ test('array() stops its collection tests at the first failure', async () => {
   assert.deepEqual(after.seen, []);
 });
 
+test('array() words a collection test failure from its messages config', async () => {
+  const validate = array(
+    number(),
+    { messages: { ascending: 'In order, please.' } },
+    ascending,
+  );
+
+  assert.deepInclude(await validate([2, 1]), { message: 'In order, please.' });
+});
+
 test('array() returns the value its last collection test gives', async () => {
   const padded = array(
     number(),
-    max(2),
     transform((value: number[]) => [...value, 0, 0]),
+    max(2),
   );
 
-  // max checks the input, so the padded value can be longer.
+  // max checks the input before the transform, so the padded value can be
+  // longer.
   assert.deepEqual(await padded([1, 2]), {
     state: 'valid',
     value: [1, 2, 0, 0],
