@@ -77,9 +77,9 @@ export interface ObjectConfig {
    */
   messages?: Messages;
   /**
-   * Fails an object with an own key outside the schema with `unknownKeys`,
-   * before any property runs. Without it, unknown keys are left out of the
-   * value.
+   * Fails an object with an own enumerable string key outside the schema
+   * with `unknownKeys`, before any property runs. Without it, unknown keys
+   * are left out of the value.
    */
   strict?: boolean;
 }
@@ -105,7 +105,7 @@ export function object<P extends ObjectParameter>(
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const { messages, strict }: ObjectConfig =
     typeof config === 'object' ? config : {};
-  const unknownKeys = unknownKeysGate(validators, strict);
+  const checkKeys = unknownKeysGate(validators, strict);
 
   return requirable<ObjectValue<P>, ObjectErrors<P>>(
     messages,
@@ -117,7 +117,7 @@ export function object<P extends ObjectParameter>(
       if (parsed.state === 'invalid') {
         return fillOwn(parsed, messages);
       }
-      const gated = unknownKeys(parsed.value, values, field);
+      const gated = checkKeys(parsed.value, field);
       if (gated) {
         return fillOwn(gated, messages);
       }

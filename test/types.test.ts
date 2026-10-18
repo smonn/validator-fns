@@ -202,6 +202,10 @@ test('array() tests take the parsed items', () => {
   array(string(), async (value: number[], field?: string) =>
     valid({ value, field }),
   );
+  // @ts-expect-error the items' type comes from the item validator, not a test
+  array(string(), async (value: unknown[], field?: string) =>
+    valid({ value, field }),
+  );
   // @ts-expect-error a test's valid value keeps the items' type
   array(string(), async (value: string[], field?: string) =>
     valid({ value: value.length, field }),

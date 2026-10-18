@@ -405,7 +405,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     ```
 
-25. **Expect `array()`'s tests to run after its items, on the parsed items.** Only the built-in `min()`, `max()` and `exact()` still check the array before any item runs. Any other test, such as a length `check()` of your own, runs once every item is valid, and doesn't run when one fails. A test's valid value is now the array's value, as in item 24. In TypeScript, the tests take the item validator's type, such as `Test<string[]>` for `array(string())`, instead of `unknown[]`.
+25. **Expect `array()`'s tests to run after its items, on the parsed items.** Only the built-in `min()`, `max()` and `exact()` still check the array before any item runs. Any other test, such as a length `check()` of your own, runs once every item is valid, and doesn't run when one fails. A test's valid value is now the array's value, as in item 24. In TypeScript, the tests take the item validator's type, such as `Test<string[]>` for `array(string())`, instead of `unknown[]`, so a `min()` built apart from its validator needs that type, as in `min<string[]>(1)`.
 
 26. **Pass `object(schema, { strict: true })` to reject keys outside the schema**, with the `unknownKeys` code, before any property runs. Without it, `object()` still leaves them out of the value, as 2.x did.
 
@@ -738,7 +738,7 @@ await object({ name: string() })(undefined);
 
 When fields fail, the object's own failure has the `properties` code, and its `errors` hold each failed field's failure under its key. See [Errors tree](#errors-tree).
 
-Keys outside the schema are left out of the value. With `strict: true`, an object with an own enumerable key outside the schema fails with the `unknownKeys` code instead, and its `params` hold the `keys`. It fails before any property runs:
+Keys outside the schema are left out of the value. With `strict: true`, an object with an own enumerable string key outside the schema fails with the `unknownKeys` code instead, and its `params` hold the `keys`. It fails before any property runs:
 
 ```js
 const point = object({ x: number(), y: number() }, { strict: true });
