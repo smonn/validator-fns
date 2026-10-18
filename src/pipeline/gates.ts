@@ -1,7 +1,7 @@
 import { failure } from '../failures/index.js';
 import { type Test, validResult } from '../shared.js';
 import type { Runs } from './schema.js';
-import type { Twin, Twinned } from './sync.js';
+import { type Twin, twinOf } from './sync.js';
 
 /**
  * The built-in `min()`, `max()` and `exact()` tests, which `array()` runs on
@@ -21,14 +21,16 @@ export function asLengthGate<T>(test: Test<T, never>): Test<T, never> {
 }
 
 /**
- * Whether `array()` runs test on the input before any item. Only the built-in
- * amount tests are marked, and they take any array and carry a twin.
+ * The twin that `array()` runs on the input before any item, for a length
+ * gate, or `undefined` for any other test. Only the built-in amount tests are
+ * marked, and they take any array and carry a twin.
  * @internal
  */
-export function isLengthGate<V, E>(
+export function lengthGateOf<V, E>(
   test: Test<V, E>,
-): test is Test<V, E> & Twinned<unknown[]> {
-  return lengthGates.has(test);
+): Twin<unknown[]> | undefined;
+export function lengthGateOf(test: Test<unknown[]>) {
+  return lengthGates.has(test) ? twinOf(test) : undefined;
 }
 
 /**

@@ -1,10 +1,10 @@
 export { items } from './items.js';
 export { type Children, keepValue } from './def.js';
-export { asLengthGate, isLengthGate, unknownKeys } from './gates.js';
+export { asLengthGate, lengthGateOf, unknownKeys } from './gates.js';
 export { properties } from './properties.js';
 export { runsOf } from './schema.js';
 export { createValidator, type TypeValidator } from './standard.js';
-export { twinOf, withSyncTwin } from './sync.js';
+export { withSyncTwin } from './sync.js';
 export { createValidatorTest } from './tests.js';
 export { optional } from './optional.js';
 export { defineType } from './twins.js';

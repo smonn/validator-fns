@@ -2,10 +2,9 @@ import {
   type Children,
   configAndTests,
   defineType,
-  isLengthGate,
   items,
   keepValue,
-  twinOf,
+  lengthGateOf,
   type TypeValidator,
 } from './pipeline/index.js';
 import {
@@ -45,9 +44,9 @@ function arrayOf<T, E>(
     expected: 'array',
     default: config.default,
     messages: config.messages,
-    gate: tests.filter(isLengthGate).map(twinOf),
+    gate: tests.flatMap((test) => lengthGateOf(test) ?? []),
     children,
-    steps: tests.filter((test) => !isLengthGate(test)),
+    steps: tests.filter((test) => !lengthGateOf(test)),
   });
 }
 
