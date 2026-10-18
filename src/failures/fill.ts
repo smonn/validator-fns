@@ -61,7 +61,11 @@ function fillErrors(errors: unknown, depth: number, fill: Fill): unknown {
   let changed = false;
   for (const [key, child] of entriesOf(errors, depth, fill.visits)) {
     const filled = child && fillFailure(child, depth + 1, fill);
-    changed = changed || filled !== child;
+    // Not changed ||= ..., which the minifier would emit and Safari 13.1 and
+    // Firefox 77, both supported, can't parse.
+    if (filled !== child) {
+      changed = true;
+    }
     setOwn(tree, key, filled);
   }
 
