@@ -149,6 +149,62 @@ test('should word a validator own failures from its messages config', async () =
   }
 });
 
+const { proxy: revoked, revoke } = Proxy.revocable({}, {});
+revoke();
+
+test.each<[string, unknown, string]>([
+  ['a null-prototype object', Object.create(null), 'got [object Object]'],
+  ['a boxed symbol', Object(Symbol('s')), 'got [object Symbol]'],
+  [
+    'an object whose toString throws',
+    {
+      toString() {
+        throw new Error('no text');
+      },
+    },
+    'got [object Object]',
+  ],
+  ['a revoked Proxy', revoked, 'got [object]'],
+])(
+  'should word %s without a string form by its tag',
+  async (_, input, message) => {
+    assert.deepInclude(
+      await string({ messages: { type: 'got {value}' } })(input),
+      { code: 'type', message },
+    );
+  },
+);
+
+test('should word a {value} template with the value as text', async () => {
+  assert.deepInclude(await string(min(3, '{value} is short'))('ab'), {
+    message: 'ab is short',
+  });
+  assert.deepInclude(
+    await number({ messages: { type: 'got {value}' } })(Symbol('s')),
+    { message: 'got Symbol(s)' },
+  );
+});
+
+test.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
+  'should word the {%s} placeholder from own parameters only',
+  async (key) => {
+    const template = `{${key}}`;
+    assert.deepInclude(
+      await invalid({ code: 'x', message: template, field: undefined }),
+      { message: 'undefined' },
+    );
+    assert.deepInclude(
+      await invalid({
+        code: 'x',
+        params: Object.fromEntries([[key, 'own']]),
+        message: template,
+        field: undefined,
+      }),
+      { message: 'own' },
+    );
+  },
+);
+
 test('should prefer the message passed to a test over the messages config', async () => {
   const result = await string(
     { messages: { min: 'config' } },
