@@ -53,19 +53,19 @@ function wrapped(
 }
 
 /**
- * A recursive schema: `layers` layers of `wrap` around a custom validator that
- * calls the schema again.
+ * A recursive validator: `layers` layers of `wrap` around a custom validator
+ * that calls the recursive validator again.
  */
 function recursive(
   layers: number,
   wrap: Wrap,
 ): TypeValidator<unknown, unknown> {
-  const schema: TypeValidator<unknown, unknown> = wrapped(
-    createValidator((value, field) => schema(value, field)),
+  const validator: TypeValidator<unknown, unknown> = wrapped(
+    createValidator((value, field) => validator(value, field)),
     layers,
     wrap,
   );
-  return schema;
+  return validator;
 }
 
 /** Whether `probe` has run since it was last reset. */
@@ -127,11 +127,11 @@ test('should validate two interleaved deep inputs, then run nested type validato
 // even once the code is warm.
 test.each<[string, () => Promise<unknown>]>([
   [
-    'a recursive schema of 100 array() layers 20,000 deep',
+    'a recursive validator of 100 array() layers 20,000 deep',
     async () => recursive(100, inArray)(nestedArray(20_000)),
   ],
   [
-    'a recursive schema of 100 object() layers 20,000 deep',
+    'a recursive validator of 100 object() layers 20,000 deep',
     async () => recursive(100, inObject)(nestedObject(20_000)),
   ],
   [
@@ -139,11 +139,11 @@ test.each<[string, () => Promise<unknown>]>([
     async () => wrapped(string(), 10_000, inArray)(nestedArray(10_000, 'leaf')),
   ],
   [
-    'a recursive object() schema 50,000 deep',
+    'a recursive object() validator 50,000 deep',
     async () => recursive(1, inObject)(nestedObject(50_000)),
   ],
   [
-    'a recursive array() schema 50,000 deep',
+    'a recursive array() validator 50,000 deep',
     async () => recursive(1, inArray)(nestedArray(50_000)),
   ],
 ])(
