@@ -1,9 +1,5 @@
-import {
-  formatMessage,
-  invalidResult,
-  type ValidatorMessage,
-  type Result,
-} from './shared.js';
+import { failure } from './failures/index.js';
+import { formatMessage, type ValidatorMessage, type Result } from './shared.js';
 
 /** @internal */
 type InvalidFields<E> = {
@@ -42,5 +38,5 @@ export async function invalid<T, E, X extends object>(
     'extras' in result
       ? formatMessage(result.message, { ...result.extras, value, field })
       : formatMessage<unknown>(result.message, { value, field });
-  return invalidResult({ message, field, errors });
+  return failure({ message, field, errors });
 }

@@ -1,9 +1,9 @@
+import { failure } from './failures/index.js';
 import { isBlank, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
   formatMessage,
-  invalidResult,
   type Test,
   validResult,
   type ValidatorMessage,
@@ -64,7 +64,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         // instance of this realm's Promise.
         const parsed = 'then' in parsing ? await parsing : parsing;
         if (parsed.state === 'invalid') {
-          return invalidResult({ message: parsed.message, field });
+          return failure({ message: parsed.message, field });
         }
 
         const parsedValue = applyConfig(parsed.value, finalConfig);
@@ -133,7 +133,7 @@ export function createValidatorTest<T, E, X extends object>(
       return validResult({ value, field });
     }
 
-    return invalidResult({ message: formatFor(value, field), field });
+    return failure({ message: formatFor(value, field), field });
   };
   const validationTest: Test<T, E> = async (value, field) => twin(value, field);
 
@@ -153,7 +153,7 @@ export function createParser<T>(
   return (value, field) => {
     const parsed = value === null || value === undefined ? value : read(value);
     return parsed === undefined && value !== undefined
-      ? invalidResult({ message, field })
+      ? failure({ message, field })
       : validResult({ value: parsed, field });
   };
 }

@@ -1,9 +1,9 @@
+import { failure } from './failures/index.js';
 import {
   type AtPath,
   errorAt,
   errorAtKey,
   formatMessage,
-  invalidResult,
   type KeyPath,
   type Test,
   validResult,
@@ -27,8 +27,8 @@ function checkWith<T, E>(
 
     const formatted = formatMessage(message, { value, field });
     return toErrors
-      ? invalidResult({ message: '', field, errors: toErrors(formatted) })
-      : invalidResult({ message: formatted, field });
+      ? failure({ message: '', field, errors: toErrors(formatted) })
+      : failure({ message: formatted, field });
   };
 }
 

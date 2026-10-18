@@ -1,3 +1,4 @@
+import { failure } from './failures/index.js';
 import {
   type ArrayTest,
   findInvalidResult,
@@ -8,7 +9,6 @@ import {
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
-  invalidResult,
   isIterable,
   valid,
   validResult,
@@ -90,7 +90,7 @@ function arrayOf<T, E>(
     async (value, field, onEmpty) => {
       const parsed = await finalConfig.parser(value, field);
       if (parsed.state === 'invalid') {
-        return invalidResult({ message: parsed.message, field });
+        return failure({ message: parsed.message, field });
       }
 
       const arrayValue = applyArrayConfig(finalConfig, parsed.value);
@@ -109,7 +109,7 @@ function arrayOf<T, E>(
         return valid({ value: items.values, field });
       }
 
-      return invalidResult({
+      return failure({
         message: arrayInvalidResult ? arrayInvalidResult.message : '',
         field,
         errors: items.errors,

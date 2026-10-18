@@ -1,6 +1,6 @@
+import { failure } from './failures/index.js';
 import {
   formatMessage,
-  invalidResult,
   validResult,
   type ValidatorMessage,
   type Result,
@@ -61,7 +61,7 @@ export function requirable<T, E>(
   const message =
     requiredMessage === undefined ? defaultRequiredMessage : requiredMessage;
   const reject = (parsed: T | null | undefined, field: string | undefined) =>
-    invalidResult<E>({
+    failure<E>({
       message: formatMessage(message, { value: parsed, field }),
       field,
     });
