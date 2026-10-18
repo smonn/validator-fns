@@ -5,20 +5,21 @@ import { type TypeValidator, withStandard } from './standard.js';
 import { type Run, toValidator } from './promises.js';
 
 /**
- * Key for what the pipeline keeps on each type validator it builds: its run,
- * and the rebuild of its def that `optional()` returns. Module-private, so
- * only validators built here carry it.
+ * What the pipeline keeps for each type validator it builds: its run, and the
+ * rebuild of its def that `optional()` returns.
  * @internal
  */
-const built = Symbol('pipeline');
-
-/** @internal */
 type Built<T, E> = {
-  readonly [built]?: {
-    run: Run<T, E>;
-    optional: () => TypeValidator<T | null | undefined, E>;
-  };
+  run: Run<T, E>;
+  optional: () => TypeValidator<T | null | undefined, E>;
 };
+
+/**
+ * Each type validator built here, by its identity, so a Proxy of one or a
+ * function with one's properties assigned runs as itself.
+ * @internal
+ */
+const registry = new WeakMap<object, Built<unknown, unknown>>();
 
 /**
  * Builds a type validator from its def, with `exit` for missing input.
@@ -27,7 +28,7 @@ type Built<T, E> = {
 function build<T, E, P, V>(
   def: Def<T, E, P>,
   exit: Exit<V, E>,
-): TypeValidator<T | V, E> & Built<T | V, E> {
+): TypeValidator<T | V, E> {
   const run: Run<T | V, E> = (value, field) => runType(def, exit, value, field);
   const validator = withStandard(toValidator(run));
   // Rebuilt once, on the first optional() call, so each call returns it.
@@ -39,7 +40,8 @@ function build<T, E, P, V>(
     }
     return rebuilt;
   };
-  return Object.assign(validator, { [built]: { run, optional: rebuild } });
+  registry.set(validator, { run, optional: rebuild });
+  return validator;
 }
 
 /**
@@ -52,14 +54,22 @@ export function defineType<T, E, P>(def: Def<T, E, P>): TypeValidator<T, E> {
 }
 
 /**
+ * What the pipeline keeps for a validator built here, or `undefined` for any
+ * other validator.
+ * @internal
+ */
+function builtOf<T, E>(validator: Validator<T, E>): Built<T, E> | undefined;
+function builtOf(validator: object): Built<unknown, unknown> | undefined {
+  return registry.get(validator);
+}
+
+/**
  * A validator's run: its own for one built here, which stays synchronous, or
  * else the validator itself.
  * @internal
  */
-export function runOf<T, E>(
-  validator: Validator<T, E> & Built<T, E>,
-): Run<T, E> {
-  return validator[built]?.run ?? validator;
+export function runOf<T, E>(validator: Validator<T, E>): Run<T, E> {
+  return builtOf(validator)?.run ?? validator;
 }
 
 /**
@@ -68,7 +78,7 @@ export function runOf<T, E>(
  * @internal
  */
 export function optionalOf<T, E>(
-  validator: Validator<T, E> & Built<T, E>,
+  validator: Validator<T, E>,
 ): TypeValidator<T | null | undefined, E> | undefined {
-  return validator[built]?.optional();
+  return builtOf(validator)?.optional();
 }
