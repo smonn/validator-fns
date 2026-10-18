@@ -1,6 +1,7 @@
 import { failure, fillOwn } from './failures/index.js';
 import {
   validResult,
+  type ConfigBase,
   type Messages,
   type Result,
   type Validator,
@@ -39,6 +40,21 @@ export function isObject(value: unknown): value is object {
       }
     })
   );
+}
+
+/**
+ * Runs `parser` on a present value. A missing value, `undefined` or `null`,
+ * never reaches a parser and stays as it is.
+ * @internal
+ */
+export function parsePresent<T>(
+  parser: ConfigBase<T>['parser'],
+  value: unknown,
+  field: string | undefined,
+): ReturnType<ConfigBase<T>['parser']> {
+  return value === null || value === undefined
+    ? validResult({ value, field })
+    : parser(value, field);
 }
 
 /**

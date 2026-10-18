@@ -1,5 +1,5 @@
 import { failure, fillAsOwn, fillOwn } from './failures/index.js';
-import { requirable } from './optional.js';
+import { parsePresent, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
@@ -57,11 +57,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     return requirable<T, string>(
       finalConfig.messages,
       async (value, field, onEmpty) => {
-        // A parser never sees a missing value.
-        const parsing =
-          value === null || value === undefined
-            ? validResult({ value, field })
-            : finalConfig.parser(value, field);
+        const parsing = parsePresent(finalConfig.parser, value, field);
         // Built-in parsers return a result synchronously, which skips an
         // await. Checks for `then`, as a promise from another realm isn't an
         // instance of this realm's Promise.
