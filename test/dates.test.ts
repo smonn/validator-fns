@@ -64,6 +64,25 @@ test('minDate() reads timestamps and ISO 8601 strings as its limit', async () =>
   }
 });
 
+// The calendar repeats every 400 years, so these hold whichever way an offset
+// moves the time.
+test('minDate() moves the years 0 to 99 across a day by an offset as it does 400 years later', async () => {
+  const fourHundredYears = 146_097 * 86_400_000;
+  const times = ['02-28T23:30:00', '03-01T00:30:00'];
+  for (const time of times) {
+    for (const offset of ['+01:00', '-01:00']) {
+      const early = await parsedDate(`0000-${time}${offset}`);
+      const later = await parsedDate(`0400-${time}${offset}`);
+      assert(early instanceof Date && later instanceof Date);
+      assert.equal(
+        early.getTime(),
+        later.getTime() - fourHundredYears,
+        time + offset,
+      );
+    }
+  }
+});
+
 test('minDate() and maxDate() throw for a limit that is not a valid date', () => {
   const unreadable: unknown[] = [
     // Missing
