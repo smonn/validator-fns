@@ -36,7 +36,7 @@ const fixture = `import {
   optional,
   parseNumber,
   string,
-  type ValidatorTest,
+  type Validator,
 } from 'validator-fns';
 
 interface MoneyConfig extends ConfigBase<number> {
@@ -59,7 +59,7 @@ const money = createTypeValidatorTest(
   applyMoneyConfig,
 );
 
-export const price: ValidatorTest<number, string> = money({ cents: true });
+export const price: Validator<number, string> = money({ cents: true });
 export const order = object({
   name: string({ requiredMessage: 'Required.' }),
   note: optional(string()),

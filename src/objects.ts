@@ -8,12 +8,12 @@ import {
   invalidResult,
   setOwn,
   valid,
-  type ValidationTest,
+  type Test,
   type ValidatorMessage,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
-export type ObjectParameter = Record<string, ValidatorTest>;
+export type ObjectParameter = Record<string, Validator>;
 
 /**
  * Flattens an intersection into one object type, keeping optional keys.
@@ -84,8 +84,8 @@ export interface ObjectConfig {
  */
 export function object<P extends ObjectParameter>(
   properties: P,
-  config?: ObjectConfig | ValidationTest<ObjectValue<P>, ObjectErrors<P>>,
-  ...tests: ValidationTest<ObjectValue<P>, ObjectErrors<P>>[]
+  config?: ObjectConfig | Test<ObjectValue<P>, ObjectErrors<P>>,
+  ...tests: Test<ObjectValue<P>, ObjectErrors<P>>[]
 ): TypeValidator<ObjectValue<P>, ObjectErrors<P>> {
   if (typeof properties !== 'object' || properties === null) {
     throw new TypeError('`properties` must be a configuration object');

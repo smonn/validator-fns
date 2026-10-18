@@ -2,7 +2,7 @@ import {
   formatMessage,
   invalidResult,
   type ValidatorMessage,
-  type ValidatorResult,
+  type Result,
 } from './shared.js';
 
 /** @internal */
@@ -25,18 +25,18 @@ type InvalidFields<E> = {
  */
 export function invalid<T, E = never>(
   result: InvalidFields<E> & { message: ValidatorMessage<unknown> },
-): Promise<ValidatorResult<T, E>>;
+): Promise<Result<T, E>>;
 export function invalid<T, E, X extends object>(
   result: InvalidFields<E> & {
     message: ValidatorMessage<unknown, X>;
     extras: X;
   },
-): Promise<ValidatorResult<T, E>>;
+): Promise<Result<T, E>>;
 export async function invalid<T, E, X extends object>(
   result:
     | (InvalidFields<E> & { message: ValidatorMessage<unknown> })
     | (InvalidFields<E> & { message: ValidatorMessage<unknown, X>; extras: X }),
-): Promise<ValidatorResult<T, E>> {
+): Promise<Result<T, E>> {
   const { value, field, errors } = result;
   const message =
     'extras' in result

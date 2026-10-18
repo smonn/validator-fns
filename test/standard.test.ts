@@ -17,8 +17,8 @@ import {
   parseNumber,
   string,
   valid,
+  type Result,
   type TypeValidator,
-  type ValidatorResult,
 } from '../src/index.js';
 
 /** The same type as StandardSchemaV1.InferOutput, without importing it. */
@@ -106,7 +106,7 @@ const passThrough = async (value: unknown, field?: string) =>
 const hello = async (
   value: unknown,
   field?: string,
-): Promise<ValidatorResult<'hello', { code: number }>> =>
+): Promise<Result<'hello', { code: number }>> =>
   value === 'hello'
     ? valid({ value, field })
     : invalid({
@@ -168,9 +168,9 @@ test('should infer the value and error types from the function', () => {
 });
 
 test('should take only async functions', () => {
-  expectTypeOf<
-    (value: unknown) => ValidatorResult<string, never>
-  >().not.toExtend<Parameters<typeof createValidator<string, never>>[0]>();
+  expectTypeOf<(value: unknown) => Result<string, never>>().not.toExtend<
+    Parameters<typeof createValidator<string, never>>[0]
+  >();
 });
 
 test('should not export standard()', () => {

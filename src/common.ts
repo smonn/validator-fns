@@ -1,7 +1,7 @@
 import { createValidatorTest } from './factories.js';
 import type {
   MessageExtras,
-  ValidationTest,
+  Test,
   ValidatorMessage,
   ValidatorMessageParameters,
 } from './shared.js';
@@ -24,7 +24,7 @@ export function oneOf<T extends string | number | boolean | Date>(
     T,
     MessageExtras<OneOfValidatorMessageParameters<T>>
   >,
-): ValidationTest<T, never> {
+): Test<T, never> {
   return createValidatorTest(
     (value: T) =>
       values.includes(value) ||

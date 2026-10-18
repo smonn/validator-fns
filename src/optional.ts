@@ -3,8 +3,8 @@ import {
   invalidResult,
   validResult,
   type ValidatorMessage,
-  type ValidatorResult,
-  type ValidatorTest,
+  type Result,
+  type Validator,
 } from './shared.js';
 import { type TypeValidator, withStandard } from './standard.js';
 
@@ -55,8 +55,8 @@ export function requirable<T, E>(
     onEmpty: (
       parsed: T | null | undefined,
       field: string | undefined,
-    ) => ValidatorResult<V, E>,
-  ) => Promise<ValidatorResult<T | V, E>>,
+    ) => Result<V, E>,
+  ) => Promise<Result<T | V, E>>,
 ): TypeValidator<T, E> {
   const message =
     requiredMessage === undefined ? defaultRequiredMessage : requiredMessage;
@@ -68,9 +68,9 @@ export function requirable<T, E>(
     });
   const accept = (parsed: T | null | undefined, field: string | undefined) =>
     validResult<T | null | undefined, E>({ value: parsed, field });
-  const required: ValidatorTest<T, E> = (value, field) =>
+  const required: Validator<T, E> = (value, field) =>
     validate(value, field, reject);
-  const twin: ValidatorTest<T | null | undefined, E> = (value, field) =>
+  const twin: Validator<T | null | undefined, E> = (value, field) =>
     validate(value, field, accept);
 
   return Object.assign(withStandard(required), {
@@ -87,7 +87,7 @@ export function requirable<T, E>(
  * @category Helpers
  */
 export function optional<T, E>(
-  validator: ValidatorTest<T, E> & OptionalTwin<T, E>,
+  validator: Validator<T, E> & OptionalTwin<T, E>,
 ): TypeValidator<T | null | undefined, E> {
   const twin = validator[optionalTwin];
   if (twin !== undefined) {

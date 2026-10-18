@@ -1,4 +1,4 @@
-import type { InvalidResult, ValidationTest, ValidatorTest } from './shared.js';
+import type { Failure, Test, Validator } from './shared.js';
 
 /**
  * Runs tests on a value in order, stopping at the first failure, for the
@@ -9,10 +9,10 @@ import type { InvalidResult, ValidationTest, ValidatorTest } from './shared.js';
  * @internal
  */
 export async function findInvalidResult<V, E>(
-  tests: ValidationTest<V, E>[],
+  tests: Test<V, E>[],
   value: V,
   field: string | undefined,
-): Promise<InvalidResult<E> | undefined> {
+): Promise<Failure<E> | undefined> {
   for (const validatorTest of tests) {
     const result = await validatorTest(value, field);
     if (result.state === 'invalid') {
@@ -30,7 +30,7 @@ export async function findInvalidResult<V, E>(
  * @param result Failed result
  * @internal
  */
-export function invalidDetail<E>(result: InvalidResult<E>): string | E {
+export function invalidDetail<E>(result: Failure<E>): string | E {
   return result.message || result.errors === undefined
     ? result.message
     : result.errors;
@@ -41,7 +41,7 @@ export function invalidDetail<E>(result: InvalidResult<E>): string | E {
  * before the item validator, so the items are `unknown`.
  * @internal
  */
-export type ArrayTest = ValidationTest<unknown[]>;
+export type ArrayTest = Test<unknown[]>;
 
 /**
  * Each item as the item validator parsed it, and each item's error: `null` for
@@ -62,7 +62,7 @@ export type ValidatedItems<T, E> = {
  * @internal
  */
 export async function validateItems<T, E>(
-  validateItem: ValidatorTest<T, E>,
+  validateItem: Validator<T, E>,
   arrayValue: unknown[],
   field: string | undefined,
 ): Promise<ValidatedItems<T, E>> {

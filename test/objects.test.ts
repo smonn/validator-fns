@@ -11,7 +11,7 @@ import {
   object,
   optional,
   string,
-  type ValidatorTest,
+  type Validator,
 } from '../src/index.js';
 
 test('object', async () => {
@@ -229,7 +229,7 @@ test('invalid configuration', async () => {
 });
 
 // Fails with an empty message and no errors, which built-in tests never do.
-const silent: ValidatorTest = async (value, field) =>
+const silent: Validator = async (value, field) =>
   invalid({ message: '', value, field });
 
 test('object records an empty message for a field that fails without one', async () => {

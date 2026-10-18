@@ -3,7 +3,7 @@ import type {
   ConfigBase,
   MessageExtras,
   ValidatorMessage,
-  ValidationTest,
+  Test,
   ValidatorMessageParameters,
 } from './shared.js';
 import { parseDate } from './parse-date.js';
@@ -53,7 +53,7 @@ export function minDate(
     MessageExtras<MinDateValidatorMessageParameters>
   >,
   exclusive?: boolean,
-): ValidationTest<Date, never> {
+): Test<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value: Date) =>
@@ -89,7 +89,7 @@ export function maxDate(
     MessageExtras<MaxDateValidatorMessageParameters>
   >,
   exclusive?: boolean,
-): ValidationTest<Date, never> {
+): Test<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value: Date) =>

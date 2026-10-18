@@ -19,7 +19,7 @@ import {
   string,
   url,
   valid,
-  type ValidatorTest,
+  type Validator,
 } from '../src/index.js';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -27,7 +27,7 @@ const TEN_DAYS = ONE_DAY * 10;
 const now = new Date();
 const tenDaysFromNow = new Date(now.getTime() + TEN_DAYS);
 
-const customValidator: ValidatorTest<string, string> = async (value, field) => {
+const customValidator: Validator<string, string> = async (value, field) => {
   if (value === 'hello') {
     return valid({ value, field });
   }

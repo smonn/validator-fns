@@ -1,7 +1,7 @@
 import { createValidatorTest } from './factories.js';
 import type {
   MessageExtras,
-  ValidationTest,
+  Test,
   ValidatorMessage,
   ValidatorMessageParameters,
 } from './shared.js';
@@ -44,7 +44,7 @@ export function max(
     MessageExtras<MaxValidatorMessageParameters>
   >,
   exclusive?: boolean,
-): ValidationTest<SharedValueType, never> {
+): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => {
       const amount = getAmount(value);
@@ -81,7 +81,7 @@ export function min(
     MessageExtras<MinValidatorMessageParameters>
   >,
   exclusive?: boolean,
-): ValidationTest<SharedValueType, never> {
+): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => {
       const amount = getAmount(value);
@@ -115,7 +115,7 @@ export function exact(
     SharedValueType,
     MessageExtras<ExactValidatorMessageParameters>
   >,
-): ValidationTest<SharedValueType, never> {
+): Test<SharedValueType, never> {
   return createValidatorTest(
     (value: SharedValueType) => getAmount(value) === limit,
     message,

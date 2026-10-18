@@ -5,7 +5,7 @@ import {
   formatMessage,
   invalidResult,
   type KeyPath,
-  type ValidationTest,
+  type Test,
   validResult,
   type ValidatorMessage,
 } from './shared.js';
@@ -19,7 +19,7 @@ function checkWith<T, E>(
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
   toErrors?: (formatted: string) => E,
-): ValidationTest<T, E> {
+): Test<T, E> {
   return async (value, field) => {
     if (test(value)) {
       return validResult({ value, field });
@@ -49,17 +49,17 @@ function checkWith<T, E>(
 export function check<T>(
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidationTest<T, never>;
+): Test<T, never>;
 export function check<T, const K extends keyof T & string>(
   path: K,
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidationTest<T, { [P in K]?: string }>;
+): Test<T, { [P in K]?: string }>;
 export function check<T, const Path extends KeyPath<T>>(
   path: Path,
   test: (value: T) => boolean,
   message: ValidatorMessage<T>,
-): ValidationTest<T, AtPath<Path>>;
+): Test<T, AtPath<Path>>;
 export function check<
   T,
   K extends keyof T & string,
@@ -73,10 +73,7 @@ export function check<
         test: (value: T) => boolean,
         message: ValidatorMessage<T>,
       ]
-):
-  | ValidationTest<T, never>
-  | ValidationTest<T, { [P in K]?: string }>
-  | ValidationTest<T, AtPath<Path>> {
+): Test<T, never> | Test<T, { [P in K]?: string }> | Test<T, AtPath<Path>> {
   if (args.length === 2) {
     return checkWith<T, never>(args[0], args[1]);
   }

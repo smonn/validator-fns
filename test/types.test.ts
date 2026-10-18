@@ -18,23 +18,21 @@ import {
   valid,
   type ExtractValue,
   type MinValidatorMessageParameters,
+  type Result,
   type SharedValueType,
+  type Test,
   type TypeValidator,
-  type ValidationTest,
+  type Validator,
   type ValidatorMessage,
   type ValidatorMessageParameters,
-  type ValidatorResult,
-  type ValidatorTest,
 } from '../src/index.js';
 
 test('validator types default to unknown', () => {
-  type Valid = Extract<ValidatorResult, { state: 'valid' }>;
-  type Invalid = Extract<ValidatorResult, { state: 'invalid' }>;
-  expectTypeOf<Valid['value']>().toEqualTypeOf<unknown>();
-  expectTypeOf<Invalid['errors']>().toEqualTypeOf<unknown>();
-  expectTypeOf<
-    Awaited<ReturnType<ValidatorTest>>
-  >().toEqualTypeOf<ValidatorResult>();
+  type DefaultValid = Extract<Result, { state: 'valid' }>;
+  type DefaultFailure = Extract<Result, { state: 'invalid' }>;
+  expectTypeOf<DefaultValid['value']>().toEqualTypeOf<unknown>();
+  expectTypeOf<DefaultFailure['errors']>().toEqualTypeOf<unknown>();
+  expectTypeOf<Awaited<ReturnType<Validator>>>().toEqualTypeOf<Result>();
 });
 
 test('type validators carry their value type and string errors', () => {
@@ -48,17 +46,17 @@ test('type validators carry their value type and string errors', () => {
 
 test('built-in tests and results without errors have never as the error type', () => {
   expectTypeOf(min(1, 'min')).toEqualTypeOf<
-    ValidationTest<string | number | unknown[], never>
+    Test<string | number | unknown[], never>
   >();
   expectTypeOf(createValidatorTest(() => true, 'message')).toEqualTypeOf<
-    ValidationTest<unknown, never>
+    Test<unknown, never>
   >();
   expectTypeOf(
     invalid({ message: 'message', value: 1, field: undefined }),
-  ).toEqualTypeOf<Promise<ValidatorResult<unknown, never>>>();
+  ).toEqualTypeOf<Promise<Result<unknown, never>>>();
 });
 
-const numericErrors: ValidatorTest<unknown, number> = async (value, field) =>
+const numericErrors: Validator<unknown, number> = async (value, field) =>
   invalid({ message: 'message', value, field, errors: 1 });
 
 test('type validators reject tests whose errors are not strings', () => {
@@ -86,12 +84,12 @@ test('optional() adds null and undefined to the value type', () => {
 });
 
 test('valid results carry the value type without null or undefined', () => {
-  type Valid<V extends ValidatorTest> = Extract<
+  type ValidValue<V extends Validator> = Extract<
     Awaited<ReturnType<V>>,
     { state: 'valid' }
   >['value'];
-  expectTypeOf<Valid<ReturnType<typeof string>>>().toEqualTypeOf<string>();
-  expectTypeOf<Valid<typeof optionalString>>().toEqualTypeOf<
+  expectTypeOf<ValidValue<ReturnType<typeof string>>>().toEqualTypeOf<string>();
+  expectTypeOf<ValidValue<typeof optionalString>>().toEqualTypeOf<
     string | null | undefined
   >();
 });
@@ -109,7 +107,7 @@ test('object() makes keys optional only for optional() validators', () => {
   >();
 });
 
-const maybe: ValidatorTest<string | undefined> = async () =>
+const maybe: Validator<string | undefined> = async () =>
   valid({ value: undefined, field: undefined });
 
 test('object() makes keys optional for validators whose type includes undefined', () => {
@@ -180,7 +178,7 @@ test('array() carries the item value and error types', () => {
 });
 
 test('results have no isValid property', () => {
-  expectTypeOf<ValidatorResult>().not.toHaveProperty('isValid');
+  expectTypeOf<Result>().not.toHaveProperty('isValid');
 });
 
 test('applyArrayConfig returns unknown items and takes no type argument', () => {
@@ -193,18 +191,16 @@ const anyValue = async (value: unknown, field?: string) =>
   valid({ value, field });
 
 test('validation tests take the parsed value', () => {
-  expectTypeOf(min(1, 'min')).toEqualTypeOf<
-    ValidationTest<SharedValueType, never>
-  >();
+  expectTypeOf(min(1, 'min')).toEqualTypeOf<Test<SharedValueType, never>>();
   expectTypeOf(
     check((value: { name: string }) => value.name !== '', 'empty'),
-  ).toEqualTypeOf<ValidationTest<{ name: string }, never>>();
+  ).toEqualTypeOf<Test<{ name: string }, never>>();
 
   // A test for another type doesn't fit, and a test on unknown fits any type.
   const isTrue = createValidatorTest((value: boolean) => value, 'true');
-  expectTypeOf(isTrue).not.toExtend<ValidationTest<string, string>>();
-  expectTypeOf(isTrue).toExtend<ValidationTest<boolean, string>>();
-  expectTypeOf(anyValue).toExtend<ValidationTest<string, string>>();
+  expectTypeOf(isTrue).not.toExtend<Test<string, string>>();
+  expectTypeOf(isTrue).toExtend<Test<boolean, string>>();
+  expectTypeOf(anyValue).toExtend<Test<string, string>>();
   string(min(1, 'min'), anyValue);
 });
 
@@ -253,17 +249,17 @@ test('check() types its errors from the path', () => {
       (value: Signup) => value.confirm === value.password,
       'Must match.',
     ),
-  ).toEqualTypeOf<ValidationTest<Signup, { confirm?: string }>>();
+  ).toEqualTypeOf<Test<Signup, { confirm?: string }>>();
   expectTypeOf(
     check(
       ['shipping', 'zip'],
       (value: Addresses) => value.shipping.zip === value.billing.zip,
       'Must match.',
     ),
-  ).toEqualTypeOf<ValidationTest<Addresses, { shipping?: { zip?: string } }>>();
+  ).toEqualTypeOf<Test<Addresses, { shipping?: { zip?: string } }>>();
   expectTypeOf(
     check(['password'], (value: Signup) => value.password !== '', 'Empty.'),
-  ).toEqualTypeOf<ValidationTest<Signup, { password?: string }>>();
+  ).toEqualTypeOf<Test<Signup, { password?: string }>>();
 });
 
 test('check() infers the object and path inside object()', () => {
