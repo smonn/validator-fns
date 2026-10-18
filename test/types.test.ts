@@ -6,6 +6,7 @@ import {
   type BooleanConfig,
   type BuiltInCode,
   check,
+  coerce,
   createTypeValidator,
   createValidatorTest,
   date,
@@ -56,6 +57,21 @@ test('type validators carry their value type and string errors', () => {
   >();
   expectTypeOf(boolean()).toEqualTypeOf<TypeValidator<boolean, string>>();
   expectTypeOf(date()).toEqualTypeOf<TypeValidator<Date, string>>();
+});
+
+test('coerce twins carry their strict built-in types', () => {
+  expectTypeOf(coerce.number(min(1))).toEqualTypeOf<
+    TypeValidator<number, string>
+  >();
+  expectTypeOf(coerce.boolean({ default: false })).toEqualTypeOf<
+    TypeValidator<boolean, string>
+  >();
+  expectTypeOf(coerce.date(minDate(0))).toEqualTypeOf<
+    TypeValidator<Date, string>
+  >();
+  expectTypeOf(optional(coerce.number())).toEqualTypeOf<
+    TypeValidator<number | null | undefined, string>
+  >();
 });
 
 const readNumber = async (value: unknown, field?: string) =>

@@ -3,12 +3,14 @@
 // because its rows and runner have no other home: the rev-dep tests boundary
 // lets a test file import only src/index.ts, so a shared table module would
 // need that boundary widened.
+import { inspect } from 'node:util';
 import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   array,
   boolean,
   check,
+  coerce,
   createTypeValidator,
   createValidator,
   createValidatorTest,
@@ -707,6 +709,270 @@ const dateRows: Row[] = [
   ),
 ];
 
+const blanks = ['', '  ', '\t\n', ' 　﻿ '];
+const atLeastOne = coerce.number(min(1));
+const zeroByDefault = coerce.number({ default: 0 });
+const falseByDefault = coerce.boolean({ default: false });
+const epochOrLater = coerce.date({ default: new Date(0) }, minDate(0));
+const foreignDate: unknown = runInNewContext('new Date(0)');
+const longDigits = '1'.repeat(300);
+
+/** Blank input is missing, so `optional()` passes it as undefined. */
+const blankRows = (name: string, validate: Validator): Row[] =>
+  blanks.map((input) =>
+    row(
+      `${name} fails ${inspect(input)} with required`,
+      validate,
+      input,
+      required(),
+      {
+        field: 'f',
+        optional: pass(undefined),
+      },
+    ),
+  );
+
+const coerceRows: Row[] = [
+  ...blankRows('coerce.number()', coerce.number()),
+  ...blankRows('coerce.boolean()', coerce.boolean()),
+  ...blankRows('coerce.date()', coerce.date()),
+  row(
+    'coerce.number() words blank text as undefined in its required message',
+    coerce.number({ messages: { required: 'got [{value}]' } }),
+    '  ',
+    required('got [undefined]'),
+    { optional: pass(undefined) },
+  ),
+  ...(
+    [
+      ['42', 42],
+      [' 42 ', 42],
+      [' -1.5 ', -1.5],
+      ['1.25', 1.25],
+      ['+1', 1],
+      ['-.5', -0.5],
+      ['1e-400', 0],
+      ['1e3', 1000],
+      ['1E+3', 1000],
+      ['2.5e-3', 0.0025],
+      ['.5', 0.5],
+      ['007', 7],
+      ['-0', -0],
+      [' 42　', 42],
+      [longDigits, Number(longDigits)],
+      [42, 42],
+      [-0, -0],
+    ] satisfies [unknown, number][]
+  ).map(([input, value]) =>
+    row(
+      `coerce.number() reads ${inspect(input)}`,
+      coerce.number(),
+      input,
+      pass(value),
+    ),
+  ),
+  ...[
+    '12px',
+    '0x10',
+    '0b1',
+    '0o7',
+    'Infinity',
+    '-Infinity',
+    'NaN',
+    '1,5',
+    '1.',
+    '1 2',
+    '1_000',
+    'e3',
+    '1e',
+    '-',
+    '+-1',
+    '١٢',
+    '1e400',
+    '1'.repeat(400),
+    'constructor',
+    Number.NaN,
+    Infinity,
+    true,
+    10n,
+    new Date(0),
+    new Number(1),
+    new String(' 1 '),
+    runInNewContext('new String("1")'),
+    {},
+    [1],
+  ].map((input) =>
+    row(
+      `coerce.number() fails ${inspect(input)} with type`,
+      coerce.number(),
+      input,
+      typeFail('number'),
+    ),
+  ),
+  row(
+    'coerce.number() runs its tests on what it reads',
+    atLeastOne,
+    '0',
+    fail('min', { min: 1, amount: 0 }),
+  ),
+  row(
+    'coerce.number() passes what it reads to its tests',
+    atLeastOne,
+    ' 42 ',
+    pass(42),
+  ),
+  row(
+    'coerce.number() fills blank text with its default',
+    zeroByDefault,
+    '  ',
+    pass(0),
+  ),
+  row(
+    'coerce.number() fills undefined with its default',
+    zeroByDefault,
+    undefined,
+    pass(0),
+  ),
+  ...(
+    [
+      [true, true],
+      [false, false],
+      ['true', true],
+      ['TRUE', true],
+      [' True\n', true],
+      ['1', true],
+      ['on', true],
+      ['On', true],
+      ['false', false],
+      ['FALSE', false],
+      ['0', false],
+      ['off', false],
+      [' OFF ', false],
+    ] satisfies [unknown, boolean][]
+  ).map(([input, value]) =>
+    row(
+      `coerce.boolean() reads ${inspect(input)}`,
+      coerce.boolean(),
+      input,
+      pass(value),
+    ),
+  ),
+  ...[
+    'yes',
+    'no',
+    'y',
+    't',
+    '1.0',
+    '01',
+    'truee',
+    'o n',
+    'constructor',
+    'toString',
+    '__proto__',
+    1,
+    0,
+    Number.NaN,
+    new Boolean(true),
+    new String('true'),
+    {},
+  ].map((input) =>
+    row(
+      `coerce.boolean() fails ${inspect(input)} with type`,
+      coerce.boolean(),
+      input,
+      typeFail('boolean'),
+    ),
+  ),
+  row(
+    'coerce.boolean() reads a checked checkbox over its default',
+    falseByDefault,
+    'on',
+    pass(true),
+  ),
+  row(
+    'coerce.boolean() fills blank text with its default',
+    falseByDefault,
+    '',
+    pass(false),
+  ),
+  ...(
+    [
+      ['2026-10-17', new Date(2026, 9, 17)],
+      [' 2026-10-17 ', new Date(2026, 9, 17)],
+      ['2026', new Date(2026, 0, 1)],
+      ['2026-10', new Date(2026, 9, 1)],
+      ['2026-10-17T08:30', new Date(2026, 9, 17, 8, 30)],
+      ['2026-10-17 08:30:15.250', new Date(2026, 9, 17, 8, 30, 15, 250)],
+      ['2026-10-17T08:30:00Z', new Date(Date.UTC(2026, 9, 17, 8, 30))],
+      ['2024-02-29', new Date(2024, 1, 29)],
+      ['2000-02-29', new Date(2000, 1, 29)],
+      [0, new Date(0)],
+      [-1, new Date(-1)],
+      [8.64e15, new Date(8.64e15)],
+      [now, now],
+      [foreignDate, foreignDate],
+    ] satisfies [unknown, unknown][]
+  ).map(([input, value]) =>
+    row(
+      `coerce.date() reads ${inspect(input)}`,
+      coerce.date(),
+      input,
+      pass(value),
+    ),
+  ),
+  ...[
+    'tomorrow',
+    '17/10/2026',
+    '20261017',
+    '2026-10-17T',
+    '2026-01-01T23:60',
+    '2026-01-01T23:59:60',
+    '0',
+    'constructor',
+    true,
+    Number.NaN,
+    Infinity,
+    8.64e15 + 1,
+    10n,
+    new Date(Number.NaN),
+    new Number(0),
+    new String('2026-10-17'),
+    {},
+  ].map((input) =>
+    row(
+      `coerce.date() fails ${inspect(input)} with type`,
+      coerce.date(),
+      input,
+      typeFail('date'),
+    ),
+  ),
+  // Today's parser rolls a day past the end of its month over (#787).
+  row(
+    'coerce.date() reads 30 February as 2 March, as minDate() does (#787)',
+    coerce.date(),
+    '2026-02-30',
+    pass(new Date(2026, 2, 2)),
+  ),
+  row(
+    'coerce.date() runs its tests on what it reads',
+    epochOrLater,
+    '1969-01-01T00:00:00Z',
+    fail('minDate', { min: new Date(0) }),
+  ),
+  row(
+    'coerce.date() reads a timestamp for its tests',
+    epochOrLater,
+    1,
+    pass(new Date(1)),
+  ),
+  row(
+    'coerce.date() fills blank text with its default',
+    epochOrLater,
+    ' ',
+    pass(new Date(0)),
+  ),
+];
+
 const builtInTests: [string, Validator, Record<string, unknown>][] = [
   ['min', untyped(min(0, 'failed')), { min: 0, amount: Number.NaN }],
   ['max', untyped(max(1, 'failed')), { max: 1, amount: Number.NaN }],
@@ -850,6 +1116,9 @@ const typeValidators: [string, Validator][] = [
   ['boolean()', boolean()],
   ['array()', array()],
   ['object()', object({ name: string() })],
+  ['coerce.number()', coerce.number()],
+  ['coerce.boolean()', coerce.boolean()],
+  ['coerce.date()', coerce.date()],
 ];
 
 const notOk: Validator<string, string> = async (value, field) =>
@@ -1521,6 +1790,19 @@ const text = createTypeValidator(async (value: unknown, field?: string) =>
 
 const customRows: Row[] = [
   row(
+    'createTypeValidator() of optional(coerce.number()) reads blank text as missing',
+    createTypeValidator(optional(coerce.number()))(),
+    ' ',
+    required(),
+    { optional: pass(undefined) },
+  ),
+  row(
+    'createTypeValidator() of coerce.number() fails blank text with required, in optional() too',
+    createTypeValidator(coerce.number())(),
+    ' ',
+    required(),
+  ),
+  row(
     'createTypeValidator() passes what its parser passes',
     uuidString(),
     '00000000-0000-0000-0000-000000000000',
@@ -1616,6 +1898,7 @@ const rows: Row[] = [
   ...numberRows,
   ...booleanRows,
   ...dateRows,
+  ...coerceRows,
   ...testRows,
   ...missingRows,
   ...arrayRows,

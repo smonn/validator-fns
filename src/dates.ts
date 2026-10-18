@@ -85,7 +85,23 @@ export function maxDate(
 export type DateConfig = ConfigBase<Date>;
 
 /**
+ * Reads trimmed ISO 8601 text, and a number as a timestamp, as a date. Passes
+ * on any other input, and what reads as no valid date, as it is.
+ */
+function readDateInput(input: unknown): unknown {
+  const read = readDate(typeof input === 'string' ? input.trim() : input);
+  return isValidDate(read) ? read : input;
+}
+
+/**
  * Validates a date value. Fails anything but a valid date.
  * @category Type Validators
  */
 export const date = defineScalar('date', isValidDate);
+
+/**
+ * Validates a date value, after reading ISO 8601 text or a timestamp. Blank
+ * text is missing.
+ * @internal
+ */
+export const coerceDate = defineScalar('date', isValidDate, readDateInput);

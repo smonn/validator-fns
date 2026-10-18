@@ -1,5 +1,6 @@
 import { assert, test } from 'vitest';
 import {
+  coerce,
   createTypeValidator,
   invalid,
   min,
@@ -59,4 +60,18 @@ test('optional() leaves the validator it wraps unchanged', async () => {
   assert.deepInclude(await optional(optionalString)(undefined), {
     state: 'valid',
   });
+});
+
+test('optional() of a coerce twin keeps the coercion, and returns one validator', async () => {
+  const validate = coerce.number();
+  const optionalNumber = optional(validate);
+
+  assert.strictEqual(optional(validate), optionalNumber);
+  assert.deepInclude(await optionalNumber(' 42 '), { value: 42 });
+  assert.deepInclude(await optionalNumber('  '), {
+    state: 'valid',
+    value: undefined,
+  });
+  assert.deepInclude(await optionalNumber('x'), { code: 'type' });
+  assert.deepInclude(await validate('  '), { code: 'required' });
 });

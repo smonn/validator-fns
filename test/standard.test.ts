@@ -109,6 +109,7 @@ test('should export only the v3 surface', () => {
     'array',
     'boolean',
     'check',
+    'coerce',
     'createTypeValidator',
     'createValidator',
     'createValidatorTest',
