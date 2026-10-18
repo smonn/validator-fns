@@ -240,6 +240,13 @@ test('string default', async () => {
   }
 });
 
+test('string() keeps whitespace without trim, in the default too', async () => {
+  assert.deepInclude(await string()(' a '), { value: ' a ' });
+  assert.deepInclude(await string({ default: ' x ' })(undefined), {
+    value: ' x ',
+  });
+});
+
 test('should pass each matching value when the pattern has the global flag', async () => {
   const validate = matches(/a/g, 'invalid');
   assert.equal((await validate('ab')).state, 'valid');
