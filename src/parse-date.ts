@@ -2,28 +2,19 @@
 const isoDatePattern =
   /^(\d{4})(?:-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01])(?:[ T]([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-](?:[01]\d|2[0-3]):?[0-5]\d)?)?)?)?)?$/;
 
-/** @internal */
-const timezonePattern = /^([+-])([0-2]\d):?([0-5]\d)$/;
-
 /**
- * Parses a timezone string.
- * @param timezone Timezone to parse
+ * Reads a timezone that `isoDatePattern` matched, `Z` or an offset such as
+ * `+02:00` or `-0530`, in minutes.
+ * @param timezone Timezone to read
  * @internal
  */
 function parseTimezone(timezone: string): number {
-  const parts = timezonePattern.exec(timezone);
-
-  if (timezone === 'Z' || !parts) {
+  if (timezone === 'Z') {
     return 0;
   }
 
-  // The pattern's groups aren't optional, so a match always has the sign,
-  // hour, and minute.
-  const [, sign, hour, minute] = parts;
-  const multiplier = sign === '-' ? -1 : 1;
-  const offset = Number(hour) * 60 + Number(minute);
-
-  return multiplier * offset;
+  const offset = Number(timezone.slice(1, 3)) * 60 + Number(timezone.slice(-2));
+  return timezone.startsWith('-') ? -offset : offset;
 }
 
 /**
@@ -68,13 +59,16 @@ function parseIsoDate(value: string): Date | undefined {
     fraction = '0',
     timezone,
   ] = parts;
+  const fullYear = Number(year);
+  const monthIndex = Number(month) - 1;
+  const dayOfMonth = Number(day);
   // Set by part, since `new Date()` and `Date.UTC()` read the years 0 to 99
   // as 1900 to 1999.
   const date = new Date(0);
-  date.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
+  date.setUTCFullYear(fullYear, monthIndex, dayOfMonth);
   // A day past the end of its month, such as 30 February, rolls over. The
   // pattern checks every other part's range.
-  if (date.getUTCDate() !== Number(day)) {
+  if (date.getUTCDate() !== dayOfMonth) {
     return undefined;
   }
 
@@ -83,7 +77,7 @@ function parseIsoDate(value: string): Date | undefined {
     const minutes = Number(minute) + parseTimezone(timezone);
     date.setUTCHours(Number(hour), minutes, Number(second), milliseconds);
   } else {
-    date.setFullYear(Number(year), Number(month) - 1, Number(day));
+    date.setFullYear(fullYear, monthIndex, dayOfMonth);
     date.setHours(Number(hour), Number(minute), Number(second), milliseconds);
   }
   return date;
