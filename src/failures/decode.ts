@@ -1,5 +1,6 @@
 import type { Failure } from '../shared.js';
 import type { StandardSchemaV1 } from '../standard-schema.js';
+import { readFailure } from './read.js';
 
 /**
  * A Standard Schema issue with its failure's `code` and `params`.
@@ -23,20 +24,11 @@ export function isContainer(made: Failure<unknown>): boolean {
   );
 }
 
-/** @internal */
-function isFailure(entry: unknown): entry is Failure<unknown> {
-  return (
-    typeof entry === 'object' &&
-    entry !== null &&
-    Reflect.get(entry, 'state') === 'invalid'
-  );
-}
-
 /**
  * Each entry of a container's errors tree with its key: an array index or an
  * own property name. A tree that isn't an object, or an entry that is neither
- * a failure nor `null`, is a bug in the code that built it, so it throws
- * (ADR 0001).
+ * a whole failure nor `null`, is a bug in the code that built it, so it
+ * throws (ADR 0001).
  * @internal
  */
 export function entriesOf(
@@ -53,11 +45,12 @@ export function entriesOf(
   const entries: [PropertyKey, Failure<unknown> | null][] = [];
   for (const key of keys) {
     const entry: unknown = Reflect.get(errors, key);
-    if (entry !== null && !isFailure(entry)) {
-      throw new TypeError(`The errors tree entry at ${key} isn't a failure`);
-    }
-
-    entries.push([key, entry]);
+    entries.push([
+      key,
+      entry === null
+        ? null
+        : readFailure(entry, `The errors tree entry at ${key}`),
+    ]);
   }
 
   return entries;
@@ -100,6 +93,6 @@ function collectIssues(
  */
 export function issues(made: Failure<unknown>): Issue[] {
   const found: Issue[] = [];
-  collectIssues(made, [], found);
+  collectIssues(readFailure(made, "A validator's result"), [], found);
   return found;
 }

@@ -1,5 +1,6 @@
 import { type Failure, type Result, setOwn } from '../shared.js';
 import { entriesOf, isContainer } from './decode.js';
+import { readFailure } from './read.js';
 
 /**
  * The messages of a failure in an errors tree of type `F`: its message, or
@@ -53,5 +54,7 @@ export function messageTree<T, E>(
   result: Result<T, E>,
 ): FailureMessages<Failure<E>> | undefined;
 export function messageTree(result: Result): unknown {
-  return result.state === 'valid' ? undefined : messagesOf(result);
+  return result.state === 'valid'
+    ? undefined
+    : messagesOf(readFailure(result, "A validator's result"));
 }
