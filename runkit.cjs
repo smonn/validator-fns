@@ -8,6 +8,7 @@ const {
   matches,
   max,
   maxDate,
+  messageTree,
   min,
   minDate,
   number,
@@ -123,7 +124,7 @@ const validate = object({
     console.log(result.value);
   } else {
     // Handle and display errors
-    console.error(result.errors);
+    console.error(messageTree(result));
   }
 })().catch((error) => {
   console.error(error);

@@ -13,6 +13,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
 - [Migrating from 2.x](#migrating-from-2x)
 - [API Reference](#api-reference)
   - [Validation result](#validation-result)
+  - [Errors tree](#errors-tree)
   - [Validation error message](#validation-error-message)
   - [Required and optional values](#required-and-optional-values)
   - [Unreadable input and throws](#unreadable-input-and-throws)
@@ -51,6 +52,7 @@ import {
   matches,
   max,
   maxDate,
+  messageTree,
   min,
   minDate,
   number,
@@ -164,8 +166,8 @@ if (result.state === 'valid') {
   // do something with the parsed values
   console.log(result.value);
 } else {
-  // handle and display errors
-  console.error(result.errors);
+  // handle and display errors, such as { firstName: 'First name is required.' }
+  console.error(messageTree(result));
 }
 ```
 
@@ -317,8 +319,19 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     ```
 
 16. **Read `min`, `max` or `exact` instead of `limit`** in the messages of `min()`, `max()`, `exact()`, `minDate()` and `maxDate()`. `email()` and `uuid()` no longer give their `pattern` to the message.
-17. **Expect codes in Standard Schema issues.** An issue for a failure carries its `code` and `params`, and an `array()` or `object()` whose children failed reports only their issues. An error without a message no longer gets `'Invalid value.'`. In this prerelease, a nested child's issue has only its message and path.
+17. **Expect codes in Standard Schema issues.** An issue for a failure carries its `code` and `params`, and an `array()` or `object()` whose children failed reports only their issues. An error without a message no longer gets `'Invalid value.'`.
 18. **Give every schema property a validator.** `object()` throws a `TypeError` naming the key when it's built with a property that isn't a function, instead of failing that field with `'No validator set'` on every call.
+19. **Read an `array()` or `object()` failure's `errors` as an [errors tree](#errors-tree) of failures.** Each failed item or field keeps its whole failure, with its `code`, `params`, `message`, `field` and own `errors`, in place of its message, and a valid item is still `null`. A failed array test, such as `max()`, no longer carries the items' errors. Pass a result to `messageTree()` for the nested messages 2.x gave, such as for Formik. `ArrayItemValidatorResult` is gone: in TypeScript, an array's errors are `(Failure<E> | null)[]`, and an object's have a `Failure` per key.
+
+    ```js
+    // 2.x
+    result.errors; // { tags: [null, 'Too short.'] }
+
+    // 3.x
+    messageTree(result); // { tags: [null, 'Too short.'] }
+    ```
+
+20. **Expect full field paths.** A nested field is the whole path from the caller's field, such as `user.a.b` or `user.tags[1].name`. 2.x gave a nested object's field its bare key, such as `b` or `name`, and an item's field left out the caller's, such as `tags[1]`. An item of a root array is `[1]`. Messages that use `{field}` get the full path too, so `'{field} is required.'` reads `user.a.b is required.`.
 
 ## API Reference
 
@@ -326,15 +339,62 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `Result<T, E>`, either `Valid<T>` or `Failure<E>`, and a validator is `Validator<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
 
-| property  | type   | description                                                                |
-| :-------- | :----- | :------------------------------------------------------------------------- |
-| `state`   | string | Either `valid` or `invalid`.                                               |
-| `field`   | string | Either the field name or `undefined`.                                      |
-| `value`   | `T`    | The parsed value. Only if `state` is `valid`; a failure has no `value`.    |
-| `code`    | string | What failed, unless `state` is `valid`. See [Error codes](#error-codes).   |
-| `params`  | object | The code's parameters, unless `state` is `valid`.                          |
-| `message` | string | The error message unless `state` is `valid`. Without one, the code.        |
-| `errors`  | `E`    | Only if `state` is `invalid` and using the `object` or `array` validators. |
+| property  | type   | description                                                              |
+| :-------- | :----- | :----------------------------------------------------------------------- |
+| `state`   | string | Either `valid` or `invalid`.                                             |
+| `field`   | string | Either the field name or `undefined`.                                    |
+| `value`   | `T`    | The parsed value. Only if `state` is `valid`; a failure has no `value`.  |
+| `code`    | string | What failed, unless `state` is `valid`. See [Error codes](#error-codes). |
+| `params`  | object | The code's parameters, unless `state` is `valid`.                        |
+| `message` | string | The error message unless `state` is `valid`. Without one, the code.      |
+| `errors`  | `E`    | Only if `state` is `invalid`. See [Errors tree](#errors-tree).           |
+
+### Errors tree
+
+An `array()` or `object()` whose children failed has the `items` or `properties` code, and its `errors` hold each failed child's failure as the child returned it:
+
+- `array()`: one entry per item, and `null` for a valid item.
+- `object()`: only the failed properties, in schema order.
+- A child that failed through its own children is an `items` or `properties` failure with its own tree. Any other failure is a leaf, including a custom one whose `errors` holds its own data.
+
+Every `field` is the full path from the field the validator was called with: `user.a.b`, `user.tags[1].name`, or `[1].name` for a root array called without one. Keys aren't escaped. Messages, including `{field}` templates, get the full path.
+
+```js
+const user = object({
+  a: object({ b: string(min(2)) }),
+  tags: array(object({ name: string(min(2)) })),
+});
+
+await user({ a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] }, 'user');
+// {
+//   state: 'invalid', code: 'properties', params: {}, message: 'properties', field: 'user',
+//   errors: {
+//     a: { state: 'invalid', code: 'properties', ..., field: 'user.a',
+//          errors: { b: { state: 'invalid', code: 'min', params: { min: 2, amount: 1 }, message: 'min', field: 'user.a.b' } } },
+//     tags: { state: 'invalid', code: 'items', ..., field: 'user.tags',
+//             errors: [null, { state: 'invalid', code: 'properties', ..., field: 'user.tags[1]',
+//                              errors: { name: { state: 'invalid', code: 'min', ..., field: 'user.tags[1].name' } } }] },
+//   },
+// }
+```
+
+In TypeScript, an array's errors are `(Failure<E> | null)[]`, with the item validator's `E`, and an object's have an optional `Failure` per key.
+
+#### messageTree(result)
+
+Turns a result into nested messages, for form libraries such as [Formik][formik]: `undefined` for a valid result, the message of a failure without children, and for an `items` or `properties` failure, its tree with each failure replaced by its messages and `null` for a valid item.
+
+```js
+messageTree(
+  await user({ a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] }),
+);
+// { a: { b: 'min' }, tags: [null, { name: 'min' }] }
+
+// Formik reads undefined as no errors.
+<Formik validate={async (values) => messageTree(await user(values))} />;
+```
+
+In TypeScript, its return type follows the validator's errors type, such as `string | { a?: string | { b?: string }; tags?: … } | undefined` for `user`.
 
 ### Validation error message
 
@@ -459,13 +519,7 @@ A valid result's `value` holds each item as `itemTest` returned it, so `array(nu
 
 Supported validation tests: `max` and `min`.
 
-For invalid results, errors are in the `errors` property. It is an array of type:
-
-```ts
-type ArrayErrors = Array<string | null>;
-```
-
-Where valid entries are represented as `null` and invalid entries with the error message as a string. When items fail, the array's own failure has the `items` code. A failed array test gives its own code, with the items' errors.
+When items fail, the array's own failure has the `items` code, and its `errors` hold each item's failure, `null` for a valid item. See [Errors tree](#errors-tree). A failed array test gives its own code, without the items' failures.
 
 <details><summary>config</summary>
 
@@ -533,7 +587,7 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 The only validation type that does not cast the entered value, meaning it does not use a parser. There's also no default fallback value option here. `config` is optional; when the second argument is a function, it's the first of the `tests`. A missing object, `undefined` or `null`, fails with `required` without checking its fields. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit. A schema property that isn't a validator throws a `TypeError` naming its key when the validator is built.
 
-For invalid results, errors are in the `errors` property. It matches the provided object with the same keys and strings or string records as values that contain the error messages. When fields fail, the object's own failure has the `properties` code.
+When fields fail, the object's own failure has the `properties` code, and its `errors` hold each failed field's failure under its key. See [Errors tree](#errors-tree).
 
 In TypeScript, a field of the valid value is required unless its validator is wrapped in `optional()`, as in `{ name: string; age?: number | null | undefined }`. A missing optional field is still set on the value, as `undefined`.
 
@@ -554,7 +608,8 @@ const signup = object(
 );
 
 await signup({ password: 'secret', confirm: 'other' });
-// { state: 'invalid', code: 'properties', message: 'properties', errors: { confirm: 'Must match.' }, ... }
+// { state: 'invalid', code: 'properties', message: 'properties',
+//   errors: { confirm: { state: 'invalid', code: 'match', message: 'Must match.', field: 'confirm', ... } }, ... }
 ```
 
 A field's own error takes precedence: object-level tests don't run while any property is invalid, so they always compare valid, parsed values.
@@ -567,7 +622,7 @@ A field's own error takes precedence: object-level tests don't run while any pro
 
 </details>
 
-To use this with a library such as [Formik][formik], you can use the resulting `errors` property. It is a key-value structure with the schema property keys and their validation errors if any. Besides that, the object validation results are the same as described above.
+To use this with a library such as [Formik][formik], pass the result to [`messageTree()`](#messagetreeresult), which gives the messages under the schema's keys.
 
 #### string(config?, ...tests)
 
@@ -611,9 +666,9 @@ Each test fails with its own [code](#error-codes), and its `message` is optional
 
 #### check(path?, test, code, message?)
 
-An object-level test for `object`. It fails with `code` when `test` returns `false` for the parsed object. With a `path`, the message, or else the code, is the error at that property in the object's `errors`, under a `properties` failure; a list of names reaches into nested objects, such as `['shipping', 'zip']`. Without a `path`, the failure is the object's own. The parsed object is provided to the message as `value`.
+An object-level test for `object`. It fails with `code` when `test` returns `false` for the parsed object. With a `path`, a property name or a list of names into nested objects, such as `['shipping', 'zip']`, the failure sits at that path in the object's `errors` with the full field, such as `shipping.zip`, under a `properties` failure for the object and each name. Without a `path`, the failure is the object's own. The parsed object is provided to the message as `value`.
 
-In TypeScript, `path` is checked against the parsed object's type, so a misspelled property is a type error, and the test's error type is the errors it produces, such as `{ shipping?: { zip?: string } }`. A path ends at an array, a date or a function.
+In TypeScript, `path` is checked against the parsed object's type, so a misspelled property is a type error, and the test's error type is the errors it produces, such as `{ shipping?: Failure<{ zip?: Failure<never> }> }`. A path ends at an array, a date or a function.
 
 <details><summary>arguments</summary>
 
@@ -794,15 +849,14 @@ await hello['~standard'].validate('hi');
 
 const schema = object({ email: string(email('Must be an email.')) });
 await schema['~standard'].validate({ email: 'nope' });
-// { issues: [{ message: 'Must be an email.', path: ['email'] }] }
+// { issues: [{ message: 'Must be an email.', code: 'email', params: {}, path: ['email'] }] }
 ```
 
 How a validator's results map to Standard Schema results:
 
 - `validate` always returns a promise, because every validator here is async. Libraries that only accept synchronous schemas can't use it.
 - A valid result gives `{ value }`, the parsed value. Its type is the validator's value type, which includes `null` and `undefined` only for `optional()` validators.
-- An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`. The failure itself is an issue with no path, with its `code` and `params`, unless it's an `items` or `properties` failure, which reports only its children. A nested child's issue has only its message and path for now.
-- An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
+- An invalid result gives one issue per leaf of its [errors tree](#errors-tree), with the leaf's `message`, `code` and `params`. The object keys and array indexes down to the leaf form its `path`, and a failure without children has no path. An `items` or `properties` failure reports only its children, or itself when its tree holds no failure.
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
@@ -887,7 +941,7 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 
 #### invalid({ code, params, message, value, field, errors })
 
-Formats a failed validation result. `code` names what failed, and `params`, `{}` if left out, are its parameters. `message` is an optional [validation error message](#validation-error-message), with `{keys}` replaced by `value`, `field` and `params`; without it, the message is the code. `value` is optional and only goes to the message; the result has no `value`. `field` is the same as above, and `errors` is additional error details used by `array` and `object` validators.
+Formats a failed validation result. `code` names what failed, and `params`, `{}` if left out, are its parameters. `message` is an optional [validation error message](#validation-error-message), with `{keys}` replaced by `value`, `field` and `params`; without it, the message is the code. `value` is optional and only goes to the message; the result has no `value`. `field` is the same as above, and `errors` is additional error details. Only an `items` or `properties` failure's `errors` is read as an [errors tree](#errors-tree); for any other code, it's the failure's own data.
 
 In TypeScript, a message function gets `value` as `unknown`, since `invalid()` takes any value. A message that reads params needs `params` with them; without `params`, it's a type error.
 
