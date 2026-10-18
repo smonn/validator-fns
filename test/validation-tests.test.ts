@@ -43,19 +43,17 @@ test('a built-in test fails a missing value it is called with directly', async (
     builtInTests.flatMap(([label, validate]) =>
       [null, undefined].map(async (value) => ({
         label: `${label}(${String(value)})`,
-        value,
         result: await callUntyped(validate, value),
       })),
     ),
   );
 
-  for (const { label, value, result } of results) {
+  for (const { label, result } of results) {
     assert.deepEqual(
       result,
       {
         state: 'invalid',
         message: 'failed',
-        value,
         field: undefined,
         errors: undefined,
       },

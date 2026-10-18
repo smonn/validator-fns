@@ -63,7 +63,6 @@ export function requirable<T, E>(
   const reject = (parsed: T | null | undefined, field: string | undefined) =>
     invalidResult<E>({
       message: formatMessage(message, { value: parsed, field }),
-      value: parsed,
       field,
     });
   const accept = (parsed: T | null | undefined, field: string | undefined) =>

@@ -25,42 +25,36 @@ test('array', async () => {
   });
   assert.deepEqual(await validate(null), {
     state: 'invalid',
-    value: null,
     message: 'required',
     errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'invalid',
-    value: undefined,
     message: 'required',
     errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate([]), {
     state: 'invalid',
-    value: [],
     message: 'min:1',
     errors: [],
     field: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
-    value: '',
     message: 'min:1',
     errors: [],
     field: undefined,
   });
   assert.deepEqual(await validate({}), {
     state: 'invalid',
-    value: {},
     message: 'min:1',
     errors: [],
     field: undefined,
   });
   assert.deepEqual(await validate(['foo', 'ba']), {
     state: 'invalid',
-    value: ['foo', 'ba'],
     message: '',
     errors: [null, 'min:3'],
     field: undefined,
@@ -79,7 +73,6 @@ test('array with object', async () => {
     await validate([{}, { username: 'foo' }, { username: 'ab' }]),
     {
       state: 'invalid',
-      value: [{}, { username: 'foo' }, { username: 'ab' }],
       message: '',
       errors: [
         {
@@ -101,7 +94,6 @@ test('nested array', async () => {
   assert.deepEqual(await validate([['', 'foo', null]]), {
     state: 'invalid',
     message: '',
-    value: [['', 'foo', null]],
     errors: [['required', null, 'required']],
     field: undefined,
   });

@@ -93,7 +93,6 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         } catch (error) {
           return invalidResult<string>({
             message: error instanceof Error ? error.message : String(error),
-            value,
             field,
           });
         }
@@ -138,7 +137,7 @@ export function createValidatorTest<T, E, X extends object>(
       return validResult({ value, field });
     }
 
-    return invalidResult({ message: formatFor(value, field), value, field });
+    return invalidResult({ message: formatFor(value, field), field });
   };
   const validationTest: Test<T, E> = async (value, field) => twin(value, field);
 

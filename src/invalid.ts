@@ -7,7 +7,7 @@ import {
 
 /** @internal */
 type InvalidFields<E> = {
-  value: unknown;
+  value?: unknown;
   field: string | undefined;
   errors?: E | undefined;
 };
@@ -17,7 +17,7 @@ type InvalidFields<E> = {
  * and `extras` must hold the extra parameters it reads.
  * @param result Result fields
  * @param result.message Error message, formatted with `formatMessage`
- * @param result.value Parsed value
+ * @param result.value Value for the message only; the result has none
  * @param result.field Field name
  * @param result.errors Extra error details, such as per-field errors from `object` and `array`
  * @param result.extras Extra message params
@@ -42,5 +42,5 @@ export async function invalid<T, E, X extends object>(
     'extras' in result
       ? formatMessage(result.message, { ...result.extras, value, field })
       : formatMessage<unknown>(result.message, { value, field });
-  return invalidResult({ message, value, field, errors });
+  return invalidResult({ message, field, errors });
 }

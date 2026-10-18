@@ -42,7 +42,6 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
-    value: 'foo',
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -54,7 +53,6 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate(4), {
     state: 'invalid',
-    value: 4,
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -66,7 +64,6 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate(Array.from({ length: 2 })), {
     state: 'invalid',
-    value: [undefined, undefined],
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -83,7 +80,6 @@ test('enums', async () => {
   const strings = oneOf<string>(['foo', 'bar', 'baz'], 'oneOf:{values}');
   assert.deepEqual(await strings('asdf'), {
     state: 'invalid',
-    value: 'asdf',
     message: 'oneOf:foo,bar,baz',
     field: undefined,
     errors: undefined,
@@ -126,7 +122,6 @@ test('custom test that throws an atypical error', async () => {
   assert.deepEqual(result, {
     state: 'invalid',
     message: 'some error',
-    value: 'hello',
     field: undefined,
     errors: undefined,
   });

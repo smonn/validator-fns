@@ -23,14 +23,12 @@ test('min', async () => {
     message: 'min:5',
     field: undefined,
     errors: undefined,
-    value: '',
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
     message: 'min:5',
     field: undefined,
     errors: undefined,
-    value: 'foo',
   });
 });
 
@@ -48,7 +46,6 @@ test('max', async () => {
   });
   assert.deepEqual(await validate('foo bar'), {
     state: 'invalid',
-    value: 'foo bar',
     message: 'max:5',
     field: undefined,
     errors: undefined,
@@ -72,26 +69,26 @@ test('email', async () => {
     value: 'name+tag@example.com',
     field: undefined,
   });
-  assert.deepInclude(await validate(''), { state: 'invalid', value: '' });
+  assert.deepInclude(await validate(''), {
+    state: 'invalid',
+    message: 'invalid email',
+  });
   assert.deepEqual(await validate('@example.com'), {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: '@example.com',
     message: 'invalid email',
   });
   assert.deepEqual(await validate('name.com'), {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: 'name.com',
     message: 'invalid email',
   });
   assert.deepEqual(await validate('name@.com'), {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: 'name@.com',
     message: 'invalid email',
   });
 });
@@ -112,20 +109,17 @@ test('url', async () => {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: '',
     message: 'invalid url',
   });
   assert.deepEqual(await validate('/foo'), {
     state: 'invalid',
     field: undefined,
     errors: undefined,
-    value: '/foo',
     message: 'invalid url',
   });
   assert.deepEqual(await validate('unknown://path'), {
     state: 'invalid',
     field: undefined,
-    value: 'unknown://path',
     errors: undefined,
     message: 'invalid url',
   });
@@ -181,35 +175,30 @@ test('string', async () => {
   assert.deepEqual(await validate('  test  '), {
     state: 'invalid',
     message: 'At least five characters.',
-    value: 'test',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate('hello world'), {
     state: 'invalid',
     message: 'At most ten characters.',
-    value: 'hello world',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
     message: 'Must enter a value.',
-    value: '',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(new Date(0)), {
     state: 'invalid',
     message: 'At most ten characters.',
-    value: '1970-01-01T00:00:00.000Z',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate({ name: 'August' }), {
     state: 'invalid',
     message: 'Failed to parse value to string.',
-    value: { name: 'August' },
     field: undefined,
     errors: undefined,
   });
@@ -324,7 +313,6 @@ test('uuid', async () => {
         state: 'invalid',
         field: undefined,
         errors: undefined,
-        value,
         message: 'invalid uuid',
       },
       value,
@@ -348,7 +336,7 @@ test('string accepts primitives, dates, and boxed primitives', async () => {
   for (const [value, expected] of accepted) {
     assert.equal(parseString(value), expected, expected);
     const result = await validate(value);
-    assert.equal(result.state, 'valid', expected);
+    assert(result.state === 'valid', expected);
     assert.equal(result.value, expected, expected);
   }
 });
@@ -385,6 +373,5 @@ test('string returns an invalid result for non-primitive and symbol input', asyn
       'Failed to parse value to string.',
       label,
     );
-    assert.equal(result.value, value, label);
   }
 });

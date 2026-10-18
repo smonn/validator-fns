@@ -131,7 +131,6 @@ test('should add ~standard to a function and keep its results and field', async 
   assert.deepEqual(await schema('hi', 'greeting'), {
     state: 'invalid',
     message: 'Must be "hello".',
-    value: 'hi',
     field: 'greeting',
     errors: { code: 1 },
   });

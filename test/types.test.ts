@@ -17,11 +17,13 @@ import {
   string,
   valid,
   type ExtractValue,
+  type Failure,
   type MinValidatorMessageParameters,
   type Result,
   type SharedValueType,
   type Test,
   type TypeValidator,
+  type Valid,
   type Validator,
   type ValidatorMessage,
   type ValidatorMessageParameters,
@@ -179,6 +181,18 @@ test('array() carries the item value and error types', () => {
 
 test('results have no isValid property', () => {
   expectTypeOf<Result>().not.toHaveProperty('isValid');
+});
+
+test('a failure has no value key, so reading value needs the valid state', () => {
+  expectTypeOf<Failure<unknown>>().not.toHaveProperty('value');
+  expectTypeOf<Result>().not.toHaveProperty('value');
+  expectTypeOf<Valid<string>>().toHaveProperty('value');
+});
+
+test('invalid() takes value only for the message, and may leave it out', () => {
+  expectTypeOf(invalid({ message: 'message', field: undefined })).toEqualTypeOf<
+    Promise<Result<unknown, never>>
+  >();
 });
 
 test('applyArrayConfig returns unknown items and takes no type argument', () => {

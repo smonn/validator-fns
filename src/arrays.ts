@@ -111,7 +111,6 @@ function arrayOf<T, E>(
 
       return invalidResult({
         message: arrayInvalidResult ? arrayInvalidResult.message : '',
-        value,
         field,
         errors: items.errors,
       });
