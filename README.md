@@ -378,6 +378,8 @@ await user({ a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] }, 'user');
 // }
 ```
 
+`messageTree()` and Standard Schema read the tree, including one a custom validator built, and throw a `TypeError` for a tree that's a bug: an entry that is neither a whole failure nor `null` for a valid item, or more than 1000 levels of `items` and `properties` failures, which a cyclic tree also reaches. The depth limit is far beyond any schema and keeps such a tree from overflowing the stack. A tree's width isn't limited, so an `array()` with many failed items still decodes.
+
 In TypeScript, an array's errors are `(Failure<E> | null)[]`, with the item validator's `E`, and an object's have an optional `Failure` per key.
 
 #### messageTree(result)
