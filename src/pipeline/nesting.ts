@@ -2,8 +2,8 @@ import type { Run } from './promises.js';
 
 /**
  * How many type validators' runs, built-in or custom, are running one inside
- * another, as a schema's children or a recursive schema's custom validator
- * calling the schema.
+ * another, as a validator's children or a recursive validator's custom
+ * validator calling it again.
  * @internal
  */
 let nesting = 0;
@@ -13,7 +13,7 @@ const maxNesting = 100;
 
 /**
  * Guards a type validator's run, so a run nested past `maxNesting` starts on a
- * later microtask instead, however the schema nests.
+ * later microtask instead, however the validators nest.
  * @internal
  */
 export function guardRun<T, E>(run: Run<T, E>): Run<T, E> {
