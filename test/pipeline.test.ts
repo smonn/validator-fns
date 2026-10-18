@@ -910,7 +910,7 @@ const missingRows: Row[] = [
     ),
   ),
   row('number() passes zero', number(), 0, pass(0)),
-  row('boolean() passes false', boolean(), false, pass(false)),
+  row('boolean() without a config passes false', boolean(), false, pass(false)),
   row('string() passes an empty string', string(), '', pass('')),
   row(
     'string() passes a blank string it trims to empty',
@@ -920,7 +920,7 @@ const missingRows: Row[] = [
   ),
   row('array() passes an empty array', array(), [], pass([])),
   row(
-    'string() words a missing value from its messages',
+    'string() without tests words a missing value from its messages',
     string({ messages: { required: 'Enter a name.' } }),
     undefined,
     required('Enter a name.'),
@@ -980,27 +980,21 @@ const missingRows: Row[] = [
   ),
   row('number() fills null with its default', oneByDefault, null, pass(1)),
   row(
-    'array() fills null with its default',
+    'array() without an item validator fills null with its default',
     array({ default: ['a'] }),
     null,
     pass(['a']),
   ),
   row('string() fills null with its default', xByDefault, null, pass('x')),
   row(
-    'string() keeps an empty string over its default',
+    'string() keeps an empty string over a one-letter default',
     xByDefault,
     '',
     pass(''),
   ),
   row('number() keeps zero over its default', oneByDefault, 0, pass(0)),
   row(
-    'boolean() keeps false over its default',
-    boolean({ default: true }),
-    false,
-    pass(false),
-  ),
-  row(
-    'array() keeps an empty array over its default',
+    'array() of strings keeps an empty array over its default',
     array(string(), { default: ['a'] }),
     [],
     pass([]),
@@ -1111,13 +1105,13 @@ const arrayRows: Row[] = [
     pass(['hello']),
   ),
   row(
-    'array() fills null with its default',
+    'array() with item tests fills null with its default',
     helloListByDefault,
     null,
     pass(['hello']),
   ),
   row(
-    'array() keeps an empty array over its default',
+    'array() with item tests keeps an empty array over its default',
     helloListByDefault,
     [],
     pass([]),
@@ -1643,7 +1637,8 @@ test.each(cases)('$name', async ({ validator, input, field, expect }) => {
     'parse()',
   );
 
-  // ~standard.validate calls the validator without a field.
+  // createValidator() returns a type validator as it is and gives a test its
+  // own ~standard. ~standard.validate calls the validator without a field.
   const schema = createValidator(validator)['~standard'];
   const unnamed = field === undefined ? expect : await validator(input);
   assert.include(schema, { version: 1, vendor: 'validator-fns' });
