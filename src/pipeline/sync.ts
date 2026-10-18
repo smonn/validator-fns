@@ -2,8 +2,8 @@ import type { Result, Test } from '../shared.js';
 import type { MaybePromise } from './promises.js';
 
 /**
- * Key for the synchronous twin of each test `withSyncTwin` makes. The step
- * loop runs a test's twin when it has one, which keeps a run of built-in tests
+ * Key for the synchronous twin of each test `withSyncTwin` makes. A type
+ * validator runs a test's twin in its place, which keeps a run of built-in tests
  * synchronous (#523). The tests themselves stay async. Module-private, so only
  * tests made here carry it.
  * @internal
@@ -42,14 +42,20 @@ export function twinOf<T>(test: Twinned<T>): Twin<T> {
 }
 
 /**
- * Runs a step, or its twin in its place.
+ * A test as the step loop runs it: its twin, or else the test.
  * @internal
  */
-export function runStep<T, E>(
-  step: Test<T, E> & Partial<Twinned<T>>,
+export type Step<T, E> = (
   value: T,
   field: string | undefined,
-): MaybePromise<Result<T, E>> {
-  const twin = step[syncTwin];
-  return twin ? twin(value, field) : step(value, field);
+) => MaybePromise<Result<T, E>>;
+
+/**
+ * The step a test runs as: its twin, or else the test itself.
+ * @internal
+ */
+export function stepOf<T, E>(
+  step: Step<T, E> & Partial<Twinned<T>>,
+): Step<T, E> {
+  return step[syncTwin] ?? step;
 }

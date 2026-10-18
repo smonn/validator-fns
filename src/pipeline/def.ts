@@ -3,11 +3,10 @@ import {
   type Failure,
   type Messages,
   type Result,
-  type Test,
   validResult,
 } from '../shared.js';
 import type { MaybePromise } from './promises.js';
-import type { Twin } from './sync.js';
+import type { Step, Twin } from './sync.js';
 
 /**
  * Turns present input into a type validator's type, `P`: a built-in's strict
@@ -73,8 +72,11 @@ export type Def<T, E, P> = Parser<P, E> & {
   gate: readonly Twin<P>[];
   /** Runs the children, or keeps the read value without them. */
   children: Children<P, T, E>;
-  /** The tests, which run once every child is valid. */
-  steps: readonly Test<T, E>[];
+  /**
+   * The tests, which run once every child is valid. `defineType()` puts each
+   * built-in test's twin in its place.
+   */
+  steps: readonly Step<T, E>[];
 };
 
 /**
