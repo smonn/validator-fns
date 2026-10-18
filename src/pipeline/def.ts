@@ -6,15 +6,15 @@ import {
   type Test,
   validResult,
 } from '../shared.js';
-import type { Maybe, Twin } from './steps.js';
+import type { MaybePromise, Twin } from './steps.js';
 
 /**
- * Reads present input into a type validator's type, `P`: a built-in's strict
+ * Turns present input into a type validator's type, `P`: a built-in's strict
  * check and the type it expects, or the validator `createTypeValidator()`
  * takes, whose failure is the type validator's own.
  * @internal
  */
-export type Reader<P, E> =
+export type Parser<P, E> =
   | {
       isType: (value: unknown) => value is P;
       expected: string;
@@ -24,7 +24,7 @@ export type Reader<P, E> =
       parser: (
         value: unknown,
         field: string | undefined,
-      ) => Maybe<Result<P | null | undefined, E>>;
+      ) => MaybePromise<Result<P | null | undefined, E>>;
       isType?: undefined;
     };
 
@@ -36,15 +36,15 @@ export type Reader<P, E> =
 export type Children<P, T, E> = (
   value: P,
   field: string | undefined,
-) => Maybe<Result<T, E>>;
+) => MaybePromise<Result<T, E>>;
 
 /**
- * What a type validator supplies to the pipeline. `P` is the type its reader
+ * What a type validator supplies to the pipeline. `P` is the type its parser
  * gives, and `T` the type its children give, which its tests take.
  * @internal
  */
-export type Def<T, E, P> = Reader<P, E> & {
-  /** Value for missing input. It skips the reader. */
+export type Def<T, E, P> = Parser<P, E> & {
+  /** Value for missing input. It skips the parser. */
   default?: P | undefined;
   /**
    * `object()`'s value for missing input. The children run on it, and when
@@ -88,27 +88,20 @@ export function reject<E>(
 }
 
 /**
- * Accepts missing input as it is, for `optional()`.
+ * Keeps a value as it is: the read value of a type validator without
+ * children, such as `array()` without an item validator, or missing input
+ * for `optional()`.
  * @internal
  */
-export function accept<E>(
-  value: null | undefined,
+export function keepValue<V>(
+  value: V,
   field: string | undefined,
-): Result<null | undefined, E> {
+): Result<V, never> {
   return validResult({ value, field });
 }
 
 /**
- * Without children, such as `array()` without an item validator, the value
- * is the read value as it is.
- * @internal
- */
-export function keep<V>(value: V, field: string | undefined): Result<V, never> {
-  return validResult({ value, field });
-}
-
-/**
- * A built-in reader's `type` failure, with the type it expects.
+ * A built-in parser's `type` failure, with the type it expects.
  * @internal
  */
 export function typeFailure(

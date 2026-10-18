@@ -139,14 +139,14 @@ export function object<P extends ObjectParameter>(
     tree: (): ObjectErrors<P> => ({}),
     value: asObjectValue<P>,
   });
-  const split = configAndTests(config, tests);
+  const { config: options, tests: steps } = configAndTests(config, tests);
   return defineType({
     isType: isRecordLike,
     expected: 'object',
     build: {},
-    messages: split.config.messages,
-    gate: split.config.strict ? [unknownKeys(properties)] : [],
+    messages: options.messages,
+    gate: options.strict ? [unknownKeys(properties)] : [],
     children,
-    steps: split.tests,
+    steps,
   });
 }

@@ -7,8 +7,8 @@ import {
   validResult,
 } from '../shared.js';
 import { runEach } from './children.js';
-import { isThenable, type Maybe, type Run } from './steps.js';
-import { runOf } from './twins.js';
+import { isThenable, type MaybePromise, type Run } from './steps.js';
+import { runOf } from './define.js';
 
 /**
  * How `object()` types its errors tree, made fresh for each failure, and its
@@ -61,7 +61,7 @@ function propertiesResult<V, Tree extends object>(
 export function properties<V, Tree extends object>(
   schema: Record<string, Validator>,
   shape: Shape<V, Tree>,
-): (value: object, field: string | undefined) => Maybe<Result<V, Tree>> {
+): (value: object, field: string | undefined) => MaybePromise<Result<V, Tree>> {
   const runs: [key: string, run: Run<unknown, unknown>][] = [];
   for (const [key, validator] of Object.entries(schema)) {
     if (typeof validator !== 'function') {

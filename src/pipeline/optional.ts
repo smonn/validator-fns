@@ -1,6 +1,7 @@
 import { type Validator, validResult } from '../shared.js';
+import { isMissing } from './def.js';
 import { type TypeValidator, withStandard } from './standard.js';
-import { optionalOf } from './twins.js';
+import { optionalOf } from './define.js';
 
 /**
  * Lets a type validator accept a missing value, `undefined` or `null`, that
@@ -16,7 +17,7 @@ export function optional<T, E>(
   return (
     optionalOf(validator) ??
     withStandard(async (value?: unknown, field?: string) =>
-      value === null || value === undefined
+      isMissing(value)
         ? validResult<T | null | undefined, E>({ value, field })
         : validator(value, field),
     )

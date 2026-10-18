@@ -1,5 +1,6 @@
 import { failure } from '../failures/index.js';
 import { type Test, validResult, type ValidatorMessage } from '../shared.js';
+import { isMissing } from './def.js';
 import { withSyncTwin } from './steps.js';
 
 /**
@@ -29,9 +30,8 @@ export function createValidatorTest<T, E>(
   getParams?: (value: T) => Record<string, unknown>,
 ): Test<T, E> {
   return withSyncTwin((value: T, field) => {
-    // Wider than T, since JavaScript callers can pass a missing value.
-    const given: unknown = value;
-    if (given !== null && given !== undefined && test(value, field)) {
+    // JavaScript callers can pass a missing value, which T leaves out.
+    if (!isMissing(value) && test(value, field)) {
       return validResult({ value, field });
     }
 

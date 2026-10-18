@@ -8,7 +8,7 @@ import {
 import { runEach } from './children.js';
 import type { Children } from './def.js';
 import { isThenable } from './steps.js';
-import { runOf } from './twins.js';
+import { runOf } from './define.js';
 
 /**
  * The items as the item validator parsed them, or an `items` failure whose
