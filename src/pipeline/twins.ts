@@ -2,7 +2,8 @@ import type { Validator } from '../shared.js';
 import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';
-import { guardRun, type Run, toValidator } from './promises.js';
+import { guardRun } from './nesting.js';
+import { type Run, toValidator } from './promises.js';
 
 /**
  * What the pipeline keeps for each type validator it builds: its run, and the
