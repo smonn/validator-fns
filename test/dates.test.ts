@@ -103,6 +103,27 @@ test.each(malformedZoneTexts)(
   },
 );
 
+// Each instant is what `new Date(text)` reads.
+const longFractionTexts: [text: string, instant: string][] = [
+  ['2020-12-31T23:59:59.99999999999999999Z', '2020-12-31T23:59:59.999Z'],
+  ['9999-12-31T23:59:59.99999999999999999Z', '9999-12-31T23:59:59.999Z'],
+  ['2020-01-31T12:45:32.1239Z', '2020-01-31T12:45:32.123Z'],
+];
+
+test.each(longFractionTexts)(
+  'should read %s as %s when the fraction has more than 3 digits',
+  (text, instant) => {
+    assert.equal(parseDate(text)?.toISOString(), instant);
+  },
+);
+
+test('should stay in the same second when local text has a long fraction of nines', () => {
+  assert.deepEqual(
+    parseDate('2020-12-31T23:59:59.99999999999999999'),
+    new Date(2020, 11, 31, 23, 59, 59, 999),
+  );
+});
+
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);
