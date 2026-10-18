@@ -279,7 +279,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`, or for text, a [coerce twin](#coercenumberconfig-tests) such as `coerce.number()`.                 |
     | `applyArrayConfig` and the other `apply…Config` functions                   | The type validator, with its config.                                                                                                       |
     | `formatMessage`                                                             | `invalid()` and `createValidatorTest()`, which format their message.                                                                       |
-    | `hasOwnProperty`                                                            | `Object.prototype.hasOwnProperty.call(object, key)`.                                                                                       |
+    | `hasOwnProperty`                                                            | `Object.hasOwn(object, key)`.                                                                                                              |
     | `isObject`                                                                  | `Object.prototype.toString.call(value) === '[object Object]'`.                                                                             |
     | `invalidDate`                                                               | `new Date('')`.                                                                                                                            |
     | `ConfigBase`                                                                | `StringConfig` and the other validation types' config types, or a custom type made with [createTypeValidator](#createtypevalidatorparser). |
@@ -439,6 +439,8 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     const age = optional(coerce.number(min(18)));
     await age(''); // valid undefined
     ```
+
+29. **Check your browsers against the new floor.** 3.x supports Chrome and Edge 93+, Firefox 92+ and Safari 15.4+ (iOS 15.4+), up from 2.x's Chrome and Edge 85+, Firefox 77+ and Safari 13.1+, because it uses `Object.hasOwn`. For an older browser, polyfill the built-ins listed in [Supported environments](#supported-environments).
 
 ## API Reference
 
@@ -1223,10 +1225,11 @@ Supports Node versions in active or maintenance LTS at release time. Dropping on
 
 - Node.js 22 and later.
 - TypeScript 5.4 and later, for the type declarations.
-- Chrome and Edge 85+, Firefox 77+, and Safari 13.1+ (iOS 13.4+): the first versions with every feature below, per [MDN's browser compatibility data][bcd] 8.1.6.
+- Chrome and Edge 93+, Firefox 92+, and Safari 15.4+ (iOS 15.4+): the first versions with every feature below, per [MDN's browser compatibility data][bcd] 8.1.6.
 
 To support older environments, transpile or polyfill these:
 
+- `Object.hasOwn` (ES2022)
 - `String.prototype.replaceAll` (ES2021)
 - `Object.fromEntries` and optional catch binding (ES2019)
 - Object spread (`...`, ES2018)
