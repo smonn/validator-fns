@@ -27,21 +27,24 @@ const unreadable = async (value: unknown, field?: string) =>
 
 // Each validator with an input it fails, one per way a failure is made.
 const failures: [string, Validator, unknown][] = [
-  ['string, missing', string(), ''],
+  ['string, missing', string(), undefined],
   ['string, unparseable', string(), {}],
   ['string, test', string(min(5, 'min')), 'abc'],
   ['string, parser', string({ parser: unreadable }), 'x'],
   ['number, unparseable', number(), 'abc'],
-  ['number, test', number(min(5, 'min')), '3'],
-  ['number, integer', number(integer('integer')), '1.5'],
+  ['number, test', number(min(5, 'min')), 3],
+  ['number, integer', number(integer('integer')), 1.5],
   ['boolean, missing', boolean(), undefined],
+  ['boolean, wrong type', boolean(), 'true'],
   ['boolean, test', boolean(oneOf([true], 'oneOf')), false],
   ['date, unparseable', date(), 'tomorrow'],
   ['array, missing', array(number()), null],
+  ['array, wrong type', array(number()), new Set([1])],
   ['array, item', array(number()), ['abc']],
-  ['array, test', array(number(), min(5, 'min')), ['3']],
+  ['array, test', array(number(), min(5, 'min')), [3]],
   ['array, parser', array(number(), { parser: unreadable }), ['3']],
   ['object, missing', object({ a: string() }), undefined],
+  ['object, wrong type', object({ a: string() }), []],
   ['object, field', object({ a: string() }), {}],
   [
     'object, test',
@@ -73,7 +76,7 @@ const failures: [string, Validator, unknown][] = [
     'x',
   ],
   ['array, test and item', array(number(), max(1)), ['a', 'b']],
-  ['optional', optional(number(min(5, 'min'))), '3'],
+  ['optional', optional(number(min(5, 'min'))), 3],
   ['optional custom validator', optional(failing), 'x'],
   ['createValidator', failing, 'x'],
 ];
@@ -121,11 +124,11 @@ test('should give the value to a message when a failure leaves it off', async ()
     [
       'required message',
       number({ messages: { required: ({ value }) => `got ${String(value)}` } })(
-        '  ',
+        null,
       ),
-      'got NaN',
+      'got null',
     ],
-    ['test template', number(min(5, '{value} < {min}'))('3'), '3 < 5'],
+    ['test template', number(min(5, '{value} < {min}'))(3), '3 < 5'],
     [
       'test function',
       string(min(5, ({ value }) => `${String(value)} is short`))('abc'),

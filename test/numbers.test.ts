@@ -145,17 +145,12 @@ test('number', async () => {
     errors: undefined,
     field: undefined,
   });
-  assert.deepEqual(await validate(Number.NaN), {
+  assert.deepEqual(await validate(null), {
     state: 'invalid',
     code: 'required',
     params: {},
     message: 'Must enter a value.',
     errors: undefined,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(new Date(0)), {
-    state: 'valid',
-    value: 0,
     field: undefined,
   });
   assert.deepEqual(await validate({}), {
@@ -180,7 +175,7 @@ test('should write a strict bound with check()', async () => {
 
 test('number default', async () => {
   const validate = number({ default: 5 });
-  assert.deepEqual(await validate(Number.NaN), {
+  assert.deepEqual(await validate(undefined), {
     state: 'valid',
     value: 5,
     field: undefined,
@@ -192,27 +187,17 @@ test('number default', async () => {
   });
 });
 
-test('number accepts primitives, dates, and boxed primitives', async () => {
-  const accepted: [unknown, number][] = [
-    ['1.5', 1.5],
-    [1n, 1],
-    ['', Number.NaN],
-    ['  ', Number.NaN],
-    [new Number(3), 3],
-    [new String('4'), 4],
-    [new Date(5), 5],
-  ];
-  // Blank input parses to NaN, which only optional() accepts.
-  const validate = optional(number());
-  for (const [value, expected] of accepted) {
-    const result = await validate(value);
-    assert(result.state === 'valid', String(expected));
-    assert.deepEqual(result.value, expected, String(expected));
-  }
-});
-
-test('number returns an invalid result for input it cannot parse', async () => {
+test('number fails anything but a finite number, inside optional() too', async () => {
   const rejected: [unknown, string][] = [
+    ['1.5', 'numeric string'],
+    ['', 'empty string'],
+    ['  ', 'blank string'],
+    [Number.NaN, 'NaN'],
+    [Infinity, 'Infinity'],
+    [1n, 'bigint'],
+    [new Number(3), 'Number object'],
+    [new String('4'), 'String object holding a number'],
+    [new Date(5), 'date'],
     [[1], 'array'],
     [[[1, 2]], 'nested array'],
     [[], 'empty array'],
@@ -226,10 +211,11 @@ test('number returns an invalid result for input it cannot parse', async () => {
     [true, 'boolean'],
     [new String('x'), 'String object holding an unparseable string'],
   ];
-  const validate = number();
-  for (const [value, label] of rejected) {
-    const result = await validate(value);
-    assert.equal(result.state, 'invalid', label);
-    assert.equal(result.state === 'invalid' && result.message, 'type', label);
+  for (const validate of [number(), optional(number())]) {
+    for (const [value, label] of rejected) {
+      const result = await validate(value);
+      assert.equal(result.state, 'invalid', label);
+      assert.equal(result.state === 'invalid' && result.message, 'type', label);
+    }
   }
 });

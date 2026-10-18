@@ -3,7 +3,6 @@ import {
   createTypeValidatorTest,
   createValidatorTest,
 } from './factories.js';
-import { primitiveToString } from './primitives.js';
 import {
   type ConfigBase,
   type MessageExtras,
@@ -40,17 +39,10 @@ export interface StringConfig extends ConfigBase<string> {
 }
 
 /**
- * Parses a value into a string. Fails anything but a string, number, bigint,
- * boolean, valid date or an object wrapping one.
+ * Parses a value into a string. Fails anything but a string.
  * @internal
  */
-const parseString = createParser(
-  (value) =>
-    value instanceof Date && !Number.isNaN(value.getTime())
-      ? value.toISOString()
-      : primitiveToString(value),
-  'string',
-);
+const parseString = createParser<string>('string');
 
 /**
  * Applies a configuration to the parsed string value.

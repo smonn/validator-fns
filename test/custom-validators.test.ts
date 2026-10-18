@@ -19,13 +19,13 @@ interface MoneyConfig {
   cents?: boolean;
 }
 
-/** Reads a number or a numeric string, and fails anything else present. */
+/** Reads a number or a numeric string, and fails anything else. */
 async function parseAmount(
   value: unknown,
   field?: string,
 ): Promise<Result<number | null | undefined>> {
   const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
-  if (typeof amount === 'number' || amount === null || amount === undefined) {
+  if (typeof amount === 'number') {
     return valid({ value: amount, field });
   }
 

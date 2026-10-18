@@ -31,31 +31,16 @@ test('boolean', async () => {
     value: false,
     field: undefined,
   });
-  assert.deepEqual(await validate('true'), {
-    state: 'valid',
-    value: true,
-    field: undefined,
-  });
-  assert.deepEqual(await validate('false'), {
-    state: 'valid',
-    value: true,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(1), {
-    state: 'valid',
-    value: true,
-    field: undefined,
-  });
-  assert.deepEqual(await validate(0), {
-    state: 'valid',
-    value: false,
-    field: undefined,
-  });
-  assert.deepEqual(await validate({}), {
-    state: 'valid',
-    value: true,
-    field: undefined,
-  });
+  for (const input of ['true', 'false', 1, 0, {}]) {
+    assert.deepEqual(await validate(input), {
+      state: 'invalid',
+      code: 'type',
+      params: { expected: 'boolean' },
+      message: 'type',
+      field: undefined,
+      errors: undefined,
+    });
+  }
   assert.deepEqual(await validateWithDefault(), {
     state: 'valid',
     value: true,

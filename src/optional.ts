@@ -20,15 +20,24 @@ type OptionalTwin<T, E> = {
 };
 
 /**
- * Whether a parsed value that isn't null or undefined still counts as missing:
- * an empty string, NaN or an invalid date.
+ * Whether `object()` accepts a present value: an object other than an array,
+ * a function or a boxed primitive, from any realm. Each wrapper's `valueOf`
+ * throws unless `this` is its own type, which `instanceof` can't tell across
+ * realms.
  * @internal
  */
-export function isBlank(value: unknown): boolean {
+export function isObject(value: unknown): value is object {
   return (
-    value === '' ||
-    (typeof value === 'number' && Number.isNaN(value)) ||
-    (value instanceof Date && Number.isNaN(value.getTime()))
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    ![String, Number, Boolean, BigInt, Symbol].some(({ prototype }) => {
+      try {
+        Reflect.apply(prototype.valueOf, value, []);
+        return true;
+      } catch {
+        return false;
+      }
+    })
   );
 }
 
@@ -69,11 +78,11 @@ export function requirable<T, E>(
 }
 
 /**
- * Lets a type validator accept a missing value: `undefined`, `null`, an empty
- * string, `NaN` or an invalid date, judged after parsing and `default`. A
- * missing value skips the tests and is the result's value as parsed. Any other
- * validator, such as a custom one, gets `undefined` and `null` accepted as
- * they are, and every other value passed on.
+ * Lets a type validator accept a missing value, `undefined` or `null`, that
+ * `default` doesn't fill. A missing value skips the parser and the tests, and
+ * is the result's value as it is. Any other validator, such as a custom one,
+ * gets `undefined` and `null` accepted the same way, and every other value
+ * passed on.
  * @category Helpers
  */
 export function optional<T, E>(

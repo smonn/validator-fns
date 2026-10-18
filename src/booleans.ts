@@ -1,21 +1,11 @@
-import { createTypeValidatorTest } from './factories.js';
-import { type ConfigBase, type Result, validResult } from './shared.js';
+import { createParser, createTypeValidatorTest } from './factories.js';
+import type { ConfigBase } from './shared.js';
 
 /**
- * Parses a value into a boolean. It never fails.
- * @param value Value to parse
- * @param field Field name
+ * Parses a value into a boolean. Fails anything but a boolean.
  * @internal
  */
-function parseBoolean(
-  value: unknown,
-  field?: string,
-): Result<boolean | null | undefined, never> {
-  return validResult({
-    value: value === undefined || value === null ? value : Boolean(value),
-    field,
-  });
-}
+const parseBoolean = createParser<boolean>('boolean');
 
 /**
  * Applies a configuration to the parsed boolean value.

@@ -4,7 +4,6 @@ import {
   max,
   messageTree,
   min,
-  number,
   object,
   optional,
   string,
@@ -49,20 +48,13 @@ test('array', async () => {
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
-    code: 'min',
-    params: { min: 1, amount: 0 },
-    message: 'min:1',
+    code: 'type',
+    params: { expected: 'array' },
+    message: 'type',
     errors: undefined,
     field: undefined,
   });
-  assert.deepEqual(await validate({}), {
-    state: 'invalid',
-    code: 'min',
-    params: { min: 1, amount: 0 },
-    message: 'min:1',
-    errors: undefined,
-    field: undefined,
-  });
+  assert.deepInclude(await validate({}), { code: 'type' });
   assert.deepInclude(await validate(['foo', 'ba']), {
     state: 'invalid',
     code: 'items',
@@ -148,12 +140,16 @@ test('array item field names', async () => {
 });
 
 test('should return the parsed items when the item validator parses', async () => {
-  const validate = array(number());
+  const validate = array(
+    string({
+      parser: async (value, field) => valid({ value: String(value), field }),
+    }),
+  );
 
-  assert.deepEqual(await validate(['1', '2.5']), {
+  assert.deepEqual(await validate([1, 2.5]), {
     state: 'valid',
     field: undefined,
-    value: [1, 2.5],
+    value: ['1', '2.5'],
   });
 });
 
@@ -197,12 +193,4 @@ test('array() rejects the 2.x order, config before the item validator', () => {
     TypeError,
     'array(item, config?, ...tests)',
   );
-});
-
-test('should read the items of an iterable that is not an array', async () => {
-  assert.deepEqual(await array(string())(new Set(['a', 'b'])), {
-    state: 'valid',
-    value: ['a', 'b'],
-    field: undefined,
-  });
 });

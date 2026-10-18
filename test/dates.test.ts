@@ -9,16 +9,16 @@ import {
 
 const invalidDate = new Date('');
 
-/** The value `date()` parses, with a blank one kept by `optional()`. */
-async function parsedDate(value: unknown) {
-  const result = await optional(date())(value);
-  assert(result.state === 'valid');
-  return result.value;
+/** The limit `minDate()` reads, from the params of its failure. */
+async function parsedDate(limit: Date | string | number) {
+  const result = await minDate(limit)(new Date(-8.64e15));
+  assert(result.state === 'invalid');
+  return result.params['min'];
 }
 
-test('date() parses dates, timestamps and ISO 8601 strings', async () => {
+test('minDate() reads dates, timestamps and ISO 8601 strings as its limit', async () => {
   const now = new Date();
-  assert.deepEqual(await parsedDate(now), now);
+  assert.strictEqual(await parsedDate(now), now);
   assert.deepEqual(await parsedDate(0), new Date(0));
   assert.deepEqual(await parsedDate(''), invalidDate);
   assert.deepEqual(await parsedDate('2020'), new Date(2020, 0));
@@ -150,14 +150,7 @@ test('date', async () => {
     value: tomorrow,
     field: undefined,
   });
-  assert.deepEqual(await validate(''), {
-    state: 'invalid',
-    code: 'required',
-    params: {},
-    message: 'required',
-    field: undefined,
-    errors: undefined,
-  });
+  assert.deepInclude(await validate(''), { code: 'type' });
   assert.deepEqual(await validate(null), {
     state: 'invalid',
     code: 'required',
@@ -194,14 +187,10 @@ test('date default', async () => {
     value: new Date(0),
     field: undefined,
   });
-  assert.deepEqual(await validate(new Date(Number.NaN)), {
-    state: 'valid',
-    value: new Date(0),
-    field: undefined,
-  });
+  assert.deepInclude(await validate(new Date(Number.NaN)), { code: 'type' });
 });
 
-test('date() fails input it cannot read apart from a missing one', async () => {
+test('minDate() and maxDate() throw for a limit they cannot read', () => {
   const unreadable: unknown[] = [
     // Strings that aren't ISO 8601
     'garbage',
@@ -210,15 +199,37 @@ test('date() fails input it cannot read apart from a missing one', async () => {
     '12/31/2020',
     // Input that isn't a date, number, or string
     true,
-    false,
     {},
     [2020],
     Symbol('s'),
     1n,
     () => 0,
   ];
-  for (const value of unreadable) {
-    const parseError: Failure<string> = {
+  for (const limit of unreadable) {
+    // Reflect.apply lets the test pass limits the types reject.
+    assert.throws(() => Reflect.apply(minDate, undefined, [limit]), TypeError);
+    assert.throws(() => Reflect.apply(maxDate, undefined, [limit]), TypeError);
+  }
+});
+
+test('date() fails anything but a valid date', async () => {
+  const notDates: unknown[] = [
+    '2020-01-31',
+    'tomorrow',
+    '',
+    '  ',
+    0,
+    Number.NaN,
+    invalidDate,
+    true,
+    {},
+    [2020],
+    Symbol('s'),
+    1n,
+    () => 0,
+  ];
+  for (const value of notDates) {
+    const failure: Failure<string> = {
       state: 'invalid',
       code: 'type',
       params: { expected: 'date' },
@@ -226,15 +237,7 @@ test('date() fails input it cannot read apart from a missing one', async () => {
       field: 'start',
       errors: undefined,
     };
-    assert.deepEqual(await date()(value, 'start'), parseError);
-    assert.deepEqual(await optional(date())(value, 'start'), parseError);
+    assert.deepEqual(await date()(value, 'start'), failure);
+    assert.deepEqual(await optional(date())(value, 'start'), failure);
   }
-
-  assert.deepInclude(await date()('  '), { message: 'required' });
-  assert.deepInclude(await date()(invalidDate), { message: 'required' });
-  assert.deepInclude(await optional(date())('  '), {
-    state: 'valid',
-    value: invalidDate,
-  });
-  assert.strictEqual(await parsedDate(invalidDate), invalidDate);
 });

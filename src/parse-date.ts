@@ -54,9 +54,9 @@ const dateParts = [
 ];
 
 /**
- * Reads a date from a present value: a date, a number or an ISO 8601 string.
- * Returns `undefined` for a non-blank string that isn't ISO 8601, and for
- * input that isn't a date, number, or string.
+ * Reads a date from a date, a number or an ISO 8601 string. Returns
+ * `undefined` for a non-blank string that isn't ISO 8601, and for input that
+ * isn't a date, number, or string.
  * @param value Value to read
  */
 export function readDate(value: unknown): Date | undefined {
@@ -72,8 +72,8 @@ export function readDate(value: unknown): Date | undefined {
     return undefined;
   }
 
-  // A blank string stays empty, as an invalid date, for `default` and
-  // `optional()` to handle.
+  // A blank string reads as an invalid date, which as a limit fails every
+  // date.
   return value.trim() === '' ? invalidDate : parseIsoDate(value);
 }
 
