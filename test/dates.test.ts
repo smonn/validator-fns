@@ -196,6 +196,36 @@ test('should fail when minDate gets a value that is not a date', async () => {
   assert.equal((await validate('2020-01-01')).state, 'invalid');
 });
 
+test('should keep the parsed value when a custom parser returns a non-date with getTime', async () => {
+  const parsed: Date = Object.create(Date.prototype);
+  Object.defineProperty(parsed, 'getTime', { value: () => 1000 });
+  const validate = date({ parser: () => parsed, default: new Date(0) });
+  const result = await validate(1);
+  assert.equal(result.state, 'valid');
+  assert.strictEqual(result.value, parsed);
+});
+
+test('should stay valid when date() gets text it cannot read', async () => {
+  assert.equal((await date()('garbage')).state, 'valid');
+});
+
+test('should fail when minDate gets a value that only looks like a date', async () => {
+  const validate = minDate(new Date(0), 'min');
+  const { proxy: revoked, revoke } = Proxy.revocable({}, {});
+  revoke();
+  for (const value of [
+    Object.create(Date.prototype),
+    new Proxy(new Date(5), {}),
+    revoked,
+  ]) {
+    assert.equal((await validate(value)).state, 'invalid');
+  }
+  const relabeled: Date = runInNewContext(
+    'Object.defineProperty(new Date(5), Symbol.toStringTag, { value: "Other" })',
+  );
+  assert.equal((await validate(relabeled)).state, 'valid');
+});
+
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);

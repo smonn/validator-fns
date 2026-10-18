@@ -292,3 +292,22 @@ test('should match a listed date when oneOf gets a date from another realm', asy
     'valid',
   );
 });
+
+test('should match a listed number when oneOf gets a date with that time', async () => {
+  assert.equal((await oneOf([1000], 'oneOf')(new Date(1000))).state, 'valid');
+});
+
+test('should compare the time when oneOf gets a date with its own getTime and valueOf', async () => {
+  const date = new Date(0);
+  Object.defineProperty(date, 'getTime', { value: () => 1000 });
+  Object.defineProperty(date, 'valueOf', { value: () => 1000 });
+  assert.equal((await oneOf([new Date(1000)], 'oneOf')(date)).state, 'invalid');
+  assert.equal((await oneOf([new Date(0)], 'oneOf')(date)).state, 'valid');
+});
+
+test('should fail required when the value is an invalid date from another realm with another toStringTag', async () => {
+  const relabeled: unknown = runInNewContext(
+    'Object.defineProperty(new Date(Number.NaN), Symbol.toStringTag, { value: "Other" })',
+  );
+  assert.equal((await required('required')(relabeled)).state, 'invalid');
+});

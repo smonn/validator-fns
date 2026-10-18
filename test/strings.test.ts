@@ -474,3 +474,9 @@ test('should give the ISO text when string() gets a date from another realm', as
     '1970-01-01T00:00:00.000Z',
   );
 });
+
+test('should give the ISO text when string() gets a date with its own toISOString', async () => {
+  const date = new Date(0);
+  Object.defineProperty(date, 'toISOString', { value: () => 'X' });
+  assert.equal((await string()(date)).value, '1970-01-01T00:00:00.000Z');
+});
