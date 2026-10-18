@@ -31,12 +31,18 @@ const day = new Date('2026-10-18T00:00:00.000Z');
 const rows: [BuiltInCode, Validator, unknown, string][] = [
   ['min', number(min(3)), 2, 'Must be at least 3.'],
   ['min', string(min(3)), 'ab', 'Must be at least 3 characters.'],
+  ['min', string(min(1)), '', 'Must be at least 1 character.'],
   ['min', array(number(), min(3)), [1], 'Must have at least 3 items.'],
+  ['min', array(number(), min(1)), [], 'Must have at least 1 item.'],
   ['max', number(max(3)), 4, 'Must be at most 3.'],
-  ['max', string(max(1)), 'ab', 'Must be at most 1 characters.'],
-  ['max', array(number(), max(1)), [1, 2], 'Must have at most 1 items.'],
+  ['max', string(max(1)), 'ab', 'Must be at most 1 character.'],
+  ['max', string(max(2)), 'abc', 'Must be at most 2 characters.'],
+  ['max', array(number(), max(1)), [1, 2], 'Must have at most 1 item.'],
+  ['max', array(number(), max(2)), [1, 2, 3], 'Must have at most 2 items.'],
   ['exact', number(exact(3)), 4, 'Must be exactly 3.'],
+  ['exact', string(exact(1)), 'ab', 'Must be exactly 1 character.'],
   ['exact', string(exact(3)), 'ab', 'Must be exactly 3 characters.'],
+  ['exact', array(number(), exact(1)), [], 'Must have exactly 1 item.'],
   ['exact', array(number(), exact(3)), [1], 'Must have exactly 3 items.'],
   [
     'minDate',
@@ -68,9 +74,16 @@ const rows: [BuiltInCode, Validator, unknown, string][] = [
   ['properties', object({ a: string() }), {}, 'Has invalid fields.'],
 ];
 
-test.each(rows)(
-  'should word %s in English: %s',
-  async (code, validator, input, message) => {
+test.each(
+  rows.map(([code, validator, input, message]) => [
+    code,
+    message,
+    validator,
+    input,
+  ]),
+)(
+  'should word %s in English as %s',
+  async (code, message, validator, input) => {
     assert.deepInclude(await withMessages(validator, en)(input), {
       code,
       message,
@@ -113,6 +126,9 @@ test('should not let en be changed', () => {
   assert.isFrozen(en);
 });
 
+const { proxy: revokedList, revoke } = Proxy.revocable([], {});
+revoke();
+
 /** en's message for an amount code, called with `parameters`. */
 const amountMessage = (
   code: 'min' | 'max' | 'exact',
@@ -124,11 +140,22 @@ const amountMessage = (
     : message;
 };
 
-test('should word an amount message without throwing for odd parameters', () => {
-  assert.strictEqual(
-    amountMessage('min', { min: 1, value: Object.create(null) }),
-    'Must have at least 1 items.',
-  );
+test.each<[string, Record<string, unknown>, string]>([
+  ['null', { min: 1, value: null }, 'Must be at least 1.'],
+  [
+    'a null-prototype object',
+    { min: 2, value: Object.create(null) },
+    'Must be at least 2.',
+  ],
+  ['a revoked Proxy', { min: 2, value: revokedList }, 'Must be at least 2.'],
+])(
+  'should word an amount with the generic message when the value is %s',
+  (_, parameters, message) => {
+    assert.strictEqual(amountMessage('min', parameters), message);
+  },
+);
+
+test('should word an amount message without throwing when the limit has no string form', () => {
   assert.strictEqual(
     amountMessage('max', { max: Symbol('s'), value: 5 }),
     'Must be at most Symbol(s).',
