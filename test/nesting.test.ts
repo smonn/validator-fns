@@ -68,50 +68,6 @@ function recursive(
   return schema;
 }
 
-// [label, validates deep input]. First in the file, the layered ones first, so
-// the pipeline's code is still cold and its stack frames as large as they get.
-test.each<[string, () => Promise<unknown>]>([
-  [
-    'a recursive schema of 10 array() layers 10,000 deep',
-    async () => recursive(10, inArray)(nestedArray(10_000)),
-  ],
-  [
-    'a recursive schema of 10 object() layers 10,000 deep',
-    async () => recursive(10, inObject)(nestedObject(10_000)),
-  ],
-  [
-    '10,000 array() layers around string()',
-    async () => wrapped(string(), 10_000, inArray)(nestedArray(10_000, 'leaf')),
-  ],
-  [
-    'a recursive object() schema 50,000 deep',
-    async () => recursive(1, inObject)(nestedObject(50_000)),
-  ],
-  [
-    'a recursive array() schema 50,000 deep',
-    async () => recursive(1, inArray)(nestedArray(50_000)),
-  ],
-])(
-  'should validate %s, with no unhandled rejection',
-  async (_label, validate) => {
-    let unhandled = 0;
-    const count = () => {
-      unhandled += 1;
-    };
-    process.on('unhandledRejection', count);
-    try {
-      assert.deepInclude(await validate(), { state: 'valid' });
-      await new Promise((resolve) => {
-        setTimeout(resolve);
-      });
-    } finally {
-      process.off('unhandledRejection', count);
-    }
-
-    assert.strictEqual(unhandled, 0);
-  },
-);
-
 /** Whether `probe` has run since it was last reset. */
 let probed = false;
 const probe = async (value: string, field?: string) => {
@@ -165,3 +121,48 @@ test('should validate two interleaved deep inputs, then run nested type validato
   assert.deepInclude(badResult, { state: 'invalid' });
   assert.isTrue(await probedInCall(syncNesting - 1));
 });
+
+// [label, validates deep input]. With 100 layers to a custom edge, counting
+// only the custom calls would let 10,000 runs nest, which overflows the stack
+// even once the code is warm.
+test.each<[string, () => Promise<unknown>]>([
+  [
+    'a recursive schema of 100 array() layers 20,000 deep',
+    async () => recursive(100, inArray)(nestedArray(20_000)),
+  ],
+  [
+    'a recursive schema of 100 object() layers 20,000 deep',
+    async () => recursive(100, inObject)(nestedObject(20_000)),
+  ],
+  [
+    '10,000 array() layers around string()',
+    async () => wrapped(string(), 10_000, inArray)(nestedArray(10_000, 'leaf')),
+  ],
+  [
+    'a recursive object() schema 50,000 deep',
+    async () => recursive(1, inObject)(nestedObject(50_000)),
+  ],
+  [
+    'a recursive array() schema 50,000 deep',
+    async () => recursive(1, inArray)(nestedArray(50_000)),
+  ],
+])(
+  'should validate %s, with no unhandled rejection',
+  async (_label, validate) => {
+    let unhandled = 0;
+    const count = () => {
+      unhandled += 1;
+    };
+    process.on('unhandledRejection', count);
+    try {
+      assert.deepInclude(await validate(), { state: 'valid' });
+      await new Promise((resolve) => {
+        setTimeout(resolve);
+      });
+    } finally {
+      process.off('unhandledRejection', count);
+    }
+
+    assert.strictEqual(unhandled, 0);
+  },
+);
