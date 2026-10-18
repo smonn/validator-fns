@@ -19,7 +19,8 @@ function parseTimezone(timezone = 'Z'): number {
 
 /**
  * Reads a date from a number or an ISO 8601 string. Returns `undefined` for a
- * string that isn't ISO 8601, and for input that isn't a number or string.
+ * string that isn't ISO 8601 or has a part out of its range, such as
+ * `'2020-02-30'` or hour 24, and for input that isn't a number or string.
  * @param value Value to read
  */
 export function readDate(value: unknown): Date | undefined {
