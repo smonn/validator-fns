@@ -36,16 +36,32 @@ function typeFactory<T, E>(
 }
 
 /**
+ * Whether a value is blank text: empty, or only the whitespace `trim()`
+ * removes.
+ * @internal
+ */
+function isBlank(value: unknown): boolean {
+  return typeof value === 'string' && value.trim() === '';
+}
+
+/**
  * Makes the factory of a built-in scalar type validator, which accepts a value
  * of its own type as it is and fails any other with a `type` failure with the
- * `expected` type. `isType` defaults to a `typeof` check for `expected`.
+ * `expected` type. `isType` defaults to a `typeof` check for `expected`. With
+ * `read`, it makes the coerce twin: blank text is missing, and `read` gives
+ * the value to validate in place of any other input.
  * @internal
  */
 export function defineScalar<T>(
   expected: string,
   isType = (value: unknown): value is T => typeof value === expected,
+  read?: (input: unknown) => unknown,
 ): TypeFactory<T, string> {
-  return typeFactory({ isType, expected });
+  const coerce =
+    read === undefined
+      ? undefined
+      : (input: unknown) => (isBlank(input) ? undefined : read(input));
+  return typeFactory({ isType, expected, coerce });
 }
 
 /**
