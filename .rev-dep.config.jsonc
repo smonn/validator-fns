@@ -133,8 +133,12 @@
         {
           // The validator-fns/en subpath: the English translation.
           "name": "en",
-          "pattern": "src/en.ts",
-          "allow": ["src/shared.ts", "src/failures/index.ts"],
+          "pattern": "src/{en,en-amount}.ts",
+          "allow": [
+            "src/shared.ts",
+            "src/failures/index.ts",
+            "src/en-amount.ts",
+          ],
         },
         {
           "name": "tests",
