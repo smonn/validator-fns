@@ -130,8 +130,9 @@ const newerApis = [
   matchMethod(['Map', 'WeakMap'], 'getOrInsertComputed'), // 145, 144, 26.2
   [
     // `cause` in an options object, within a call to a built-in Error or to
-    // `super`. The window keeps the scan linear.
-    /(?<![\w$.])(?:(?:Aggregate|Eval|Range|Reference|Syntax|Type|URI)?Error|super)\s*\([^;]{0,300}?[{,]\s*cause\s*[:,}]/g,
+    // `super`. The window steps over whole string literals, so a `;` in the
+    // message doesn't end it, and its bounds keep the scan linear.
+    /(?<![\w$.])(?:(?:Aggregate|Eval|Range|Reference|Syntax|Type|URI)?Error|super)\s*\((?:'(?:[^'\\]|\\[\s\S]){0,300}'|"(?:[^"\\]|\\[\s\S]){0,300}"|`(?:[^`\\]|\\[\s\S]){0,300}`|[^;'"`]){0,300}?[{,]\s*cause\s*[:,}]/g,
     ['Error.cause'], // 93, 91, 15
   ],
 ];
