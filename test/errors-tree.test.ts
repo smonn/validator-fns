@@ -398,3 +398,28 @@ test('should type the message tree from the error type', async () => {
     string | { password?: string; confirm?: string } | undefined
   >();
 });
+
+// A hand-built container whose errors aren't a tree is a bug (ADR 0001).
+test.each<[string, unknown]>([
+  ['a string', 'oops'],
+  ['an object entry that is not a failure', { a: 'Too short.' }],
+  ['an array entry that is not a failure', [{ code: 'min' }]],
+  ['a hole in an array', Object.assign([], { 1: null })],
+])(
+  'should throw when a container decodes errors that hold %s',
+  async (_, errors) => {
+    const malformed = createValidator(async (value: unknown, field?: string) =>
+      invalid({ code: 'properties', value, field, errors }),
+    );
+
+    const made = await malformed({});
+    assert.throws(() => messageTree(made), TypeError);
+    const rejection = await Promise.resolve(
+      malformed['~standard'].validate({}),
+    ).then(
+      () => 'resolved',
+      (error: unknown) => error,
+    );
+    assert.instanceOf(rejection, TypeError);
+  },
+);
