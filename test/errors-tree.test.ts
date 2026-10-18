@@ -1,0 +1,390 @@
+import { assert, expectTypeOf, test } from 'vitest';
+import {
+  array,
+  check,
+  createValidator,
+  type Failure,
+  invalid,
+  max,
+  messageTree,
+  min,
+  object,
+  string,
+  type TypeValidator,
+  valid,
+} from '../src/index.js';
+
+/** A failure as the safe call returns it. */
+function failed(
+  code: string,
+  field: string | undefined,
+  extra: {
+    params?: Record<string, unknown>;
+    message?: string;
+    errors?: unknown;
+  } = {},
+): Failure<unknown> {
+  const { params = {}, message = code, errors } = extra;
+  return { state: 'invalid', code, params, message, field, errors };
+}
+
+const items = (field: string | undefined, errors: unknown[]) =>
+  failed('items', field, { errors });
+
+const properties = (field: string | undefined, errors: object) =>
+  failed('properties', field, { errors });
+
+const tooShort = (field: string) =>
+  failed('min', field, { params: { min: 2, amount: 1 } });
+
+/** An object with an own `__proto__` key, which a literal can't make. */
+const withProto = <V>(value: V): Record<string, V> =>
+  Object.fromEntries([['__proto__', value]]);
+
+const user = object({
+  a: object({ b: string(min(2)) }),
+  tags: array(object({ name: string(min(2)) })),
+});
+
+const addresses = object(
+  { billing: object({ zip: string() }), shipping: object({ zip: string() }) },
+  check(
+    ['shipping', 'zip'],
+    (value) => value.shipping.zip === value.billing.zip,
+    'match',
+    '{field} must match the billing zip.',
+  ),
+);
+
+const signup = object(
+  { password: string(), confirm: string() },
+  check(
+    'confirm',
+    (value) => value.confirm === value.password,
+    'match',
+    'Must match.',
+  ),
+);
+
+const hello = createValidator(async (value: unknown, field?: string) =>
+  value === 'hello'
+    ? valid({ value, field })
+    : invalid({
+        code: 'hello',
+        message: 'Must be "hello".',
+        value,
+        field,
+        errors: { count: 1 },
+      }),
+);
+
+const silent = createValidator(async (value: unknown, field?: string) =>
+  invalid({ code: 'custom', message: '', value, field }),
+);
+
+type Row = {
+  label: string;
+  validator: TypeValidator<unknown, unknown>;
+  input: unknown;
+  field?: string;
+  /** The safe call's failure, called with `field`. */
+  failure: Failure<unknown>;
+  /** `~standard.validate` takes no field, so `{field}` reads the path alone. */
+  issues: object[];
+  /** `messageTree()` of the safe call's failure. */
+  messages: unknown;
+};
+
+const rows: Row[] = [
+  {
+    label: 'nested objects and arrays with a caller field',
+    validator: user,
+    input: { a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] },
+    field: 'user',
+    failure: properties('user', {
+      a: properties('user.a', { b: tooShort('user.a.b') }),
+      tags: items('user.tags', [
+        null,
+        properties('user.tags[1]', { name: tooShort('user.tags[1].name') }),
+      ]),
+    }),
+    issues: [
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['a', 'b'],
+      },
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['tags', 1, 'name'],
+      },
+    ],
+    messages: { a: { b: 'min' }, tags: [null, { name: 'min' }] },
+  },
+  {
+    label: 'nested objects and arrays without a field',
+    validator: user,
+    input: { a: { b: 'x' }, tags: [{ name: 'x' }] },
+    failure: properties(undefined, {
+      a: properties('a', { b: tooShort('a.b') }),
+      tags: items('tags', [
+        properties('tags[0]', { name: tooShort('tags[0].name') }),
+      ]),
+    }),
+    issues: [
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['a', 'b'],
+      },
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['tags', 0, 'name'],
+      },
+    ],
+    messages: { a: { b: 'min' }, tags: [{ name: 'min' }] },
+  },
+  {
+    label: 'a root array without a field',
+    validator: array(object({ name: string(min(2)) })),
+    input: [{ name: 'ok' }, { name: 'x' }],
+    failure: items(undefined, [
+      null,
+      properties('[1]', { name: tooShort('[1].name') }),
+    ]),
+    issues: [
+      {
+        message: 'min',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: [1, 'name'],
+      },
+    ],
+    messages: [null, { name: 'min' }],
+  },
+  {
+    label: 'nested arrays with a caller field',
+    validator: array(array(string())),
+    input: [['a', null]],
+    field: 'grid',
+    failure: items('grid', [
+      items('grid[0]', [null, failed('required', 'grid[0][1]')]),
+    ]),
+    issues: [
+      { message: 'required', code: 'required', params: {}, path: [0, 1] },
+    ],
+    messages: [[null, 'required']],
+  },
+  {
+    label: 'a {field} template in a nested message',
+    validator: object({
+      a: object({
+        b: string({ messages: { required: '{field} is required.' } }),
+      }),
+    }),
+    input: { a: {} },
+    field: 'user',
+    failure: properties('user', {
+      a: properties('user.a', {
+        b: failed('required', 'user.a.b', { message: 'user.a.b is required.' }),
+      }),
+    }),
+    issues: [
+      {
+        message: 'a.b is required.',
+        code: 'required',
+        params: {},
+        path: ['a', 'b'],
+      },
+    ],
+    messages: { a: { b: 'user.a.b is required.' } },
+  },
+  {
+    label: 'a leaf failure at the root',
+    validator: string(min(2)),
+    input: 'x',
+    field: 'name',
+    failure: tooShort('name'),
+    issues: [{ message: 'min', code: 'min', params: { min: 2, amount: 1 } }],
+    messages: 'min',
+  },
+  {
+    label: 'an array test failure, a leaf even when items fail',
+    validator: array(string(min(2)), max(2, 'At most two.')),
+    input: ['a', 'bb', 'c'],
+    field: 'tags',
+    failure: failed('max', 'tags', {
+      params: { max: 2, amount: 3 },
+      message: 'At most two.',
+    }),
+    issues: [
+      { message: 'At most two.', code: 'max', params: { max: 2, amount: 3 } },
+    ],
+    messages: 'At most two.',
+  },
+  {
+    label: 'check() with a key',
+    validator: signup,
+    input: { password: 'a', confirm: 'b' },
+    field: 'signup',
+    failure: properties('signup', {
+      confirm: failed('match', 'signup.confirm', { message: 'Must match.' }),
+    }),
+    issues: [
+      { message: 'Must match.', code: 'match', params: {}, path: ['confirm'] },
+    ],
+    messages: { confirm: 'Must match.' },
+  },
+  {
+    label: 'check() with a path',
+    validator: addresses,
+    input: { billing: { zip: '1' }, shipping: { zip: '2' } },
+    field: 'order',
+    failure: properties('order', {
+      shipping: properties('order.shipping', {
+        zip: failed('match', 'order.shipping.zip', {
+          message: 'order.shipping.zip must match the billing zip.',
+        }),
+      }),
+    }),
+    issues: [
+      {
+        message: 'shipping.zip must match the billing zip.',
+        code: 'match',
+        params: {},
+        path: ['shipping', 'zip'],
+      },
+    ],
+    messages: {
+      shipping: { zip: 'order.shipping.zip must match the billing zip.' },
+    },
+  },
+  {
+    label: 'check() without a path',
+    validator: object(
+      { name: string() },
+      check(() => false, 'never', 'Never passes.'),
+    ),
+    input: { name: 'a' },
+    field: 'form',
+    failure: failed('never', 'form', { message: 'Never passes.' }),
+    issues: [{ message: 'Never passes.', code: 'never', params: {} }],
+    messages: 'Never passes.',
+  },
+  {
+    label: 'a __proto__ key',
+    validator: object(withProto(object({ admin: string() }))),
+    input: JSON.parse('{"__proto__": {}}'),
+    failure: properties(
+      undefined,
+      withProto(
+        properties('__proto__', {
+          admin: failed('required', '__proto__.admin'),
+        }),
+      ),
+    ),
+    issues: [
+      {
+        message: 'required',
+        code: 'required',
+        params: {},
+        path: ['__proto__', 'admin'],
+      },
+    ],
+    messages: withProto({ admin: 'required' }),
+  },
+  {
+    label: 'a custom failure with its own errors, a leaf',
+    validator: object({ hello }),
+    input: { hello: 'hi' },
+    failure: properties(undefined, {
+      hello: failed('hello', 'hello', {
+        message: 'Must be "hello".',
+        errors: { count: 1 },
+      }),
+    }),
+    issues: [
+      {
+        message: 'Must be "hello".',
+        code: 'hello',
+        params: {},
+        path: ['hello'],
+      },
+    ],
+    messages: { hello: 'Must be "hello".' },
+  },
+  {
+    label: 'a child that fails with an empty message',
+    validator: array(silent),
+    input: ['a'],
+    failure: items(undefined, [failed('custom', '[0]', { message: '' })]),
+    issues: [{ message: '', code: 'custom', params: {}, path: [0] }],
+    messages: [''],
+  },
+  {
+    label: 'an items failure without errors, a leaf',
+    validator: createValidator(async (value: unknown, field?: string) =>
+      invalid({ code: 'items', message: 'No items.', value, field }),
+    ),
+    input: [],
+    failure: failed('items', undefined, { message: 'No items.' }),
+    issues: [{ message: 'No items.', code: 'items', params: {} }],
+    messages: 'No items.',
+  },
+  {
+    label: 'a container whose errors hold no failure',
+    validator: createValidator(async (value: unknown, field?: string) =>
+      invalid({ code: 'items', value, field, errors: [null] }),
+    ),
+    input: [1],
+    failure: items(undefined, [null]),
+    issues: [{ message: 'items', code: 'items', params: {} }],
+    messages: [null],
+  },
+];
+
+for (const row of rows) {
+  test(`should keep the failure in the tree for ${row.label}`, async () => {
+    assert.deepEqual(await row.validator(row.input, row.field), row.failure);
+  });
+
+  test(`should report the leaves as issues for ${row.label}`, async () => {
+    assert.deepEqual<unknown>(
+      await row.validator['~standard'].validate(row.input),
+      {
+        issues: row.issues,
+      },
+    );
+  });
+
+  test(`should give the message tree for ${row.label}`, async () => {
+    assert.deepEqual(
+      messageTree(await row.validator(row.input, row.field)),
+      row.messages,
+    );
+  });
+}
+
+test('should give undefined as the message tree when the result is valid', async () => {
+  assert.isUndefined(messageTree(await string()('a')));
+});
+
+test('should type the message tree from the error type', async () => {
+  expectTypeOf(messageTree(await user({}))).toEqualTypeOf<
+    | string
+    | {
+        a?: string | { b?: string };
+        tags?: string | (string | { name?: string } | null)[];
+      }
+    | undefined
+  >();
+  expectTypeOf(messageTree(await signup({}))).toEqualTypeOf<
+    string | { password?: string; confirm?: string } | undefined
+  >();
+});

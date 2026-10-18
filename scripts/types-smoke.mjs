@@ -107,6 +107,7 @@ const tsconfig = {
 
 /** The 2.x type names v3 removes. */
 const removedNames = [
+  'ArrayItemValidatorResult',
   'ConfigBase',
   'DeepPartial',
   'InvalidResult',

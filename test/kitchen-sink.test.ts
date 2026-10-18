@@ -10,6 +10,7 @@ import {
   matches,
   max,
   maxDate,
+  messageTree,
   min,
   minDate,
   number,
@@ -153,14 +154,12 @@ test('kitchen sink invalid', async () => {
     startDate,
   });
 
-  assert(result.state === 'invalid');
-  assert.deepEqual(result.errors, {
+  assert.deepEqual(messageTree(result), {
     firstName: 'First name is required.',
     emailAddress: 'Must be a valid email address.',
     age: 'Must be at least 18 years old.',
     homepage: 'Must be a valid URL.',
     fruit: 'Must be apple, orange or banana.',
-    // Note that this would be a string if the error is from the array validator.
     favoriteCarMakers: ['Must be a known car brand.', null],
     startDate: 'Must be on or after today.',
     notRobot: 'This is the answer.',

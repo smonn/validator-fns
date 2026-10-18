@@ -170,18 +170,6 @@ export type BuiltInCode =
   | 'properties';
 
 /**
- * The errors with a message at `Path` that `check()` produces, such as
- * `{ shipping?: { zip?: string } }` for `['shipping', 'zip']`.
- * @internal
- */
-export type AtPath<Path> = Path extends readonly [
-  infer Head extends string,
-  ...infer Rest,
-]
-  ? { [P in Head]?: AtPath<Rest> }
-  : string;
-
-/**
  * Safe hasOwnProperty check
  * @param object Object to check
  * @param property Property to look for
@@ -199,46 +187,13 @@ export function hasOwnProperty(
  * `Object.prototype.__proto__` setter instead of creating the property.
  * @internal
  */
-export function setOwn(target: object, key: string, value: unknown) {
+export function setOwn(target: object, key: PropertyKey, value: unknown) {
   Object.defineProperty(target, key, {
     value,
     enumerable: true,
     writable: true,
     configurable: true,
   });
-}
-
-/**
- * The errors with `message` at `key`, for `check()`.
- * @internal
- */
-export function errorAtKey<K extends string>(
-  key: K,
-  message: string,
-): { [P in K]?: string } {
-  const errors: { [P in K]?: string } = {};
-  setOwn(errors, key, message);
-  return errors;
-}
-
-/**
- * The errors with `message` at `path`, for `check()`. The one type assertion
- * it needs: no loop can build the recursive type `AtPath<Path>`.
- * @internal
- */
-export function errorAt<Path extends readonly string[]>(
-  path: Path,
-  message: string,
-): AtPath<Path> {
-  // Computed keys define own properties, so a `__proto__` key stays one.
-  const errors = path.reduceRight<unknown>(
-    (inner, key) => ({ [key]: inner }),
-    message,
-  );
-  // Permanent, approved in #657 (2.2a). Reconsider if TypeScript can check a
-  // recursive type built in a loop.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- no loop can build AtPath<Path>, see above
-  return errors as AtPath<Path>;
 }
 
 /**

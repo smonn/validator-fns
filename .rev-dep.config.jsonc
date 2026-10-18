@@ -132,7 +132,7 @@
         {
           "name": "entry",
           "pattern": "src/index.ts",
-          "allow": ["src/*.ts"],
+          "allow": ["src/*.ts", "src/failures/index.ts"],
         },
         {
           "name": "tests",

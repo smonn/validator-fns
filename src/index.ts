@@ -1,5 +1,5 @@
 export { array } from './arrays';
-export type { ArrayConfig, ArrayItemValidatorResult } from './arrays';
+export type { ArrayConfig } from './arrays';
 export { boolean } from './booleans';
 export type { BooleanConfig } from './booleans';
 export { date, maxDate, minDate } from './dates';
@@ -25,6 +25,7 @@ export type {
   MaxValidatorMessageParameters,
   MinValidatorMessageParameters,
 } from './limits';
+export { messageTree } from './failures/index';
 export { invalid } from './invalid';
 export { valid } from './shared';
 export type {

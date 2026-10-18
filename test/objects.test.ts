@@ -4,14 +4,13 @@ import {
   createValidatorTest,
   date,
   integer,
-  invalid,
   max,
+  messageTree,
   min,
   number,
   object,
   optional,
   string,
-  type Validator,
 } from '../src/index.js';
 
 test('object', async () => {
@@ -44,22 +43,15 @@ test('object', async () => {
     },
   );
 
-  assert.deepEqual(
-    await validate({
-      username: 'hello',
-      age: null,
-    }),
-    {
-      state: 'invalid',
-      code: 'properties',
-      params: {},
-      field: undefined,
-      message: 'properties',
-      errors: {
-        age: 'Must enter your age.',
-      },
-    },
-  );
+  const result = await validate({ username: 'hello', age: null });
+  assert.deepInclude(result, {
+    state: 'invalid',
+    code: 'properties',
+    params: {},
+    field: undefined,
+    message: 'properties',
+  });
+  assert.deepEqual(messageTree(result), { age: 'Must enter your age.' });
 });
 
 test('empty object config accepts any object', async () => {
@@ -98,13 +90,9 @@ test('should report a field as missing when its name is on Object.prototype', as
     toString: string({ messages: { required: 'Required' } }),
   });
 
-  assert.deepEqual(await validate({}), {
-    state: 'invalid',
-    code: 'properties',
-    params: {},
-    field: undefined,
-    message: 'properties',
-    errors: { constructor: 'Required', toString: 'Required' },
+  assert.deepEqual(messageTree(await validate({})), {
+    constructor: 'Required',
+    toString: 'Required',
   });
 });
 
@@ -114,14 +102,7 @@ test('should report a field as missing when the input only inherits it', async (
     name: string({ messages: { required: 'Required' } }),
   });
 
-  assert.deepEqual(await validate(input), {
-    state: 'invalid',
-    code: 'properties',
-    params: {},
-    field: undefined,
-    message: 'properties',
-    errors: { name: 'Required' },
-  });
+  assert.deepEqual(messageTree(await validate(input)), { name: 'Required' });
 });
 
 test('should keep a __proto__ field as an own property when it is in the schema', async () => {
@@ -139,10 +120,9 @@ test('should keep a __proto__ field as an own property when it is in the schema'
   assert.equal(Reflect.get(validResult.value ?? {}, '__proto__'), 'x');
 
   const invalidResult = await validate(JSON.parse('{"__proto__": null}'));
-  assert.equal(invalidResult.state, 'invalid');
-  assert.deepEqual(
+  assert.equal(
     Object.getOwnPropertyDescriptor(
-      (invalidResult.state === 'invalid' && invalidResult.errors) || {},
+      messageTree(invalidResult) ?? {},
       '__proto__',
     )?.value,
     'Required',
@@ -195,24 +175,8 @@ test('nested object', async () => {
   );
 
   assert.deepEqual(
-    await validate({
-      person: {
-        firstName: 'foo',
-        age: '22',
-      },
-    }),
-    {
-      state: 'invalid',
-      code: 'properties',
-      params: {},
-      message: 'properties',
-      errors: {
-        person: {
-          lastName: 'required',
-        },
-      },
-      field: undefined,
-    },
+    messageTree(await validate({ person: { firstName: 'foo', age: '22' } })),
+    { person: { lastName: 'required' } },
   );
 });
 
@@ -225,21 +189,6 @@ test('invalid configuration', () => {
     TypeError,
     '`name`',
   );
-});
-
-// Fails with an empty message and no errors, which built-in tests never do.
-const silent: Validator = async (value, field) =>
-  invalid({ code: 'custom', message: '', value, field });
-
-test('object records an empty message for a field that fails without one', async () => {
-  const result = await object({ silent, name: string() })({
-    silent: 1,
-    name: 'x',
-  });
-  assert.equal(result.state, 'invalid');
-  assert.deepEqual(result.state === 'invalid' && result.errors, {
-    silent: '',
-  });
 });
 
 const signup = object(
@@ -256,14 +205,15 @@ const signup = object(
 );
 
 test('should put an object-level error on the named field when the check fails', async () => {
-  assert.deepEqual(await signup({ password: 'secret', confirm: 'other' }), {
+  const result = await signup({ password: 'secret', confirm: 'other' });
+  assert.deepInclude(result, {
     state: 'invalid',
     code: 'properties',
     params: {},
     field: undefined,
     message: 'properties',
-    errors: { confirm: 'Must match.' },
   });
+  assert.deepEqual(messageTree(result), { confirm: 'Must match.' });
 });
 
 test('should return the parsed object when every object-level test passes', async () => {
@@ -284,14 +234,7 @@ test('should skip object-level tests when a field is invalid', async () => {
     }, 'never'),
   );
 
-  assert.deepEqual(await validate({}), {
-    state: 'invalid',
-    code: 'properties',
-    params: {},
-    field: undefined,
-    message: 'properties',
-    errors: { password: 'Required' },
-  });
+  assert.deepEqual(messageTree(await validate({})), { password: 'Required' });
   assert.strictEqual(calls, 0);
 });
 
@@ -306,9 +249,9 @@ test('should compare parsed values when an object-level test runs', async () => 
     ),
   );
 
-  assert.deepInclude(
-    await validate({ start: '2024-01-02', end: '2024-01-01' }),
-    { state: 'invalid', errors: { end: 'Must follow the start date.' } },
+  assert.deepEqual(
+    messageTree(await validate({ start: '2024-01-02', end: '2024-01-01' })),
+    { end: 'Must follow the start date.' },
   );
 });
 
@@ -346,12 +289,11 @@ test('should nest an object-level error when the check names a path', async () =
     ),
   );
 
-  assert.deepInclude(
-    await validate({ billing: { zip: '12345' }, shipping: { zip: '54321' } }),
-    {
-      state: 'invalid',
-      errors: { shipping: { zip: 'Must match the billing zip.' } },
-    },
+  assert.deepEqual(
+    messageTree(
+      await validate({ billing: { zip: '12345' }, shipping: { zip: '54321' } }),
+    ),
+    { shipping: { zip: 'Must match the billing zip.' } },
   );
 });
 
