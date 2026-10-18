@@ -22,6 +22,7 @@ import {
   url,
   uuid,
   valid,
+  type Messages,
   type Result,
   type Validator,
 } from '../src/index.js';
@@ -145,6 +146,31 @@ test('should prefer the message passed to a test over the messages config', asyn
   )('ab');
   assert.deepInclude(result, { code: 'min', message: 'test' });
 });
+
+test.each(['constructor', 'toString', '__proto__'])(
+  'should fall back to the code %s when the messages config lacks it',
+  async (code) => {
+    const fails = createValidatorTest(code, () => false);
+    assert.deepInclude(await string({ messages: {} }, fails)('x'), {
+      code,
+      message: code,
+    });
+  },
+);
+
+test.each<[string, Messages]>([
+  ['constructor', { constructor: 'Own.' }],
+  ['__proto__', JSON.parse('{ "__proto__": "Own." }')],
+])(
+  'should word the code %s from its own messages key',
+  async (code, messages) => {
+    const fails = createValidatorTest(code, () => false);
+    assert.deepInclude(await string({ messages }, fails)('x'), {
+      code,
+      message: 'Own.',
+    });
+  },
+);
 
 test('should leave children unworded by a container messages config', async () => {
   const messages = { min: 'config', required: 'config', type: 'config' };
