@@ -5,6 +5,7 @@ import type {
   ValidatorMessageParameters,
   Validator,
 } from './shared.js';
+import { isDate } from './date-check.js';
 import { parseDate } from './parse-date.js';
 
 /**
@@ -78,7 +79,7 @@ export function minDate(
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (value instanceof Date &&
+        (isDate(value) &&
           (exclusive ? value > parsedDate : value >= parsedDate))),
     message,
     () => ({
@@ -133,7 +134,7 @@ export function maxDate(
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (value instanceof Date &&
+        (isDate(value) &&
           (exclusive ? value < parsedDate : value <= parsedDate))),
     message,
     () => ({

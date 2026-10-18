@@ -1,3 +1,4 @@
+import { isDate } from './date-check.js';
 import { createTypeValidatorTest } from './factories.js';
 import {
   type ConfigBase,
@@ -22,7 +23,7 @@ export function parseNumber(value: unknown): number | null | undefined {
     return value;
   }
 
-  if (value instanceof Date) {
+  if (isDate(value)) {
     return value.getTime();
   }
 

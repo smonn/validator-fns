@@ -1,3 +1,4 @@
+import { isDate } from './date-check.js';
 import { createTypeValidatorTest, createValidatorTest } from './factories.js';
 import {
   type ConfigBase,
@@ -47,7 +48,7 @@ export function parseString(value: unknown): string | null | undefined {
     return value;
   }
 
-  if (value instanceof Date) {
+  if (isDate(value)) {
     return value.toISOString();
   }
 
