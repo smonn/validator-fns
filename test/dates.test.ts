@@ -67,6 +67,41 @@ test.each(offsetTexts)(
   },
 );
 
+// Each instant is what `new Date(text)` reads.
+const minuteZoneTexts: [text: string, instant: string][] = [
+  ['2026-10-17T08:30Z', '2026-10-17T08:30:00.000Z'],
+  ['2026-10-17 08:30Z', '2026-10-17T08:30:00.000Z'],
+  ['2026-10-17T08:30+02:00', '2026-10-17T06:30:00.000Z'],
+  ['2026-10-17T08:30+0200', '2026-10-17T06:30:00.000Z'],
+  ['2026-10-17T08:30-05:30', '2026-10-17T14:00:00.000Z'],
+  ['2026-10-17T08:30-0530', '2026-10-17T14:00:00.000Z'],
+  ['2020-01-31T23:30-01:00', '2020-02-01T00:30:00.000Z'],
+];
+
+test.each(minuteZoneTexts)(
+  'should read %s as %s when a timezone follows the minutes',
+  (text, instant) => {
+    assert.equal(parseDate(text)?.toISOString(), instant);
+  },
+);
+
+// `new Date(text)` rejects each of these too.
+const malformedZoneTexts = [
+  '2026-10-17T08Z',
+  '2026-10-17T08+02:00',
+  '2026-10-17T08:30+02',
+  '2026-10-17T08:30:Z',
+  '2026-10-17T08:30Zx',
+  'x2026-10-17T08:30Z',
+];
+
+test.each(malformedZoneTexts)(
+  'should give an invalid date when %s has a malformed timezone',
+  (text) => {
+    assert.isNaN(parseDate(text)?.getTime());
+  },
+);
+
 test('minDate', async () => {
   const now = new Date();
   const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);
