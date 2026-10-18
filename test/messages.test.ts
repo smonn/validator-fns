@@ -170,6 +170,31 @@ test.each<[string, unknown]>([
   });
 });
 
+type Lengths = { billing?: string | { length?: { unit?: string } } };
+
+const unitTest = check(
+  ['billing', 'length', 'unit'],
+  (value: Lengths) => value === undefined,
+  'match',
+);
+
+test('should give no value to a check() path level under a string', async () => {
+  const unitCheck = withMessages(
+    // Reflect.apply lets the validator take values the test's type rejects.
+    createValidator(async (value: unknown): Promise<Result> =>
+      Reflect.apply(unitTest, undefined, [value]),
+    ),
+    { properties: ({ value }) => `got ${String(value)}` },
+  );
+  const result = await unitCheck({ billing: 'ab' });
+  const billing: unknown =
+    result.state === 'invalid' && Reflect.get(Object(result.errors), 'billing');
+  assert.deepInclude(billing, { message: 'got ab' });
+  assert.deepInclude(Reflect.get(Object(billing).errors, 'length'), {
+    message: 'got undefined',
+  });
+});
+
 test('should word a custom validator failure made without a message', async () => {
   const taken = createValidator(async (value: unknown, field?: string) =>
     invalid({ code: 'taken', params: { name: 'bob' }, value, field }),
