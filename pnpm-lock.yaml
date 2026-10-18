@@ -212,8 +212,8 @@ importers:
         specifier: 0.3.25
         version: 0.3.25
       rev-dep:
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 3.2.1
+        version: 3.2.1
       tsdown:
         specifier: 0.23.1
         version: 0.23.1(@arethetypeswrong/core@0.18.5)(publint@0.3.25)(typescript@7.0.2)
@@ -984,32 +984,32 @@ packages:
   '@quansync/fs@1.1.0':
     resolution: {integrity: sha512-qAPG/t3HqML1TlN7sY/pTbEjzFVAKsMjNNMGheyDosro+kT4iw2KCUoHcVdmliwWjorm4elZbgNQyU2eD97eDg==}
 
-  '@rev-dep/darwin-arm64@3.1.0':
-    resolution: {integrity: sha512-juMbFy3E988dq1DlqHPOT+7QRWPGIPypDal+7f/a1yCRd43TnhMy5mXfTGLBfK9OuOOr1893nHFRO0iRWAx2Ww==}
+  '@rev-dep/darwin-arm64@3.2.1':
+    resolution: {integrity: sha512-TdYwy5Kf66WYE/xDgP2qDr1+hHgLnqWlN4KB+uT6uqg3x+15X6BKB66sfVcGDq4WU/wZt8BUjJ2mq+QJp3lNYA==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [darwin]
 
-  '@rev-dep/darwin-x64@3.1.0':
-    resolution: {integrity: sha512-uV2L40ly0gFErJdiDQBfkaHWv6pR92O4axqhj3wAR7gm3fRGsM6LH3A7AYwV1mpsFckwsQHQOquWSpDKl5ZoLg==}
+  '@rev-dep/darwin-x64@3.2.1':
+    resolution: {integrity: sha512-WXgIbZ+h8iNiixfLwI/MaCqc4VUiu47ml4gbm1/grawp28eqc2JY7C+u25Awv5stDfzwBWKgeE6Ct0qlandQrA==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [darwin]
 
-  '@rev-dep/linux-arm64@3.1.0':
-    resolution: {integrity: sha512-P+M+qXVEP1nG0THAqrQjbNEaurQNxVSGFX69aTzD4ANDPfT5LfMeBHcshUY9F//VbWLatnJ8LYSVESDqcbOQFQ==}
+  '@rev-dep/linux-arm64@3.2.1':
+    resolution: {integrity: sha512-zijYa1LA5QqHujCahthwoVIEwh6pnsk/kq4H2AP1ruV3gOE18NhQAbJSIa6FyAvMF0M8AhJcEOb+2jIUBZojXg==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [linux]
 
-  '@rev-dep/linux-x64@3.1.0':
-    resolution: {integrity: sha512-wgrnH76CS2lozKle/rLz9bTuu+MJh2u5yVv0lR/dc8w7CkpgLBv27BzfYHrGl7KLrLBtjaKhIr8ZZQfaAT49pw==}
+  '@rev-dep/linux-x64@3.2.1':
+    resolution: {integrity: sha512-2TxSWU43Pr1cMi0ddY5Pz/PXOWtCSUcVLdOwdJLKKXbMyMeaMKiddfKAhIv3HY2jAR5WoewWVXjBIm94FdU6Cw==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [linux]
 
-  '@rev-dep/win32-x64@3.1.0':
-    resolution: {integrity: sha512-NI7aOiX30O5btvZxKkMGLpU0vfIZV0VNVSn1XOxOFlkTUfjE4wwqO5GZ7+XizAwT8zthzR5BHdDJz+CIdwrVaA==}
+  '@rev-dep/win32-x64@3.2.1':
+    resolution: {integrity: sha512-egvyavFq0zMD7BP4Ch2TSMNQlQwYqDGwIlU5pmjwHrErjlRCi54GO1t1fmNfqHOL0FcsuJpzXLaAf76zElZ43g==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
@@ -2324,8 +2324,8 @@ packages:
     resolution: {integrity: sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==}
     hasBin: true
 
-  rev-dep@3.1.0:
-    resolution: {integrity: sha512-arg2teDn3jCxyelvMMoh+GU01HY4yGU9bzOXElTVlFGHGYJLU0hHw4pAYR9ji/ydZJK6tI9AvjIIC1UGFzd9dw==}
+  rev-dep@3.2.1:
+    resolution: {integrity: sha512-r0IlTddnpyD1onb58BuO64syyIAo+dLLftnFQOsI1wGEmQT+U6whjBmL+aEP/+rnyLpf2FtfVG9LVjlfvj1OlQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -3530,19 +3530,19 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@rev-dep/darwin-arm64@3.1.0':
+  '@rev-dep/darwin-arm64@3.2.1':
     optional: true
 
-  '@rev-dep/darwin-x64@3.1.0':
+  '@rev-dep/darwin-x64@3.2.1':
     optional: true
 
-  '@rev-dep/linux-arm64@3.1.0':
+  '@rev-dep/linux-arm64@3.2.1':
     optional: true
 
-  '@rev-dep/linux-x64@3.1.0':
+  '@rev-dep/linux-x64@3.2.1':
     optional: true
 
-  '@rev-dep/win32-x64@3.1.0':
+  '@rev-dep/win32-x64@3.2.1':
     optional: true
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
@@ -4748,13 +4748,13 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
-  rev-dep@3.1.0:
+  rev-dep@3.2.1:
     optionalDependencies:
-      '@rev-dep/darwin-arm64': 3.1.0
-      '@rev-dep/darwin-x64': 3.1.0
-      '@rev-dep/linux-arm64': 3.1.0
-      '@rev-dep/linux-x64': 3.1.0
-      '@rev-dep/win32-x64': 3.1.0
+      '@rev-dep/darwin-arm64': 3.2.1
+      '@rev-dep/darwin-x64': 3.2.1
+      '@rev-dep/linux-arm64': 3.2.1
+      '@rev-dep/linux-x64': 3.2.1
+      '@rev-dep/win32-x64': 3.2.1
 
   rolldown-plugin-dts@0.28.8(rolldown@1.2.14)(typescript@7.0.2):
     dependencies:
