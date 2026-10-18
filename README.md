@@ -1059,7 +1059,7 @@ How a validator's results map to Standard Schema results:
 
 Makes a custom validation type from `parser`, which can be any validator: a validation type with its tests, a custom validator, or one made with `createValidator()`. It returns a function with the validation types' call shape, `(config?, ...tests)`, where `config` takes `default` and `messages`. The resulting validator is required by default, runs its tests on the parsed value, works with `optional()`, and is a [Standard Schema][standard-schema], like the built-in ones.
 
-The parser reads present input only, with the field name: `undefined` and `null` skip it as missing, and a parsed `undefined` or `null` counts as missing too. Its valid value is the parsed value. Its failure is the custom type's own, with its own `code`, `params`, `message` and `errors`, and `messages` words it when it has no message. In TypeScript, the value and error types are the parser's, without `null` and `undefined`.
+The parser reads present input only, with the field name: `undefined` and `null` skip it as missing, and a parsed `undefined` or `null` counts as missing too. Its valid value is the parsed value. Its failure is the custom type's own, with its own `code`, `params`, `message` and `errors`, and `messages` words it when it has no message. In TypeScript, the value and error types are the parser's, without `null` and `undefined`. A `parser` that isn't a function throws a `TypeError` when the custom type is made.
 
 ```ts
 import {
