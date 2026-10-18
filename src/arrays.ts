@@ -4,7 +4,7 @@ import {
   defineType,
   isLengthGate,
   items,
-  keep,
+  keepValue,
   twinOf,
   type TypeValidator,
 } from './pipeline/index.js';
@@ -85,5 +85,5 @@ export function array<T, E>(
     );
   }
 
-  return arrayOf(keep, first, []);
+  return arrayOf(keepValue, first, []);
 }

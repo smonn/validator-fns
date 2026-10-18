@@ -1,5 +1,5 @@
 import type { Validator } from '../shared.js';
-import { accept, type Def, type Exit, reject } from './def.js';
+import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';
 import type { Run } from './steps.js';
@@ -35,7 +35,7 @@ function build<T, E, P, V>(
   );
   // Rebuilt once, on the first optional() call, so each call returns it.
   let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
-  const rebuild = () => (rebuilt ??= build(def, accept<E>));
+  const rebuild = () => (rebuilt ??= build(def, keepValue));
   return Object.assign(validator, { [built]: { run, optional: rebuild } });
 }
 

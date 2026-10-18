@@ -4,7 +4,7 @@ import { type Result, type Test, validResult } from '../shared.js';
  * A result, or a promise of one once a step or child is async.
  * @internal
  */
-export type Maybe<T> = T | PromiseLike<T>;
+export type MaybePromise<T> = T | PromiseLike<T>;
 
 /**
  * A validator's run, which returns a result synchronously until a step or
@@ -14,7 +14,7 @@ export type Maybe<T> = T | PromiseLike<T>;
 export type Run<T, E> = (
   value: unknown,
   field: string | undefined,
-) => Maybe<Result<T, E>>;
+) => MaybePromise<Result<T, E>>;
 
 /**
  * Whether a step or child returned a promise. Checks for `then`, as a promise
@@ -22,7 +22,7 @@ export type Run<T, E> = (
  * @internal
  */
 export function isThenable<T extends object>(
-  value: Maybe<T>,
+  value: MaybePromise<T>,
 ): value is PromiseLike<T> {
   return 'then' in value;
 }
@@ -77,7 +77,7 @@ export function runSteps<T, E>(
   steps: readonly (Test<T, E> & Partial<Twinned<T>>)[],
   value: T,
   field: string | undefined,
-): Maybe<Result<T, E>> {
+): MaybePromise<Result<T, E>> {
   let current = value;
   for (const [index, step] of steps.entries()) {
     const twin = step[syncTwin];
