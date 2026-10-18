@@ -19,7 +19,10 @@ const unsupported = [
   [/#[A-Za-z_][\w$]*/g, 'private class member'],
   [/\bstatic\s*\{/g, 'class static block'],
   // Only a class's first member, or one after `static`, is matched.
-  [/\bclass\b[^{]*\{\s*(?:static\s+)?[\w$]+\s*[=;}]/g, 'class field'],
+  [
+    /(?<![.\w$])class\b(?!\s*:)[^{]*\{\s*(?:static\s+)?[\w$]+\s*[=;}]/g,
+    'class field',
+  ],
   [/\(\?</g, 'regex named group or lookbehind'],
   [/\(\?[a-z-]+:/g, 'regex modifiers'],
   [/\\{1,2}(?:[pP]\{|k<)/g, 'regex property escape or named backreference'],
