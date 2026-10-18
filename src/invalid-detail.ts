@@ -91,6 +91,32 @@ export async function keepItems(
 }
 
 /**
+ * Makes the gate of a strict `object()`: an `unknownKeys` failure for a value
+ * with own enumerable keys that its properties don't name. A key such as
+ * `constructor` or `__proto__` is unknown unless the schema has it. Without
+ * `strict`, every value passes.
+ * @internal
+ */
+export function unknownKeysGate(
+  validators: [key: string, validator: Validator][],
+  strict: boolean | undefined,
+): (
+  objectValue: object,
+  value: unknown,
+  field: string | undefined,
+) => Failure<never> | undefined {
+  const known = new Set(validators.map(([key]) => key));
+  return (objectValue, value, field) => {
+    const keys = strict
+      ? Object.keys(objectValue).filter((key) => !known.has(key))
+      : [];
+    return keys.length > 0
+      ? failure({ code: 'unknownKeys', params: { keys }, value, field })
+      : undefined;
+  };
+}
+
+/**
  * Runs each property's validator on the value `read` gives for its key, with
  * the key's full field. Gives the errors tree, each failed property's failure
  * set on `tree`, or `undefined` when every property is valid, and each valid

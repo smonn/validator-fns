@@ -1,5 +1,9 @@
 import { failure, fillOwn } from './failures/index.js';
-import { runTests, validateProperties } from './invalid-detail.js';
+import {
+  runTests,
+  unknownKeysGate,
+  validateProperties,
+} from './invalid-detail.js';
 import { parseRecord, requirable } from './optional.js';
 import { ownValue, propertiesOf } from './properties.js';
 import type { TypeValidator } from './standard.js';
@@ -72,12 +76,19 @@ export interface ObjectConfig {
    * for a missing object, `undefined` or `null`.
    */
   messages?: Messages;
+  /**
+   * Fails an object with an own key outside the schema with `unknownKeys`,
+   * before any property runs. Without it, unknown keys are left out of the
+   * value.
+   */
+  strict?: boolean;
 }
 
 /**
  * Validates an object. The second argument is a configuration object, or the
- * first of the `tests`. The tests run on the parsed object, in order, once
- * every property is valid, and the first failure is the result.
+ * first of the `tests`. A strict object fails unknown keys before any property
+ * runs. The tests run on the parsed object, in order, once every property is
+ * valid, and the first failure is the result.
  * @category Type Validators
  */
 export function object<P extends ObjectParameter>(
@@ -92,7 +103,9 @@ export function object<P extends ObjectParameter>(
   const validators = propertiesOf(properties);
 
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
-  const messages = typeof config === 'object' ? config.messages : undefined;
+  const { messages, strict }: ObjectConfig =
+    typeof config === 'object' ? config : {};
+  const unknownKeys = unknownKeysGate(validators, strict);
 
   return requirable<ObjectValue<P>, ObjectErrors<P>>(
     messages,
@@ -103,6 +116,10 @@ export function object<P extends ObjectParameter>(
       const parsed = parseRecord(isMissing ? {} : values, field);
       if (parsed.state === 'invalid') {
         return fillOwn(parsed, messages);
+      }
+      const gated = unknownKeys(parsed.value, values, field);
+      if (gated) {
+        return fillOwn(gated, messages);
       }
 
       const { errors, values: resolvedValues } = await validateProperties<

@@ -178,3 +178,54 @@ test('array() returns the value its last collection test gives', async () => {
   });
   assert.deepInclude(await padded([1, 2, 3]), { code: 'max' });
 });
+
+test('strict object() fails unknown keys before any field runs', async () => {
+  const field = spy();
+  const validate = object({ a: field, constructor: field }, { strict: true });
+  const input = JSON.parse('{"a":1,"b":2,"__proto__":3,"toString":4}');
+
+  assert.deepEqual(await validate(input, 'user'), {
+    state: 'invalid',
+    code: 'unknownKeys',
+    params: { keys: ['b', '__proto__', 'toString'] },
+    message: 'unknownKeys',
+    field: 'user',
+    errors: undefined,
+  });
+  assert.equal(field.calls, 0);
+  assert.deepEqual(await validate({ a: 1, constructor: 2 }), {
+    state: 'valid',
+    value: { a: 1, constructor: 2 },
+    field: undefined,
+  });
+});
+
+test('strict object() words unknownKeys from its messages config', async () => {
+  const validate = object(
+    { a: number() },
+    { strict: true, messages: { unknownKeys: 'Unexpected: {keys}.' } },
+  );
+
+  assert.deepInclude(await validate({ a: 1, b: 2, c: 3 }), {
+    message: 'Unexpected: b,c.',
+  });
+});
+
+test('strict object() builds a missing object from its fields', async () => {
+  const validate = object({ a: number({ default: 1 }) }, { strict: true });
+
+  assert.deepInclude(await validate(undefined), {
+    state: 'valid',
+    value: { a: 1 },
+  });
+});
+
+test('object() strips unknown keys unless strict', async () => {
+  for (const config of [undefined, {}, { strict: false }]) {
+    assert.deepEqual(await object({ a: number() }, config)({ a: 1, b: 2 }), {
+      state: 'valid',
+      value: { a: 1 },
+      field: undefined,
+    });
+  }
+});

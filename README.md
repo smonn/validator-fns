@@ -407,6 +407,8 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 25. **Expect `array()`'s tests to run after its items, on the parsed items.** Only the built-in `min()`, `max()` and `exact()` still check the array before any item runs. Any other test, such as a length `check()` of your own, runs once every item is valid, and doesn't run when one fails. A test's valid value is now the array's value, as in item 24. In TypeScript, the tests take the item validator's type, such as `Test<string[]>` for `array(string())`, instead of `unknown[]`.
 
+26. **Pass `object(schema, { strict: true })` to reject keys outside the schema**, with the `unknownKeys` code, before any property runs. Without it, `object()` still leaves them out of the value, as 2.x did.
+
 ## API Reference
 
 ### Validation result
@@ -547,10 +549,11 @@ Every failure has a `code`, the name of what failed, and `params`, an object wit
 | `integer`, `email`, `uuid` | those tests                                               | `{}`                               |
 | `required`                 | a missing value                                           | `{}`                               |
 | `type`                     | input of another type, or that the parser can't read      | `{ expected }`, such as `'number'` |
+| `unknownKeys`              | `object(schema, { strict: true })` with keys outside it   | `{ keys }`                         |
 | `items`                    | an `array()` whose items failed                           | `{}`                               |
 | `properties`               | an `object()` whose fields failed, or `check()` at a path | `{}`                               |
 
-A custom test or validator names its own code, any string. The message is the first that applies: the one passed to the test, the one for the code in the validator's `messages` config, or the code itself. `messages` words only the validator's own failures: `required`, `type`, `items` or `properties`, and its tests' codes. It leaves an array's items and an object's fields as they failed, so give their validators their own `messages`.
+A custom test or validator names its own code, any string. The message is the first that applies: the one passed to the test, the one for the code in the validator's `messages` config, or the code itself. `messages` words only the validator's own failures: `required`, `type`, `unknownKeys`, `items` or `properties`, and its tests' codes. It leaves an array's items and an object's fields as they failed, so give their validators their own `messages`.
 
 ```js
 await string(min(3))('ab');
@@ -735,6 +738,15 @@ await object({ name: string() })(undefined);
 
 When fields fail, the object's own failure has the `properties` code, and its `errors` hold each failed field's failure under its key. See [Errors tree](#errors-tree).
 
+Keys outside the schema are left out of the value. With `strict: true`, an object with an own enumerable key outside the schema fails with the `unknownKeys` code instead, and its `params` hold the `keys`. It fails before any property runs:
+
+```js
+const point = object({ x: number(), y: number() }, { strict: true });
+
+await point({ x: 1, y: 2, z: 3 });
+// { state: 'invalid', code: 'unknownKeys', params: { keys: ['z'] }, ... }
+```
+
 In TypeScript, a field of the valid value is required unless its validator is wrapped in `optional()`, as in `{ name: string; age?: number | null | undefined }`. A missing optional field is still set on the value, as `undefined`.
 
 The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Each test's valid value goes to the next, and the last one is the result's value, as with [`transform()`](#transformfn). Use [`check`](#checkpath-test-code-message) to compare fields and put the error on one of them:
@@ -762,9 +774,10 @@ A field's own error takes precedence: object-level tests don't run while any pro
 
 <details><summary>config</summary>
 
-| option     | type   | description                                                                                                              |
-| :--------- | :----- | :----------------------------------------------------------------------------------------------------------------------- |
-| `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
+| option     | type    | description                                                                                                              |
+| :--------- | :------ | :----------------------------------------------------------------------------------------------------------------------- |
+| `messages` | object  | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
+| `strict`   | boolean | Optional. Fails keys outside the schema with `unknownKeys`, instead of leaving them out of the value.                    |
 
 </details>
 

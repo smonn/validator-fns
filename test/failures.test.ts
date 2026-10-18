@@ -46,6 +46,7 @@ const failures: [string, Validator, unknown][] = [
   ['object, missing', object({ a: string() }), undefined],
   ['object, wrong type', object({ a: string() }), []],
   ['object, field', object({ a: string() }), {}],
+  ['object, unknown keys', object({}, { strict: true }), { b: 1 }],
   [
     'object, test',
     object(

@@ -208,6 +208,13 @@ test('array() tests take the parsed items', () => {
   );
 });
 
+test('object() takes a strict option', () => {
+  expectTypeOf<ObjectConfig['strict']>().toEqualTypeOf<boolean | undefined>();
+  expectTypeOf(object({ a: string() }, { strict: true })).toEqualTypeOf<
+    TypeValidator<{ a: string }, { a?: Failure<string> }>
+  >();
+});
+
 test('results have no isValid property', () => {
   expectTypeOf<Result>().not.toHaveProperty('isValid');
 });
@@ -421,7 +428,9 @@ test('a translation of the built-in codes needs every code', () => {
   expectTypeOf<{ min: string }>().not.toExtend<Messages<BuiltInCode>>();
   expectTypeOf<Record<BuiltInCode, string>>().toExtend<Messages<BuiltInCode>>();
   expectTypeOf<{ min: string }>().toExtend<Messages>();
-  expectTypeOf<'min' | 'required' | 'type'>().toExtend<BuiltInCode>();
+  expectTypeOf<
+    'min' | 'required' | 'type' | 'unknownKeys'
+  >().toExtend<BuiltInCode>();
 });
 
 test('createValidatorTest() gives its params to the message', () => {

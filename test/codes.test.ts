@@ -50,6 +50,7 @@ const codes: [string, Validator, unknown, Record<string, unknown>][] = [
   ['type', object({}), [], { expected: 'object' }],
   ['items', array(number()), ['abc'], {}],
   ['properties', object({ a: string() }), {}, {}],
+  ['unknownKeys', object({}, { strict: true }), { b: 1 }, { keys: ['b'] }],
 ];
 
 test('should fail with the code and its params, and the code as the message', async () => {
