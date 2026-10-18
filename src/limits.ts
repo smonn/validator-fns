@@ -1,4 +1,4 @@
-import { createValidatorTest } from './factories.js';
+import { asLengthGate, createValidatorTest } from './factories.js';
 import type {
   MessageExtras,
   Test,
@@ -47,11 +47,13 @@ export function max<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<MaxValidatorMessageParameters>,
 ): Test<T, never> {
-  return createValidatorTest(
-    'max',
-    (value: T) => getAmount(value) <= limit,
-    message,
-    (value: T) => ({ max: limit, amount: getAmount(value) }),
+  return asLengthGate(
+    createValidatorTest(
+      'max',
+      (value: T) => getAmount(value) <= limit,
+      message,
+      (value: T) => ({ max: limit, amount: getAmount(value) }),
+    ),
   );
 }
 
@@ -71,11 +73,13 @@ export function min<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<MinValidatorMessageParameters>,
 ): Test<T, never> {
-  return createValidatorTest(
-    'min',
-    (value: T) => getAmount(value) >= limit,
-    message,
-    (value: T) => ({ min: limit, amount: getAmount(value) }),
+  return asLengthGate(
+    createValidatorTest(
+      'min',
+      (value: T) => getAmount(value) >= limit,
+      message,
+      (value: T) => ({ min: limit, amount: getAmount(value) }),
+    ),
   );
 }
 
@@ -95,10 +99,12 @@ export function exact<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<ExactValidatorMessageParameters>,
 ): Test<T, never> {
-  return createValidatorTest(
-    'exact',
-    (value: T) => getAmount(value) === limit,
-    message,
-    (value: T) => ({ exact: limit, amount: getAmount(value) }),
+  return asLengthGate(
+    createValidatorTest(
+      'exact',
+      (value: T) => getAmount(value) === limit,
+      message,
+      (value: T) => ({ exact: limit, amount: getAmount(value) }),
+    ),
   );
 }

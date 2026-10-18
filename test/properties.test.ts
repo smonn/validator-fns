@@ -47,7 +47,7 @@ const dateTests: Test<Date, never>[] = [
   minDate('2020-01-01', 'min'),
   maxDate('2020-01-01', 'max'),
 ];
-const arrayTests: Test<unknown[], never>[] = [
+const arrayTests: Test<string[], never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),

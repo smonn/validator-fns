@@ -134,6 +134,34 @@ export function createValidatorTest<T, E>(
 }
 
 /**
+ * The built-in `min()`, `max()` and `exact()` tests, which `array()` runs on
+ * the input before any item. A wrapped one isn't in it, so it runs after the
+ * items.
+ * @internal
+ */
+const lengthGates = new WeakSet<object>();
+
+/**
+ * Marks a built-in amount test as a length gate for `array()`.
+ * @internal
+ */
+export function asLengthGate<T>(test: Test<T, never>): Test<T, never> {
+  lengthGates.add(test);
+  return test;
+}
+
+/**
+ * Whether `array()` runs test on the input before any item. Only the built-in
+ * amount tests are marked, and they take any array.
+ * @internal
+ */
+export function isLengthGate<V, E>(
+  test: Test<V, E>,
+): test is Test<V, E> & Test<unknown[], never> {
+  return lengthGates.has(test);
+}
+
+/**
  * Makes a test from its synchronous twin, which type validators run in its
  * place.
  * @internal

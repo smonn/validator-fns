@@ -189,6 +189,25 @@ test('array() carries the item value and error types', () => {
   >();
 });
 
+test('array() tests take the parsed items', () => {
+  array(
+    string(),
+    (value, field) => {
+      expectTypeOf(value).toEqualTypeOf<string[]>();
+      return valid({ value, field });
+    },
+    min(1),
+  );
+  // @ts-expect-error a test on numbers doesn't fit an array of strings
+  array(string(), async (value: number[], field?: string) =>
+    valid({ value, field }),
+  );
+  // @ts-expect-error a test's valid value keeps the items' type
+  array(string(), async (value: string[], field?: string) =>
+    valid({ value: value.length, field }),
+  );
+});
+
 test('results have no isValid property', () => {
   expectTypeOf<Result>().not.toHaveProperty('isValid');
 });

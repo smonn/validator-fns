@@ -405,6 +405,8 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     ```
 
+25. **Expect `array()`'s tests to run after its items, on the parsed items.** Only the built-in `min()`, `max()` and `exact()` still check the array before any item runs. Any other test, such as a length `check()` of your own, runs once every item is valid, and doesn't run when one fails. A test's valid value is now the array's value, as in item 24. In TypeScript, the tests take the item validator's type, such as `Test<string[]>` for `array(string())`, instead of `unknown[]`.
+
 ## API Reference
 
 ### Validation result
@@ -635,9 +637,27 @@ Accepts an array. Anything else, such as a `Set` or a string, fails with the `ty
 
 A valid result's `value` holds each item as `itemTest` returned it, so `array(string(transform((s) => s.trim())))` trims each item.
 
-Supported validation tests: `max` and `min`. For now, the array's own `tests` only check: a value they return is ignored, so a `transform()` there has no effect, and they get the input array itself.
+Supported validation tests: `exact`, `max` and `min`, and any test on the parsed items. `array()` runs in three phases:
 
-When items fail, the array's own failure has the `items` code, and its `errors` hold each item's failure, `null` for a valid item. See [Errors tree](#errors-tree). A failed array test gives its own code, without the items' failures.
+1. The built-in `min()`, `max()` and `exact()` check the array's length, wherever they come among the `tests`. A failure is the result, and no item runs, so `array(item, max(5))` fails six items without calling `item`. A `min()` wrapped in a test of your own isn't built in, so it runs in the third phase.
+2. `itemTest` runs on every item, one after another, even after one fails.
+3. Once every item is valid, the remaining `tests`, its collection tests, run on the parsed items, as a validation type runs its tests: in order, each test's valid value goes to the next, and the first failure ends the run. The last one is the result's value.
+
+```js
+const scores = array(
+  number(),
+  max(3),
+  check((value) => new Set(value).size === value.length, 'unique'),
+);
+
+await scores([1, 2, 3, 4]); // { state: 'invalid', code: 'max', ... }, no item ran
+await scores([1, 'a']); // { state: 'invalid', code: 'items', ... }, no check
+await scores([1, 1]); // { state: 'invalid', code: 'unique', ... }
+```
+
+When items fail, the array's own failure has the `items` code, and its `errors` hold each item's failure, `null` for a valid item. See [Errors tree](#errors-tree). A failed length check or collection test gives its own code, without the items' failures.
+
+In TypeScript, a collection test takes the parsed items, such as `Test<number[]>` for `array(number())`.
 
 <details><summary>config</summary>
 
@@ -770,7 +790,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values, so a built-in test fails `null` and `undefined` when it's called with them directly. An empty string is a string like any other: `min(1, …)` fails it and `max(1, …)` accepts it. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
-Tests are steps: a validation type runs them in order, and each test's valid value goes to the next, so a test can change the value. The last one is the result's value. The built-in tests return the value unchanged, and [`transform()`](#transformfn) makes a test that changes it. A failure ends the run. `array()`'s own tests are the exception for now: they only check.
+Tests are steps: a validation type runs them in order, and each test's valid value goes to the next, so a test can change the value. The last one is the result's value. The built-in tests return the value unchanged, and [`transform()`](#transformfn) makes a test that changes it. A failure ends the run.
 
 In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of type `T` and resolves to a `Result<T, E>`, so a step keeps the type. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. `min()`, `max()` and `exact()` take their type from the validator they're passed to; one built apart from it needs the type, as in `min<string>(2)`. A custom test that keeps any type, such as `async <T>(value: T, field?: string) => valid({ value, field })`, fits every validation type.
 
