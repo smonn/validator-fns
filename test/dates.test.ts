@@ -23,8 +23,6 @@ test('minDate() reads dates, timestamps and ISO 8601 strings as its limit', asyn
   assert.strictEqual(await parsedDate(now), now);
   assert.strictEqual(await parsedDate(foreign), foreign);
   assert.deepEqual(await parsedDate(0), new Date(0));
-  assert.deepEqual(await parsedDate(''), invalidDate);
-  assert.deepEqual(await parsedDate('  '), invalidDate);
   assert.deepEqual(await parsedDate('2020'), new Date(2020, 0));
   assert.deepEqual(await parsedDate('2020-13'), new Date(2021, 0));
   assert.deepEqual(await parsedDate('2020-01'), new Date(2020, 0));
@@ -61,7 +59,7 @@ test('minDate() reads dates, timestamps and ISO 8601 strings as its limit', asyn
 
 test('minDate', async () => {
   const now = new Date();
-  const validate = minDate(now, ({ min }) => `min:${min?.toISOString() ?? ''}`);
+  const validate = minDate(now, ({ min }) => `min:${min.toISOString()}`);
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
@@ -88,7 +86,7 @@ test('minDate', async () => {
 
 test('maxDate', async () => {
   const now = new Date();
-  const validate = maxDate(now, ({ max }) => `max:${max?.toISOString() ?? ''}`);
+  const validate = maxDate(now, ({ max }) => `max:${max.toISOString()}`);
   assert.deepEqual(await validate(now), {
     state: 'valid',
     value: now,
@@ -129,21 +127,6 @@ test('minDate() and maxDate() compare times, which an own valueOf cannot change'
     state: 'valid',
   });
   assert.deepInclude(await maxDate(throwing)(new Date(0)), { state: 'valid' });
-});
-
-test('should fail every date when the minDate() or maxDate() limit is missing', async () => {
-  // JSON.parse returns any, which lets the test pass values the types reject.
-  const limits = JSON.parse('[null]');
-  limits.push(undefined);
-
-  for (const limit of limits) {
-    assert.deepInclude(await minDate(limit, 'min')(new Date(0)), {
-      state: 'invalid',
-    });
-    assert.deepInclude(await maxDate(limit, 'max')(new Date(0)), {
-      state: 'invalid',
-    });
-  }
 });
 
 test('date', async () => {
@@ -212,15 +195,26 @@ test('date default', async () => {
   assert.deepInclude(await validate(new Date(Number.NaN)), { code: 'type' });
 });
 
-test('minDate() and maxDate() throw for a limit they cannot read', () => {
+test('minDate() and maxDate() throw for a limit that is not a valid date', () => {
   const unreadable: unknown[] = [
+    // Missing
+    null,
+    undefined,
     // Strings that aren't ISO 8601
+    '',
+    '  ',
     'garbage',
     '2020-01-01x',
     'tomorrow',
     '12/31/2020',
+    // Timestamps out of a date's range
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    9e15,
     // An invalid date, and input that isn't a date, number, or string
     invalidDate,
+    runInNewContext("new Date('')"),
     true,
     {},
     [2020],
@@ -234,12 +228,12 @@ test('minDate() and maxDate() throw for a limit they cannot read', () => {
     assert.throws(
       () => Reflect.apply(minDate, undefined, [limit]),
       TypeError,
-      'Failed to parse value to date.',
+      '`limit` must be a valid date',
     );
     assert.throws(
       () => Reflect.apply(maxDate, undefined, [limit]),
       TypeError,
-      'Failed to parse value to date.',
+      '`limit` must be a valid date',
     );
   }
 });
