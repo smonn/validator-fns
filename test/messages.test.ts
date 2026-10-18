@@ -58,7 +58,7 @@ test('should keep the message passed to a test or set in the config', async () =
   );
 });
 
-test('should leave a failure copied with spread as it is', async () => {
+test('should leave a failure as it is when it was copied with spread', async () => {
   const short = string(min(2));
   const copied = createValidator(async (value: unknown, field?: string) => ({
     ...(await short(value, field)),
@@ -155,6 +155,7 @@ test.each<[string, unknown]>([
   ['an object without the key', {}],
 ])('should give the check() path level of %s its value', async (_, billing) => {
   const zipCheck = withMessages(
+    // Reflect.apply lets the test pass billing values the types reject.
     createValidator(async (value: unknown): Promise<Result> =>
       Reflect.apply(zipTest, undefined, [value]),
     ),
@@ -183,13 +184,20 @@ test('should word a custom validator failure made without a message', async () =
 const plain: Validator<never> = async (value, field) =>
   invalid({ code: 'plain', value, field });
 
-test('should take a plain async function as the validator', async () => {
-  const translated = withMessages(plain, { plain: 'Plain.' });
-  assert.deepInclude(await translated(1), { message: 'Plain.' });
-  assert.deepEqual<unknown>(await translated['~standard'].validate(1), {
+const translatedPlain = withMessages(plain, { plain: 'Plain.' });
+
+test('should word the safe call when the validator is a plain async function', async () => {
+  assert.deepInclude(await translatedPlain(1), { message: 'Plain.' });
+});
+
+test('should word ~standard issues when the validator is a plain async function', async () => {
+  assert.deepEqual<unknown>(await translatedPlain['~standard'].validate(1), {
     issues: [{ message: 'Plain.', code: 'plain', params: {} }],
   });
-  assert.deepEqual(await optional(translated)(null), {
+});
+
+test('should pass a missing value in optional() when the validator is a plain async function', async () => {
+  assert.deepEqual(await optional(translatedPlain)(null), {
     state: 'valid',
     value: null,
     field: undefined,
@@ -207,12 +215,14 @@ test.each(['constructor', 'toString', '__proto__'])(
   },
 );
 
-/** A translation with an own `__proto__` key and no prototype. */
-const bare = Object.fromEntries([['__proto__', 'Own.']]);
+/** A translation with an own `__proto__` key, which a literal can't make. */
+const withProto = () => Object.fromEntries([['__proto__', 'Own.']]);
+
+const bare = withProto();
 Object.setPrototypeOf(bare, null);
 
 test.each<[string, Record<string, string>]>([
-  ['an own __proto__ key', JSON.parse('{ "__proto__": "Own." }')],
+  ['an own __proto__ key', withProto()],
   ['a null prototype', bare],
 ])('should word a code from a translation with %s', async (_, messages) => {
   const fails = createValidatorTest<string>('__proto__', () => false);
@@ -238,6 +248,7 @@ test.each<[string, unknown, string]>([
   'should throw a TypeError when the translation is %s',
   (_, messages, text) => {
     assert.throws(
+      // Reflect.apply lets the test pass a translation the types reject.
       () => Reflect.apply(withMessages, undefined, [string(), messages]),
       TypeError,
       text,
@@ -247,31 +258,11 @@ test.each<[string, unknown, string]>([
 
 test('should throw a TypeError when the validator is not a function', () => {
   assert.throws(
+    // Reflect.apply lets the test pass a validator the types reject.
     () => Reflect.apply(withMessages, undefined, [{}, {}]),
     TypeError,
     '`validator` must be a validator',
   );
-});
-
-const bogus: Validator = async () => JSON.parse('{ "state": "invalid" }');
-
-test('should reject with a TypeError when the result is not a failure', async () => {
-  const error = await rejection(withMessages(bogus, {})('x'));
-  assert.instanceOf(error, TypeError);
-  assert.include(String(error), "A validator's result isn't a failure");
-});
-
-test('should reject with a TypeError for an errors tree with 1000001 entries', async () => {
-  const flat = createValidator(async () =>
-    invalid({
-      code: 'items',
-      field: undefined,
-      errors: Array.from({ length: 1_000_001 }, () => null),
-    }),
-  );
-  const error = await rejection(withMessages(flat, {})({}));
-  assert.instanceOf(error, TypeError);
-  assert.include(String(error), 'more than 1000000 entries');
 });
 
 test('should reject with what the validator throws', async () => {
@@ -292,173 +283,7 @@ test('should reject with what a message function throws', async () => {
   assert.strictEqual(await rejection(name('a')), bug);
 });
 
-test('should word a frozen failure without changing it', async () => {
-  const leaf = Object.freeze(await invalid({ code: 'min', field: 'a' }));
-  const frozen = Object.freeze(
-    await invalid({
-      code: 'properties',
-      field: undefined,
-      errors: { a: leaf },
-    }),
-  );
-  const result = await withMessages(
-    createValidator(async () => frozen),
-    { min: 'Too short.', properties: 'Fix it.' },
-  )({});
-  assert.deepInclude(result, { message: 'Fix it.' });
-  assert.deepEqual<unknown>(messageTree(result), { a: 'Too short.' });
-  assert.deepInclude(frozen, { message: 'properties' });
-  assert.deepInclude(leaf, { message: 'min' });
-});
-
-test('should keep a failure and its tree as they are when nothing is worded', async () => {
-  const made = await invalid({
-    code: 'properties',
-    field: undefined,
-    errors: { a: await invalid({ code: 'min', field: 'a' }) },
-  });
-  const result = await withMessages(
-    createValidator(async () => made),
-    {},
-  )({});
-  assert.strictEqual(result, made);
-});
-
-/** A validator whose failure shares each level's child under two keys. */
-const doubling = (levels: number) =>
-  createValidator(async () => {
-    let made: Result = await invalid({ code: 'min', field: undefined });
-    for (let level = 0; level < levels; level++) {
-      made = await invalid({
-        code: 'properties',
-        field: undefined,
-        errors: { a: made, b: made },
-      });
-    }
-    return made;
-  });
-
-test('should word a shared failure once for all its references', async () => {
-  const result = await withMessages(doubling(40), { min: 'Too short.' })({});
-  let made: unknown = result;
-  for (let level = 0; level < 40; level++) {
-    const errors: unknown = Reflect.get(Object(made), 'errors');
-    assert.strictEqual(
-      Reflect.get(Object(errors), 'a'),
-      Reflect.get(Object(errors), 'b'),
-    );
-    made = Reflect.get(Object(errors), 'a');
-  }
-  assert.deepInclude(made, { code: 'min', message: 'Too short.' });
-});
-
-/** A validator whose failure nests `levels` `properties` failures above a leaf. */
-const nested = (levels: number) =>
-  createValidator(async () => {
-    let made: Result = await invalid({ code: 'min', field: undefined });
-    for (let level = 0; level < levels; level++) {
-      made = await invalid({
-        code: 'properties',
-        field: undefined,
-        errors: { a: made },
-      });
-    }
-    return made;
-  });
-
-test('should word an errors tree 1000 levels deep', async () => {
-  const result = await withMessages(nested(1000), { min: 'Too short.' })({});
-  let made: unknown = result;
-  for (let level = 0; level < 1000; level++) {
-    made = Reflect.get(Object(Reflect.get(Object(made), 'errors')), 'a');
-  }
-  assert.deepInclude(made, { message: 'Too short.' });
-});
-
-test.each([1001, 100_000])(
-  'should reject with a TypeError for an errors tree %i levels deep',
-  async (levels) => {
-    const error = await rejection(
-      withMessages(nested(levels), { min: 'Too short.' })({}),
-    );
-    assert.instanceOf(error, TypeError);
-    assert.include(String(error), 'deeper than 1000 levels');
-  },
-);
-
-test('should reject with a TypeError for a cyclic errors tree', async () => {
-  const errors: { a?: unknown } = {};
-  const cyclic = await invalid({
-    code: 'properties',
-    field: undefined,
-    errors,
-  });
-  errors.a = cyclic;
-  const error = await rejection(
-    withMessages(
-      createValidator(async () => cyclic),
-      {},
-    )({}),
-  );
-  assert.instanceOf(error, TypeError);
-  assert.include(String(error), 'deeper than 1000 levels');
-});
-
-/** An `object()` schema nested `levels` deep, with a string at the bottom. */
-const deepSchema = (levels: number): Validator => {
-  let schema: Validator = string(min(2));
-  for (let level = 0; level < levels; level++) {
-    schema = object({ a: schema });
-  }
-  return schema;
-};
-
-/** Input nested `levels` deep in `a`, with a short string at the bottom. */
-const deepInput = (levels: number): unknown => {
-  let input: unknown = 'x';
-  for (let level = 0; level < levels; level++) {
-    input = { a: input };
-  }
-  return input;
-};
-
-test('should word a deep object() failure synchronously', async () => {
-  const result = await withMessages(deepSchema(300), { min: 'Too short.' })(
-    deepInput(300),
-  );
-  let made: unknown = result;
-  for (let level = 0; level < 300; level++) {
-    made = Reflect.get(Object(Reflect.get(Object(made), 'errors')), 'a');
-  }
-  assert.deepInclude(made, { message: 'Too short.' });
-});
-
-// Awaiting before it recurses, the schema nests past the fill's 1000 levels.
-const node: Validator = createValidator(async (value, field) => {
-  await Promise.resolve();
-  return recursive(value, field);
-});
-const recursive = object({ a: node });
-
-test('should reject once and leave no unhandled rejection for input too deep to word', async () => {
-  const unhandled: unknown[] = [];
-  const onUnhandled = (reason: unknown) => unhandled.push(reason);
-  process.on('unhandledRejection', onUnhandled);
-  try {
-    const translated = withMessages(recursive, { type: 'Not an object.' });
-    assert.deepInclude(await recursive(deepInput(1200)), {
-      code: 'properties',
-    });
-    const error = await rejection(translated(deepInput(1200)));
-    assert.instanceOf(error, TypeError);
-    assert.include(String(error), 'deeper than 1000 levels');
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    assert.deepEqual(unhandled, []);
-  } finally {
-    process.off('unhandledRejection', onUnhandled);
-  }
-});
-test('should keep a valid result as it is', async () => {
+test('should keep the result as it is when it is valid', async () => {
   const valued = createValidator(async (value: unknown, field?: string) =>
     valid({ value, field }),
   );

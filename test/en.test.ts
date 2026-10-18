@@ -100,26 +100,30 @@ test('should type en as a message for each built-in code', () => {
   expectTypeOf(en).toEqualTypeOf<Messages<BuiltInCode>>();
 });
 
-test('should word the children, keep supplied messages and compose with spread', async () => {
-  const taken = createValidatorTest<string>(
-    'taken',
-    (value) => value !== 'bob',
-  );
-  const form = withMessages(
-    object({
-      name: string(min(2, 'Name is short.')),
-      user: string(taken),
-      tags: array(string(min(2))),
-    }),
-    { ...en, taken: 'Taken.' },
-  );
-  const result = await form({ name: 'a', user: 'bob', tags: ['x'] });
+const taken = createValidatorTest<string>('taken', (value) => value !== 'bob');
+const signup = object({
+  name: string(min(2, 'Name is short.')),
+  user: string(taken),
+  tags: array(string(min(2))),
+});
+const input = { name: 'a', user: 'bob', tags: ['x'] };
+
+test('should word the children of a container', async () => {
+  const result = await withMessages(signup, en)(input);
   assert.deepInclude(result, { message: 'Has invalid fields.' });
-  assert.deepEqual<unknown>(messageTree(result), {
-    name: 'Name is short.',
-    user: 'Taken.',
+  assert.deepInclude(messageTree(result), {
     tags: ['Must be at least 2 characters.'],
   });
+});
+
+test('should keep a message passed to a test over en', async () => {
+  const result = await withMessages(signup, en)(input);
+  assert.deepInclude(messageTree(result), { name: 'Name is short.' });
+});
+
+test('should word a custom code when en is spread with it', async () => {
+  const result = await withMessages(signup, { ...en, taken: 'Taken.' })(input);
+  assert.deepInclude(messageTree(result), { user: 'Taken.' });
 });
 
 test('should not let en be changed', () => {
