@@ -60,8 +60,9 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       async (value, field, onEmpty) => {
         const parsing = finalConfig.parser(value, field);
         // Built-in parsers return a result synchronously, which skips an
-        // await.
-        const parsed = parsing instanceof Promise ? await parsing : parsing;
+        // await. Checks for `then`, as a promise from another realm isn't an
+        // instance of this realm's Promise.
+        const parsed = 'then' in parsing ? await parsing : parsing;
         if (parsed.state === 'invalid') {
           return invalidResult({ message: parsed.message, field });
         }
