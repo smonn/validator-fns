@@ -24,7 +24,7 @@ const missing: [string, Validator][] = [
   ['date', date()],
   ['boolean', boolean()],
   ['array', array()],
-  ['object', object({})],
+  ['object', object({ name: string() })],
 ];
 
 // Runs validate on every missing input, labeled for assertion messages.

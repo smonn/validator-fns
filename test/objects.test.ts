@@ -12,6 +12,7 @@ import {
   optional,
   string,
   valid,
+  type Validator,
 } from '../src/index.js';
 
 test('object', async () => {
@@ -187,6 +188,109 @@ test('nested object', async () => {
     messageTree(await validate({ person: { firstName: 'foo', age: 22 } })),
     { person: { lastName: 'required' } },
   );
+});
+
+test('should build a missing object from its children', async () => {
+  const validate = object({
+    theme: string({ default: 'light' }),
+    note: optional(string()),
+  });
+
+  assert.deepEqual(await validate(undefined, 'settings'), {
+    state: 'valid',
+    value: { theme: 'light', note: undefined },
+    field: 'settings',
+  });
+  assert.deepInclude(await validate(null), {
+    state: 'valid',
+    value: { theme: 'light', note: undefined },
+  });
+  assert.deepInclude(await object({})(undefined), {
+    state: 'valid',
+    value: {},
+  });
+});
+
+test('should build a nested missing object whose children all have defaults', async () => {
+  const validate = object({
+    display: object({ theme: string({ default: 'light' }) }),
+  });
+
+  assert.deepInclude(await validate({}), {
+    state: 'valid',
+    value: { display: { theme: 'light' } },
+  });
+  assert.deepInclude(await validate(undefined), {
+    state: 'valid',
+    value: { display: { theme: 'light' } },
+  });
+});
+
+test('should run each child on undefined with its usual field path when the object is missing', async () => {
+  const seen: unknown[][] = [];
+  const spy: Validator<string> = async (value, field) => {
+    seen.push([value, field]);
+    return valid({ value: 'spied', field });
+  };
+
+  await object({ a: spy, b: spy })(null, 'parent');
+  assert.deepEqual(seen, [
+    [undefined, 'parent.a'],
+    [undefined, 'parent.b'],
+  ]);
+});
+
+test('should fail a missing object with required when a child fails', async () => {
+  const validate = object({
+    name: string({ messages: { required: 'Enter a name.' } }),
+    theme: string({ default: 'light' }),
+  });
+
+  assert.deepEqual(await validate(undefined, 'person'), {
+    state: 'invalid',
+    code: 'required',
+    params: {},
+    message: 'required',
+    field: 'person',
+    errors: undefined,
+  });
+  assert.deepInclude(
+    await object(
+      { name: string() },
+      { messages: { required: 'Enter a person.' } },
+    )(null),
+    { code: 'required', message: 'Enter a person.' },
+  );
+});
+
+test('should run the object-level tests on a built object', async () => {
+  const validate = object(
+    { theme: string({ default: 'light' }) },
+    check((value) => value.theme === 'dark', 'dark'),
+  );
+
+  assert.deepInclude(await validate(undefined), {
+    state: 'invalid',
+    code: 'dark',
+  });
+  assert.deepInclude(await optional(validate)(undefined), {
+    state: 'invalid',
+    code: 'dark',
+  });
+});
+
+test('should give the built object or the missing value in optional()', async () => {
+  assert.deepInclude(
+    await optional(object({ theme: string({ default: 'light' }) }))(undefined),
+    { state: 'valid', value: { theme: 'light' } },
+  );
+
+  const validate = optional(object({ name: string() }));
+  assert.deepInclude(await validate(undefined), {
+    state: 'valid',
+    value: undefined,
+  });
+  assert.deepInclude(await validate(null), { state: 'valid', value: null });
 });
 
 test('invalid configuration', () => {

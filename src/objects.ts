@@ -105,11 +105,10 @@ export function object<P extends ObjectParameter>(
   return requirable<ObjectValue<P>, ObjectErrors<P>>(
     messages,
     async (values, field, onEmpty) => {
-      if (values === null || values === undefined) {
-        return onEmpty(values, field);
-      }
-
-      const parsed = parseRecord(values, field);
+      // Missing input has no properties, so each child runs on undefined, and
+      // the object is built from the children when they're all valid.
+      const isMissing = values === null || values === undefined;
+      const parsed = parseRecord(isMissing ? {} : values, field);
       if (parsed.state === 'invalid') {
         return fillOwn(parsed, messages);
       }
@@ -130,6 +129,9 @@ export function object<P extends ObjectParameter>(
 
       const value = asObjectValue<P>(resolvedValues);
       const errors = propertiesTree<ObjectErrors<P>>(results, {});
+      if (errors && isMissing) {
+        return onEmpty(values, field);
+      }
       if (errors) {
         const container = failure({
           code: 'properties',

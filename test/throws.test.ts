@@ -86,7 +86,7 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   ],
   [
     'an object() required message',
-    object({}, { messages: { required: throwBug } }),
+    object({ a: string() }, { messages: { required: throwBug } }),
     null,
   ],
   [
