@@ -563,8 +563,23 @@ test.each<[string, unknown, string]>([
     "entry at a isn't a failure",
   ],
   [
+    'an entry whose state is not invalid',
+    { a: { state: 'valid', code: 'min', params: {}, message: 'min' } },
+    "entry at a isn't a failure",
+  ],
+  [
+    'an entry without a code',
+    { a: { state: 'invalid', params: {}, message: 'min' } },
+    "entry at a isn't a failure",
+  ],
+  [
     'an entry without params',
     { a: { state: 'invalid', code: 'min', message: 'min' } },
+    "entry at a isn't a failure",
+  ],
+  [
+    'an entry whose params are null',
+    { a: { state: 'invalid', code: 'min', params: null, message: 'min' } },
     "entry at a isn't a failure",
   ],
   [
