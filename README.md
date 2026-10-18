@@ -1017,10 +1017,10 @@ Ensures value is on or before the specified date. Works with dates. `max`, the l
 
 <details><summary>arguments</summary>
 
-| name      | type                    | description                                                                                                |
-| :-------- | :---------------------- | :--------------------------------------------------------------------------------------------------------- |
-| `limit`   | date, number, or string | The maximum date allowed: a valid date, a timestamp, or a subset of [ISO 8601][iso8601] (no week formats). |
-| `message` | string or function      | Optional. The validation error message.                                                                    |
+| name      | type                    | description                                                                                                                                                                                |
+| :-------- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `limit`   | date, number, or string | The maximum date allowed: a valid date, a timestamp, or a subset of [ISO 8601][iso8601] (no week formats). A part out of its range, such as `'2020-02-30'`, throws when the test is built. |
+| `message` | string or function      | Optional. The validation error message.                                                                                                                                                    |
 
 </details>
 
@@ -1043,10 +1043,10 @@ Ensures value is on or after the specified date. Works with dates. `min`, the li
 
 <details><summary>arguments</summary>
 
-| name      | type                    | description                                                                                                |
-| :-------- | :---------------------- | :--------------------------------------------------------------------------------------------------------- |
-| `limit`   | date, number, or string | The minimum date allowed: a valid date, a timestamp, or a subset of [ISO 8601][iso8601] (no week formats). |
-| `message` | string or function      | Optional. The validation error message.                                                                    |
+| name      | type                    | description                                                                                                                                                                                |
+| :-------- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `limit`   | date, number, or string | The minimum date allowed: a valid date, a timestamp, or a subset of [ISO 8601][iso8601] (no week formats). A part out of its range, such as `'2020-02-30'`, throws when the test is built. |
+| `message` | string or function      | Optional. The validation error message.                                                                                                                                                    |
 
 </details>
 
