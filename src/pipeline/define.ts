@@ -2,7 +2,7 @@ import type { Validator } from '../shared.js';
 import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';
-import type { Run } from './steps.js';
+import { type Run, toValidator } from './promises.js';
 
 /**
  * Key for what the pipeline keeps on each type validator it builds: its run,
@@ -29,15 +29,7 @@ function build<T, E, P, V>(
   exit: Exit<V, E>,
 ): TypeValidator<T | V, E> & Built<T | V, E> {
   const run: Run<T | V, E> = (value, field) => runType(def, exit, value, field);
-  // A throw rejects rather than escapes the call. Not an async function,
-  // which would wait extra ticks for the promise a run returns.
-  const validator = withStandard<T | V, E>((value, field) => {
-    try {
-      return Promise.resolve(run(value, field));
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  });
+  const validator = withStandard(toValidator(run));
   // Rebuilt once, on the first optional() call, so each call returns it.
   let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
   const rebuild = () => {

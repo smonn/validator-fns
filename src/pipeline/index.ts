@@ -3,12 +3,9 @@ export { type Children, keepValue } from './def.js';
 export { asLengthGate, isLengthGate, unknownKeys } from './gates.js';
 export { properties } from './properties.js';
 export { createValidator, type TypeValidator } from './standard.js';
-export { twinOf, withSyncTwin } from './steps.js';
+export { twinOf, withSyncTwin } from './twins.js';
 export { createValidatorTest } from './tests.js';
 export { optional } from './optional.js';
 export { defineType } from './define.js';
-export {
-  configAndTests,
-  createTypeValidator,
-  defineScalar,
-} from './factory.js';
+export { configAndTests } from './config.js';
+export { createTypeValidator, defineScalar } from './factory.js';

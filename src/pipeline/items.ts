@@ -7,7 +7,7 @@ import {
 } from '../shared.js';
 import { runEach } from './children.js';
 import type { Children } from './def.js';
-import { andThen } from './steps.js';
+import { andThen } from './promises.js';
 import { runOf } from './define.js';
 
 /**

@@ -56,7 +56,7 @@
           // the Standard Schema types. rev-dep's patterns can't exclude a
           // file, so this lists every other pipeline file; add new ones here.
           "name": "pipeline-core",
-          "pattern": "src/pipeline/{children,def,define,factory,gates,index,items,optional,present,properties,run,steps,tests}.ts",
+          "pattern": "src/pipeline/{children,config,def,define,factory,gates,index,items,optional,present,promises,properties,run,schema,steps,tests,twins}.ts",
           "deny": ["src/standard-schema.ts"],
         },
         {

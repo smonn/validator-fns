@@ -1,4 +1,4 @@
-import { isThenable, type MaybePromise } from './steps.js';
+import { isThenable, type MaybePromise } from './promises.js';
 
 /**
  * Runs each child in order, sync until one returns a promise, and gives every
