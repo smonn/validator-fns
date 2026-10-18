@@ -28,5 +28,5 @@ export function fillTree(result: Result, translation: Translation): Result {
     translation,
     visits: { entries: 0 },
     filled: new Map(),
-  });
+  }).made;
 }

@@ -65,7 +65,7 @@ test('should keep a failure and its tree as they are when nothing is worded', as
   const made = await invalid({
     code: 'properties',
     field: undefined,
-    errors: { a: await invalid({ code: 'min', field: 'a' }) },
+    errors: { a: await invalid({ code: 'min', field: 'a' }), b: null },
   });
   const result = await withMessages(
     createValidator(async () => made),
@@ -133,6 +133,72 @@ test.each([1001, 100_000])(
     );
     assert.instanceOf(error, TypeError);
     assert.include(String(error), 'deeper than 1000 levels');
+  },
+);
+
+/** `levels` `properties` failures, each holding the next, above `made`. */
+const above = async (levels: number, made: Result): Promise<Result> => {
+  let outer = made;
+  for (let level = 0; level < levels; level++) {
+    outer = await invalid({
+      code: 'properties',
+      field: undefined,
+      errors: { a: outer },
+    });
+  }
+  return outer;
+};
+
+/**
+ * A failure whose `direct` entry holds a `shared` subtree of 500 levels, and
+ * whose `deep` entry holds it under `levels` more, keyed in `order`.
+ */
+const sharedAtTwoDepths = async (levels: number, order: string[]) => {
+  const shared = await above(
+    500,
+    await invalid({ code: 'min', field: undefined }),
+  );
+  const paths: Record<string, Result> = {
+    direct: shared,
+    deep: await above(levels, shared),
+  };
+  return invalid({
+    code: 'properties',
+    field: undefined,
+    errors: Object.fromEntries(order.map((key) => [key, paths[key]])),
+  });
+};
+
+test.each([[['direct', 'deep']], [['deep', 'direct']]])(
+  'should reject as messageTree() does when a shared subtree reaches past 1000 levels, keyed %j',
+  async (order) => {
+    const made = await sharedAtTwoDepths(500, order);
+    assert.throws(
+      () => messageTree(made),
+      TypeError,
+      'deeper than 1000 levels',
+    );
+    const error = await rejection(
+      withMessages(
+        createValidator(async () => made),
+        { min: 'Too short.' },
+      )({}),
+    );
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), 'deeper than 1000 levels');
+  },
+);
+
+test.each([[['direct', 'deep']], [['deep', 'direct']]])(
+  'should word a shared subtree that reaches exactly 1000 levels, keyed %j',
+  async (order) => {
+    const made = await sharedAtTwoDepths(499, order);
+    assert.doesNotThrow(() => messageTree(made));
+    const result = await withMessages(
+      createValidator(async () => made),
+      { min: 'Too short.' },
+    )({});
+    assert.deepInclude(result, { code: 'properties' });
   },
 );
 
