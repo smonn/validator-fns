@@ -542,6 +542,7 @@ async function decoderErrors(validator: TypeValidator<unknown, unknown>) {
 test.each<[string, unknown, string]>([
   ['a number', 5, 'errors tree must be an object'],
   ['a string', 'oops', 'errors tree must be an object'],
+  ['null', null, 'errors tree must be an object'],
   [
     'an object entry that is not a failure',
     { a: 'Too short.' },
