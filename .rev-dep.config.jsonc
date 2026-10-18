@@ -88,9 +88,15 @@
             "src/factories.ts",
             "src/invalid-detail.ts",
             "src/optional.ts",
+            "src/properties.ts",
             "src/standard.ts",
             "src/standard-schema.ts",
           ],
+        },
+        {
+          "name": "properties",
+          "pattern": "src/properties.ts",
+          "allow": ["src/shared.ts"],
         },
         {
           "name": "dates",
