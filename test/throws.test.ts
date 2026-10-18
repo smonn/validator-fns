@@ -205,7 +205,10 @@ test('should await a parser promise from another realm', async () => {
 test.each<[string, () => unknown]>([
   // JSON.parse returns any, which lets the test pass values the types reject.
   ['object() without a schema', () => object(JSON.parse('"schema"'))],
-  ['array() in the 2.x order', () => array(JSON.parse('{}'), string())],
+  [
+    'array() in the 2.x order',
+    () => Reflect.apply(array, undefined, [{}, string()]),
+  ],
   ['minDate() with an unreadable limit', () => minDate('nonsense', 'm')],
   ['maxDate() with an unreadable limit', () => maxDate('nonsense', 'm')],
 ])('should throw a TypeError when building %s', (_label, build) => {

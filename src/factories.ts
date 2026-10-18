@@ -28,7 +28,7 @@ type SyncTwin<T> = {
   readonly [syncTwin]?: (
     value: T,
     field: string | undefined,
-  ) => Result<unknown, never>;
+  ) => Result<T, never>;
 };
 
 /**
@@ -70,7 +70,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
         }
 
-        const parsedValue = applyConfig(parsed.value, finalConfig);
+        let parsedValue = applyConfig(parsed.value, finalConfig);
         if (parsedValue === null || parsedValue === undefined) {
           return onEmpty(parsedValue, field);
         }
@@ -79,7 +79,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           const syncTest = validatorTest[syncTwin];
           // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
           // await in a ternary arm a negative count.
-          let result: Result<unknown, string>;
+          let result: Result<T, string>;
           if (syncTest) {
             result = syncTest(parsedValue, field);
           } else {
@@ -88,6 +88,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           if (result.state === 'invalid') {
             return fillOwn(result, finalConfig.messages);
           }
+          parsedValue = result.value;
         }
 
         return validResult({ value: parsedValue, field });
@@ -122,10 +123,7 @@ export function createValidatorTest<T, E>(
   message?: ValidatorMessage<T, Record<string, unknown>>,
   getParams?: (value: T) => Record<string, unknown>,
 ): Test<T, E> {
-  const twin = (
-    value: T,
-    field: string | undefined,
-  ): Result<unknown, never> => {
+  const twin = (value: T, field: string | undefined): Result<T, never> => {
     // Wider than T, since JavaScript callers can pass a missing value.
     const given: unknown = value;
     if (given !== null && given !== undefined && test(value, field)) {
