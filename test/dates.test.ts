@@ -4,6 +4,21 @@ import { maxDate, minDate } from '../src/index.js';
 
 const invalidDate = new Date('');
 
+/**
+ * A date in the years 0 to 99, which `new Date()` and `Date.UTC()` read as
+ * 1900 to 1999: local midnight, or with `utc`, UTC midnight.
+ */
+function earlyDate(year: number, month: number, day: number, utc = false) {
+  const early = new Date(0);
+  if (utc) {
+    early.setUTCFullYear(year, month, day);
+  } else {
+    early.setFullYear(year, month, day);
+    early.setHours(0, 0, 0, 0);
+  }
+  return early;
+}
+
 /** The limit `minDate()` reads, from the params of its failure. */
 async function parsedDate(limit: Date | string | number) {
   const result = await minDate(limit)(new Date(-8.64e15));
@@ -30,6 +45,9 @@ test('minDate() reads timestamps and ISO 8601 strings as its limit', async () =>
     ['2000-02-29', new Date(2000, 1, 29)],
     ['2020-04-30', new Date(2020, 3, 30)],
     ['2020-12-31T23:59:59', new Date(2020, 11, 31, 23, 59, 59)],
+    ['0050-01-01', earlyDate(50, 0, 1)],
+    ['0000-02-29', earlyDate(0, 1, 29)],
+    ['0099-12-31T00:00:00Z', earlyDate(99, 11, 31, true)],
     ['2020-01-31 12:45', new Date(2020, 0, 31, 12, 45)],
     ['2020-01-31T12:45:32', new Date(2020, 0, 31, 12, 45, 32)],
     ['2020-01-31T12:45:32Z', new Date(Date.UTC(2020, 0, 31, 12, 45, 32))],

@@ -737,6 +737,16 @@ const zeroByDefault = coerce.number({ default: 0 });
 const falseByDefault = coerce.boolean({ default: false });
 const epochOrLater = coerce.date({ default: new Date(0) }, minDate(0));
 const foreignDate: unknown = runInNewContext('new Date(0)');
+
+/**
+ * Local midnight on a date in the years 0 to 99, which `new Date()` reads as
+ * 1900 to 1999.
+ */
+const earlyDate = (year: number, month: number, day: number) => {
+  const early = new Date(2000, 0, 1);
+  early.setFullYear(year, month, day);
+  return early;
+};
 const longDigits = '1'.repeat(300);
 
 /** Blank input is missing, so `optional()` passes it as undefined. */
@@ -936,6 +946,8 @@ const coerceRows: Row[] = [
       [foreignDate, foreignDate],
       ['2024-02-29', new Date(2024, 1, 29)],
       ['2000-02-29', new Date(2000, 1, 29)],
+      ['0050-01-01', earlyDate(50, 0, 1)],
+      ['0000-02-29', earlyDate(0, 1, 29)],
     ] satisfies [unknown, unknown][]
   ).map(([input, value]) =>
     row(

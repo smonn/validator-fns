@@ -68,6 +68,8 @@ function parseIsoDate(value: string): Date | undefined {
     fraction = '0',
     timezone,
   ] = parts;
+  // Set by part, since `new Date()` and `Date.UTC()` read the years 0 to 99
+  // as 1900 to 1999.
   const date = new Date(0);
   date.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
   // A day past the end of its month, such as 30 February, rolls over. The
@@ -77,28 +79,12 @@ function parseIsoDate(value: string): Date | undefined {
   }
 
   const milliseconds = Number(fraction) * 1e3;
-
-  if (!timezone) {
-    return new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-      Number(second),
-      milliseconds,
-    );
+  if (timezone) {
+    const minutes = Number(minute) + parseTimezone(timezone);
+    date.setUTCHours(Number(hour), minutes, Number(second), milliseconds);
+  } else {
+    date.setFullYear(Number(year), Number(month) - 1, Number(day));
+    date.setHours(Number(hour), Number(minute), Number(second), milliseconds);
   }
-
-  return new Date(
-    Date.UTC(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute) + parseTimezone(timezone),
-      Number(second),
-      milliseconds,
-    ),
-  );
+  return date;
 }
