@@ -1,4 +1,4 @@
-import type { ValidatorTest } from './shared.js';
+import type { Validator } from './shared.js';
 import type { StandardSchemaV1 } from './standard-schema.js';
 
 /** @internal */
@@ -40,7 +40,7 @@ function collectIssues(
  * as every type validator is.
  * @category Types
  */
-export type TypeValidator<T, E> = ValidatorTest<T, E> &
+export type TypeValidator<T, E> = Validator<T, E> &
   StandardSchemaV1<unknown, T>;
 
 /**
@@ -56,7 +56,7 @@ const carriers = new WeakSet<object>();
  * @internal
  */
 function isTypeValidator<T, E>(
-  validator: ValidatorTest<T, E>,
+  validator: Validator<T, E>,
 ): validator is TypeValidator<T, E> {
   return carriers.has(validator);
 }
@@ -66,7 +66,7 @@ function isTypeValidator<T, E>(
  * @internal
  */
 export function withStandard<T, E>(
-  validator: ValidatorTest<T, E>,
+  validator: Validator<T, E>,
 ): TypeValidator<T, E> {
   const validate = async (
     value: unknown,
@@ -105,7 +105,7 @@ export function withStandard<T, E>(
  * @category Helpers
  */
 export function createValidator<T, E>(
-  fn: ValidatorTest<T, E>,
+  fn: Validator<T, E>,
 ): TypeValidator<T, E> {
   if (isTypeValidator(fn)) {
     return fn;

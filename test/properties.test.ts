@@ -22,12 +22,12 @@ import {
   uuid,
   valid,
   type SharedValueType,
-  type ValidationTest,
-  type ValidatorTest,
+  type Test,
+  type Validator,
 } from '../src/index';
 
 // Every built-in test, so a generated list can hold any of them.
-const stringTests: ValidationTest<string, never>[] = [
+const stringTests: Test<string, never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),
@@ -37,25 +37,25 @@ const stringTests: ValidationTest<string, never>[] = [
   matches(/^a/, 'matches'),
   oneOf(['a', 'b'], 'oneOf'),
 ];
-const numberTests: ValidationTest<number, never>[] = [
+const numberTests: Test<number, never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),
   integer('integer'),
   oneOf([1, 2], 'oneOf'),
 ];
-const dateTests: ValidationTest<Date, never>[] = [
+const dateTests: Test<Date, never>[] = [
   minDate('2020-01-01', 'min'),
   maxDate('2020-01-01', 'max'),
 ];
-const arrayTests: ValidationTest<unknown[], never>[] = [
+const arrayTests: Test<unknown[], never>[] = [
   min(3, 'min'),
   max(3, 'max'),
   exact(3, 'exact'),
 ];
 
 // Built-in tests have the error type never, so they fit their type validator.
-const testsFrom = <T>(pool: ValidationTest<T, never>[]) =>
+const testsFrom = <T>(pool: Test<T, never>[]) =>
   fc.subarray(pool, { minLength: 0 });
 
 // fc.anything with every kind of value it can make, including null-prototype
@@ -87,7 +87,7 @@ test('type validators reject undefined and null unless optional()', async () => 
     fc.asyncProperty(
       typeValidators,
       fc.constantFrom(undefined, null),
-      async (validate: ValidatorTest, value) => {
+      async (validate: Validator, value) => {
         assert.deepInclude(await validate(value), {
           state: 'invalid',
           message: 'Required.',
@@ -127,7 +127,7 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
       fc.boolean(),
       async (value, limit, exclusive) => {
         const amount = amountOf(value);
-        const isValid = async (validate: ValidationTest<SharedValueType>) =>
+        const isValid = async (validate: Test<SharedValueType>) =>
           (await validate(value)).state === 'valid';
 
         assert.equal(
@@ -147,7 +147,7 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
 // A property validator that passes or fails as generated, so the expected
 // errors are known.
 const fixedResult =
-  (passes: boolean): ValidatorTest =>
+  (passes: boolean): Validator =>
   async (value, field) =>
     passes
       ? valid({ value, field })
@@ -194,7 +194,7 @@ test('object() passes undefined for keys missing from the input', async () => {
   await fc.assert(
     fc.asyncProperty(keys, async (schemaKeys) => {
       const received: unknown[] = [];
-      const record: ValidatorTest = async (value, field) => {
+      const record: Validator = async (value, field) => {
         received.push(value);
         return valid({ value, field });
       };

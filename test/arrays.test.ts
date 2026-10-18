@@ -9,7 +9,7 @@ import {
   optional,
   string,
   valid,
-  type ValidatorTest,
+  type Validator,
 } from '../src/index.js';
 
 test('array', async () => {
@@ -147,7 +147,7 @@ test('array without validation', async () => {
 
 test('array item field names', async () => {
   const fields: (string | undefined)[] = [];
-  const recordField: ValidatorTest = (value, field) => {
+  const recordField: Validator = (value, field) => {
     fields.push(field);
     return valid({ value, field });
   };
@@ -165,7 +165,7 @@ test('array item field names', async () => {
 });
 
 // Fails with an empty message and no errors, which built-in tests never do.
-const silent: ValidatorTest = async (value, field) =>
+const silent: Validator = async (value, field) =>
   invalid({ message: '', value, field });
 
 test('array records an empty message for an item that fails without one', async () => {

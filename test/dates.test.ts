@@ -6,7 +6,7 @@ import {
   minDate,
   optional,
   parseDate,
-  type InvalidResult,
+  type Failure,
 } from '../src/index.js';
 
 test('parseDate', () => {
@@ -209,7 +209,7 @@ test('parseDate throws for a non-blank string it cannot read', () => {
 });
 
 test('date() fails an unreadable string apart from a missing one', async () => {
-  const parseError: InvalidResult<string> = {
+  const parseError: Failure<string> = {
     state: 'invalid',
     message: 'Failed to parse value to date.',
     value: 'garbage',
@@ -240,7 +240,7 @@ test('parseDate throws for input that is not a date, number, or string', () => {
 
 test('date() fails input that is not a date, number, or string', async () => {
   for (const value of [true, {}, [2020]]) {
-    const parseError: InvalidResult<string> = {
+    const parseError: Failure<string> = {
       state: 'invalid',
       message: 'Failed to parse value to date.',
       value,

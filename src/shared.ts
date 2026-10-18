@@ -1,5 +1,10 @@
-export type ValidResult<T> = {
-  /** `valid` if the value passed every validation test. */
+/**
+ * A valid result.
+ * @typeParam T The value type
+ * @category Types
+ */
+export type Valid<T> = {
+  /** `valid` if the value passed every test. */
   state: 'valid';
   /**
    * The parsed value. Note that may be different than the original value.
@@ -10,8 +15,13 @@ export type ValidResult<T> = {
   field?: string | undefined;
 };
 
-export type InvalidResult<E> = {
-  /** `invalid` if the value failed a validation test. */
+/**
+ * The result for invalid input.
+ * @typeParam E The error type
+ * @category Types
+ */
+export type Failure<E> = {
+  /** `invalid` if the value failed a test. */
   state: 'invalid';
   /** The parsed value. Note that may be different than the original value. */
   value: unknown;
@@ -24,52 +34,52 @@ export type InvalidResult<E> = {
 };
 
 /**
- * The result of a validation.
+ * What a validator resolves to: valid or a failure.
  * @typeParam T The value type
+ * @typeParam E The error type
  * @category Types
  */
-export type ValidatorResult<T = unknown, E = unknown> =
-  | ValidResult<T>
-  | InvalidResult<E>;
+export type Result<T = unknown, E = unknown> = Valid<T> | Failure<E>;
 
 /**
- * Validation test function.
+ * A function that takes unknown input and a field, and resolves to a result.
  * @typeParam T The value type
+ * @typeParam E The error type
  * @category Types
  */
-export type ValidatorTest<T = unknown, E = unknown> = (
+export type Validator<T = unknown, E = unknown> = (
   value?: unknown,
   field?: string,
-) => Promise<ValidatorResult<T, E>>;
+) => Promise<Result<T, E>>;
 
 /**
- * Validation test function, such as `min()`: it checks a parsed value. Type
- * validators run their tests on the parsed value once it's present, so a test
- * takes the validator's value type. Its own result value is never read.
+ * A test, such as `min()`: it checks a parsed value. Type validators run
+ * their tests on the parsed value once it's present, so a test takes the
+ * validator's value type. Its own result value is never read.
  * @typeParam T The value type the test checks
  * @typeParam E The error type
  * @category Types
  */
-export type ValidationTest<T = unknown, E = unknown> = (
+export type Test<T = unknown, E = unknown> = (
   value: T,
   field?: string,
-) => Promise<ValidatorResult<unknown, E>>;
+) => Promise<Result<unknown, E>>;
 
 /**
- * Extracts the generic error type from a ValidatorTest.
- * @typeParam T a ValidatorTest
+ * Extracts the generic error type from a Validator.
+ * @typeParam T a Validator
  * @category Types
  */
-export type ExtractError<T extends ValidatorTest> =
-  T extends ValidatorTest<unknown, infer E> ? E : unknown;
+export type ExtractError<T extends Validator> =
+  T extends Validator<unknown, infer E> ? E : unknown;
 
 /**
- * Extracts the generic value type from a ValidatorTest.
- * @typeParam T a ValidatorTest
+ * Extracts the generic value type from a Validator.
+ * @typeParam T a Validator
  * @category Types
  */
-export type ExtractValue<T extends ValidatorTest> =
-  T extends ValidatorTest<infer V> ? V : unknown;
+export type ExtractValue<T extends Validator> =
+  T extends Validator<infer V> ? V : unknown;
 
 /**
  * Make a deep partial type.
@@ -86,9 +96,9 @@ export type DeepPartial<T> = {
  * @category Types
  */
 export type ValidatorFactory<C, T, E> = (
-  config?: Partial<C> | ValidationTest<T, E>,
-  ...tests: ValidationTest<T, E>[]
-) => ValidatorTest<T, E>;
+  config?: Partial<C> | Test<T, E>,
+  ...tests: Test<T, E>[]
+) => Validator<T, E>;
 
 /**
  * Base configuration type.
@@ -273,7 +283,7 @@ export function formatMessage<T, X extends object = object>(
 export async function valid<T, E = never>(result: {
   value: T;
   field: string | undefined;
-}): Promise<ValidatorResult<T, E>> {
+}): Promise<Result<T, E>> {
   return validResult(result);
 }
 
@@ -288,7 +298,7 @@ export function validResult<T, E = never>({
 }: {
   value: T;
   field: string | undefined;
-}): ValidatorResult<T, E> {
+}): Result<T, E> {
   return {
     state: 'valid',
     value,
@@ -311,7 +321,7 @@ export function invalidResult<E = never>({
   value: unknown;
   field: string | undefined;
   errors?: E | undefined;
-}): InvalidResult<E> {
+}): Failure<E> {
   return {
     state: 'invalid',
     message,

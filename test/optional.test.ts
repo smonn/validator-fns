@@ -12,13 +12,13 @@ import {
   optional,
   string,
   valid,
-  type ValidatorTest,
+  type Validator,
 } from '../src/index.js';
 
 const invalidDate = new Date('');
 
 // Each validator with the inputs that parse to a missing value.
-const missing: [string, ValidatorTest, unknown[]][] = [
+const missing: [string, Validator, unknown[]][] = [
   ['string', string(), [undefined, null, '']],
   ['trimmed string', string({ trim: true }), ['  ']],
   ['number', number(), [undefined, null, '', '  ', Number.NaN, invalidDate]],
@@ -29,7 +29,7 @@ const missing: [string, ValidatorTest, unknown[]][] = [
 ];
 
 // Runs validate on every missing input, labeled for assertion messages.
-const runMissing = async (wrap: (validate: ValidatorTest) => ValidatorTest) =>
+const runMissing = async (wrap: (validate: Validator) => Validator) =>
   Promise.all(
     missing.flatMap(([label, validate, values]) =>
       values.map(async (value) => ({
@@ -147,7 +147,7 @@ test('default fills a missing value before it is checked', async () => {
 
 test('optional() accepts only undefined and null for a custom validator', async () => {
   const seen: unknown[] = [];
-  const custom: ValidatorTest<string, string> = async (value, field) => {
+  const custom: Validator<string, string> = async (value, field) => {
     seen.push(value);
     return value === 'ok'
       ? valid({ value, field })

@@ -12,7 +12,7 @@ import {
   isIterable,
   valid,
   type ConfigBase,
-  type ValidatorTest,
+  type Validator,
 } from './shared.js';
 
 /**
@@ -126,7 +126,7 @@ function arrayOf<T, E>(
  * @category Type Validators
  */
 export function array<T, E>(
-  item: ValidatorTest<T, E>,
+  item: Validator<T, E>,
   config?: Partial<ArrayConfig> | ArrayTest,
   ...tests: ArrayTest[]
 ): TypeValidator<T[], string | ArrayItemValidatorResult<E>[]>;
@@ -134,7 +134,7 @@ export function array(
   config?: Partial<ArrayConfig>,
 ): TypeValidator<unknown[], string | ArrayItemValidatorResult[]>;
 export function array<T, E>(
-  first?: ValidatorTest<T, E> | Partial<ArrayConfig>,
+  first?: Validator<T, E> | Partial<ArrayConfig>,
   second?: Partial<ArrayConfig> | ArrayTest,
   ...tests: ArrayTest[]
 ):
