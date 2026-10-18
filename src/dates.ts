@@ -1,8 +1,4 @@
-import {
-  createParser,
-  createValidatorTest,
-  typeValidatorOf,
-} from './factories.js';
+import { createValidatorTest, defineScalar } from './pipeline/index.js';
 import type {
   ConfigBase,
   MessageExtras,
@@ -29,12 +25,6 @@ function timeOf(value: unknown): number {
 function isValidDate(value: unknown): value is Date {
   return !Number.isNaN(timeOf(value));
 }
-
-/**
- * Parses a value into a date. Fails anything but a valid date.
- * @internal
- */
-const parseDate = createParser('date', isValidDate);
 
 /**
  * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
@@ -112,7 +102,7 @@ export function maxDate(
 export type DateConfig = ConfigBase<Date>;
 
 /**
- * Validates a date value.
+ * Validates a date value. Fails anything but a valid date.
  * @category Type Validators
  */
-export const date = typeValidatorOf<Date, string>(parseDate);
+export const date = defineScalar('date', isValidDate);

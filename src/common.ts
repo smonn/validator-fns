@@ -1,4 +1,4 @@
-import { createValidatorTest } from './factories.js';
+import { createValidatorTest } from './pipeline/index.js';
 import type {
   MessageExtras,
   Test,

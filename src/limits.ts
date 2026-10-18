@@ -1,4 +1,4 @@
-import { asLengthGate, createValidatorTest } from './factories.js';
+import { asLengthGate, createValidatorTest } from './pipeline/index.js';
 import type {
   MessageExtras,
   Test,

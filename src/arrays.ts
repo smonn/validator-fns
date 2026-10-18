@@ -1,13 +1,13 @@
-import { createParser, isLengthGate } from './factories.js';
-import { fillOwn } from './failures/index.js';
 import {
-  type ItemsResult,
-  keepItems,
-  runTests,
-  validateItems,
-} from './invalid-detail.js';
-import { parsePresent, requirable } from './optional.js';
-import type { TypeValidator } from './standard.js';
+  type Children,
+  configAndTests,
+  defineType,
+  isLengthGate,
+  items,
+  keep,
+  twinOf,
+  type TypeValidator,
+} from './pipeline/index.js';
 import {
   type ConfigBase,
   type Failure,
@@ -22,14 +22,6 @@ import {
 export type ArrayConfig = ConfigBase<unknown[]>;
 
 /**
- * Parses a value into an array. Fails anything but an array.
- * @internal
- */
-const parseArray = createParser('array', (value): value is unknown[] =>
-  Array.isArray(value),
-);
-
-/**
  * A test on an array's parsed items. The built-in `min()`, `max()` and
  * `exact()` instead check the input's length before any item runs.
  * @internal
@@ -37,54 +29,26 @@ const parseArray = createParser('array', (value): value is unknown[] =>
 type ArrayTest<T, E> = Test<T[], (Failure<E> | null)[]>;
 
 /**
- * Builds the array validator around a function that checks the items. Runs
- * the length gates on the input, then every item, then the collection tests
- * on the parsed items once every item is valid.
+ * Builds the array validator around its children. The built-in length tests
+ * are its gate, which runs on the input, and the rest run on the parsed items
+ * once every item is valid.
  * @internal
  */
 function arrayOf<T, E>(
-  checkItems: (
-    arrayValue: unknown[],
-    field: string | undefined,
-  ) => Promise<ItemsResult<T, E>>,
-  config: Partial<ArrayConfig> | ArrayTest<T, E> | undefined,
-  tests: ArrayTest<T, E>[],
+  children: Children<unknown[], T[], (Failure<E> | null)[]>,
+  first: Partial<ArrayConfig> | ArrayTest<T, E> | undefined,
+  rest: ArrayTest<T, E>[],
 ): TypeValidator<T[], (Failure<E> | null)[]> {
-  const arrayTests = typeof config === 'function' ? [config, ...tests] : tests;
-  const gates: Test<unknown[], never>[] = arrayTests.filter(isLengthGate);
-  const collectionTests = arrayTests.filter((test) => !isLengthGate(test));
-  const finalConfig: Partial<ArrayConfig> =
-    typeof config === 'function' ? {} : (config ?? {});
-
-  return requirable<T[], (Failure<E> | null)[]>(
-    finalConfig.messages,
-    async (value, field, onEmpty) => {
-      const parsed = await parsePresent(parseArray, value, field);
-      if (parsed.state === 'invalid') {
-        return fillOwn(parsed, finalConfig.messages);
-      }
-
-      const arrayValue = parsed.value ?? finalConfig.default ?? parsed.value;
-      if (arrayValue === null || arrayValue === undefined) {
-        return onEmpty(arrayValue, field);
-      }
-
-      const gated = await runTests(gates, arrayValue, field);
-      if (gated.state === 'invalid') {
-        return fillOwn(gated, finalConfig.messages);
-      }
-
-      const items = await checkItems(arrayValue, field);
-      if (items.state === 'invalid') {
-        return fillOwn(items, finalConfig.messages);
-      }
-
-      const result = await runTests(collectionTests, items.value, field);
-      return result.state === 'invalid'
-        ? fillOwn(result, finalConfig.messages)
-        : result;
-    },
-  );
+  const { config, tests } = configAndTests(first, rest);
+  return defineType({
+    isType: Array.isArray,
+    expected: 'array',
+    default: config.default,
+    messages: config.messages,
+    gate: tests.filter(isLengthGate).map(twinOf),
+    children,
+    steps: tests.filter((test) => !isLengthGate(test)),
+  });
 }
 
 /**
@@ -110,11 +74,7 @@ export function array<T, E>(
   | TypeValidator<T[], (Failure<E> | null)[]>
   | TypeValidator<unknown[], (Failure<unknown> | null)[]> {
   if (typeof first === 'function') {
-    return arrayOf(
-      (arrayValue, field) => validateItems(first, arrayValue, field),
-      second,
-      tests,
-    );
+    return arrayOf(items(first), second, tests);
   }
 
   // 2.x took the config first, so a JavaScript caller may still pass the item
@@ -125,5 +85,5 @@ export function array<T, E>(
     );
   }
 
-  return arrayOf(keepItems, first, []);
+  return arrayOf(keep, first, []);
 }

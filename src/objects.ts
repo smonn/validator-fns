@@ -1,12 +1,10 @@
-import { failure, fillOwn } from './failures/index.js';
 import {
-  runTests,
-  unknownKeysGate,
-  validateProperties,
-} from './invalid-detail.js';
-import { parseRecord, requirable } from './optional.js';
-import { ownValue, propertiesOf } from './properties.js';
-import type { TypeValidator } from './standard.js';
+  configAndTests,
+  defineType,
+  properties as propertiesOf,
+  type TypeValidator,
+  unknownKeys,
+} from './pipeline/index.js';
 import {
   type ExtractError,
   type ExtractValue,
@@ -85,6 +83,43 @@ export interface ObjectConfig {
 }
 
 /**
+ * Whether `object()` accepts a present value: an object other than an array,
+ * a function or a boxed primitive, from any realm. Each wrapper's `valueOf`
+ * throws unless `this` is its own type, which `instanceof` can't tell across
+ * realms.
+ * @internal
+ */
+function isRecordLike(value: unknown): value is object {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  // Plain objects and class instances, the common case, skip the brand
+  // checks, whose throws are slow. Without a Symbol.toStringTag, the tag reads
+  // the internal slots, so a String, Number or Boolean wrapper keeps its own
+  // tag whatever its prototype. A Symbol or BigInt wrapper has no such tag, so
+  // one with a swapped prototype passes (#779).
+  if (
+    !(Symbol.toStringTag in value) &&
+    Object.prototype.toString.call(value) === '[object Object]'
+  ) {
+    return true;
+  }
+  // BigInt is missing before Safari 14, and no boxed BigInt exists without it.
+  const wrappers =
+    typeof BigInt === 'function'
+      ? [String, Number, Boolean, Symbol, BigInt]
+      : [String, Number, Boolean, Symbol];
+  return !wrappers.some(({ prototype }) => {
+    try {
+      Reflect.apply(prototype.valueOf, value, []);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
  * Validates an object. The second argument is a configuration object, or the
  * first of the `tests`. A strict object fails unknown keys before any property
  * runs. The tests run on the parsed object, in order, once every property is
@@ -100,51 +135,18 @@ export function object<P extends ObjectParameter>(
     throw new TypeError('`properties` must be a configuration object');
   }
 
-  const validators = propertiesOf(properties);
-
-  const allTests = typeof config === 'function' ? [config, ...tests] : tests;
-  const { messages, strict }: ObjectConfig =
-    typeof config === 'object' ? config : {};
-  const findUnknownKeys = unknownKeysGate(validators, strict);
-
-  return requirable<ObjectValue<P>, ObjectErrors<P>>(
-    messages,
-    async (input, field, onEmpty) => {
-      // Missing input has no properties, so each child runs on undefined, and
-      // the object is built from the children when they're all valid.
-      const isMissing = input === null || input === undefined;
-      const parsed = parseRecord(isMissing ? {} : input, field);
-      if (parsed.state === 'invalid') {
-        return fillOwn(parsed, messages);
-      }
-      const keysFailure = findUnknownKeys(parsed.value, field);
-      if (keysFailure) {
-        return fillOwn(keysFailure, messages);
-      }
-
-      const { errors, values: resolvedValues } = await validateProperties<
-        ObjectErrors<P>
-      >(validators, (key) => ownValue(parsed.value, key), field, {});
-      if (errors && isMissing) {
-        return onEmpty(input, field);
-      }
-      if (errors) {
-        const container = failure({
-          code: 'properties',
-          params: {},
-          value: input,
-          field,
-          errors,
-        });
-        return fillOwn(container, messages);
-      }
-
-      const result = await runTests(
-        allTests,
-        asObjectValue<P>(resolvedValues),
-        field,
-      );
-      return result.state === 'invalid' ? fillOwn(result, messages) : result;
-    },
-  );
+  const children = propertiesOf(properties, {
+    tree: (): ObjectErrors<P> => ({}),
+    value: asObjectValue<P>,
+  });
+  const split = configAndTests(config, tests);
+  return defineType({
+    isType: isRecordLike,
+    expected: 'object',
+    build: {},
+    messages: split.config.messages,
+    gate: split.config.strict ? [unknownKeys(properties)] : [],
+    children,
+    steps: split.tests,
+  });
 }

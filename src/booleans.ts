@@ -1,11 +1,5 @@
-import { createParser, typeValidatorOf } from './factories.js';
+import { defineScalar } from './pipeline/index.js';
 import type { ConfigBase } from './shared.js';
-
-/**
- * Parses a value into a boolean. Fails anything but a boolean.
- * @internal
- */
-const parseBoolean = createParser<boolean>('boolean');
 
 /**
  * Configuration for boolean validation.
@@ -17,4 +11,4 @@ export type BooleanConfig = ConfigBase<boolean>;
  * Validates a boolean value.
  * @category Type Validators
  */
-export const boolean = typeValidatorOf<boolean, string>(parseBoolean);
+export const boolean = defineScalar<boolean>('boolean');

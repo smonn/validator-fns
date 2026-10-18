@@ -1,17 +1,5 @@
-import {
-  createParser,
-  createValidatorTest,
-  typeValidatorOf,
-} from './factories.js';
+import { createValidatorTest, defineScalar } from './pipeline/index.js';
 import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
-
-/**
- * Parses a value into a number. Fails anything but a finite number.
- * @internal
- */
-const parseNumber = createParser('number', (value): value is number =>
-  Number.isFinite(value),
-);
 
 /**
  * Ensures a number value is an integer.
@@ -35,7 +23,9 @@ export function integer(
 export type NumberConfig = ConfigBase<number>;
 
 /**
- * Validates a number value.
+ * Validates a number value. Fails anything but a finite number.
  * @category Type Validators
  */
-export const number = typeValidatorOf<number, string>(parseNumber);
+export const number = defineScalar('number', (value): value is number =>
+  Number.isFinite(value),
+);

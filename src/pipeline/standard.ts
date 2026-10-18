@@ -1,6 +1,6 @@
-import { issues } from './failures/index.js';
-import type { Validator } from './shared.js';
-import type { StandardSchemaV1 } from './standard-schema.js';
+import { issues } from '../failures/index.js';
+import type { Validator } from '../shared.js';
+import type { StandardSchemaV1 } from '../standard-schema.js';
 
 /**
  * A validator that is also a Standard Schema (https://standardschema.dev),
