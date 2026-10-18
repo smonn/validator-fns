@@ -25,7 +25,7 @@ const listExports = {
     "import * as v from 'validator-fns'; console.log(JSON.stringify(Object.keys(v).sort()))",
 };
 
-// Words a failure with en, so the subpath and the root share one fill.
+// en's messages call a chunk the root shares, so word a failure with both.
 const wordInEnglish = {
   require: `const { string, min, withMessages } = require('validator-fns');
 const { en } = require('validator-fns/en');
