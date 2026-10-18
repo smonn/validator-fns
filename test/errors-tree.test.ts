@@ -8,6 +8,7 @@ import {
   max,
   messageTree,
   min,
+  type Result,
   object,
   string,
   type TypeValidator,
@@ -614,5 +615,58 @@ test.each<[string, string]>([
   for (const error of await decoderErrors(createValidator(bogus))) {
     assert.instanceOf(error, TypeError);
     assert.include(String(error), "result isn't a failure");
+  }
+});
+
+/** A validator whose failure nests `levels` `properties` failures above a leaf. */
+const nestedValidator = (levels: number) =>
+  createValidator(async () => {
+    let made: Result = await invalid({
+      code: 'min',
+      field: undefined,
+    });
+    for (let level = 0; level < levels; level++) {
+      made = await invalid({
+        code: 'properties',
+        field: undefined,
+        errors: { a: made },
+      });
+    }
+    return made;
+  });
+
+test('should decode an errors tree 1000 levels deep', async () => {
+  const deep = nestedValidator(1000);
+  const made = await deep({});
+  let messages = messageTree(made);
+  for (let level = 0; level < 1000; level++) {
+    assert.isObject(messages);
+    messages = Reflect.get(Object(messages), 'a');
+  }
+  assert.strictEqual(messages, 'min');
+  const result = await deep['~standard'].validate({});
+  assert.lengthOf(result.issues ?? [], 1);
+  assert.lengthOf(result.issues?.[0]?.path ?? [], 1000);
+});
+
+test.each([1001, 10_000])(
+  'should throw before decoding an errors tree %i levels deep',
+  async (levels) => {
+    for (const error of await decoderErrors(nestedValidator(levels))) {
+      assert.instanceOf(error, TypeError);
+      assert.include(String(error), 'deeper than 1000 levels');
+    }
+  },
+);
+
+test('should throw when decoding a cyclic errors tree', async () => {
+  const errors: { a?: unknown } = {};
+  const cyclic = failed('properties', undefined, { errors });
+  errors.a = cyclic;
+  for (const error of await decoderErrors(
+    createValidator(async () => cyclic),
+  )) {
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), 'deeper than 1000 levels');
   }
 });

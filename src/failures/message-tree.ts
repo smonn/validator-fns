@@ -28,15 +28,18 @@ type ChildMessages<E> = unknown extends E
       ? { [K in keyof E]: FailureMessages<E[K]> }
       : never;
 
-/** @internal */
-function messagesOf(made: Failure<unknown>): unknown {
+/**
+ * @param depth How many containers hold `made`
+ * @internal
+ */
+function messagesOf(made: Failure<unknown>, depth: number): unknown {
   if (!isContainer(made)) {
     return made.message;
   }
 
   const tree = Array.isArray(made.errors) ? [] : {};
-  for (const [key, child] of entriesOf(made.errors)) {
-    setOwn(tree, key, child && messagesOf(child));
+  for (const [key, child] of entriesOf(made.errors, depth)) {
+    setOwn(tree, key, child && messagesOf(child, depth + 1));
   }
 
   return tree;
@@ -56,5 +59,5 @@ export function messageTree<T, E>(
 export function messageTree(result: Result): unknown {
   return result.state === 'valid'
     ? undefined
-    : messagesOf(readFailure(result, "A validator's result"));
+    : messagesOf(readFailure(result, "A validator's result"), 0);
 }
