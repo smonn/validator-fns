@@ -22,10 +22,12 @@ export function integer(
  */
 export type NumberConfig = ConfigBase<number>;
 
+function isFiniteNumber(value: unknown): value is number {
+  return Number.isFinite(value);
+}
+
 /**
  * Validates a number value. Fails anything but a finite number.
  * @category Type Validators
  */
-export const number = defineScalar('number', (value): value is number =>
-  Number.isFinite(value),
-);
+export const number = defineScalar('number', isFiniteNumber);
