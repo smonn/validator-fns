@@ -21,16 +21,35 @@ export function asLengthGate<T>(test: Test<T, never>): Test<T, never> {
 }
 
 /**
- * The twin that `array()` runs on the input before any item, for a length
- * gate, or `undefined` for any other test. Only the built-in amount tests are
- * marked, and they take any array and carry a twin.
+ * The twin of a length gate, or `undefined` for any other test. Only the
+ * built-in amount tests are marked, and they take any array, so typing the test
+ * as one on `unknown[]` is safe, which a WeakSet's type can't express.
  * @internal
  */
-export function lengthGateOf<V, E>(
-  test: Test<V, E>,
-): Twin<unknown[]> | undefined;
-export function lengthGateOf(test: Test<unknown[]>) {
+function lengthGateOf<V, E>(test: Test<V, E>): Twin<unknown[]> | undefined;
+function lengthGateOf(test: Test<unknown[]>) {
   return lengthGates.has(test) ? twinOf(test) : undefined;
+}
+
+/**
+ * Splits `array()`'s tests into its gate, the twins of the length gates, which
+ * run on the input before any item, and the steps, which run on the items.
+ * @internal
+ */
+export function splitLengthGates<V, E>(
+  tests: readonly Test<V, E>[],
+): { gate: Twin<unknown[]>[]; steps: Test<V, E>[] } {
+  const gate: Twin<unknown[]>[] = [];
+  const steps: Test<V, E>[] = [];
+  for (const test of tests) {
+    const twin = lengthGateOf(test);
+    if (twin) {
+      gate.push(twin);
+    } else {
+      steps.push(test);
+    }
+  }
+  return { gate, steps };
 }
 
 /**

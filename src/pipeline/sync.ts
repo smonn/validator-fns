@@ -34,7 +34,9 @@ export function withSyncTwin<T, E>(twin: Twin<T>): Test<T, E> {
 
 /**
  * A test's synchronous twin, or `undefined` for a test `withSyncTwin` didn't
- * make.
+ * make. The lookup erases T, which is safe: the map is keyed by identity and
+ * holds only the twin `withSyncTwin` made for that test, of the same T, a link
+ * between key and value that a WeakMap's type can't express.
  * @internal
  */
 export function twinOf<T>(test: Step<T, unknown>): Twin<T> | undefined;
