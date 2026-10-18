@@ -119,27 +119,42 @@ function stdoutOf(error) {
 }
 
 /**
+ * Type-checks a project and returns tsc's output, or `undefined` when it
+ * passes.
+ * @param {string} tsc
+ * @param {string} cwd
+ * @param {string} project
+ */
+function typeErrors(tsc, cwd, project) {
+  try {
+    run(process.execPath, [tsc, '--project', project], cwd);
+    return undefined;
+  } catch (error) {
+    return stdoutOf(error);
+  }
+}
+
+/**
  * Returns the removed names the declarations still export.
  * @param {string} tsc
  * @param {string} cwd
  */
 function stillExported(tsc, cwd) {
-  try {
-    run(process.execPath, [tsc, '--project', 'tsconfig.removed.json'], cwd);
+  const output = typeErrors(tsc, cwd, 'tsconfig.removed.json');
+  if (output === undefined) {
     return removedNames;
-  } catch (error) {
-    const output = stdoutOf(error);
-    const missing = new Set(
-      Array.from(
-        // tsc reports a name the declarations keep unexported as declared locally.
-        output.matchAll(
-          /(?:has no exported member (?:named )?|declares )'(\w+)'/g,
-        ),
-        (match) => match[1],
-      ),
-    );
-    return removedNames.filter((name) => !missing.has(name));
   }
+
+  const missing = new Set(
+    Array.from(
+      // tsc reports a name the declarations keep unexported as declared locally.
+      output.matchAll(
+        /(?:has no exported member (?:named )?|declares )'(\w+)'/g,
+      ),
+      (match) => match[1],
+    ),
+  );
+  return removedNames.filter((name) => !missing.has(name));
 }
 
 /**
