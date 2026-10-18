@@ -28,13 +28,18 @@ type OptionalTwin<T, E> = {
  * @internal
  */
 function isRecordLike(value: unknown): value is object {
-  if (typeof value !== 'object') {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
-  // A plain object, the common case, skips the brand checks, whose throws are
-  // slow. Getting a revoked Proxy's prototype throws, and createParser fails it.
-  const proto: unknown = Object.getPrototypeOf(value);
-  if (proto === Object.prototype || proto === null) {
+  // Plain objects and class instances, the common case, skip the brand
+  // checks, whose throws are slow. Without a Symbol.toStringTag, the tag reads
+  // the internal slots, so a String, Number or Boolean wrapper keeps its own
+  // tag whatever its prototype. A Symbol or BigInt wrapper has no such tag, so
+  // one with a swapped prototype passes (#779).
+  if (
+    !(Symbol.toStringTag in value) &&
+    Object.prototype.toString.call(value) === '[object Object]'
+  ) {
     return true;
   }
   // BigInt is missing before Safari 14, and no boxed BigInt exists without it.
@@ -42,17 +47,14 @@ function isRecordLike(value: unknown): value is object {
     typeof BigInt === 'function'
       ? [String, Number, Boolean, Symbol, BigInt]
       : [String, Number, Boolean, Symbol];
-  return (
-    !Array.isArray(value) &&
-    !wrappers.some(({ prototype }) => {
-      try {
-        Reflect.apply(prototype.valueOf, value, []);
-        return true;
-      } catch {
-        return false;
-      }
-    })
-  );
+  return !wrappers.some(({ prototype }) => {
+    try {
+      Reflect.apply(prototype.valueOf, value, []);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**

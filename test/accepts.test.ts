@@ -241,8 +241,9 @@ test('object() accepts objects where BigInt is missing, as before Safari 14', as
     assert.deepInclude(await object({ name: string() })({ name: 'Ada' }), {
       state: 'valid',
     });
-    // A class instance takes the brand checks, which then skip BigInt.
-    assert.deepInclude(await object({})(new Point()), { state: 'valid' });
+    // A Map has a Symbol.toStringTag, so it takes the brand checks, which
+    // then skip BigInt.
+    assert.deepInclude(await object({})(new Map()), { state: 'valid' });
     assert.deepInclude(await object({})(Object('a')), { code: 'type' });
   } finally {
     Reflect.set(globalThis, 'BigInt', bigInt);
@@ -278,21 +279,84 @@ test('oneOf() keeps a primitive off the date path', async () => {
   }
 });
 
-test('object() takes a plain object without probing the wrappers', async () => {
+test('object() takes plain objects and class instances without probing the wrappers', async () => {
   const valueOf = vi.spyOn(String.prototype, 'valueOf');
   try {
-    assert.deepInclude(await object({})({}), { state: 'valid' });
-    assert.deepInclude(await object({})(Object.create(null)), {
-      state: 'valid',
-    });
+    for (const value of [
+      {},
+      Object.create(null),
+      new Point(),
+      runInNewContext('({})'),
+    ]) {
+      assert.deepInclude(await object({})(value), { state: 'valid' });
+    }
     assert.equal(valueOf.mock.calls.length, 0);
-    // Anything else still gets the brand checks.
-    assert.deepInclude(await object({})(Object('a')), { code: 'type' });
-    assert.deepInclude(await object({})(new Point()), { state: 'valid' });
-    assert.deepInclude(await object({})(runInNewContext('({})')), {
-      state: 'valid',
-    });
   } finally {
     valueOf.mockRestore();
   }
+});
+
+test.each<[string, () => unknown]>([
+  ['an array with a null prototype', () => Object.setPrototypeOf([], null)],
+  [
+    'an array with the object prototype',
+    () => Object.setPrototypeOf([], Object.prototype),
+  ],
+  [
+    'an array Proxy reporting the object prototype',
+    () => new Proxy([], { getPrototypeOf: () => Object.prototype }),
+  ],
+  ...(
+    [
+      ['string', 'x'],
+      ['number', 1],
+      ['boolean', true],
+    ] satisfies [string, unknown][]
+  ).flatMap(([type, primitive]): [string, () => unknown][] => [
+    [
+      `a boxed ${type} with a null prototype`,
+      () => Object.setPrototypeOf(Object(primitive), null),
+    ],
+    [
+      `a boxed ${type} with the object prototype`,
+      () => Object.setPrototypeOf(Object(primitive), Object.prototype),
+    ],
+  ]),
+  [
+    'a boxed string with a Symbol.toStringTag getter',
+    () =>
+      Object.defineProperty(Object('x'), Symbol.toStringTag, {
+        get: () => 'Object',
+      }),
+  ],
+])('object() fails %s with type', async (_label, make) => {
+  assert.deepInclude(await object({})(make()), {
+    code: 'type',
+    params: { expected: 'object' },
+  });
+});
+
+// Known behaviour, pending #779's "Decisions needed": Symbol and BigInt
+// wrappers have no tag of their own, so with a swapped prototype they take the
+// fast path. Only throwing brand checks can tell them apart.
+test.each<[string, unknown]>([
+  ['symbol', Symbol('s')],
+  ['bigint', 1n],
+])(
+  'object() accepts a boxed %s with a swapped prototype',
+  async (_type, primitive) => {
+    for (const proto of [null, Object.prototype]) {
+      const boxed: unknown = Object.setPrototypeOf(Object(primitive), proto);
+      assert.deepInclude(await object({})(boxed), { state: 'valid' });
+    }
+  },
+);
+
+test('object() accepts an object with a Symbol.toStringTag getter', async () => {
+  const tagged = {
+    get [Symbol.toStringTag]() {
+      return 'String';
+    },
+  };
+  assert.deepInclude(await object({})(tagged), { state: 'valid' });
 });
