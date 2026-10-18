@@ -4,7 +4,7 @@ import {
   defineType,
   items,
   keepValue,
-  lengthGateOf,
+  splitLengthGates,
   type TypeValidator,
 } from './pipeline/index.js';
 import {
@@ -39,14 +39,15 @@ function arrayOf<T, E>(
   rest: ArrayTest<T, E>[],
 ): TypeValidator<T[], (Failure<E> | null)[]> {
   const { config, tests } = configAndTests(first, rest);
+  const { gate, steps } = splitLengthGates(tests);
   return defineType({
     isType: Array.isArray,
     expected: 'array',
     default: config.default,
     messages: config.messages,
-    gate: tests.flatMap((test) => lengthGateOf(test) ?? []),
+    gate,
     children,
-    steps: tests.filter((test) => !lengthGateOf(test)),
+    steps,
   });
 }
 
