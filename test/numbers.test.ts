@@ -1,13 +1,5 @@
 import { assert, test } from 'vitest';
-import {
-  check,
-  integer,
-  max,
-  min,
-  number,
-  optional,
-  parseNumber,
-} from '../src/index.js';
+import { check, integer, max, min, number, optional } from '../src/index.js';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -189,7 +181,6 @@ test('number accepts primitives, dates, and boxed primitives', async () => {
   // Blank input parses to NaN, which only optional() accepts.
   const validate = optional(number());
   for (const [value, expected] of accepted) {
-    assert.deepEqual(parseNumber(value), expected, String(expected));
     const result = await validate(value);
     assert(result.state === 'valid', String(expected));
     assert.deepEqual(result.value, expected, String(expected));
@@ -213,12 +204,6 @@ test('number returns an invalid result for input it cannot parse', async () => {
   ];
   const validate = number();
   for (const [value, label] of rejected) {
-    assert.throws(
-      () => parseNumber(value),
-      TypeError,
-      'Failed to parse value to number.',
-      label,
-    );
     const result = await validate(value);
     assert.equal(result.state, 'invalid', label);
     assert.equal(

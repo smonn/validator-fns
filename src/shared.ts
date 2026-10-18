@@ -81,28 +81,9 @@ export type ExtractValue<T extends Validator> =
   T extends Validator<infer V> ? V : unknown;
 
 /**
- * Make a deep partial type.
- * @typeParam T any object type
- * @category Types
- */
-export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>;
-};
-
-/**
- * Validation factory function.
- * @typeParam C The configuration type
- * @category Types
- */
-export type ValidatorFactory<C, T, E> = (
-  config?: Partial<C> | Test<T, E>,
-  ...tests: Test<T, E>[]
-) => Validator<T, E>;
-
-/**
  * Base configuration type.
  * @typeParam T The target type.
- * @category Types
+ * @internal
  */
 export interface ConfigBase<T> {
   /** Parser to convert value into the designated type. */
@@ -175,17 +156,10 @@ export type AtPath<Path> = Path extends readonly [
   : string;
 
 /**
- * Simple check for objects.
- * @param value Value to test
- */
-export function isObject(value: unknown): boolean {
-  return Object.prototype.toString.call(value) === '[object Object]';
-}
-
-/**
  * Safe hasOwnProperty check
  * @param object Object to check
  * @param property Property to look for
+ * @internal
  */
 export function hasOwnProperty(
   object: unknown,
@@ -257,7 +231,7 @@ const formatPattern = /{(\w+)}/g;
  * Formats a message using a squiggly bracket `{}` template.
  * @param template Message template as string or function
  * @param parameters Params to inject into template
- * @category Helpers
+ * @internal
  */
 export function formatMessage<T, X extends object = object>(
   template: ValidatorMessage<T, X>,

@@ -1,5 +1,8 @@
-/** Badly formatted date for internal use. */
-export const invalidDate = new Date('');
+/**
+ * The invalid date a blank string parses to.
+ * @internal
+ */
+const invalidDate = new Date('');
 
 /** @internal */
 const isoDatePattern =

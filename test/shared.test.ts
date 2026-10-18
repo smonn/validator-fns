@@ -1,8 +1,6 @@
 import { assert, test } from 'vitest';
 import {
   exact,
-  formatMessage,
-  isObject,
   invalid,
   min,
   number,
@@ -11,26 +9,26 @@ import {
   valid,
 } from '../src/index.js';
 
-test('format string message', () => {
-  assert.strictEqual(
-    formatMessage('Hello {name}!', {
-      name: 'World',
-      value: '',
-      field: undefined,
-    }),
-    'Hello World!',
-  );
+test('format string message', async () => {
+  const result = await invalid({
+    message: 'Hello {name}!',
+    value: '',
+    field: undefined,
+    extras: { name: 'World' },
+  });
+
+  assert.deepInclude(result, { message: 'Hello World!' });
 });
 
-test('format function message', () => {
-  assert.strictEqual(
-    formatMessage(({ name }) => `Hello ${name}!`, {
-      name: 'World',
-      value: '',
-      field: undefined,
-    }),
-    'Hello World!',
-  );
+test('format function message', async () => {
+  const result = await invalid({
+    message: ({ name }: { name: string }) => `Hello ${name}!`,
+    value: '',
+    field: undefined,
+    extras: { name: 'World' },
+  });
+
+  assert.deepInclude(result, { message: 'Hello World!' });
 });
 
 test('exact', async () => {
@@ -142,26 +140,6 @@ test('should run custom tests on every call when the same value repeats', async 
   await validate('a');
   await validate('a');
   assert.strictEqual(calls, 2);
-});
-
-test('isObject is true only for objects tagged Object', () => {
-  class Point {
-    x = 1;
-  }
-  for (const value of [{}, Object.create(null), new Point()]) {
-    assert.isTrue(isObject(value));
-  }
-  const others: [unknown, string][] = [
-    [[], 'array'],
-    [null, 'null'],
-    [undefined, 'undefined'],
-    [new Map(), 'Map'],
-    ['x', 'string'],
-    [1, 'number'],
-  ];
-  for (const [value, label] of others) {
-    assert.isFalse(isObject(value), label);
-  }
 });
 
 test('should return a promise when a built-in test is called directly', async () => {

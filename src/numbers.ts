@@ -5,9 +5,9 @@ import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 /**
  * Parses a value into a number.
  * @param value Value to parse
- * @category Parsers
+ * @internal
  */
-export function parseNumber(value: unknown): number | null | undefined {
+function parseNumber(value: unknown): number | null | undefined {
   if (value === null || value === undefined) {
     return value;
   }
@@ -34,9 +34,9 @@ export function parseNumber(value: unknown): number | null | undefined {
  * Applies a configuration to the number value.
  * @param value Value to modify
  * @param config Configuration to apply
- * @category Helpers
+ * @internal
  */
-export function applyNumberConfig(
+function applyNumberConfig(
   value: unknown,
   config: NumberConfig,
 ): number | null | undefined {
