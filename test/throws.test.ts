@@ -286,6 +286,10 @@ test.each<[string, () => unknown]>([
   // JSON.parse returns any, which lets the test pass values the types reject.
   ['object() without a schema', () => object(JSON.parse('"schema"'))],
   [
+    'createTypeValidator() without a validator',
+    () => createTypeValidator(JSON.parse('"parser"')),
+  ],
+  [
     'array() in the 2.x order',
     () => Reflect.apply(array, undefined, [{}, string()]),
   ],

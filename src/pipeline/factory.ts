@@ -62,12 +62,17 @@ export function defineScalar<T>(
  * Makes a custom type validator from a parser, which can be any validator. It
  * reads present input, and its failure is the type validator's own, with its
  * code, params and errors. The type validator adds the missing check,
- * `default`, `messages`, the tests and `optional()`.
+ * `default`, `messages`, the tests and `optional()`. A parser that isn't a
+ * function throws a `TypeError`.
  * @param parser Validator that reads the input into the type
  * @category Helpers
  */
 export function createTypeValidator<T, E>(
   parser: Validator<T | null | undefined, E>,
 ): TypeFactory<T, E> {
+  if (typeof parser !== 'function') {
+    throw new TypeError('`parser` must be a validator');
+  }
+
   return typeFactory({ parser: runOf(parser) });
 }
