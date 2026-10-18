@@ -40,11 +40,10 @@ const customValidator = (value, field) => {
 };
 
 const validate = object({
-  firstName: string({
-    default: '',
-    trim: true,
-    messages: { required: 'First name is required.' },
-  }),
+  firstName: string(
+    { trim: true, messages: { required: 'First name is required.' } },
+    min(1, 'First name is required.'),
+  ),
   emailAddress: string(
     { messages: { required: 'Email address is required.' } },
     email('Must be a valid email address.'),
