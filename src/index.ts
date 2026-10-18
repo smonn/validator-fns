@@ -17,6 +17,7 @@ export {
   createValidator,
   createValidatorTest,
   optional,
+  withMessages,
 } from './pipeline/index';
 export type { TypeValidator } from './pipeline/index';
 export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';

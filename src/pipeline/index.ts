@@ -10,3 +10,4 @@ export { optional } from './optional.js';
 export { defineType } from './twins.js';
 export { configAndTests } from './config.js';
 export { createTypeValidator, defineScalar } from './factory.js';
+export { withMessages } from './messages.js';

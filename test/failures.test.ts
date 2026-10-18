@@ -18,6 +18,7 @@ import {
   string,
   type Result,
   type Validator,
+  withMessages,
 } from '../src/index.js';
 
 const failing = createValidator(async (value, field) =>
@@ -79,6 +80,12 @@ const failures: [string, Validator, unknown][] = [
   ['optional', optional(number(min(5, 'min'))), 3],
   ['optional custom validator', optional(failing), 'x'],
   ['createValidator', failing, 'x'],
+  ['withMessages', withMessages(string(min(5)), { min: 'min' }), 'abc'],
+  [
+    'withMessages, nested',
+    withMessages(object({ a: string() }), { required: 'required' }),
+    {},
+  ],
 ];
 
 test('should leave value off a failure when a validator fails', async () => {

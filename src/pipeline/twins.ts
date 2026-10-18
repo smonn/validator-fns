@@ -30,7 +30,7 @@ const registry = new WeakMap<object, Built<unknown, unknown>>();
  * which `optional()` calls once and returns on every call.
  * @internal
  */
-function fromRun<T, E>(
+export function fromRun<T, E>(
   run: Run<T, E>,
   rebuild: () => TypeValidator<T | null | undefined, E>,
 ): TypeValidator<T, E> {
