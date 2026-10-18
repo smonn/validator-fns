@@ -17,25 +17,27 @@ export type Run<T, E> = (
 ) => MaybePromise<Result<T, E>>;
 
 /**
- * Whether a step or child returned a promise. Checks for `then`, as a promise
- * from another realm isn't an instance of this realm's Promise.
+ * Whether a step or child returned a promise: a value with a `then` function,
+ * as a promise from another realm isn't an instance of this realm's Promise.
  * @internal
  */
 export function isThenable<T extends object>(
   value: MaybePromise<T>,
 ): value is PromiseLike<T> {
-  return 'then' in value;
+  return typeof Reflect.get(value, 'then') === 'function';
 }
 
 /**
- * Runs `next` on a result, once it settles when it's a promise.
+ * Runs `next` on a result, once it settles when it's a promise. A promise is
+ * adopted as `await` would, so a thenable that isn't a Promise is called once,
+ * and its first callback alone counts.
  * @internal
  */
 export function andThen<T extends object, R>(
   result: MaybePromise<T>,
   next: (done: T) => MaybePromise<R>,
 ): MaybePromise<R> {
-  return isThenable(result) ? result.then(next) : next(result);
+  return isThenable(result) ? Promise.resolve(result).then(next) : next(result);
 }
 
 /**
@@ -94,7 +96,7 @@ export function runSteps<T, E>(
     const twin = step[syncTwin];
     const result = twin ? twin(current, field) : step(current, field);
     if (isThenable(result)) {
-      return result.then((done) =>
+      return Promise.resolve(result).then((done) =>
         done.state === 'invalid'
           ? done
           : runSteps(steps.slice(index + 1), done.value, field),

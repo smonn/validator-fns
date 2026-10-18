@@ -14,7 +14,7 @@ export function runEach<C, R extends object>(
   for (let next = children.next(); !next.done; next = children.next()) {
     const result = runOne(next.value[1], next.value[0]);
     if (isThenable(result)) {
-      return result.then((done) => {
+      return Promise.resolve(result).then((done) => {
         results.push(done);
         return runEach(children, runOne, results);
       });
