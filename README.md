@@ -415,7 +415,8 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     money({ cents: true });
 
-    // 3.x
+    // 3.x, where readAmount is any validator that reads an amount, such as
+    // the parser in the createTypeValidator(parser) example
     const amount = createTypeValidator(readAmount);
     amount(transform((value) => Math.round(value * 100)));
     ```
