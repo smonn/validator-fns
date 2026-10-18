@@ -81,11 +81,7 @@ function fillErrors(
 
     const filled = fillFailure(child, depth + 1, fill);
     height = Math.max(height, filled.height + 1);
-    // Not changed ||= ..., which the minifier would emit and Safari 13.1 and
-    // Firefox 77, both supported, can't parse.
-    if (filled.made !== child) {
-      changed = true;
-    }
+    changed ||= filled.made !== child;
     setOwn(tree, key, filled.made);
   }
 

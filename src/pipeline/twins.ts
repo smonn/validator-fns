@@ -38,13 +38,7 @@ export function fromRun<T, E>(
   const run = guardRun(unguarded);
   const validator = withStandard(toValidator(run));
   let rebuilt: TypeValidator<T | null | undefined, E> | undefined;
-  const optional = () => {
-    // Not ??=, which Safari 13.1 and Firefox 77, both supported, can't parse.
-    if (rebuilt === undefined) {
-      rebuilt = rebuild();
-    }
-    return rebuilt;
-  };
+  const optional = () => (rebuilt ??= rebuild());
   registry.set(validator, { run, optional });
   return validator;
 }
