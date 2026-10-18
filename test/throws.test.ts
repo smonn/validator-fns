@@ -18,6 +18,7 @@ import {
   transform,
   valid,
   type Failure,
+  type Result,
   type TypeValidator,
 } from '../src/index.js';
 
@@ -195,6 +196,89 @@ test('should await a parser promise from another realm', async () => {
   )();
 
   assert.deepInclude(await validate('x'), { state: 'valid', value: 'parsed' });
+});
+
+// Thenables that aren't Promises, as JavaScript code can return from a test,
+// child or parser. Each `then` returns nothing, where a Promise's returns a
+// new Promise. Made from source in another realm, as a promise from another
+// realm is; their types are the Promises they stand in for.
+const resolving = <R>(result: R): Promise<R> =>
+  runInNewContext('({ then(resolve) { resolve(result); } })', { result });
+const rejectingLater = (reason: unknown): Promise<never> =>
+  runInNewContext(
+    '({ then(resolve, reject) { setTimeout(() => reject(reason)); } })',
+    { reason, setTimeout },
+  );
+const resolvingTwice = <R>(first: R, second: R): Promise<R> =>
+  runInNewContext('({ then(resolve) { resolve(first); resolve(second); } })', {
+    first,
+    second,
+  });
+
+const ok = <T>(value: T, field?: string): Result<T, never> => ({
+  state: 'valid',
+  value,
+  field,
+});
+const passOn = (value: unknown, field?: string) => resolving(ok(value, field));
+const doubled = (value: number, field?: string) =>
+  resolving(ok(value * 2, field));
+const twice = <T>(value: T, field?: string) =>
+  resolvingTwice<Result<T | string, never>>(
+    ok(value, field),
+    ok('again', field),
+  );
+// JSON.parse returns any, which lets a test return what the types reject.
+const withThen = () =>
+  JSON.parse('{ "state": "valid", "value": "b", "then": null }');
+
+test('should settle a non-Promise thenable as a Promise would', async () => {
+  assert.deepEqual(await number(doubled, doubled)(1), {
+    state: 'valid',
+    value: 4,
+    field: undefined,
+  });
+  assert.deepInclude(await array(createValidator(passOn))(['a', 'b']), {
+    value: ['a', 'b'],
+  });
+  assert.deepInclude(await object({ a: createValidator(passOn) })({ a: 1 }), {
+    value: { a: 1 },
+  });
+  assert.deepInclude(await createTypeValidator(passOn)()(5), { value: 5 });
+});
+
+test('should reject with the reason of a non-Promise thenable', async () => {
+  const later = () => rejectingLater(bug);
+
+  assert.strictEqual(await rejection(string(later)('a')), bug);
+  assert.strictEqual(await rejection(array(createValidator(later))([1])), bug);
+  assert.strictEqual(
+    await rejection(object({ a: createValidator(later) })({ a: 1 })),
+    bug,
+  );
+  assert.strictEqual(await rejection(createTypeValidator(later)()(1)), bug);
+});
+
+test('should take only the first value of a thenable that calls back twice', async () => {
+  let calls = 0;
+  const counted = async (value: string, field?: string) => {
+    calls += 1;
+    return valid({ value, field });
+  };
+
+  assert.deepInclude(await array(createValidator(twice))(['a', 'b']), {
+    value: ['a', 'b'],
+  });
+  assert.deepInclude(await string(twice, counted)('a'), { value: 'a' });
+  assert.strictEqual(calls, 1);
+});
+
+test('should take a result with a `then` that is not a function as a result', async () => {
+  assert.deepEqual(await string(withThen)('a'), {
+    state: 'valid',
+    value: 'b',
+    field: undefined,
+  });
 });
 
 // [label, builds a validator or test from bad configuration]
