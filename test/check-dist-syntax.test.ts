@@ -32,6 +32,8 @@ describe('syntax the README browsers parse', () => {
     ['braces in an extends clause', 'class A extends f({a:1}){m(){}}'],
     ['a property named class', 'a.class=1;b={class:2};'],
     ['older regex flags', 'let a=/a/gimuy;'],
+    ['regex group syntax inside a character class', 'let a=/[(?<]/;'],
+    ['a division after an object literal', 'let a={b:1}/2;'],
     ['a RegExp built from a variable', 'let a=new RegExp(b);'],
     ['a string after RegExp but not its argument', 'let a=[RegExp,"(?<"];'],
     ['a RegExp built from a plain pattern', 'let a=RegExp(`a+`,`gu`);'],
@@ -58,6 +60,14 @@ describe('syntax newer than the README browsers', () => {
     ['let a=/\\p{L}/u;', '\\p{'],
     ['let a=/a/s;', 'regex flag s'],
     ['let a=/a/d;', 'regex flag d'],
+    ['export default/(?<y>a)/;', '(?<'],
+    ['let a=/(?i:a)b/;', 'regex modifiers'],
+    ['let a=/(?-i:a)/i;', 'regex modifiers'],
+    ['let a=10n;', 'BigInt literal'],
+    ['let a=@b class{};', 'decorator'],
+    ['let a="b;', 'unterminated'],
+    ['let a=/b;', 'unterminated'],
+    ['let a=`b;', 'unterminated'],
     ['let a=RegExp(`(?<y>\\\\d)`,``);', '(?<'],
     ['let a=new RegExp("a","s");', 'regex flag s'],
   ])('fails %s', (code, feature) => {
@@ -94,6 +104,12 @@ describe('where the tokens appear', () => {
     ['code between divisions of a number', 'let a=1/2;b||=c/3;'],
     ['code between divisions of a group', 'let a=(b)/2;c||=d/3;'],
     ['an object in a template substitution', 'let a=`${{b:1}.c||=d}`;'],
+    [
+      'a regex after a function declaration',
+      "function f(){}/'/.test(a);b||=c;d='e';",
+    ],
+    ['a regex after an if condition', "if(a)/'/.test(b);c||=d;e='f';"],
+    ['a regex after a block', "if(a){b()}/'/.test(c);d||=e;f='g';"],
   ])('finds them in %s', (_, code) => {
     const result = run(code);
     assert.strictEqual(result.status, 1);
