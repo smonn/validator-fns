@@ -165,19 +165,6 @@ export type BuiltInCode =
   | 'properties';
 
 /**
- * Safe hasOwnProperty check
- * @param object Object to check
- * @param property Property to look for
- * @internal
- */
-export function hasOwnProperty(
-  object: unknown,
-  property: string | number | symbol,
-): boolean {
-  return Object.prototype.hasOwnProperty.call(object, property);
-}
-
-/**
  * Sets an own property. Plain assignment of `__proto__` calls the
  * `Object.prototype.__proto__` setter instead of creating the property.
  * @internal

@@ -1,9 +1,4 @@
-import {
-  type Failure,
-  hasOwnProperty,
-  type Messages,
-  type ValidatorMessage,
-} from '../types.js';
+import type { Failure, Messages, ValidatorMessage } from '../types.js';
 import { failure, unworded } from './make.js';
 
 /**
@@ -45,7 +40,8 @@ export function fillOwn<E>(
   // Own keys only, so a code such as `constructor` isn't read from the
   // prototype.
   const message =
-    messages !== undefined && hasOwnProperty(messages, made.code)
+    messages !== undefined &&
+    Object.prototype.hasOwnProperty.call(messages, made.code)
       ? messages[made.code]
       : undefined;
   return reword(made, message, made.errors);
