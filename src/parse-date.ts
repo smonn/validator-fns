@@ -1,9 +1,3 @@
-/**
- * The invalid date a blank string parses to.
- * @internal
- */
-const invalidDate = new Date('');
-
 /** @internal */
 const isoDatePattern =
   /^(\d{4})(?:-([0-2]\d)(?:-([0-3]\d)(?:[ T]([0-2]\d):([0-5]\d)(?::([0-5]\d)(\.\d+)?(Z|[+-][0-2]\d:?[0-5]\d)?)?)?)?)?$/;
@@ -55,8 +49,7 @@ const dateParts = [
 
 /**
  * Reads a date from a number or an ISO 8601 string. Returns `undefined` for a
- * non-blank string that isn't ISO 8601, and for input that isn't a number or
- * string.
+ * string that isn't ISO 8601, and for input that isn't a number or string.
  * @param value Value to read
  */
 export function readDate(value: unknown): Date | undefined {
@@ -68,9 +61,7 @@ export function readDate(value: unknown): Date | undefined {
     return undefined;
   }
 
-  // A blank string reads as an invalid date, which as a limit fails every
-  // date.
-  return value.trim() === '' ? invalidDate : parseIsoDate(value);
+  return parseIsoDate(value);
 }
 
 /**

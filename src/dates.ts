@@ -41,13 +41,10 @@ const parseDate = createParser('date', isValidDate);
  * it can't read, so bad configuration fails when the test is built.
  * @param limit Limit to parse
  */
-function parseLimit(limit: SharedDateValueType): Date | null | undefined {
-  const parsed =
-    limit === null || limit === undefined || isValidDate(limit)
-      ? limit
-      : readDate(limit);
-  if (parsed === undefined && limit !== undefined) {
-    throw new TypeError('Failed to parse value to date.');
+function parseLimit(limit: SharedDateValueType): Date {
+  const parsed = typeof limit === 'object' ? limit : readDate(limit);
+  if (!isValidDate(parsed)) {
+    throw new TypeError('`limit` must be a valid date');
   }
 
   return parsed;
@@ -74,7 +71,7 @@ function applyDateConfig(
 type SharedDateValueType = Date | string | number;
 
 export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
-  min: Date | null | undefined;
+  min: Date;
 }
 
 /**
@@ -100,7 +97,7 @@ export function minDate(
 }
 
 export interface MaxDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
-  max: Date | null | undefined;
+  max: Date;
 }
 
 /**
