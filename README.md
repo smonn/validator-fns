@@ -271,7 +271,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     ```
 
 12. **Expect a rejection when your code throws.** In 2.x, `string()`, `number()`, `boolean()`, `date()` and `createTypeValidatorTest()` validators turned a throw from a test, a `requiredMessage` function or a `parser` into an invalid result with the error's message, while `array()` and `object()` rejected. In 3.x, every validator rejects with the thrown value. Input a validator can't read still gives an invalid result.
-13. **Return a result from a custom `parser`**, made with `valid()` or `invalid()`, instead of the value, and fail input it can't read with `invalid()` instead of throwing. `createTypeValidatorTest()`'s `applyConfig` gets the parsed value, so it no longer calls `config.parser`:
+13. **Return a result from a custom `parser`**, made with `valid()` or `invalid()`, instead of the value, and fail input it can't read with `invalid()` instead of throwing. The parser gets the field name as its second argument, for the result. `createTypeValidatorTest()`'s `applyConfig` gets the parsed value, so it no longer calls `config.parser`:
 
     ```js
     // 2.x
