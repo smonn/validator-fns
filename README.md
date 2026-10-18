@@ -15,6 +15,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
   - [Validation result](#validation-result)
   - [Validation error message](#validation-error-message)
   - [Required and optional values](#required-and-optional-values)
+  - [Unreadable input and throws](#unreadable-input-and-throws)
   - [Validation types](#validation-types)
   - [Validation tests](#validation-tests)
   - [Custom validation](#custom-validation)
@@ -269,6 +270,27 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     ```
 
+12. **Expect a rejection when your code throws.** In 2.x, `string()`, `number()`, `boolean()`, `date()` and `createTypeValidatorTest()` validators turned a throw from a test, a `requiredMessage` function or a `parser` into an invalid result with the error's message, while `array()` and `object()` rejected. In 3.x, every validator rejects with the thrown value. Input a validator can't read still gives an invalid result.
+13. **Return a result from a custom `parser`**, made with `valid()` or `invalid()`, instead of the value, and fail input it can't read with `invalid()` instead of throwing. `createTypeValidatorTest()`'s `applyConfig` gets the parsed value, so it no longer calls `config.parser`:
+
+    ```js
+    // 2.x
+    const shout = string({
+      parser: (value) => {
+        if (typeof value !== 'string') throw new TypeError('Must be text.');
+        return value.toUpperCase();
+      },
+    });
+
+    // 3.x
+    const shout = string({
+      parser: async (value, field) =>
+        typeof value === 'string'
+          ? valid({ value: value.toUpperCase(), field })
+          : invalid({ message: 'Must be text.', field }),
+    });
+    ```
+
 ## API Reference
 
 ### Validation result
@@ -326,6 +348,26 @@ For a custom validator, `optional()` accepts `undefined` and `null` without call
 
 In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and `undefined`. In `object()`, a key is optional when its validator's value type includes `undefined`, so `object({ name: string(), age: optional(number()) })` is typed `{ name: string; age?: number | null | undefined }`.
 
+### Unreadable input and throws
+
+Input a validation type can't read gives an invalid result. For example, `number()` fails `'abc'` with `'Failed to parse value to number.'`. A validator never rejects for its input.
+
+A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a `requiredMessage` function, a `parser`, `createTypeValidatorTest()`'s `applyConfig`, and a validator passed to `array()` or `object()`. `~standard.validate` rejects the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
+
+A custom `parser` takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. A parsed `undefined` or `null` counts as missing, as with the built-in parsers.
+
+```js
+const upper = string({
+  parser: async (value, field) =>
+    typeof value === 'string'
+      ? valid({ value: value.toUpperCase(), field })
+      : invalid({ message: 'Must be text.', field }),
+});
+
+await upper('abc'); // { state: 'valid', value: 'ABC', ... }
+await upper(42); // { state: 'invalid', message: 'Must be text.', ... }
+```
+
 ### Validation types
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, and rejects a missing value unless wrapped in [`optional()`](#optionalvalidator). It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
@@ -361,7 +403,7 @@ Where valid entries are represented as `null` and invalid entries with the error
 | :---------------- | :----------------- | :-------------------------------------------------------------------------------------- |
 | `default`         | string             | Optional. Value used if the parser returns `undefined`, `null`, or an empty array `[]`. |
 | `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                       |
-| `parser`          | function           | Optional. Used to customize how a value is converted into a string.                     |
+| `parser`          | function           | Optional. Used to customize how a value is converted into an array.                     |
 
 </details>
 
@@ -685,36 +727,48 @@ How a validator's results map to Standard Schema results:
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. It must include a `parser` function, which turns the input into the value type, and the config type declares `parser` and any options, such as `requiredMessage`. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object the validator starts from. It must include a `parser` function, which returns a result as described in [Unreadable input and throws](#unreadable-input-and-throws), and the config type declares `parser` and any options, such as `requiredMessage`. The validator parses the input with the config's `parser`, then `applyConfig` gets the parsed value and the config, and returns the value to check. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`.
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
 In TypeScript, the value type and the config type are inferred from `applyConfig`, so the validator accepts options that `defaultConfig` doesn't set. Passing them as type arguments, as in `createTypeValidatorTest<number, MoneyConfig>(…)`, still works.
 
 ```ts
-import { createTypeValidatorTest, type ValidatorMessage } from 'validator-fns';
+import {
+  createTypeValidatorTest,
+  invalid,
+  type Result,
+  valid,
+  type ValidatorMessage,
+} from 'validator-fns';
 
 interface MoneyConfig {
-  parser: (value: unknown) => number | null | undefined;
+  parser: (
+    value: unknown,
+    field?: string,
+  ) => Promise<Result<number | null | undefined>>;
   requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
 }
 
-/** Reads a number or a numeric string. Anything else is missing. */
-function parseAmount(value: unknown): number | undefined {
-  if (typeof value === 'string') {
-    return Number.parseFloat(value);
+/** Reads a number or a numeric string, and fails anything else present. */
+async function parseAmount(
+  value: unknown,
+  field?: string,
+): Promise<Result<number | null | undefined>> {
+  const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (typeof amount === 'number' || amount === null || amount === undefined) {
+    return valid({ value: amount, field });
   }
 
-  return typeof value === 'number' ? value : undefined;
+  return invalid({ message: 'Must be an amount.', field });
 }
 
 function applyMoneyConfig(
-  value: unknown,
+  amount: number | null | undefined,
   config: MoneyConfig,
 ): number | null | undefined {
-  const amount = config.parser(value);
   return config.cents && typeof amount === 'number'
     ? Math.round(amount * 100)
     : amount;
@@ -725,8 +779,10 @@ const money = createTypeValidatorTest(
   applyMoneyConfig,
 );
 
-const result = await money({ cents: true })('12.5');
+await money({ cents: true })('12.5');
 // { state: 'valid', value: 1250, ... }
+await money()(true);
+// { state: 'invalid', message: 'Must be an amount.', ... }
 ```
 
 #### valid({ value, field })
