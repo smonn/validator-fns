@@ -12,12 +12,15 @@ import type {
 } from './shared.js';
 import { readDate } from './parse-date.js';
 
+/** @internal */
+const parseErrorMessage = 'Failed to parse value to date.';
+
 /**
  * Parses a value into a date. Fails a non-blank string that isn't ISO 8601,
  * and input that isn't a date, number, or string.
  * @internal
  */
-const parseDate = createParser(readDate, 'Failed to parse value to date.');
+const parseDate = createParser(readDate, parseErrorMessage);
 
 /**
  * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
@@ -25,12 +28,13 @@ const parseDate = createParser(readDate, 'Failed to parse value to date.');
  * @param limit Limit to parse
  */
 function parseLimit(limit: SharedDateValueType): Date | null | undefined {
-  const parsed = parseDate(limit);
-  if (parsed.state === 'invalid') {
-    throw new TypeError(parsed.message);
+  const parsed =
+    limit === null || limit === undefined ? limit : readDate(limit);
+  if (parsed === undefined && limit !== undefined) {
+    throw new TypeError(parseErrorMessage);
   }
 
-  return parsed.value;
+  return parsed;
 }
 
 /**
