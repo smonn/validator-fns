@@ -83,12 +83,18 @@
           ],
         },
         {
+          "name": "valid-date",
+          "pattern": "src/valid-date.ts",
+          "deny": ["src/**"],
+        },
+        {
           "name": "dates",
           "pattern": "src/dates.ts",
           "allow": [
             "src/shared.ts",
             "src/pipeline/index.ts",
             "src/parse-date.ts",
+            "src/valid-date.ts",
           ],
         },
         {

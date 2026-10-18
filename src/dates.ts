@@ -7,24 +7,7 @@ import type {
   ValidatorMessageParameters,
 } from './shared.js';
 import { readDate } from './parse-date.js';
-
-/**
- * The time of a date from any realm, or `NaN` for any other value. `getTime`
- * throws unless `this` is a `Date`, which `instanceof` can't tell across
- * realms, and unlike `valueOf` the value can't override it.
- */
-function timeOf(value: unknown): number {
-  try {
-    return Date.prototype.getTime.call(value);
-  } catch {
-    return Number.NaN;
-  }
-}
-
-/** Whether a value is a valid date, from any realm. */
-function isValidDate(value: unknown): value is Date {
-  return !Number.isNaN(timeOf(value));
-}
+import { isValidDate, timeOf } from './valid-date.js';
 
 /**
  * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
