@@ -2,17 +2,17 @@ import { afterPromise, isThenable, type MaybePromise } from './promises.js';
 
 /**
  * Runs each child in order, sync until one returns a promise, and gives every
- * child's result. Takes an iterator, so a run that goes async resumes where it
- * left off.
+ * child's result. Reads the children by index, not through an array's own
+ * `values()` or `entries()`, and a run that goes async resumes at the next.
  * @internal
  */
-export function runEach<C, R extends object>(
-  children: Iterator<C>,
-  runOne: (child: C, index: number) => MaybePromise<R>,
+export function runEach<A extends readonly unknown[], R extends object>(
+  children: A,
+  runOne: (child: A[number], index: number) => MaybePromise<R>,
   results: R[] = [],
 ): MaybePromise<R[]> {
-  for (let next = children.next(); !next.done; next = children.next()) {
-    const result = runOne(next.value, results.length);
+  for (let index = results.length; index < children.length; index += 1) {
+    const result = runOne(children[index], index);
     if (isThenable(result)) {
       return afterPromise(result, (done) => {
         results.push(done);
