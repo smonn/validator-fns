@@ -122,3 +122,40 @@ test('should type the check value as the parsed object when used in object()', (
     }, 'code'),
   );
 });
+
+/** A schema whose `a` getter runs `onRead` on it and returns `string()`. */
+function schemaReading(
+  onRead: (schema: Record<string, Validator>) => void,
+): Record<string, Validator> {
+  const schema: Record<string, Validator> = {};
+  return Object.defineProperty(schema, 'a', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      onRead(schema);
+      return string();
+    },
+  });
+}
+
+test('should fail a key a strict schema getter adds while object() reads it', async () => {
+  const schema = schemaReading((read) => {
+    read['b'] = string();
+  });
+
+  assert.deepInclude(
+    await object(schema, { strict: true })({ a: 'ok', b: 123 }),
+    { state: 'invalid', code: 'unknownKeys', params: { keys: ['b'] } },
+  );
+});
+
+test('should take the key of a strict schema getter that deletes itself while object() reads it', async () => {
+  const schema = schemaReading((read) => {
+    Reflect.deleteProperty(read, 'a');
+  });
+
+  assert.deepInclude(await object(schema, { strict: true })({ a: 'ok' }), {
+    state: 'valid',
+    value: { a: 'ok' },
+  });
+});
