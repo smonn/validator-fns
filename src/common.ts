@@ -13,16 +13,16 @@ export interface OneOfValidatorMessageParameters<
 }
 
 /**
- * The time of a `Date` from any realm, or `undefined` for any other value.
- * `getTime` throws unless `this` is a `Date`, which `instanceof` can't tell
- * across realms, and unlike `valueOf` the value can't override it.
+ * The time of a date from any realm, or `NaN` for any other value. `getTime`
+ * throws unless `this` is a `Date`, which `instanceof` can't tell across
+ * realms, and unlike `valueOf` the value can't override it.
  * @internal
  */
-function timeOf(value: unknown): number | undefined {
+function timeOf(value: unknown): number {
   try {
     return Date.prototype.getTime.call(value);
   } catch {
-    return undefined;
+    return Number.NaN;
   }
 }
 
@@ -42,11 +42,9 @@ export function oneOf<T extends string | number | boolean | Date>(
   return createValidatorTest(
     'oneOf',
     (value: T) => {
+      // NaN equals nothing, so only a valid date matches by its time.
       const time = timeOf(value);
-      return (
-        values.includes(value) ||
-        (time !== undefined && values.some((x) => timeOf(x) === time))
-      );
+      return values.includes(value) || values.some((x) => timeOf(x) === time);
     },
     message,
     () => ({ values }),
