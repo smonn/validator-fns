@@ -1,9 +1,10 @@
 import { setOwn, type ValidatorMessageParameters } from '../shared.js';
 
 /**
- * The value of an own data property, or `undefined` for anything else: a
- * missing or inherited key, a getter, which it doesn't run, or a target such
- * as a revoked Proxy, whose trap throws.
+ * The value of an object's own data property, or `undefined` for anything
+ * else: a target that isn't an object, a missing or inherited key, a getter,
+ * which it doesn't run, or a target such as a revoked Proxy, whose trap
+ * throws.
  * @internal
  */
 export function ownData(target: unknown, key: PropertyKey): unknown {
