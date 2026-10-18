@@ -14,16 +14,30 @@ const repoRoot = path.join(import.meta.dirname, '..');
 const script = path.join(repoRoot, 'scripts/check-dist-syntax.mjs');
 const tsdown = path.join(repoRoot, 'node_modules/tsdown/dist/run.mjs');
 
+/** A README whose polyfill list names each of `apis`. */
+function readmeListing(...apis: string[]) {
+  return [
+    '## Supported environments',
+    '',
+    'To support older environments, transpile or polyfill these:',
+    '',
+    ...apis.map((api) => `- \`${api}\``),
+    '- `Promise`, `URL`, and the rest of ES2015',
+    '',
+  ].join('\n');
+}
+
 /**
- * Runs a copy of the script next to a dist folder holding `files`, so it
- * scans them the way it scans the real dist.
+ * Runs a copy of the script next to a dist folder holding `files` and a
+ * README, so it scans them the way it scans the real dist.
  */
-function run(files: Record<string, string>) {
+function run(files: Record<string, string>, readme = readmeListing()) {
   const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-'));
   mkdirSync(path.join(root, 'scripts'));
   mkdirSync(path.join(root, 'dist'));
   const copy = path.join(root, 'scripts', path.basename(script));
   copyFileSync(script, copy);
+  writeFileSync(path.join(root, 'README.md'), readme);
   for (const [name, code] of Object.entries(files)) {
     writeFileSync(path.join(root, 'dist', name), code);
   }
