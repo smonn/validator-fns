@@ -118,6 +118,12 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
 test.each<[string, TypeValidator<unknown, unknown>, unknown, string]>([
   ['string()', string(), Symbol('s'), 'Failed to parse value to string.'],
   ['string() with an object', string(), {}, 'Failed to parse value to string.'],
+  [
+    'string() with an invalid date',
+    string(),
+    new Date(Number.NaN),
+    'Failed to parse value to string.',
+  ],
   ['number()', number(), 'abc', 'Failed to parse value to number.'],
   ['date()', date(), 'tomorrow', 'Failed to parse value to date.'],
   ['date() with a boolean', date(), true, 'Failed to parse value to date.'],

@@ -498,7 +498,7 @@ To use this with a library such as [Formik][formik], you can use the resulting `
 
 Casts value to a string, or keeps `null` or `undefined` if using the default string parser. `config` is optional.
 
-The default parser accepts strings, numbers, bigints, booleans, dates (as an ISO string), and `String`, `Number`, or `Boolean` objects. Any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to string.`
+The default parser accepts strings, numbers, bigints, booleans, valid dates (as an ISO string), and `String`, `Number`, or `Boolean` objects. An invalid `Date`, any other object, including arrays and functions, and symbols give an invalid result with the message `Failed to parse value to string.`
 
 Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `url`, and `uuid`.
 
