@@ -153,3 +153,109 @@ test.each(['/a,b/s', '/a(b)./s'])(
     assert.include(result.stderr, 'regex flag d, s or v');
   },
 );
+
+test.each([
+  [['BigInt'], 'let a=BigInt(b);'],
+  [['BigInt'], 'let a=BigInt.asIntN(64,b);'],
+  [['WeakRef'], 'let a=new WeakRef(b);'],
+  [['FinalizationRegistry'], 'let a=new FinalizationRegistry(b);'],
+  [['AggregateError'], 'let a=b instanceof AggregateError;'],
+  [['structuredClone'], 'let a=structuredClone(b);'],
+  [['structuredClone'], 'let a=globalThis.structuredClone(b);'],
+  [['Object.hasOwn'], 'let a=Object.hasOwn(b,c);'],
+  [['Object.hasOwn'], 'let a=Object.hasOwn.call(void 0,b,c);'],
+  [['Promise.any'], 'let a=Promise.any(b);'],
+  [['Intl.ListFormat'], 'let a=new Intl.ListFormat(`en`);'],
+  [['URL.canParse'], 'let a=URL.canParse(b);'],
+  [['Array.prototype.at', 'String.prototype.at'], 'let a=b.at(-1);'],
+  [
+    ['Array.prototype.at', 'String.prototype.at'],
+    'let a=Array.prototype.at.call(b,-1);',
+  ],
+  [['Array.prototype.at', 'String.prototype.at'], 'let a=b.at?.(-1);'],
+  [
+    ['Array.prototype.at', 'String.prototype.at'],
+    'let a=(t=b.at)==null?void 0:t.call(b,-1);',
+  ],
+  [['Array.prototype.findLast'], 'let a=b.findLast(c);'],
+  [['Array.prototype.findLastIndex'], 'let a=b.findLastIndex(c);'],
+  [['String.prototype.replaceAll'], 'let a=b.replaceAll(c,d);'],
+  [['Error.cause'], 'throw new Error(`a`,{cause:b});'],
+  [['Error.cause'], 'throw TypeError(`a${String(b)}`,{cause:b});'],
+  [
+    ['Error.cause'],
+    'throw Error(`a${b.map((c)=>JSON.stringify(c))}`,{cause:b});',
+  ],
+  [['Error.cause'], 'throw Error(a,{b:{c:1},cause:d});'],
+  [
+    ['Error.cause'],
+    'class A extends Error{constructor(a,b){super(a,{cause:b})}}',
+  ],
+])('flags %j: fails unless the README lists it', (apis, code) => {
+  const unlisted = run({ 'index.js': code });
+  assert.strictEqual(unlisted.status, 1);
+  for (const api of apis) {
+    assert.include(unlisted.stderr, api);
+  }
+  const listed = run({ 'index.js': code }, readmeListing(...apis));
+  assert.strictEqual(listed.status, 0, listed.stderr);
+});
+
+test('needs every API a method name could be', () => {
+  const result = run(
+    { 'index.js': 'let a=b.at(-1);' },
+    readmeListing('Array.prototype.at'),
+  );
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'String.prototype.at');
+});
+
+test.each([
+  ['an identifier in a string', 'let a=`Expected a BigInt or WeakRef`;'],
+  ['an identifier in a string', 'let a="Use Object.hasOwn, at least";'],
+  ['an identifier in a string', "let a='a cause of failure';"],
+  ['a longer name', 'let a=b.atom(c)+b.attach(c)+b.withdraw(c);'],
+  ['a property of the same name', 'let a=b.BigInt(c)+b.structuredClone(c);'],
+  [
+    'a method of another object',
+    'let a=b.hasOwn(c)+Reflect.any(c)+myObject.hasOwn(c);',
+  ],
+  ['a property named cause', 'let a={cause:b};'],
+  ['a cause passed to another call', 'let a=f(`a`,{cause:b});'],
+  ['an Error option named like cause', 'throw Error(`a`,{causes:b});'],
+  ['a function named like an Error', 'let a=formatError(b,{cause:c});'],
+])('passes %s', (_, code) => {
+  const result = run({ 'index.js': code });
+  assert.strictEqual(result.status, 0, result.stderr);
+});
+
+test('fails on code quoted in a string', () => {
+  const result = run({ 'index.js': 'let a=`Call b.at(-1)`;' });
+  assert.strictEqual(result.status, 1);
+});
+
+test('names the API, line and column', () => {
+  const result = run({ 'index.js': 'let a;\nlet b=Object.hasOwn(c,d);' });
+  assert.include(result.stderr, 'index.js:2:7 `Object.hasOwn`');
+});
+
+test('counts only the polyfill list', () => {
+  const readme = `${readmeListing()}\n## API\n\nUses \`Object.hasOwn\`.\n`;
+  const result = run({ 'index.js': 'let a=Object.hasOwn(b,c);' }, readme);
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'Object.hasOwn');
+});
+
+test('fails when the README has no polyfill list', () => {
+  const result = run({ 'index.js': 'let a=1;' }, '# validator-fns\n');
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'polyfill list');
+});
+
+test("passes the README's own polyfill list", () => {
+  const result = run(
+    { 'index.js': 'let a=b.replaceAll(c,d);' },
+    readFileSync(path.join(repoRoot, 'README.md'), 'utf8'),
+  );
+  assert.strictEqual(result.status, 0, result.stderr);
+});
