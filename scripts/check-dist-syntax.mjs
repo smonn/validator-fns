@@ -26,7 +26,12 @@ const unsupported = [
   [/\(\?</g, 'regex named group or lookbehind'],
   [/\(\?[a-z-]+:/g, 'regex modifiers'],
   [/\\{1,2}(?:[pP]\{|k<)/g, 'regex property escape or named backreference'],
-  [/\bRegExp\([^,)]*,\s*["'`][a-z]*[dsv]/g, 'regex flag d, s or v'],
+  // The pattern is a quoted string, which can hold commas and parentheses,
+  // or a plain expression.
+  [
+    /\bRegExp\(\s*(?:`(?:[^`\\]|\\.)*`|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|[^,)"'`]*)\s*,\s*["'`][a-z]*[dsv]/gs,
+    'regex flag d, s or v',
+  ],
   [/\b(?:0[box][\da-f_]+|\d[\d_]*)n\b/gi, 'BigInt literal'],
 ];
 

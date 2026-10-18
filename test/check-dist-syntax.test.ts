@@ -1,13 +1,18 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { assert, test } from 'vitest';
 
-const script = path.join(
-  import.meta.dirname,
-  '../scripts/check-dist-syntax.mjs',
-);
+const repoRoot = path.join(import.meta.dirname, '..');
+const script = path.join(repoRoot, 'scripts/check-dist-syntax.mjs');
+const tsdown = path.join(repoRoot, 'node_modules/tsdown/dist/run.mjs');
 
 /**
  * Runs a copy of the script next to a dist folder holding `files`, so it
@@ -57,6 +62,21 @@ test.each([
     'let a=RegExp(`(?<y>a)\\\\k<y>`);',
   ],
   ['regex flag d, s or v', 'let a=RegExp(b,`gu`);', 'let a=RegExp(`a.b`,`s`);'],
+  [
+    'regex flag d, s or v',
+    "let a=RegExp('a,b','g');",
+    "let a=RegExp('a,b','s');",
+  ],
+  [
+    'regex flag d, s or v',
+    'let a=RegExp("a(b).");',
+    'let a=RegExp("a(b).","s");',
+  ],
+  [
+    'regex flag d, s or v',
+    'let a=RegExp(`a\\`,b`,`u`);',
+    'let a=RegExp(`a\\`,b`,`d`);',
+  ],
   ['BigInt literal', 'let a1n=10,b=0x1f;', 'let a=10n;'],
   ['BigInt literal', 'let a=0x1f;', 'let a=0x1fn;'],
 ])('flags %s: passes %s, fails %s', (feature, passing, failing) => {
@@ -91,3 +111,31 @@ test('finds syntax after a regex that follows a block', () => {
   assert.strictEqual(result.status, 1);
   assert.include(result.stderr, 'logical assignment');
 });
+
+test.each(['/a,b/s', '/a(b)./s'])(
+  'finds the flags of %s in the build output',
+  (regex) => {
+    // Builds with tsdown.config.ts, so its target turns the regex into a
+    // RegExp call.
+    const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-build-'));
+    const entry = path.join(root, 'entry.ts');
+    const outDir = path.join(root, 'out');
+    writeFileSync(entry, `export const pattern = ${regex};\n`);
+    const built = spawnSync(
+      process.execPath,
+      [tsdown, entry, '-d', outDir, '--no-dts', '--no-sourcemap'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    assert.strictEqual(built.status, 0, built.stderr);
+    const esm = readFileSync(path.join(outDir, 'entry.js'), 'utf8');
+    assert.include(esm, 'RegExp(');
+    const result = run({
+      'index.js': esm,
+      'index.cjs': readFileSync(path.join(outDir, 'entry.cjs'), 'utf8'),
+    });
+    assert.strictEqual(result.status, 1);
+    assert.include(result.stderr, 'index.js:1:');
+    assert.include(result.stderr, 'index.cjs:1:');
+    assert.include(result.stderr, 'regex flag d, s or v');
+  },
+);
