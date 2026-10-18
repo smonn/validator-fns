@@ -3,6 +3,7 @@ import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';
 import { guardRun } from './nesting.js';
+import { stepOf } from './sync.js';
 import { type Run, toValidator } from './promises.js';
 
 /**
@@ -70,7 +71,8 @@ function build<T, E, P, V>(
  * @internal
  */
 export function defineType<T, E, P>(def: Def<T, E, P>): TypeValidator<T, E> {
-  return build(def, reject<E>);
+  // Each test's twin, looked up once here instead of on every run.
+  return build({ ...def, steps: def.steps.map(stepOf) }, reject<E>);
 }
 
 /**
