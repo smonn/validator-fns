@@ -207,6 +207,20 @@ test.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
   },
 );
 
+test('should keep the params own enumerable data when a getter in them throws', async () => {
+  const params = {
+    m: 1,
+    get n(): number {
+      throw new Error('getter');
+    },
+  };
+  Object.defineProperty(params, 'k', { value: 2, enumerable: false });
+  assert.deepInclude(
+    await invalid({ code: 'x', params, message: '{m} {k} {n}', field: 'f' }),
+    { message: '1 undefined undefined' },
+  );
+});
+
 const { proxy: revokedParams, revoke: revokeParams } = Proxy.revocable(
   { n: 1 },
   {},
