@@ -1,3 +1,8 @@
+// One table runs every input through each entry point (the safe call,
+// parse() and ~standard.validate), as is and in optional(). It stays one file
+// because its rows and runner have no other home: the rev-dep tests boundary
+// lets a test file import only src/index.ts, so a shared table module would
+// need that boundary widened.
 import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
@@ -1703,28 +1708,39 @@ const cases = wraps.flatMap(({ name, wrap, expect }) =>
   })),
 );
 
-test.each(cases)('$name', async ({ validator, input, field, expect }) => {
-  assert.deepEqual(await validator(input, field), expect, 'safe call');
+test.each(cases)(
+  'the safe call gives the result: $name',
+  async ({ validator, input, field, expect }) => {
+    assert.deepEqual(await validator(input, field), expect);
+  },
+);
 
-  const parsed = await parse(validator, input, field).then(
-    (value) => ({ value }),
-    (error: unknown) =>
-      error instanceof FailureError ? { failure: error.failure } : { error },
-  );
-  assert.deepEqual(
-    parsed,
-    expect.state === 'valid' ? { value: expect.value } : { failure: expect },
-    'parse()',
-  );
+test.each(cases)(
+  'parse() gives the value or rejects with the failure: $name',
+  async ({ validator, input, field, expect }) => {
+    const parsed = await parse(validator, input, field).then(
+      (value) => ({ value }),
+      (error: unknown) =>
+        error instanceof FailureError ? { failure: error.failure } : { error },
+    );
+    assert.deepEqual(
+      parsed,
+      expect.state === 'valid' ? { value: expect.value } : { failure: expect },
+    );
+  },
+);
 
-  // createValidator() returns a type validator as it is and gives a test its
-  // own ~standard. ~standard.validate calls the validator without a field.
-  const schema = createValidator(validator)['~standard'];
-  const unnamed = field === undefined ? expect : await validator(input);
-  assert.include(schema, { version: 1, vendor: 'validator-fns' });
-  assert.deepEqual<unknown>(
-    await schema.validate(input),
-    standardOf(unnamed),
-    '~standard',
-  );
-});
+// createValidator() returns a type validator as it is and gives a test its own
+// ~standard. ~standard.validate calls the validator without a field.
+test.each(cases)(
+  '~standard.validate gives the value or the issues: $name',
+  async ({ validator, input, field, expect }) => {
+    const schema = createValidator(validator)['~standard'];
+    const unnamed = field === undefined ? expect : await validator(input);
+    assert.include(schema, { version: 1, vendor: 'validator-fns' });
+    assert.deepEqual<unknown>(
+      await schema.validate(input),
+      standardOf(unnamed),
+    );
+  },
+);
