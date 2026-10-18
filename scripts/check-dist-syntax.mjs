@@ -168,7 +168,6 @@ function readTemplate(code, start, braces) {
 }
 
 /**
- * Reads the punctuator that starts at `start`.
  * @param {string} code
  * @param {number} start
  * @param {string[]} braces open braces, innermost last
@@ -187,7 +186,6 @@ function readPunctuator(code, start, braces) {
 }
 
 /**
- * Reads the name, number or punctuator that starts at `start`.
  * @param {string} code
  * @param {number} start
  * @param {string[]} braces open braces, innermost last
@@ -346,10 +344,7 @@ function isClassKeyword(tokens, index) {
   return !['.', '?.'].includes(before) && ![':', '('].includes(after);
 }
 
-/**
- * Starts the next member of a class body.
- * @param {Scope} body
- */
+/** @param {Scope} body */
 function resetMember(body) {
   body.member = 'key';
   body.key = [];
