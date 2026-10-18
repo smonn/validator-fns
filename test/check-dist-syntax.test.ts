@@ -166,6 +166,24 @@ test.each(['/a,b/s', '/a(b)./s'])(
 );
 
 test.each([
+  ['Intl.Segmenter', 'export const a = new Intl.Segmenter();'],
+  [
+    'Intl.RelativeTimeFormat',
+    'export const a = new Intl.RelativeTimeFormat();',
+  ],
+  ['Intl.Segmenter', 'export const a = new globalThis.Intl.Segmenter();'],
+  ['WeakRef', 'export const a = new WeakRef();'],
+  ['WeakRef', 'export const a = new globalThis.WeakRef();'],
+])('finds %s built from %s', (api, source) => {
+  // The minifier drops a constructor's empty parentheses.
+  const files = build(source);
+  assert.notInclude(files['index.js'], '()');
+  const result = run(files);
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, `\`${api}\``);
+});
+
+test.each([
   [['BigInt'], 'let a=BigInt(b);'],
   [['BigInt'], 'let a=BigInt.asIntN(64,b);'],
   [['WeakRef'], 'let a=new WeakRef(b);'],
