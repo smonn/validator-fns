@@ -59,11 +59,12 @@
   "scripts": {
     "build": "tsdown",
     "check": "run-s changeset:status check:code",
-    "check:code": "run-s ignores format:check lint typecheck deps fta coverage build publint attw smoke bench:smoke lint:bench",
+    "check:code": "run-s ignores format:check lint typecheck deps fta coverage build syntax publint attw smoke bench:smoke lint:bench",
     "changeset:status": "node scripts/changeset-status.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "ignores": "node scripts/check-ignores.mjs",
+    "syntax": "node scripts/check-dist-syntax.mjs",
     "lint": "oxlint --deny-warnings --ignore-pattern 'benchmark/**'",
     "lint:bench": "oxlint --deny-warnings benchmark",
     "lint:staged": "lint-staged",
