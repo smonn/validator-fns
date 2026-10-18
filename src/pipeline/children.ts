@@ -7,12 +7,12 @@ import { isThenable, type MaybePromise } from './steps.js';
  * @internal
  */
 export function runEach<C, R extends object>(
-  children: Iterator<[index: number, child: C]>,
+  children: Iterator<C>,
   runOne: (child: C, index: number) => MaybePromise<R>,
   results: R[] = [],
 ): MaybePromise<R[]> {
   for (let next = children.next(); !next.done; next = children.next()) {
-    const result = runOne(next.value[1], next.value[0]);
+    const result = runOne(next.value, results.length);
     if (isThenable(result)) {
       return Promise.resolve(result).then((done) => {
         results.push(done);

@@ -71,7 +71,7 @@ export function properties<V, Tree extends object>(
   }
 
   return (value, field) => {
-    const results = runEach(runs.entries(), ([key, run]) => {
+    const results = runEach(runs.values(), ([key, run]) => {
       const result = run(ownValue(value, key), childField(field, key));
       return andThen(result, (done): [string, Result] => [key, done]);
     });

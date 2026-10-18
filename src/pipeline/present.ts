@@ -35,9 +35,11 @@ function runTests<T, E, P, V>(
     return children;
   }
 
-  return andThen(runSteps(def.steps, children.value, field), (done) =>
-    wordOwn(def.messages, done),
-  );
+  const result = runSteps(def.steps, children.value, field);
+  // Without messages, wordOwn() leaves a result as it is.
+  return def.messages === undefined
+    ? result
+    : andThen(result, (done) => wordOwn(def.messages, done));
 }
 
 /**
