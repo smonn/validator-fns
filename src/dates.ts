@@ -1,4 +1,8 @@
-import { createTypeValidatorTest, createValidatorTest } from './factories.js';
+import {
+  createParser,
+  createTypeValidatorTest,
+  createValidatorTest,
+} from './factories.js';
 import type {
   ConfigBase,
   MessageExtras,
@@ -6,29 +10,47 @@ import type {
   Test,
   ValidatorMessageParameters,
 } from './shared.js';
-import { parseDate } from './parse-date.js';
+import { readDate } from './parse-date.js';
 
 /**
- * Applies a configuration to the date value.
- * @param value Value to modify
+ * Parses a value into a date. Fails a non-blank string that isn't ISO 8601,
+ * and input that isn't a date, number, or string.
+ * @internal
+ */
+const parseDate = createParser(readDate, 'Failed to parse value to date.');
+
+/**
+ * Parses the limit of `minDate()` or `maxDate()`. Throws a `TypeError` for one
+ * it can't read, so bad configuration fails when the test is built.
+ * @param limit Limit to parse
+ */
+function parseLimit(limit: SharedDateValueType): Date | null | undefined {
+  const parsed = parseDate(limit);
+  if (parsed.state === 'invalid') {
+    throw new TypeError(parsed.message);
+  }
+
+  return parsed.value;
+}
+
+/**
+ * Applies a configuration to the parsed date value.
+ * @param value Parsed value
  * @param config Configuration to apply
  * @internal
  */
 function applyDateConfig(
-  value: unknown,
+  value: Date | null | undefined,
   config: DateConfig,
 ): Date | null | undefined {
-  let parsedValue = config.parser(value);
   if (
     config.default !== undefined &&
-    (parsedValue === undefined ||
-      parsedValue === null ||
-      Number.isNaN(parsedValue.getTime()))
+    (value === undefined || value === null || Number.isNaN(value.getTime()))
   ) {
-    parsedValue = config.default;
+    return config.default;
   }
 
-  return parsedValue;
+  return value;
 }
 
 /** @internal */
@@ -52,7 +74,7 @@ export function minDate(
     MessageExtras<MinDateValidatorMessageParameters>
   >,
 ): Test<Date, never> {
-  const parsedDate = parseDate(limit);
+  const parsedDate = parseLimit(limit);
   return createValidatorTest(
     (value: Date) =>
       parsedDate !== null && parsedDate !== undefined && value >= parsedDate,
@@ -82,7 +104,7 @@ export function maxDate(
     MessageExtras<MaxDateValidatorMessageParameters>
   >,
 ): Test<Date, never> {
-  const parsedDate = parseDate(limit);
+  const parsedDate = parseLimit(limit);
   return createValidatorTest(
     (value: Date) =>
       parsedDate !== null && parsedDate !== undefined && value <= parsedDate,

@@ -101,10 +101,18 @@ test('type validators reject undefined and null unless optional()', async () => 
   );
 });
 
-test('string() and number() resolve for any input', async () => {
+test('type validators resolve for any input', async () => {
+  const validators: Validator[] = [
+    string(),
+    number(),
+    boolean(),
+    date(),
+    array(string()),
+    object({ a: string() }),
+  ];
   await fc.assert(
     fc.asyncProperty(anyValue, async (value) => {
-      for (const validate of [string(), number()]) {
+      for (const validate of validators) {
         const result = await validate(value);
         assert.oneOf(result.state, ['valid', 'invalid']);
       }

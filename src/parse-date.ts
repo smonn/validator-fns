@@ -53,16 +53,13 @@ const dateParts = [
   (part = '0') => Number.parseFloat(part) * 1e3,
 ];
 
-/** @internal */
-const parseErrorMessage = 'Failed to parse value to date.';
-
 /**
  * Reads a date from a present value: a date, a number or an ISO 8601 string.
  * Returns `undefined` for a non-blank string that isn't ISO 8601, and for
  * input that isn't a date, number, or string.
  * @param value Value to read
  */
-function readDate(value: unknown): Date | undefined {
+export function readDate(value: unknown): Date | undefined {
   if (value instanceof Date) {
     return value;
   }
@@ -78,25 +75,6 @@ function readDate(value: unknown): Date | undefined {
   // A blank string stays empty, as an invalid date, for `default` and
   // `optional()` to handle.
   return value.trim() === '' ? invalidDate : parseIsoDate(value);
-}
-
-/**
- * Parses a value into a date. Throws a `TypeError` for a non-blank string that
- * isn't ISO 8601, and for input that isn't a date, number, or string.
- * @param value Value to parse
- * @category Parsers
- */
-export function parseDate(value: unknown): Date | null | undefined {
-  if (value === null || value === undefined) {
-    return value;
-  }
-
-  const parsed = readDate(value);
-  if (parsed === undefined) {
-    throw new TypeError(parseErrorMessage);
-  }
-
-  return parsed;
 }
 
 /**

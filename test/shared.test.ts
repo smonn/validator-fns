@@ -111,20 +111,6 @@ test('enums', async () => {
   });
 });
 
-test('custom test that throws an atypical error', async () => {
-  const validate = string(() => {
-    throw 'some error';
-  });
-
-  const result = await validate('hello');
-  assert.deepEqual(result, {
-    state: 'invalid',
-    message: 'some error',
-    field: undefined,
-    errors: undefined,
-  });
-});
-
 test('should return the field of each call when the same value repeats', async () => {
   const validate = number();
   await validate(1, 'first');
@@ -158,18 +144,5 @@ test('should stop at a custom test when it fails between built-in tests', async 
   assert.deepInclude(await validate('abc'), {
     state: 'invalid',
     message: 'custom',
-  });
-});
-
-test('should return an invalid result when a built-in test message throws', async () => {
-  const validate = string(
-    min(5, () => {
-      throw new Error('boom');
-    }),
-  );
-
-  assert.deepInclude(await validate('abc'), {
-    state: 'invalid',
-    message: 'boom',
   });
 });

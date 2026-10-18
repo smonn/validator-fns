@@ -201,8 +201,11 @@ test('should export only the v3 surface', () => {
 });
 
 const money = createTypeValidatorTest(
-  { parser: (value: unknown) => (typeof value === 'number' ? value : null) },
-  (value, config) => config.parser(value),
+  {
+    parser: async (value: unknown, field?: string) =>
+      valid({ value: typeof value === 'number' ? value : null, field }),
+  },
+  (value: number | null | undefined) => value,
 );
 
 // Every kind of type validator, with an input it accepts and one it rejects.

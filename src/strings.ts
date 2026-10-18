@@ -1,4 +1,8 @@
-import { createTypeValidatorTest, createValidatorTest } from './factories.js';
+import {
+  createParser,
+  createTypeValidatorTest,
+  createValidatorTest,
+} from './factories.js';
 import { primitiveToString } from './primitives.js';
 import {
   type ConfigBase,
@@ -30,54 +34,34 @@ export interface StringConfig extends ConfigBase<string> {
 }
 
 /**
- * Parses a value into a string.
- * @param value Value to parse
+ * Parses a value into a string. Fails anything but a string, number, bigint,
+ * boolean, date or an object wrapping one.
  * @internal
  */
-function parseString(value: unknown): string | null | undefined {
-  if (value === null || value === undefined) {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  const parsed = primitiveToString(value);
-  if (parsed === undefined) {
-    throw new TypeError('Failed to parse value to string.');
-  }
-
-  return parsed;
-}
+const parseString = createParser(
+  (value) =>
+    value instanceof Date ? value.toISOString() : primitiveToString(value),
+  'Failed to parse value to string.',
+);
 
 /**
- * Applies a configuration to the string value.
- * @param value Value to modify
+ * Applies a configuration to the parsed string value.
+ * @param value Parsed value
  * @param config Configuration to apply
  * @internal
  */
 function applyStringConfig(
-  value: unknown,
+  value: string | null | undefined,
   config: StringConfig,
 ): string | null | undefined {
-  let parsedValue = config.parser(value);
-  if (
+  const parsedValue =
     config.default !== undefined &&
-    (parsedValue === undefined || parsedValue === null || parsedValue === '')
-  ) {
-    parsedValue = config.default;
-  }
-
-  if (config.trim && typeof parsedValue === 'string') {
-    parsedValue = parsedValue.trim();
-  }
-
-  return parsedValue;
+    (value === undefined || value === null || value === '')
+      ? config.default
+      : value;
+  return config.trim && typeof parsedValue === 'string'
+    ? parsedValue.trim()
+    : parsedValue;
 }
 
 export interface MatchesValidatorMessageParameters extends ValidatorMessageParameters<string> {

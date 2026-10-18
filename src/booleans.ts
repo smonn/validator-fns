@@ -1,42 +1,37 @@
 import { createTypeValidatorTest } from './factories.js';
-import type { ConfigBase } from './shared.js';
+import { type ConfigBase, type Result, validResult } from './shared.js';
 
 /**
- * Parses a value into a boolean.
+ * Parses a value into a boolean. It never fails.
  * @param value Value to parse
+ * @param field Field name
  * @internal
  */
-function parseBoolean(value: unknown): boolean | null | undefined {
-  if (value === undefined || value === null) {
-    return value;
-  }
-
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  return Boolean(value);
+function parseBoolean(
+  value: unknown,
+  field?: string,
+): Result<boolean | null | undefined, never> {
+  return validResult({
+    value: value === undefined || value === null ? value : Boolean(value),
+    field,
+  });
 }
 
 /**
- * Applies a configuration to the boolean value.
- * @param value Value to modify
+ * Applies a configuration to the parsed boolean value.
+ * @param value Parsed value
  * @param config Configuration to apply
  * @internal
  */
 function applyBooleanConfig(
-  value: unknown,
+  value: boolean | null | undefined,
   config: BooleanConfig,
 ): boolean | null | undefined {
-  let parsedValue = config.parser(value);
-  if (
-    config.default !== undefined &&
-    (parsedValue === undefined || parsedValue === null)
-  ) {
-    parsedValue = config.default;
+  if (config.default !== undefined && (value === undefined || value === null)) {
+    return config.default;
   }
 
-  return parsedValue;
+  return value;
 }
 
 /**

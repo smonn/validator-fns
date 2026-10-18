@@ -21,12 +21,15 @@ import {
 const failing = createValidator(async (value, field) =>
   invalid({ message: 'custom', value, field }),
 );
+const unreadable = async (value: unknown, field?: string) =>
+  invalid<never>({ message: 'parser', value, field });
 
 // Each validator with an input it fails, one per way a failure is made.
 const failures: [string, Validator, unknown][] = [
   ['string, missing', string(), ''],
   ['string, unparseable', string(), {}],
   ['string, test', string(min(5, 'min')), 'abc'],
+  ['string, parser', string({ parser: unreadable }), 'x'],
   ['number, unparseable', number(), 'abc'],
   ['number, test', number(min(5, 'min')), '3'],
   ['number, integer', number(integer('integer')), '1.5'],
@@ -36,6 +39,7 @@ const failures: [string, Validator, unknown][] = [
   ['array, missing', array(number()), null],
   ['array, item', array(number()), ['abc']],
   ['array, test', array(number(), min(5, 'min')), ['3']],
+  ['array, parser', array(number(), { parser: unreadable }), ['3']],
   ['object, missing', object({ a: string() }), undefined],
   ['object, field', object({ a: string() }), {}],
   [

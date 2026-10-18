@@ -34,34 +34,43 @@ const compilers = [
 const fixture = `import {
   createTypeValidatorTest,
   type ExtractValue,
+  invalid,
   object,
   optional,
+  type Result,
   string,
+  valid,
   type Validator,
   type ValidatorMessage,
 } from 'validator-fns';
 
 interface MoneyConfig {
-  parser: (value: unknown) => number | null | undefined;
+  parser: (
+    value: unknown,
+    field?: string,
+  ) => Promise<Result<number | null | undefined>>;
   requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
 }
 
-/** Reads a number or a numeric string. Anything else is missing. */
-function parseAmount(value: unknown): number | undefined {
-  if (typeof value === 'string') {
-    return Number.parseFloat(value);
+/** Reads a number or a numeric string, and fails anything else present. */
+async function parseAmount(
+  value: unknown,
+  field?: string,
+): Promise<Result<number | null | undefined>> {
+  const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (typeof amount === 'number' || amount === null || amount === undefined) {
+    return valid({ value: amount, field });
   }
 
-  return typeof value === 'number' ? value : undefined;
+  return invalid({ message: 'Must be an amount.', field });
 }
 
 function applyMoneyConfig(
-  value: unknown,
+  amount: number | null | undefined,
   config: MoneyConfig,
 ): number | null | undefined {
-  const amount = config.parser(value);
   return config.cents && typeof amount === 'number'
     ? Math.round(amount * 100)
     : amount;

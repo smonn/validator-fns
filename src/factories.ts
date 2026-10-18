@@ -32,15 +32,16 @@ type SyncTwin<T> = {
  * Creates a type validator.
  * @typeParam T The basic type for the final value to be validated.
  * @typeParam C The configuration type.
- * @param defaultParser Parser to convert value into type.
- * @param applyConfig Function that applies configuration to value.
+ * @param defaultConfig Configuration with at least the `parser`, which
+ * converts the input into the type.
+ * @param applyConfig Function that applies configuration to the parsed value.
  * @category Helpers
  */
 export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   // NoInfer makes TypeScript infer C from applyConfig's config parameter, so C
   // keeps the options that defaultConfig leaves out. Needs TypeScript 5.4.
   defaultConfig: NoInfer<C>,
-  applyConfig: (value: unknown, config: C) => T | null | undefined,
+  applyConfig: (value: T | null | undefined, config: C) => T | null | undefined,
 ): (
   config?: Partial<C> | Test<T, string>,
   ...tests: Test<T, string>[]
@@ -57,38 +58,39 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     return requirable<T, string>(
       finalConfig.requiredMessage,
       async (value, field, onEmpty) => {
-        try {
-          const parsedValue = applyConfig(value, finalConfig);
-          if (
-            parsedValue === null ||
-            parsedValue === undefined ||
-            isBlank(parsedValue)
-          ) {
-            return onEmpty(parsedValue, field);
-          }
-
-          for (const validatorTest of allTests) {
-            const syncTest = validatorTest[syncTwin];
-            // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
-            // await in a ternary arm a negative count.
-            let result: Result<unknown, string>;
-            if (syncTest) {
-              result = syncTest(parsedValue, field);
-            } else {
-              result = await validatorTest(parsedValue, field);
-            }
-            if (result.state === 'invalid') {
-              return result;
-            }
-          }
-
-          return validResult({ value: parsedValue, field });
-        } catch (error) {
-          return invalidResult<string>({
-            message: error instanceof Error ? error.message : String(error),
-            field,
-          });
+        const parsing = finalConfig.parser(value, field);
+        // Built-in parsers return a result synchronously, which skips an
+        // await.
+        const parsed = parsing instanceof Promise ? await parsing : parsing;
+        if (parsed.state === 'invalid') {
+          return invalidResult({ message: parsed.message, field });
         }
+
+        const parsedValue = applyConfig(parsed.value, finalConfig);
+        if (
+          parsedValue === null ||
+          parsedValue === undefined ||
+          isBlank(parsedValue)
+        ) {
+          return onEmpty(parsedValue, field);
+        }
+
+        for (const validatorTest of allTests) {
+          const syncTest = validatorTest[syncTwin];
+          // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
+          // await in a ternary arm a negative count.
+          let result: Result<unknown, string>;
+          if (syncTest) {
+            result = syncTest(parsedValue, field);
+          } else {
+            result = await validatorTest(parsedValue, field);
+          }
+          if (result.state === 'invalid') {
+            return result;
+          }
+        }
+
+        return validResult({ value: parsedValue, field });
       },
     );
   };
@@ -135,4 +137,22 @@ export function createValidatorTest<T, E, X extends object>(
   const validationTest: Test<T, E> = async (value, field) => twin(value, field);
 
   return Object.assign(validationTest, { [syncTwin]: twin });
+}
+
+/**
+ * Makes a built-in parser from `read`, which converts a present value and
+ * returns `undefined` for input it can't read. `undefined` and `null` stay as
+ * they are, for the missing check.
+ * @internal
+ */
+export function createParser<T>(
+  read: (value: unknown) => T | undefined,
+  message: string,
+): (value: unknown, field?: string) => Result<T | null | undefined, never> {
+  return (value, field) => {
+    const parsed = value === null || value === undefined ? value : read(value);
+    return parsed === undefined && value !== undefined
+      ? invalidResult({ message, field })
+      : validResult({ value: parsed, field });
+  };
 }
