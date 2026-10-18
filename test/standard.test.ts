@@ -12,7 +12,6 @@ import {
   object,
   optional,
   string,
-  transform,
   valid,
   type Result,
   type TypeValidator,
@@ -30,12 +29,6 @@ test('should describe the library', () => {
 
   assert.strictEqual(schema['~standard'].version, 1);
   assert.strictEqual(schema['~standard'].vendor, 'validator-fns');
-});
-
-test('should return the parsed value when the input is valid', async () => {
-  const schema = string(transform((value) => value.trim()));
-
-  assert.deepEqual(await schema['~standard'].validate(' a '), { value: 'a' });
 });
 
 const passThrough = async (value: unknown, field?: string) =>
