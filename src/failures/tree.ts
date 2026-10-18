@@ -1,10 +1,6 @@
-import {
-  type Failure,
-  hasOwnProperty,
-  type Result,
-  setOwn,
-} from '../shared.js';
+import { type Failure, type Result, setOwn } from '../shared.js';
 import { failure } from './make.js';
+import { ownData } from './own.js';
 
 /**
  * The errors `check()` produces at `Path`: a `properties` failure for each
@@ -67,22 +63,10 @@ export function propertiesTree<Tree extends object>(
 }
 
 /**
- * The own property `key` of an object, or `undefined`, for the value of a
- * `check()` path level.
- * @internal
- */
-function ownAt(value: unknown, key: string): unknown {
-  return typeof value === 'object' &&
-    value !== null &&
-    hasOwnProperty(value, key)
-    ? Reflect.get(value, key)
-    : undefined;
-}
-
-/**
  * Wraps a `check()` failure, made with the full field, in an unworded
  * `properties` failure for each name in `path`. Each gets the value at its
- * level for its message: the object's own, then each name's own property.
+ * level for its message: the object's own, then each name's own data
+ * property, read without running a getter.
  * @internal
  */
 export function nestAt(
@@ -100,7 +84,7 @@ export function nestAt(
   setOwn(
     errors,
     key,
-    nestAt(rest, made, childField(field, key), ownAt(value, key)),
+    nestAt(rest, made, childField(field, key), ownData(value, key)),
   );
   return failure({ code: 'properties', params: {}, value, field, errors });
 }

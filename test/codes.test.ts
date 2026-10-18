@@ -4,6 +4,7 @@ import {
   boolean,
   check,
   createTypeValidator,
+  createValidator,
   createValidatorTest,
   date,
   email,
@@ -362,6 +363,42 @@ test('should nest a check() failure at its path in a properties failure', async 
   assert.deepInclude(worded, { message: 'Fix the form.' });
   assert.deepEqual(messageTree(worded), { confirm: 'Must match.' });
 });
+
+let getterReads = 0;
+const { proxy: revokedZip, revoke: revokeZip } = Proxy.revocable(
+  { z: 'a' },
+  {},
+);
+revokeZip();
+
+test.each<[string, { z: string }]>([
+  [
+    'a getter',
+    {
+      get z(): string {
+        getterReads += 1;
+        throw new Error('getter');
+      },
+    },
+  ],
+  ['a revoked Proxy', revokedZip],
+])(
+  'should nest a check() failure without reading the path when a level is %s',
+  async (_, inner) => {
+    getterReads = 0;
+    const validate = object(
+      {
+        s: createValidator(async (_value: unknown, field?: string) =>
+          valid({ value: inner, field }),
+        ),
+      },
+      check(['s', 'z'], () => false, 'bad'),
+    );
+    const result = await validate({ s: 1 });
+    assert.deepEqual(messageTree(result), { s: { z: 'bad' } });
+    assert.strictEqual(getterReads, 0);
+  },
+);
 
 test('should make a failure with a custom code through invalid()', async () => {
   assert.deepEqual(await invalid({ code: 'taken', field: 'name' }), {
