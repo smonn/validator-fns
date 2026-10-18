@@ -114,7 +114,7 @@ test('should word a validator own failures from its messages config', async () =
       'Bad items.',
     ],
     [
-      'array test',
+      'length check',
       array(number(), { messages: { max: 'Too many.' } }, max(1))([1, 2]),
       'Too many.',
     ],

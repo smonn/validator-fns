@@ -243,7 +243,7 @@ const rows: Row[] = [
     error: 'name: min',
   },
   {
-    label: 'an array test failure, a leaf even when items fail',
+    label: 'a length check failure, a leaf even when items fail',
     validator: array(string(min(2)), max(2, 'At most two.')),
     input: ['a', 'bb', 'c'],
     field: 'tags',
