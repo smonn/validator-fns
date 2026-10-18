@@ -347,6 +347,16 @@ const rows: Row[] = [
     issues: [{ message: 'items', code: 'items', params: {} }],
     messages: [null],
   },
+  {
+    label: 'a container with an empty tree',
+    validator: createValidator(async (value: unknown, field?: string) =>
+      invalid({ code: 'items', value, field, errors: [] }),
+    ),
+    input: [],
+    failure: items(undefined, []),
+    issues: [{ message: 'items', code: 'items', params: {} }],
+    messages: [],
+  },
 ];
 
 for (const row of rows) {
