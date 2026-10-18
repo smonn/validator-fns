@@ -31,6 +31,7 @@ const customValidator = (value, field) => {
   }
 
   return invalid({
+    code: 'hello',
     message: 'Must be "hello".',
     value,
     field,
@@ -41,14 +42,14 @@ const validate = object({
   firstName: string({
     default: '',
     trim: true,
-    requiredMessage: 'First name is required.',
+    messages: { required: 'First name is required.' },
   }),
   emailAddress: string(
-    { requiredMessage: 'Email address is required.' },
+    { messages: { required: 'Email address is required.' } },
     email('Must be a valid email address.'),
   ),
   age: number(
-    { requiredMessage: 'Age is required.' },
+    { messages: { required: 'Age is required.' } },
     integer('Age must be a whole number.'),
     min(18, 'Must be at least {min} years old.'),
   ),
@@ -62,7 +63,7 @@ const validate = object({
   ),
   favoriteCarMakers: array(
     string(
-      { requiredMessage: 'Car brand is required.' },
+      { messages: { required: 'Car brand is required.' } },
       oneOf(
         [
           'BMW',
@@ -90,9 +91,9 @@ const validate = object({
       maxDate(tenDaysFromNow, 'Must be at most ten days from now.'),
     ),
   ),
-  optIn: boolean({ requiredMessage: 'Must decide to opt in or out.' }),
+  optIn: boolean({ messages: { required: 'Must decide to opt in or out.' } }),
   notRobot: number(
-    { requiredMessage: 'Must enter the correct answer.' },
+    { messages: { required: 'Must enter the correct answer.' } },
     exact(42, 'This is the answer.'),
   ),
   postalCode: optional(
