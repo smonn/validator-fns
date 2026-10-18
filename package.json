@@ -41,9 +41,26 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./en": {
+      "import": {
+        "types": "./dist/en.d.ts",
+        "default": "./dist/en.js"
+      },
+      "require": {
+        "types": "./dist/en.d.cts",
+        "default": "./dist/en.cjs"
+      }
     }
   },
   "typings": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "en": [
+        "./dist/en.d.cts"
+      ]
+    }
+  },
   "sideEffects": false,
   "engines": {
     "node": ">=22"

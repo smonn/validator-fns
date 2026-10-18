@@ -17,7 +17,7 @@
   "workspaces": [
     {
       "path": ".",
-      "prodEntryPoints": ["src/index.ts"],
+      "prodEntryPoints": ["src/index.ts", "src/en.ts"],
       "devEntryPoints": [
         "test/**/*.test.ts",
         "*.config.{ts,mjs}",
@@ -131,14 +131,20 @@
           ],
         },
         {
+          // The validator-fns/en subpath: the English translation.
+          "name": "en",
+          "pattern": "src/en.ts",
+          "allow": ["src/shared.ts", "src/failures/index.ts"],
+        },
+        {
           "name": "tests",
           "pattern": "test/**/*",
-          "allow": ["src/index.ts"],
+          "allow": ["src/index.ts", "src/en.ts"],
         },
       ],
       "restrictedImportsDetection": {
         "enabled": true,
-        "entryPoints": ["src/index.ts"],
+        "entryPoints": ["src/index.ts", "src/en.ts"],
         "denyModules": ["*"],
       },
       "circularImportsDetection": { "enabled": true },

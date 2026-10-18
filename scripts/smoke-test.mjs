@@ -1,7 +1,8 @@
 // Installs the packed package into an empty project and loads it the way
-// consumers do, through both the require and the import conditions. This
-// catches export map paths that point at files missing from the tarball. It
-// also runs the published RunKit example (`runkitExampleFilename`).
+// consumers do, through both the require and the import conditions, for the
+// root and the validator-fns/en subpath. This catches export map paths that
+// point at files missing from the tarball. It also runs the published RunKit
+// example (`runkitExampleFilename`).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
@@ -22,6 +23,18 @@ const listExports = {
     "console.log(JSON.stringify(Object.keys(require('validator-fns')).sort()))",
   import:
     "import * as v from 'validator-fns'; console.log(JSON.stringify(Object.keys(v).sort()))",
+};
+
+// Words a failure with en, so the subpath and the root share one fill.
+const wordInEnglish = {
+  require: `const { string, min, withMessages } = require('validator-fns');
+const { en } = require('validator-fns/en');
+withMessages(string(min(3)), en)('ab').then((result) =>
+  console.log(JSON.stringify([Object.keys(en).length, result.message])));`,
+  import: `import { string, min, withMessages } from 'validator-fns';
+import { en } from 'validator-fns/en';
+const result = await withMessages(string(min(3)), en)('ab');
+console.log(JSON.stringify([Object.keys(en).length, result.message]));`,
 };
 
 /**
@@ -76,6 +89,29 @@ try {
     'require and import expose different exports',
   );
 
+  /** @type {unknown} */
+  const requiredEn = JSON.parse(
+    run(process.execPath, ['--eval', wordInEnglish.require], consumer),
+  );
+  /** @type {unknown} */
+  const importedEn = JSON.parse(
+    run(
+      process.execPath,
+      ['--input-type=module', '--eval', wordInEnglish.import],
+      consumer,
+    ),
+  );
+  assert.deepEqual(
+    requiredEn,
+    [16, 'Must be at least 3 characters.'],
+    'validator-fns/en through require gave no English',
+  );
+  assert.deepEqual(
+    importedEn,
+    requiredEn,
+    'require and import word validator-fns/en differently',
+  );
+
   const runkit = run(
     process.execPath,
     [join('node_modules', 'validator-fns', 'runkit.cjs')],
@@ -84,7 +120,7 @@ try {
   assert.match(runkit, /firstName: 'Bob'/, 'runkit.cjs logged no valid result');
 
   console.log(
-    `Smoke test passed on Node.js ${process.version}: ${required.length} exports via require and import, and runkit.cjs`,
+    `Smoke test passed on Node.js ${process.version}: ${required.length} exports and validator-fns/en via require and import, and runkit.cjs`,
   );
 } finally {
   rmSync(workDir, { recursive: true, force: true });
