@@ -16,6 +16,7 @@ import {
   type TypeValidator,
   valid,
   type Validator,
+  withMessages,
 } from '../src/index.js';
 
 /** A failure as the safe call returns it. */
@@ -146,6 +147,55 @@ const rows: Row[] = [
     ],
     messages: { a: { b: 'min' }, tags: [null, { name: 'min' }] },
     error: 'user.a.b: min\nuser.tags[1].name: min',
+  },
+  {
+    label: 'withMessages() filling nested failures',
+    validator: withMessages(user, {
+      min: '{field} needs {min}, got {value}.',
+      items: 'Fix the tags.',
+    }),
+    input: { a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] },
+    field: 'user',
+    failure: properties('user', {
+      a: properties('user.a', {
+        b: failed('min', 'user.a.b', {
+          params: { min: 2, amount: 1 },
+          message: 'user.a.b needs 2, got x.',
+        }),
+      }),
+      tags: failed('items', 'user.tags', {
+        message: 'Fix the tags.',
+        errors: [
+          null,
+          properties('user.tags[1]', {
+            name: failed('min', 'user.tags[1].name', {
+              params: { min: 2, amount: 1 },
+              message: 'user.tags[1].name needs 2, got x.',
+            }),
+          }),
+        ],
+      }),
+    }),
+    issues: [
+      {
+        message: 'a.b needs 2, got x.',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['a', 'b'],
+      },
+      {
+        message: 'tags[1].name needs 2, got x.',
+        code: 'min',
+        params: { min: 2, amount: 1 },
+        path: ['tags', 1, 'name'],
+      },
+    ],
+    messages: {
+      a: { b: 'user.a.b needs 2, got x.' },
+      tags: [null, { name: 'user.tags[1].name needs 2, got x.' }],
+    },
+    error:
+      'user.a.b: user.a.b needs 2, got x.\nuser.tags[1].name: user.tags[1].name needs 2, got x.',
   },
   {
     label: 'nested objects and arrays without a field',

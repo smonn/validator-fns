@@ -1,5 +1,6 @@
 // One table runs every input through each entry point (the safe call,
-// parse() and ~standard.validate), as is and in optional(). It stays one file
+// parse() and ~standard.validate), as is, in optional(), in withMessages()
+// and in both orders of the two. It stays one file
 // because its rows and runner have no other home: the rev-dep tests boundary
 // lets a test file import only src/index.ts, so a shared table module would
 // need that boundary widened.
@@ -35,7 +36,10 @@ import {
   url,
   uuid,
   valid,
+  withMessages,
+  type BuiltInCode,
   type Failure,
+  type Messages,
   type Result,
   type Validator,
 } from '../src/index.js';
@@ -59,6 +63,11 @@ type Row = {
   expect: Expect;
   /** What `optional()` of the validator gives, where the wrap rule below doesn't. */
   optional?: Expect | undefined;
+  /**
+   * Whether its leaves' messages were supplied, although they read as their
+   * codes, so `withMessages()` words only its containers.
+   */
+  supplied?: boolean | undefined;
 };
 
 const row = (
@@ -66,7 +75,7 @@ const row = (
   validator: Validator,
   input: unknown,
   expect: Expect,
-  more: { field?: string; optional?: Expect } = {},
+  more: { field?: string; optional?: Expect; supplied?: boolean } = {},
 ): Row => ({ case: name, validator, input, expect, ...more });
 
 const pass = (value: unknown): Expect => ({ value });
@@ -428,6 +437,7 @@ const numberRows: Row[] = [
     anInteger,
     Number.NaN,
     fail('integer', {}, 'integer'),
+    { supplied: true },
   ),
   row('integer() passes zero', anInteger, 0, pass(0)),
   row(
@@ -435,6 +445,7 @@ const numberRows: Row[] = [
     anInteger,
     0.1,
     fail('integer', {}, 'integer'),
+    { supplied: true },
   ),
   ...[0, -10, 10].map((input) =>
     row(
@@ -530,12 +541,15 @@ const aBoolean = boolean({ messages: { required: 'required' } });
 const trueByDefault = boolean({ default: true });
 
 const booleanRows: Row[] = [
-  row('boolean() fails null with required', aBoolean, null, required()),
+  row('boolean() fails null with required', aBoolean, null, required(), {
+    supplied: true,
+  }),
   row(
     'boolean() fails undefined with required',
     aBoolean,
     undefined,
     required(),
+    { supplied: true },
   ),
   row('boolean() passes true', aBoolean, true, pass(true)),
   row('boolean() passes false', aBoolean, false, pass(false)),
@@ -660,8 +674,16 @@ const dateRows: Row[] = [
     '',
     typeFail('date'),
   ),
-  row('date() fails null with required', thisMonth, null, required()),
-  row('date() fails undefined with required', thisMonth, undefined, required()),
+  row('date() fails null with required', thisMonth, null, required(), {
+    supplied: true,
+  }),
+  row(
+    'date() fails undefined with required',
+    thisMonth,
+    undefined,
+    required(),
+    { supplied: true },
+  ),
   row(
     'date() fills undefined with its default',
     epochByDefault,
@@ -1012,6 +1034,7 @@ const testRows: Row[] = [
     untyped(min(1, 'min')),
     '',
     fail('min', { min: 1, amount: 0 }, 'min'),
+    { supplied: true },
   ),
   row("max() checks '' as a string", untyped(max(1, 'max')), '', pass('')),
   row(
@@ -1031,18 +1054,21 @@ const testRows: Row[] = [
     untyped(email('email')),
     '',
     fail('email', {}, 'email'),
+    { supplied: true },
   ),
   row(
     "url() checks '' as a string",
     untyped(url('url')),
     '',
     fail('url', { protocols: ['http:', 'https:'] }, 'url'),
+    { supplied: true },
   ),
   row(
     "uuid() checks '' as a string",
     untyped(uuid('uuid')),
     '',
     fail('uuid', {}, 'uuid'),
+    { supplied: true },
   ),
   row(
     'exact() passes a string of its length',
@@ -1198,12 +1224,14 @@ const missingRows: Row[] = [
     atLeastThree,
     '',
     fail('min', { min: 3, amount: 0 }, 'min'),
+    { supplied: true },
   ),
   row(
     'string() fails a short string',
     atLeastThree,
     'ab',
     fail('min', { min: 3, amount: 2 }, 'min'),
+    { supplied: true },
   ),
   row('string() passes a string at its min', atLeastThree, 'abc', pass('abc')),
   row(
@@ -1277,12 +1305,15 @@ const arrayRows: Row[] = [
     ['foo', 'bar', 'baz'],
     pass(['foo', 'bar', 'baz']),
   ),
-  row('array() fails null with required', threeLetterWords, null, required()),
+  row('array() fails null with required', threeLetterWords, null, required(), {
+    supplied: true,
+  }),
   row(
     'array() fails undefined with required',
     threeLetterWords,
     undefined,
     required(),
+    { supplied: true },
   ),
   row(
     'array() runs its tests on an empty array',
@@ -1333,6 +1364,7 @@ const arrayRows: Row[] = [
         username: child('[2].username', 'min', { min: 3, amount: 2 }, 'min:3'),
       }),
     ]),
+    { supplied: true },
   ),
   row(
     'array() fills undefined with its default',
@@ -1557,6 +1589,7 @@ const objectRows: Row[] = [
         lastName: child('person.lastName', 'required'),
       }),
     }),
+    { supplied: true },
   ),
   row(
     'object() builds undefined from its children',
@@ -1909,9 +1942,83 @@ const rows: Row[] = [
 
 const isMissing = (input: unknown) => input === undefined || input === null;
 
+const isObject = (entry: unknown): entry is object =>
+  typeof entry === 'object' && entry !== null;
+
+const isFailure = (entry: unknown): entry is Failure<unknown> =>
+  isObject(entry) && Reflect.get(entry, 'state') === 'invalid';
+
+/** What `optional()` of a row's validator gives. */
+const optionalExpect = (each: Row): Expect =>
+  each.optional ??
+  (isMissing(each.input) && 'code' in each.expect
+    ? pass(each.input)
+    : each.expect);
+
+const builtInCodes: BuiltInCode[] = [
+  'min',
+  'max',
+  'exact',
+  'minDate',
+  'maxDate',
+  'oneOf',
+  'matches',
+  'url',
+  'integer',
+  'email',
+  'uuid',
+  'required',
+  'type',
+  'unknownKeys',
+  'items',
+  'properties',
+];
+
+/** A translation that words each built-in code as `code!`. */
+const marked: Messages = Object.fromEntries(
+  builtInCodes.map((code) => [code, `${code}!`]),
+);
+
+const isBuiltIn = (code: string) => builtInCodes.some((each) => each === code);
+
+/**
+ * A failure as `withMessages(validator, marked)` gives it: each failure in its
+ * tree made without a message, which reads its code, worded as `code!`.
+ * @param supplied Whether the leaves' messages were supplied
+ */
+function translated<
+  F extends { code: string; message: string; errors?: unknown },
+>(made: F, supplied: boolean): F {
+  const { code, errors } = made;
+  const isContainer =
+    (code === 'items' || code === 'properties') &&
+    typeof errors === 'object' &&
+    errors !== null;
+  const message =
+    made.message === code && isBuiltIn(code) && (isContainer || !supplied)
+      ? `${code}!`
+      : made.message;
+  if (!isContainer) {
+    return { ...made, message };
+  }
+
+  const each = (entry: unknown) =>
+    isFailure(entry) ? translated(entry, supplied) : entry;
+  const tree = Array.isArray(errors)
+    ? errors.map(each)
+    : Object.fromEntries(
+        Object.entries(errors).map(([key, entry]) => [key, each(entry)]),
+      );
+  return { ...made, message, errors: tree };
+}
+
+const translatedExpect = (each: Row, expect: Expect): Expect =>
+  'code' in expect ? translated(expect, each.supplied ?? false) : expect;
+
 /**
  * Each wrap runs every row again around its validator. `optional()` passes a
- * missing input the validator fails, unless the row says otherwise.
+ * missing input the validator fails, unless the row says otherwise, and
+ * `withMessages()` words each failure made without a message.
  */
 const wraps: {
   name: string;
@@ -1926,11 +2033,22 @@ const wraps: {
   {
     name: 'in optional()',
     wrap: optional,
-    expect: (each) =>
-      each.optional ??
-      (isMissing(each.input) && 'code' in each.expect
-        ? pass(each.input)
-        : each.expect),
+    expect: optionalExpect,
+  },
+  {
+    name: 'in withMessages()',
+    wrap: (validator) => withMessages(validator, marked),
+    expect: (each) => translatedExpect(each, each.expect),
+  },
+  {
+    name: 'in optional(withMessages())',
+    wrap: (validator) => optional(withMessages(validator, marked)),
+    expect: (each) => translatedExpect(each, optionalExpect(each)),
+  },
+  {
+    name: 'in withMessages(optional())',
+    wrap: (validator) => withMessages(optional(validator), marked),
+    expect: (each) => translatedExpect(each, optionalExpect(each)),
   },
 ];
 
@@ -1939,12 +2057,6 @@ const resultOf = (expect: Expect, field: string | undefined): Result =>
   'value' in expect
     ? { state: 'valid', value: expect.value, field }
     : { state: 'invalid', ...expect, field };
-
-const isObject = (entry: unknown): entry is object =>
-  typeof entry === 'object' && entry !== null;
-
-const isFailure = (entry: unknown): entry is Failure<unknown> =>
-  isObject(entry) && Reflect.get(entry, 'state') === 'invalid';
 
 /** The entries of an `items` or `properties` failure's errors tree. */
 const childrenOf = ({

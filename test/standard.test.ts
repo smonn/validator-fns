@@ -134,6 +134,7 @@ test('should export only the v3 surface', () => {
     'url',
     'uuid',
     'valid',
+    'withMessages',
   ]);
 });
 

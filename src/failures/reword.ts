@@ -12,7 +12,7 @@ import { failure, unworded } from './make.js';
  * word it.
  * @internal
  */
-function reword<E>(
+export function reword<E>(
   made: Failure<E>,
   message: ValidatorMessage<unknown, Record<string, unknown>> | undefined,
   errors: E | undefined,
