@@ -1,15 +1,6 @@
 import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
-import {
-  email,
-  matches,
-  max,
-  min,
-  parseString,
-  string,
-  url,
-  uuid,
-} from '../src/index';
+import { email, matches, max, min, string, url, uuid } from '../src/index';
 
 test('min', async () => {
   const validate = min(5, 'min:{min}');
@@ -334,7 +325,6 @@ test('string accepts primitives, dates, and boxed primitives', async () => {
   ];
   const validate = string();
   for (const [value, expected] of accepted) {
-    assert.equal(parseString(value), expected, expected);
     const result = await validate(value);
     assert(result.state === 'valid', expected);
     assert.equal(result.value, expected, expected);
@@ -360,12 +350,6 @@ test('string returns an invalid result for non-primitive and symbol input', asyn
   ];
   const validate = string();
   for (const [value, label] of rejected) {
-    assert.throws(
-      () => parseString(value),
-      TypeError,
-      'Failed to parse value to string.',
-      label,
-    );
     const result = await validate(value);
     assert.equal(result.state, 'invalid', label);
     assert.equal(

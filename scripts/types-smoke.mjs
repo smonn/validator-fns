@@ -30,19 +30,29 @@ const compilers = [
 ];
 
 const fixture = `import {
-  type ConfigBase,
   createTypeValidatorTest,
   type ExtractValue,
   object,
   optional,
-  parseNumber,
   string,
   type Validator,
+  type ValidatorMessage,
 } from 'validator-fns';
 
-interface MoneyConfig extends ConfigBase<number> {
+interface MoneyConfig {
+  parser: (value: unknown) => number | null | undefined;
+  requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
+}
+
+/** Reads a number or a numeric string. Anything else is missing. */
+function parseAmount(value: unknown): number | undefined {
+  if (typeof value === 'string') {
+    return Number.parseFloat(value);
+  }
+
+  return typeof value === 'number' ? value : undefined;
 }
 
 function applyMoneyConfig(
@@ -56,7 +66,7 @@ function applyMoneyConfig(
 }
 
 const money = createTypeValidatorTest(
-  { parser: parseNumber },
+  { parser: parseAmount },
   applyMoneyConfig,
 );
 
@@ -86,8 +96,13 @@ const tsconfig = {
 
 /** The 2.x type names v3 removes. */
 const removedNames = [
+  'ConfigBase',
+  'DeepPartial',
   'InvalidResult',
+  'SharedDateValueType',
+  'SharedValueType',
   'ValidationTest',
+  'ValidatorFactory',
   'ValidatorResult',
   'ValidatorTest',
   'ValidResult',
@@ -116,7 +131,10 @@ function stillExported(tsc, cwd) {
     const output = stdoutOf(error);
     const missing = new Set(
       Array.from(
-        output.matchAll(/has no exported member (?:named )?'(\w+)'/g),
+        // A name the declarations keep for their own use is declared locally.
+        output.matchAll(
+          /(?:has no exported member (?:named )?|declares )'(\w+)'/g,
+        ),
         (match) => match[1],
       ),
     );

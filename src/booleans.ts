@@ -4,9 +4,9 @@ import type { ConfigBase } from './shared.js';
 /**
  * Parses a value into a boolean.
  * @param value Value to parse
- * @category Parsers
+ * @internal
  */
-export function parseBoolean(value: unknown): boolean | null | undefined {
+function parseBoolean(value: unknown): boolean | null | undefined {
   if (value === undefined || value === null) {
     return value;
   }
@@ -22,9 +22,9 @@ export function parseBoolean(value: unknown): boolean | null | undefined {
  * Applies a configuration to the boolean value.
  * @param value Value to modify
  * @param config Configuration to apply
- * @category Helpers
+ * @internal
  */
-export function applyBooleanConfig(
+function applyBooleanConfig(
   value: unknown,
   config: BooleanConfig,
 ): boolean | null | undefined {

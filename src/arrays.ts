@@ -30,9 +30,9 @@ export type ArrayConfig = ConfigBase<unknown[]>;
 /**
  * Parses a value into an array.
  * @param value Value to parse
- * @category Parsers
+ * @internal
  */
-export function parseArray(value: unknown): unknown[] | null | undefined {
+function parseArray(value: unknown): unknown[] | null | undefined {
   if (Array.isArray(value)) {
     const items: unknown[] = value;
     return items;
@@ -53,9 +53,9 @@ export function parseArray(value: unknown): unknown[] | null | undefined {
  * Applies a configuration to the array value.
  * @param value Value to modify
  * @param config Configuration to apply
- * @category Helpers
+ * @internal
  */
-export function applyArrayConfig(
+function applyArrayConfig(
   config: ArrayConfig,
   value: unknown,
 ): unknown[] | null | undefined {

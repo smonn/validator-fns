@@ -14,7 +14,6 @@ import {
   number,
   object,
   optional,
-  parseNumber,
   string,
   valid,
   type Result,
@@ -172,12 +171,37 @@ test('should take only async functions', () => {
   >();
 });
 
-test('should not export standard()', () => {
-  assert.notProperty(validatorFns, 'standard');
+test('should export only the v3 surface', () => {
+  assert.deepEqual(Object.keys(validatorFns).toSorted(), [
+    'array',
+    'boolean',
+    'check',
+    'createTypeValidatorTest',
+    'createValidator',
+    'createValidatorTest',
+    'date',
+    'email',
+    'exact',
+    'integer',
+    'invalid',
+    'matches',
+    'max',
+    'maxDate',
+    'min',
+    'minDate',
+    'number',
+    'object',
+    'oneOf',
+    'optional',
+    'string',
+    'url',
+    'uuid',
+    'valid',
+  ]);
 });
 
 const money = createTypeValidatorTest(
-  { parser: parseNumber },
+  { parser: (value: unknown) => (typeof value === 'number' ? value : null) },
   (value, config) => config.parser(value),
 );
 

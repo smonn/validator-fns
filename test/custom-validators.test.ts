@@ -1,15 +1,25 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
-  type ConfigBase,
   createTypeValidatorTest,
-  parseNumber,
   type TypeValidator,
+  type ValidatorMessage,
 } from '../src/index.js';
 
 // The custom type validator from the README's createTypeValidatorTest section.
-interface MoneyConfig extends ConfigBase<number> {
+interface MoneyConfig {
+  parser: (value: unknown) => number | null | undefined;
+  requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
+}
+
+/** Reads a number or a numeric string. Anything else is missing. */
+function parseAmount(value: unknown): number | undefined {
+  if (typeof value === 'string') {
+    return Number.parseFloat(value);
+  }
+
+  return typeof value === 'number' ? value : undefined;
 }
 
 function applyMoneyConfig(
@@ -23,7 +33,7 @@ function applyMoneyConfig(
 }
 
 const money = createTypeValidatorTest(
-  { parser: parseNumber },
+  { parser: parseAmount },
   applyMoneyConfig,
 );
 
@@ -40,5 +50,9 @@ test('custom type validator accepts its own config options', async () => {
     state: 'valid',
     field: undefined,
     value: 12.5,
+  });
+  assert.deepInclude(await money({ requiredMessage: 'Enter an amount.' })({}), {
+    state: 'invalid',
+    message: 'Enter an amount.',
   });
 });

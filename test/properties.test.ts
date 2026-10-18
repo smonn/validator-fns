@@ -21,7 +21,6 @@ import {
   url,
   uuid,
   valid,
-  type SharedValueType,
   type Test,
   type Validator,
 } from '../src/index';
@@ -126,7 +125,7 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
       fc.integer({ min: -5, max: 10 }),
       async (value, limit) => {
         const amount = amountOf(value);
-        const isValid = async (validate: Test<SharedValueType>) =>
+        const isValid = async (validate: Test<number | string | unknown[]>) =>
           (await validate(value)).state === 'valid';
 
         assert.equal(await isValid(min(limit, 'min')), amount >= limit);

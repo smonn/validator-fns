@@ -1,49 +1,56 @@
 import { assert, test } from 'vitest';
 import {
   date,
-  invalidDate,
   maxDate,
   minDate,
   optional,
-  parseDate,
   type Failure,
 } from '../src/index.js';
 
-test('parseDate', () => {
+const invalidDate = new Date('');
+
+/** The value `date()` parses, with a blank one kept by `optional()`. */
+async function parseDate(value: unknown) {
+  const result = await optional(date())(value);
+  assert(result.state === 'valid');
+  return result.value;
+}
+
+test('date() parses dates, timestamps and ISO 8601 strings', async () => {
   const now = new Date();
-  assert.deepEqual(parseDate(now), now);
-  assert.deepEqual(parseDate(0), new Date(0));
-  assert.deepEqual(parseDate(''), invalidDate);
-  assert.deepEqual(parseDate('2020'), new Date(2020, 0));
-  assert.deepEqual(parseDate('2020-13'), new Date(2021, 0));
-  assert.deepEqual(parseDate('2020-01'), new Date(2020, 0));
-  assert.deepEqual(parseDate('2020-01-31'), new Date(2020, 0, 31));
+  assert.deepEqual(await parseDate(now), now);
+  assert.deepEqual(await parseDate(0), new Date(0));
+  assert.deepEqual(await parseDate(''), invalidDate);
+  assert.deepEqual(await parseDate('2020'), new Date(2020, 0));
+  assert.deepEqual(await parseDate('2020-13'), new Date(2021, 0));
+  assert.deepEqual(await parseDate('2020-01'), new Date(2020, 0));
+  assert.deepEqual(await parseDate('2020-01-31'), new Date(2020, 0, 31));
   assert.deepEqual(
-    parseDate('2020-01-31 12:45'),
+    await parseDate('2020-01-31 12:45'),
     new Date(2020, 0, 31, 12, 45),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32'),
+    await parseDate('2020-01-31T12:45:32'),
     new Date(2020, 0, 31, 12, 45, 32),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32Z'),
+    await parseDate('2020-01-31T12:45:32Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32+01:30'),
+    await parseDate('2020-01-31T12:45:32+01:30'),
     new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32-0200'),
+    await parseDate('2020-01-31T12:45:32-0200'),
     new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32.123'),
+    await parseDate('2020-01-31T12:45:32.123'),
     new Date(2020, 0, 31, 12, 45, 32, 123),
   );
   assert.deepEqual(
-    parseDate('2020-01-31T12:45:32.001242Z'),
+    await parseDate('2020-01-31T12:45:32.001242Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
   );
 });
@@ -169,51 +176,23 @@ test('date default', async () => {
   });
 });
 
-test('parseDate throws for a non-blank string it cannot read', () => {
-  for (const value of ['garbage', '2020-01-01x', 'tomorrow', '12/31/2020']) {
-    assert.throws(
-      () => parseDate(value),
-      TypeError,
-      'Failed to parse value to date.',
-      value,
-    );
-  }
-  assert.deepEqual(parseDate(''), invalidDate);
-  assert.deepEqual(parseDate('  '), invalidDate);
-  assert.strictEqual(parseDate(invalidDate), invalidDate);
-});
-
-test('date() fails an unreadable string apart from a missing one', async () => {
-  const parseError: Failure<string> = {
-    state: 'invalid',
-    message: 'Failed to parse value to date.',
-    field: 'start',
-    errors: undefined,
-  };
-  assert.deepEqual(await date()('garbage', 'start'), parseError);
-  assert.deepEqual(await optional(date())('garbage', 'start'), parseError);
-
-  assert.deepInclude(await date()('  '), { message: 'Required.' });
-  assert.deepInclude(await date()(invalidDate), { message: 'Required.' });
-  assert.deepInclude(await optional(date())('  '), {
-    state: 'valid',
-    value: invalidDate,
-  });
-});
-
-test('parseDate throws for input that is not a date, number, or string', () => {
-  for (const value of [true, false, {}, [2020], Symbol('s'), 1n, () => 0]) {
-    assert.throws(
-      () => parseDate(value),
-      TypeError,
-      'Failed to parse value to date.',
-      typeof value,
-    );
-  }
-});
-
-test('date() fails input that is not a date, number, or string', async () => {
-  for (const value of [true, {}, [2020]]) {
+test('date() fails input it cannot read apart from a missing one', async () => {
+  const unreadable: unknown[] = [
+    // Strings that aren't ISO 8601
+    'garbage',
+    '2020-01-01x',
+    'tomorrow',
+    '12/31/2020',
+    // Input that isn't a date, number, or string
+    true,
+    false,
+    {},
+    [2020],
+    Symbol('s'),
+    1n,
+    () => 0,
+  ];
+  for (const value of unreadable) {
     const parseError: Failure<string> = {
       state: 'invalid',
       message: 'Failed to parse value to date.',
@@ -223,4 +202,12 @@ test('date() fails input that is not a date, number, or string', async () => {
     assert.deepEqual(await date()(value, 'start'), parseError);
     assert.deepEqual(await optional(date())(value, 'start'), parseError);
   }
+
+  assert.deepInclude(await date()('  '), { message: 'Required.' });
+  assert.deepInclude(await date()(invalidDate), { message: 'Required.' });
+  assert.deepInclude(await optional(date())('  '), {
+    state: 'valid',
+    value: invalidDate,
+  });
+  assert.strictEqual(await parseDate(invalidDate), invalidDate);
 });

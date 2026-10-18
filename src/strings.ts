@@ -32,9 +32,9 @@ export interface StringConfig extends ConfigBase<string> {
 /**
  * Parses a value into a string.
  * @param value Value to parse
- * @category Parsers
+ * @internal
  */
-export function parseString(value: unknown): string | null | undefined {
+function parseString(value: unknown): string | null | undefined {
   if (value === null || value === undefined) {
     return value;
   }
@@ -59,9 +59,9 @@ export function parseString(value: unknown): string | null | undefined {
  * Applies a configuration to the string value.
  * @param value Value to modify
  * @param config Configuration to apply
- * @category Helpers
+ * @internal
  */
-export function applyStringConfig(
+function applyStringConfig(
   value: unknown,
   config: StringConfig,
 ): string | null | undefined {

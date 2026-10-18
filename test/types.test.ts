@@ -1,8 +1,6 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
-  applyArrayConfig,
   array,
-  type ArrayConfig,
   type ArrayItemValidatorResult,
   boolean,
   check,
@@ -26,7 +24,6 @@ import {
   type MinValidatorMessageParameters,
   type NumberConfig,
   type Result,
-  type SharedValueType,
   type Test,
   type TypeValidator,
   type Valid,
@@ -53,7 +50,9 @@ test('type validators carry their value type and string errors', () => {
 });
 
 test('built-in tests and results without errors have never as the error type', () => {
-  expectTypeOf(min(1, 'min')).toEqualTypeOf<Test<SharedValueType, never>>();
+  expectTypeOf(min(1, 'min')).toEqualTypeOf<
+    Test<string | number | unknown[], never>
+  >();
   expectTypeOf(createValidatorTest(() => true, 'message')).toEqualTypeOf<
     Test<unknown, never>
   >();
@@ -199,12 +198,6 @@ test('invalid() takes value only for the message, and may leave it out', () => {
   >();
 });
 
-test('applyArrayConfig returns unknown items and takes no type argument', () => {
-  expectTypeOf(applyArrayConfig).toEqualTypeOf<
-    (config: ArrayConfig, value: unknown) => unknown[] | null | undefined
-  >();
-});
-
 test('number() takes no round option', () => {
   expectTypeOf<NumberConfig>().not.toHaveProperty('round');
 });
@@ -228,7 +221,9 @@ const anyValue = async (value: unknown, field?: string) =>
   valid({ value, field });
 
 test('validation tests take the parsed value', () => {
-  expectTypeOf(min(1, 'min')).toEqualTypeOf<Test<SharedValueType, never>>();
+  expectTypeOf(min(1, 'min')).toEqualTypeOf<
+    Test<string | number | unknown[], never>
+  >();
   expectTypeOf(
     check((value: { name: string }) => value.name !== '', 'empty'),
   ).toEqualTypeOf<Test<{ name: string }, never>>();
@@ -249,7 +244,7 @@ test('messages get their extras with the value and field', async () => {
     expectTypeOf(parameters.min).toEqualTypeOf<number>();
     expectTypeOf(parameters.amount).toEqualTypeOf<number | null | undefined>();
     expectTypeOf(parameters.value).toEqualTypeOf<
-      SharedValueType | null | undefined
+      string | number | unknown[] | null | undefined
     >();
     expectTypeOf(parameters.field).toEqualTypeOf<string | undefined>();
     return '';

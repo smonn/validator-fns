@@ -6,7 +6,8 @@ import type {
   ValidatorMessageParameters,
 } from './shared.js';
 
-export type SharedValueType = string | number | unknown[];
+/** @internal */
+type SharedValueType = string | number | unknown[];
 
 /**
  * Extracts a numeric amount from value, i.e. string length, array length, or number.

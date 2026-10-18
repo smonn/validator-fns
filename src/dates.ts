@@ -12,9 +12,9 @@ import { parseDate } from './parse-date.js';
  * Applies a configuration to the date value.
  * @param value Value to modify
  * @param config Configuration to apply
- * @category Helpers
+ * @internal
  */
-export function applyDateConfig(
+function applyDateConfig(
   value: unknown,
   config: DateConfig,
 ): Date | null | undefined {
@@ -31,7 +31,8 @@ export function applyDateConfig(
   return parsedValue;
 }
 
-export type SharedDateValueType = Date | string | number;
+/** @internal */
+type SharedDateValueType = Date | string | number;
 
 export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
