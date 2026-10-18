@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   date,
@@ -18,7 +19,9 @@ async function parsedDate(limit: Date | string | number) {
 
 test('minDate() reads dates, timestamps and ISO 8601 strings as its limit', async () => {
   const now = new Date();
+  const foreign: Date = runInNewContext('new Date(0)');
   assert.strictEqual(await parsedDate(now), now);
+  assert.strictEqual(await parsedDate(foreign), foreign);
   assert.deepEqual(await parsedDate(0), new Date(0));
   assert.deepEqual(await parsedDate(''), invalidDate);
   assert.deepEqual(await parsedDate('2020'), new Date(2020, 0));
@@ -197,7 +200,8 @@ test('minDate() and maxDate() throw for a limit they cannot read', () => {
     '2020-01-01x',
     'tomorrow',
     '12/31/2020',
-    // Input that isn't a date, number, or string
+    // An invalid date, and input that isn't a date, number, or string
+    invalidDate,
     true,
     {},
     [2020],

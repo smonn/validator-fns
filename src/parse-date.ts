@@ -54,16 +54,12 @@ const dateParts = [
 ];
 
 /**
- * Reads a date from a date, a number or an ISO 8601 string. Returns
- * `undefined` for a non-blank string that isn't ISO 8601, and for input that
- * isn't a date, number, or string.
+ * Reads a date from a number or an ISO 8601 string. Returns `undefined` for a
+ * non-blank string that isn't ISO 8601, and for input that isn't a number or
+ * string.
  * @param value Value to read
  */
 export function readDate(value: unknown): Date | undefined {
-  if (value instanceof Date) {
-    return value;
-  }
-
   if (typeof value === 'number') {
     return new Date(value);
   }
