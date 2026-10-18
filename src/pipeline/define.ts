@@ -35,7 +35,13 @@ function build<T, E, P, V>(
   );
   // Rebuilt once, on the first optional() call, so each call returns it.
   let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
-  const rebuild = () => (rebuilt ??= build(def, keepValue));
+  const rebuild = () => {
+    // Not ??=, which Safari 13.1 and Firefox 77, both supported, can't parse.
+    if (rebuilt === undefined) {
+      rebuilt = build(def, keepValue);
+    }
+    return rebuilt;
+  };
   return Object.assign(validator, { [built]: { run, optional: rebuild } });
 }
 
