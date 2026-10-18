@@ -241,6 +241,8 @@ test('object() accepts objects where BigInt is missing, as before Safari 14', as
     assert.deepInclude(await object({ name: string() })({ name: 'Ada' }), {
       state: 'valid',
     });
+    // A class instance takes the brand checks, which then skip BigInt.
+    assert.deepInclude(await object({})(new Point()), { state: 'valid' });
     assert.deepInclude(await object({})(Object('a')), { code: 'type' });
   } finally {
     Reflect.set(globalThis, 'BigInt', bigInt);
@@ -273,5 +275,24 @@ test('oneOf() keeps a primitive off the date path', async () => {
     }
   } finally {
     getTime.mockRestore();
+  }
+});
+
+test('object() takes a plain object without probing the wrappers', async () => {
+  const valueOf = vi.spyOn(String.prototype, 'valueOf');
+  try {
+    assert.deepInclude(await object({})({}), { state: 'valid' });
+    assert.deepInclude(await object({})(Object.create(null)), {
+      state: 'valid',
+    });
+    assert.equal(valueOf.mock.calls.length, 0);
+    // Anything else still gets the brand checks.
+    assert.deepInclude(await object({})(Object('a')), { code: 'type' });
+    assert.deepInclude(await object({})(new Point()), { state: 'valid' });
+    assert.deepInclude(await object({})(runInNewContext('({})')), {
+      state: 'valid',
+    });
+  } finally {
+    valueOf.mockRestore();
   }
 });
