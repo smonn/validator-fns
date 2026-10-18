@@ -231,6 +231,18 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    | `InvalidResult`   | `Failure`   |
    | `ValidatorTest`   | `Validator` |
 
+9. **Read `value` only from a valid result**: a failure has no `value`, so code that read the parsed or raw input from an invalid result needs to keep the input itself. In TypeScript, `Failure` has no `value` key, so reading `result.value` needs `result.state === 'valid'` first. Messages still get `value`, and `invalid()` uses its `value` only for the message:
+
+   ```js
+   // 2.x
+   await number(min(5, 'Too small.'))('3');
+   // { state: 'invalid', message: 'Too small.', value: 3, ... }
+
+   // 3.x
+   await number(min(5, 'Too small.'))('3');
+   // { state: 'invalid', message: 'Too small.', ... }
+   ```
+
 ## API Reference
 
 ### Validation result
@@ -241,7 +253,7 @@ All validation tests yield one of two results: `valid` and `invalid`. Both are o
 | :-------- | :----- | :------------------------------------------------------------------------- |
 | `state`   | string | Either `valid` or `invalid`.                                               |
 | `field`   | string | Either the field name or `undefined`.                                      |
-| `value`   | `T`    | The parsed value.                                                          |
+| `value`   | `T`    | The parsed value. Only if `state` is `valid`; a failure has no `value`.    |
 | `message` | string | The error message unless `state` is `valid`.                               |
 | `errors`  | `E`    | Only if `state` is `invalid` and using the `object` or `array` validators. |
 
@@ -255,7 +267,7 @@ The `message` argument in the validation tests must be a static string, a templa
 | template string | `'Password must be at least {min} characters.'`                                        |
 | function        | `` ({ value, field, max }) => `${field} must be less than ${max} but was ${value}.` `` |
 
-The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available, such as `min` for `min()`.
+The parsed `value` is always provided, even though the failure the message goes into has none. If available, `field` is also provided. Depending on the validator, additional fields may be available, such as `min` for `min()`.
 
 In TypeScript, a message function's parameters are typed: `ValidatorMessage<T, X>` gets the value and field, `X & ValidatorMessageParameters<T>`, where `X` holds the test's extra parameters. Each test's exported parameters type, such as `MinValidatorMessageParameters`, still describes everything a message gets, so a message annotated with it fits.
 
@@ -267,7 +279,7 @@ The message is `'Required.'` unless the config sets `requiredMessage`, which tak
 
 ```js
 await string()('');
-// { state: 'invalid', message: 'Required.', value: '', ... }
+// { state: 'invalid', message: 'Required.', ... }
 
 await number({ requiredMessage: '{field} is required.' })(undefined, 'age');
 // { state: 'invalid', message: 'age is required.', ... }
@@ -700,7 +712,7 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 
 #### invalid({ message, value, field, errors, extras })
 
-Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` and `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
+Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` is optional and only goes to the message; the result has no `value`. `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
 
 In TypeScript, a message function gets `value` as `unknown`, since `invalid()` takes any value. A message that reads extra parameters needs `extras` with them; without `extras`, it's a type error.
 
