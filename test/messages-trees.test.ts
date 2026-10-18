@@ -238,7 +238,7 @@ const deepInput = (levels: number): unknown => {
   return input;
 };
 
-test('should word a deep object() failure synchronously', async () => {
+test('should word an object() failure 300 levels deep, past the nesting guard', async () => {
   const result = await withMessages(deepValidator(300), { min: 'Too short.' })(
     deepInput(300),
   );
