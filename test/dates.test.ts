@@ -66,7 +66,7 @@ test('minDate() reads timestamps and ISO 8601 strings as its limit', async () =>
 
 // The calendar repeats every 400 years, so these hold whichever way an offset
 // moves the time.
-test('minDate() moves the years 0 to 99 across a day by an offset as it does 400 years later', async () => {
+test('minDate() reads an offset in the years 0 to 99 as it does 400 years later', async () => {
   const fourHundredYears = 146_097 * 86_400_000;
   const times = ['02-28T23:30:00', '03-01T00:30:00'];
   for (const time of times) {
