@@ -1,12 +1,13 @@
 import { assert, expectTypeOf, test } from 'vitest';
 import {
   check,
-  date,
+  createTypeValidator,
   messageTree,
   number,
   object,
   string,
   valid,
+  type Result,
   type Validator,
 } from '../src/index.js';
 
@@ -89,10 +90,10 @@ test('should skip collection tests when a field is invalid', async () => {
 });
 
 test('should compare parsed values when a collection test runs', async () => {
-  const isoDate = date({
-    parser: async (value, field) =>
+  const isoDate = createTypeValidator(
+    async (value: unknown, field?: string): Promise<Result<Date>> =>
       valid({ value: new Date(String(value)), field }),
-  });
+  )();
   const validate = object(
     { start: isoDate, end: isoDate },
     check(

@@ -1,6 +1,6 @@
 import { assert, test } from 'vitest';
 import {
-  createTypeValidatorTest,
+  createTypeValidator,
   invalid,
   min,
   number,
@@ -13,13 +13,12 @@ import {
 
 test('default skips the parser, and the tests run on it', async () => {
   const parsed: unknown[] = [];
-  const validate = string({
-    default: 'x',
-    parser: (value, field) => {
+  const validate = createTypeValidator(
+    async (value: unknown, field?: string) => {
       parsed.push(value);
       return valid({ value: String(value), field });
     },
-  });
+  )({ default: 'x' });
   assert.deepInclude(await validate(undefined), { value: 'x' });
   assert.deepEqual(parsed, []);
 
@@ -60,21 +59,4 @@ test('optional() leaves the validator it wraps unchanged', async () => {
   assert.deepInclude(await optional(optionalString)(undefined), {
     state: 'valid',
   });
-});
-
-test('validators from createTypeValidatorTest are required unless optional()', async () => {
-  const upper = createTypeValidatorTest(
-    {
-      parser: async (value, field) =>
-        valid({ value: typeof value === 'string' ? value : undefined, field }),
-    },
-    (value) => (typeof value === 'string' ? value.toUpperCase() : value),
-  );
-
-  assert.deepInclude(await upper()(1), { message: 'required' });
-  assert.deepInclude(await upper({ messages: { required: 'Text.' } })(null), {
-    message: 'Text.',
-  });
-  assert.deepInclude(await optional(upper())(1), { state: 'valid' });
-  assert.deepInclude(await upper()('a'), { state: 'valid', value: 'A' });
 });

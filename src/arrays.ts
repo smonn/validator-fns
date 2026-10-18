@@ -1,5 +1,5 @@
 import { createParser, isLengthGate } from './factories.js';
-import { fillAsOwn, fillOwn } from './failures/index.js';
+import { fillOwn } from './failures/index.js';
 import {
   type ItemsResult,
   keepItems,
@@ -30,23 +30,6 @@ const parseArray = createParser('array', (value): value is unknown[] =>
 );
 
 /**
- * Applies a configuration to the parsed array value.
- * @param config Configuration to apply
- * @param value Parsed value
- * @internal
- */
-function applyArrayConfig(
-  config: ArrayConfig,
-  value: unknown[] | null | undefined,
-): unknown[] | null | undefined {
-  if (config.default !== undefined && (value === undefined || value === null)) {
-    return config.default;
-  }
-
-  return value;
-}
-
-/**
  * A test on an array's parsed items. The built-in `min()`, `max()` and
  * `exact()` instead check the input's length before any item runs.
  * @internal
@@ -70,20 +53,18 @@ function arrayOf<T, E>(
   const arrayTests = typeof config === 'function' ? [config, ...tests] : tests;
   const gates: Test<unknown[], never>[] = arrayTests.filter(isLengthGate);
   const collectionTests = arrayTests.filter((test) => !isLengthGate(test));
-  const finalConfig: ArrayConfig = {
-    parser: parseArray,
-    ...(typeof config === 'function' ? undefined : config),
-  };
+  const finalConfig: Partial<ArrayConfig> =
+    typeof config === 'function' ? {} : (config ?? {});
 
   return requirable<T[], (Failure<E> | null)[]>(
     finalConfig.messages,
     async (value, field, onEmpty) => {
-      const parsed = await parsePresent(finalConfig.parser, value, field);
+      const parsed = await parsePresent(parseArray, value, field);
       if (parsed.state === 'invalid') {
-        return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
+        return fillOwn(parsed, finalConfig.messages);
       }
 
-      const arrayValue = applyArrayConfig(finalConfig, parsed.value);
+      const arrayValue = parsed.value ?? finalConfig.default ?? parsed.value;
       if (arrayValue === null || arrayValue === undefined) {
         return onEmpty(arrayValue, field);
       }

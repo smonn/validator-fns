@@ -1,7 +1,7 @@
 // Type-checks a consumer project against the packed package's declarations,
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
-// the README's createTypeValidatorTest example, without type arguments, and a
+// the README's createTypeValidator example, without type arguments, and a
 // check() at a path read through messageTree(), and parse() with a
 // FailureError told from a bug. A second fixture imports the
 // 2.x type names v3 removes, and must fail on each, and a third makes calls
@@ -35,59 +35,41 @@ const compilers = [
 
 const fixture = `import {
   check,
-  createTypeValidatorTest,
+  createTypeValidator,
   type ExtractValue,
   FailureError,
   invalid,
-  type Messages,
   messageTree,
+  min,
   object,
   optional,
   parse,
-  type Result,
   string,
+  uuid,
   valid,
   type Validator,
 } from 'validator-fns';
 
-interface MoneyConfig {
-  parser: (
-    value: unknown,
-    field?: string,
-  ) => Promise<Result<number | null | undefined>>;
-  messages?: Messages;
-  /** Convert the amount to cents. */
-  cents?: boolean;
-}
+export const uuidString = createTypeValidator(string(uuid()));
 
-/** Reads a number or a numeric string, and fails anything else present. */
-async function parseAmount(
-  value: unknown,
-  field?: string,
-): Promise<Result<number | null | undefined>> {
-  const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
-  if (typeof amount === 'number' || amount === null || amount === undefined) {
-    return valid({ value: amount, field });
-  }
+/** Reads a number or a numeric string, and fails anything else. */
+const amount = createTypeValidator(async (value, field) => {
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed)
+    ? valid({ value: parsed, field })
+    : invalid({
+        code: 'type',
+        params: { expected: 'amount' },
+        message: 'Must be an amount.',
+        value,
+        field,
+      });
+});
 
-  return invalid({ code: 'type', message: 'Must be an amount.', field });
-}
-
-function applyMoneyConfig(
-  amount: number | null | undefined,
-  config: MoneyConfig,
-): number | null | undefined {
-  return config.cents && typeof amount === 'number'
-    ? Math.round(amount * 100)
-    : amount;
-}
-
-const money = createTypeValidatorTest(
-  { parser: parseAmount },
-  applyMoneyConfig,
+export const price: Validator<number> = amount(
+  { messages: { required: 'Enter an amount.' } },
+  min(0),
 );
-
-export const price: Validator<number, string> = money({ cents: true });
 export const order = object({
   name: string({ messages: { required: 'Required.' } }),
   note: optional(string()),
@@ -170,8 +152,11 @@ const removedCalls = [
   // A transform is synchronous, even on a type a promise would fit (#756).
   'object({}, transform(async (value) => value));',
   'transform(async (value: unknown) => value);',
+  // Custom parsing is a custom type, made with createTypeValidator (#758).
+  'string({ parser: () => undefined });',
+  'array(string(), { parser: () => undefined });',
 ];
-const removedCallsFixture = `import { max, maxDate, min, minDate, number, object, string, transform } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
+const removedCallsFixture = `import { array, max, maxDate, min, minDate, number, object, string, transform } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
 
 /**
  * @param {unknown} error

@@ -4,6 +4,7 @@ import {
   array,
   boolean,
   check,
+  createTypeValidator,
   createValidator,
   createValidatorTest,
   date,
@@ -1527,6 +1528,121 @@ const objectRows: Row[] = [
   ),
 ];
 
+// Custom types
+
+const uuidString = createTypeValidator(string(uuid()));
+
+/** Reads a number or a numeric string, and fails anything else. */
+const amount = createTypeValidator(async (value: unknown, field?: string) => {
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed)
+    ? valid({ value: parsed, field })
+    : invalid({
+        code: 'type',
+        params: { expected: 'amount' },
+        message: 'Must be an amount.',
+        value,
+        field,
+      });
+});
+
+/** Reads only text, and gives undefined, which counts as missing, otherwise. */
+const text = createTypeValidator(async (value: unknown, field?: string) =>
+  valid({ value: typeof value === 'string' ? value : undefined, field }),
+);
+
+const customRows: Row[] = [
+  row(
+    'createTypeValidator() passes what its parser passes',
+    uuidString(),
+    '00000000-0000-0000-0000-000000000000',
+    pass('00000000-0000-0000-0000-000000000000'),
+  ),
+  row(
+    "createTypeValidator() keeps its parser's type failure",
+    uuidString(),
+    42,
+    typeFail('string'),
+  ),
+  row(
+    "createTypeValidator() keeps the code of its parser's test",
+    uuidString(),
+    'nope',
+    fail('uuid'),
+  ),
+  row(
+    "createTypeValidator() keeps its parser's params and message",
+    amount(),
+    'x',
+    fail('type', { expected: 'amount' }, 'Must be an amount.'),
+  ),
+  row(
+    "createTypeValidator() keeps its parser's errors tree",
+    createTypeValidator(object({ name: string() }))(),
+    { name: 1 },
+    fail('properties', {}, 'properties', {
+      name: child('name', 'type', { expected: 'string' }),
+    }),
+  ),
+  row(
+    "createTypeValidator() words its parser's unworded failure from its messages",
+    uuidString({ messages: { uuid: 'Must be a UUID.' } }),
+    'nope',
+    fail('uuid', {}, 'Must be a UUID.'),
+  ),
+  row(
+    "createTypeValidator() keeps its parser's worded failure over its messages",
+    amount({ messages: { type: 'Other.' } }),
+    'x',
+    fail('type', { expected: 'amount' }, 'Must be an amount.'),
+  ),
+  row(
+    'createTypeValidator() runs its tests on the parsed value',
+    amount(min(1, 'At least {min}.')),
+    '0.5',
+    fail('min', { min: 1, amount: 0.5 }, 'At least 1.'),
+  ),
+  row(
+    'createTypeValidator() passes the last test value',
+    amount({ messages: {} }, transform(Math.round)),
+    '2.5',
+    pass(3),
+  ),
+  row(
+    'createTypeValidator() fails a missing value with required',
+    amount({ messages: { required: 'Enter an amount.' } }),
+    undefined,
+    fail('required', {}, 'Enter an amount.'),
+  ),
+  row(
+    'createTypeValidator() fills a missing value with its default',
+    amount({ default: 0 }, min(1)),
+    null,
+    fail('min', { min: 1, amount: 0 }),
+    { optional: fail('min', { min: 1, amount: 0 }) },
+  ),
+  row(
+    'createTypeValidator() treats a parsed undefined as missing',
+    text({ messages: { required: 'Text.' } }),
+    1,
+    fail('required', {}, 'Text.'),
+    { optional: pass(undefined) },
+  ),
+  row(
+    'createTypeValidator() runs its tests on what its parser reads',
+    text(transform((value) => value.toUpperCase())),
+    'a',
+    pass('A'),
+  ),
+  row(
+    'createTypeValidator() passes the field to its parser',
+    uuidString(),
+    'nope',
+    fail('uuid'),
+    { field: 'id' },
+  ),
+];
+
 const rows: Row[] = [
   ...stringRows,
   ...numberRows,
@@ -1536,6 +1652,7 @@ const rows: Row[] = [
   ...missingRows,
   ...arrayRows,
   ...objectRows,
+  ...customRows,
 ];
 
 const isMissing = (input: unknown) => input === undefined || input === null;

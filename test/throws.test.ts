@@ -3,7 +3,7 @@ import { assert, test } from 'vitest';
 import {
   array,
   boolean,
-  createTypeValidatorTest,
+  createTypeValidator,
   createValidator,
   date,
   invalid,
@@ -29,9 +29,8 @@ const throwBug = (): never => {
 // Validators are async, so a custom one rejects rather than throws.
 const rejectBug = async (): Promise<never> => throwBug();
 
-const custom = createTypeValidatorTest(
-  { parser: async (value: unknown, field?: string) => valid({ value, field }) },
-  (value: unknown) => value,
+const custom = createTypeValidator(async (value: unknown, field?: string) =>
+  valid({ value, field }),
 );
 
 const unreadable = async (value: unknown, field?: string) =>
@@ -97,25 +96,18 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
     custom({ messages: { required: throwBug } }),
     null,
   ],
-  ['a string() parser', string({ parser: throwBug }), 'a'],
-  ['a number() parser', number({ parser: throwBug }), 1],
-  ['a boolean() parser', boolean({ parser: throwBug }), true],
-  ['a date() parser', date({ parser: throwBug }), new Date(0)],
-  ['an array() parser', array(string(), { parser: throwBug }), ['a']],
-  ['a custom type parser', custom({ parser: throwBug }), 'a'],
+  ['a custom type test', custom(throwBug), 'a'],
+  ['a custom type parser', createTypeValidator(rejectBug)(), 'a'],
   [
-    'a parser promise from another realm',
-    string({ parser: () => runInNewContext('Promise.reject(bug)', { bug }) }),
+    'a custom type parser that throws without a promise',
+    createTypeValidator(throwBug)(),
     'a',
   ],
+  ["a custom type parser's test", createTypeValidator(string(throwBug))(), 'a'],
   [
-    'a custom type applyConfig',
-    createTypeValidatorTest(
-      {
-        parser: async (value: unknown, field?: string) =>
-          valid({ value, field }),
-      },
-      (): unknown => throwBug(),
+    'a parser promise from another realm',
+    createTypeValidator(() =>
+      runInNewContext('Promise.reject(bug)', { bug }),
     )(),
     'a',
   ],
@@ -156,22 +148,24 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown, string, string?]>([
   ['date()', date(), 'tomorrow', 'type', 'date'],
   ['date() with a boolean', date(), true, 'type', 'date'],
   ['optional(date())', optional(date()), 'tomorrow', 'type', 'date'],
-  ['a string() parser', string({ parser: unreadable }), 'x', 'Unreadable.'],
-  ['a number() parser', number({ parser: unreadable }), 'x', 'Unreadable.'],
-  ['a boolean() parser', boolean({ parser: unreadable }), 'x', 'Unreadable.'],
-  ['a date() parser', date({ parser: unreadable }), 'x', 'Unreadable.'],
   [
-    'an array() parser',
-    array(string(), { parser: unreadable }),
+    'a custom type parser',
+    createTypeValidator(unreadable)(),
     'x',
     'Unreadable.',
   ],
-  ['a custom type parser', custom({ parser: unreadable }), 'x', 'Unreadable.'],
   [
     'a custom type parser in optional()',
-    optional(custom({ parser: unreadable })),
+    optional(createTypeValidator(unreadable)()),
     'x',
     'Unreadable.',
+  ],
+  [
+    'a custom type parser that is a type validator',
+    createTypeValidator(number())(),
+    'x',
+    'type',
+    'number',
   ],
   ['createValidator()', createValidator(unreadable), 'x', 'Unreadable.'],
 ])(
@@ -190,16 +184,15 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown, string, string?]>([
 );
 
 test('should not call the tests when the parser fails', async () => {
-  const validate = string({ parser: unreadable }, throwBug);
+  const validate = createTypeValidator(unreadable)(throwBug);
 
   assert.deepInclude(await validate('x'), { state: 'invalid' });
 });
 
 test('should await a parser promise from another realm', async () => {
-  const validate = string({
-    parser: () =>
-      runInNewContext('Promise.resolve({ state: "valid", value: "parsed" })'),
-  });
+  const validate = createTypeValidator(() =>
+    runInNewContext('Promise.resolve({ state: "valid", value: "parsed" })'),
+  )();
 
   assert.deepInclude(await validate('x'), { state: 'valid', value: 'parsed' });
 });

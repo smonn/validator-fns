@@ -2,7 +2,7 @@ import { assert, test } from 'vitest';
 import {
   array,
   check,
-  createTypeValidatorTest,
+  createTypeValidator,
   max,
   messageTree,
   min,
@@ -47,9 +47,8 @@ test('the last test value is the result value', async () => {
   });
 });
 
-const custom = createTypeValidatorTest(
-  { parser: async (value: unknown, field?: string) => valid({ value, field }) },
-  (value: unknown) => value,
+const custom = createTypeValidator(async (value: unknown, field?: string) =>
+  valid({ value, field }),
 );
 const wrap = async (value: unknown, field?: string) =>
   valid({ value: [value], field });

@@ -1,7 +1,7 @@
 import {
   createParser,
-  createTypeValidatorTest,
   createValidatorTest,
+  typeValidatorOf,
 } from './factories.js';
 import {
   type ConfigBase,
@@ -40,20 +40,6 @@ export type StringConfig = ConfigBase<string>;
  * @internal
  */
 const parseString = createParser<string>('string');
-
-/**
- * Applies a configuration to the parsed string value.
- * @param value Parsed value
- * @param config Configuration to apply
- * @internal
- */
-function applyStringConfig(
-  value: string | null | undefined,
-  config: StringConfig,
-): string | null | undefined {
-  // Missing input without a default stays as it is.
-  return value ?? config.default ?? value;
-}
 
 export interface MatchesValidatorMessageParameters extends ValidatorMessageParameters<string> {
   pattern: RegExp;
@@ -134,9 +120,4 @@ export function url(
  * Validates a string value.
  * @category Type Validators
  */
-export const string = createTypeValidatorTest(
-  {
-    parser: parseString,
-  },
-  applyStringConfig,
-);
+export const string = typeValidatorOf<string, string>(parseString);

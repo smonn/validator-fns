@@ -92,16 +92,6 @@ export type ExtractValue<T extends Validator> =
  */
 export interface ConfigBase<T> {
   /**
-   * Converts the input into the designated type. It never gets `undefined` or
-   * `null`, which are missing. It returns a result: valid with the parsed
-   * value, made with `valid()`, or a failure for input it can't read, made
-   * with `invalid()`. A throw is a bug, and the validator rejects with it.
-   */
-  parser: (
-    value: unknown,
-    field?: string,
-  ) => Result<T | null | undefined> | Promise<Result<T | null | undefined>>;
-  /**
    * Value for missing input, `undefined` or `null`. It skips the parser, and
    * the tests run on it.
    */

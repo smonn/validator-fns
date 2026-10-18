@@ -271,16 +271,16 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 10. **Replace the helpers 3.x no longer exports**:
 
-    | 2.x                                                                         | 3.x                                                                                                                                       |
-    | :-------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
-    | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`.                                                                                                   |
-    | `applyArrayConfig` and the other `apply…Config` functions                   | The type validator, with its config.                                                                                                      |
-    | `formatMessage`                                                             | `invalid()` and `createValidatorTest()`, which format their message.                                                                      |
-    | `hasOwnProperty`                                                            | `Object.prototype.hasOwnProperty.call(object, key)`.                                                                                      |
-    | `isObject`                                                                  | `Object.prototype.toString.call(value) === '[object Object]'`.                                                                            |
-    | `invalidDate`                                                               | `new Date('')`.                                                                                                                           |
-    | `ConfigBase`                                                                | A config type that declares `parser` and its options, as in [createTypeValidatorTest](#createtypevalidatortestdefaultconfig-applyconfig). |
-    | `DeepPartial`, `ValidatorFactory`, `SharedValueType`, `SharedDateValueType` | Your own type.                                                                                                                            |
+    | 2.x                                                                         | 3.x                                                                                                                                        |
+    | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+    | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`.                                                                                                    |
+    | `applyArrayConfig` and the other `apply…Config` functions                   | The type validator, with its config.                                                                                                       |
+    | `formatMessage`                                                             | `invalid()` and `createValidatorTest()`, which format their message.                                                                       |
+    | `hasOwnProperty`                                                            | `Object.prototype.hasOwnProperty.call(object, key)`.                                                                                       |
+    | `isObject`                                                                  | `Object.prototype.toString.call(value) === '[object Object]'`.                                                                             |
+    | `invalidDate`                                                               | `new Date('')`.                                                                                                                            |
+    | `ConfigBase`                                                                | `StringConfig` and the other validation types' config types, or a custom type made with [createTypeValidator](#createtypevalidatorparser). |
+    | `DeepPartial`, `ValidatorFactory`, `SharedValueType`, `SharedDateValueType` | Your own type.                                                                                                                             |
 
 11. **Replace `round` with `integer()`**, which rejects a number that isn't an integer instead of rounding it, **and `exclusive` with `check()`**. Messages for `min()`, `max()`, `minDate()` and `maxDate()` no longer get `exclusive`:
 
@@ -296,7 +296,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     ```
 
 12. **Expect a rejection when your code throws.** In 2.x, `string()`, `number()`, `boolean()`, `date()` and `createTypeValidatorTest()` validators turned a throw from a test, a message function or a `parser` into an invalid result with the error's message, while `array()` and `object()` rejected. In 3.x, every validator rejects with the thrown value. Input a validator can't read still gives an invalid result.
-13. **Return a result from a custom `parser`**, made with `valid()` or `invalid()`, instead of the value, and fail input it can't read with `invalid()` instead of throwing. The parser gets the field name as its second argument, for the result. `createTypeValidatorTest()`'s `applyConfig` gets the parsed value, so it no longer calls `config.parser`:
+13. **Replace a custom `parser` with a custom type made by [`createTypeValidator(parser)`](#createtypevalidatorparser)**. The parser is any validator, so it returns a result made with `valid()` or `invalid()` instead of the value, fails input it can't read with `invalid()` instead of throwing, and gets the field name as its second argument. The `parser` option is gone from every validation type, and so is `createTypeValidatorTest()`; see item 27:
 
     ```js
     // 2.x
@@ -308,12 +308,9 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     });
 
     // 3.x
-    const shout = string({
-      parser: async (value, field) =>
-        typeof value === 'string'
-          ? valid({ value: value.toUpperCase(), field })
-          : invalid({ code: 'type', message: 'Must be text.', field }),
-    });
+    const shout = createTypeValidator(
+      string(transform((value) => value.toUpperCase())),
+    )();
     ```
 
 14. **Read the code, not the wording.** Every failure has a `code`, such as `min` or `required`, and `params`, such as `{ min, amount }`, beside its `message`. See [Error codes](#error-codes). No English default remains: a message is optional on every built-in test, and a failure without one reads its code, until a translation arrives in a later 3.0 prerelease. `'Required.'` is now `'required'`, and `'Failed to parse value to number.'` is `'type'`, with `{ expected: 'number' }`.
@@ -355,7 +352,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 20. **Expect full field paths.** A nested field is the whole path from the caller's field, such as `user.a.b` or `user.tags[1].name`. 2.x gave a nested object's field its bare key, such as `b` or `name`, and an item's field left out the caller's, such as `tags[1]`. An item of a root array is `[1]`. Messages that use `{field}` get the full path too, so `'{field} is required.'` reads `user.a.b is required.`.
 
-21. **Treat only `undefined` and `null` as missing.** `''`, `NaN` and an invalid `Date` are present values, so they reach the parser and the tests. `string()` accepts `''`, and `string(transform((s) => s.trim()))` accepts `'  '` as `''`; add `min(1)` to reject them. `number()`, `date()` and `boolean()` fail `''`, `NaN` and an invalid `Date` with `type`, inside `optional()` too. A custom `parser` no longer gets `undefined` or `null`:
+21. **Treat only `undefined` and `null` as missing.** `''`, `NaN` and an invalid `Date` are present values, so they reach the parser and the tests. `string()` accepts `''`, and `string(transform((s) => s.trim()))` accepts `'  '` as `''`; add `min(1)` to reject them. `number()`, `date()` and `boolean()` fail `''`, `NaN` and an invalid `Date` with `type`, inside `optional()` too. A custom type's parser never gets `undefined` or `null`:
 
     ```js
     // 2.x
@@ -368,7 +365,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     );
     ```
 
-22. **Pass each type validator its own type.** In 2.x, the built-in parsers converted input: `number('42')` was `42`, `string(42)` was `'42'`, `boolean('false')` was `true`, `array('abc')` was `['a', 'b', 'c']` and `array(new Set())` held the set's items. In 3.x, each accepts only its own type and fails anything else with `type`, until `coerce` arrives in a later 3.0 prerelease. Convert the input before validating it, or with a custom `parser`, in the meantime:
+22. **Pass each type validator its own type.** In 2.x, the built-in parsers converted input: `number('42')` was `42`, `string(42)` was `'42'`, `boolean('false')` was `true`, `array('abc')` was `['a', 'b', 'c']` and `array(new Set())` held the set's items. In 3.x, each accepts only its own type and fails anything else with `type`, until `coerce` arrives in a later 3.0 prerelease. Convert the input before validating it, or with a custom type's parser, in the meantime:
 
     | Validator   | Accepts                                                                                                                                                                                                                  | Fails with `type`, for example       |
     | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------- |
@@ -408,6 +405,20 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 25. **Expect `array()`'s tests to run after its items, on the parsed items.** Only the built-in `min()`, `max()` and `exact()` still check the array before any item runs. Any other test, such as a length `check()` of your own, runs once every item is valid, and doesn't run when one fails. A test's valid value is now the array's value, as in item 24. In TypeScript, the tests take the item validator's type, such as `Test<string[]>` for `array(string())`, instead of `unknown[]`, so a `min()` built apart from its validator needs that type, as in `min<string[]>(1)`.
 
 26. **Pass `object(schema, { strict: true })` to reject keys outside the schema**, with the `unknownKeys` code, before any property runs. Without it, `object()` still leaves them out of the value, as 2.x did.
+27. **Replace `createTypeValidatorTest(defaultConfig, applyConfig)` with [`createTypeValidator(parser)`](#createtypevalidatorparser)**, whose parser is any validator, and do in its tests what `applyConfig` did. The config takes only `default` and `messages`, so a custom option such as `cents` becomes a separate custom type or a `transform()`. A parser's failure keeps its own code, params and errors:
+
+    ```js
+    // 2.x
+    const money = createTypeValidatorTest(
+      { parser: parseAmount },
+      applyMoneyConfig,
+    );
+    money({ cents: true });
+
+    // 3.x
+    const amount = createTypeValidator(readAmount);
+    amount(transform((value) => Math.round(value * 100)));
+    ```
 
 ## API Reference
 
@@ -603,19 +614,18 @@ In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and
 
 ### Unreadable input and throws
 
-Input of another type, or that a custom parser can't read, gives an invalid result. For example, `number()` fails `'42'` with the `type` code and `{ expected: 'number' }`. A validator never rejects for its input.
+Input of another type, or that a custom type's parser can't read, gives an invalid result. For example, `number()` fails `'42'` with the `type` code and `{ expected: 'number' }`. A validator never rejects for its input.
 
-A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a `parser`, `createTypeValidatorTest()`'s `applyConfig`, and a validator passed to `array()` or `object()`. `parse()` and `~standard.validate` reject the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
+A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a custom type's parser, and a validator passed to `array()` or `object()`. `parse()` and `~standard.validate` reject the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
 
-A custom `parser` takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. It never gets `undefined` or `null`, which skip the parser as missing. A parsed `undefined` or `null` counts as missing too.
+A custom type's parser, the validator passed to [createTypeValidator(parser)](#createtypevalidatorparser), takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. It never gets `undefined` or `null`, which skip the parser as missing. A parsed `undefined` or `null` counts as missing too.
 
 ```js
-const upper = string({
-  parser: async (value, field) =>
-    typeof value === 'string'
-      ? valid({ value: value.toUpperCase(), field })
-      : invalid({ code: 'type', message: 'Must be text.', field }),
-});
+const upper = createTypeValidator(async (value, field) =>
+  typeof value === 'string'
+    ? valid({ value: value.toUpperCase(), field })
+    : invalid({ code: 'type', message: 'Must be text.', field }),
+)();
 
 await upper('abc'); // { state: 'valid', value: 'ABC', ... }
 await upper(42); // { state: 'invalid', message: 'Must be text.', ... }
@@ -664,11 +674,10 @@ In TypeScript, a collection test takes the parsed items, such as `Test<number[]>
 
 <details><summary>config</summary>
 
-| option     | type     | description                                                                                                              |
-| :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | array    | Optional. Value used for `undefined` or `null`.                                                                          |
-| `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
-| `parser`   | function | Optional. Used to customize how a value is converted into an array.                                                      |
+| option     | type   | description                                                                                                              |
+| :--------- | :----- | :----------------------------------------------------------------------------------------------------------------------- |
+| `default`  | array  | Optional. Value used for `undefined` or `null`.                                                                          |
+| `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
 </details>
 
@@ -680,11 +689,10 @@ Supported validation tests: `oneOf`.
 
 <details><summary>config</summary>
 
-| option     | type     | description                                                                                                              |
-| :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | boolean  | Optional. Value used for `undefined` or `null`.                                                                          |
-| `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
-| `parser`   | function | Optional. Used to customize how a value is converted into a boolean.                                                     |
+| option     | type    | description                                                                                                              |
+| :--------- | :------ | :----------------------------------------------------------------------------------------------------------------------- |
+| `default`  | boolean | Optional. Value used for `undefined` or `null`.                                                                          |
+| `messages` | object  | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
 </details>
 
@@ -696,13 +704,12 @@ Supported validation tests: `maxDate`, `minDate`, and `oneOf`.
 
 <details><summary>config</summary>
 
-| option     | type     | description                                                                                                              |
-| :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | date     | Optional. Value used for `undefined` or `null`.                                                                          |
-| `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
-| `parser`   | function | Optional. Used to customize how a value is converted into a date.                                                        |
+| option     | type   | description                                                                                                              |
+| :--------- | :----- | :----------------------------------------------------------------------------------------------------------------------- |
+| `default`  | date   | Optional. Value used for `undefined` or `null`.                                                                          |
+| `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
-To read dates from other input, such as [ISO 8601][iso8601] strings or other formats, use a custom `parser`, for example with a third-party library such as [date-fns][date-fns].
+To read dates from other input, such as [ISO 8601][iso8601] strings or other formats, make a custom type with [createTypeValidator(parser)](#createtypevalidatorparser), for example with a third-party library such as [date-fns][date-fns].
 
 </details>
 
@@ -714,11 +721,10 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 <details><summary>config</summary>
 
-| option     | type     | description                                                                                                              |
-| :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | number   | Optional. Value used for `undefined` or `null`.                                                                          |
-| `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
-| `parser`   | function | Optional. Used to customize how a value is converted into a number.                                                      |
+| option     | type   | description                                                                                                              |
+| :--------- | :----- | :----------------------------------------------------------------------------------------------------------------------- |
+| `default`  | number | Optional. Value used for `undefined` or `null`.                                                                          |
+| `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
 </details>
 
@@ -791,11 +797,10 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 <details><summary>config</summary>
 
-| option     | type     | description                                                                                                              |
-| :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | string   | Optional. Value used for `undefined` or `null`.                                                                          |
-| `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
-| `parser`   | function | Optional. Used to customize how a value is converted into a string.                                                      |
+| option     | type   | description                                                                                                              |
+| :--------- | :----- | :----------------------------------------------------------------------------------------------------------------------- |
+| `default`  | string | Optional. Value used for `undefined` or `null`.                                                                          |
+| `messages` | object | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 
 </details>
 
@@ -1018,7 +1023,7 @@ Ensures the value is a UUID as defined by [RFC 9562](https://www.rfc-editor.org/
 Custom validation types and validators can be created and used as needed, with these helpers.
 
 - [createValidator(fn)](#createvalidatorfn)
-- [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
+- [createTypeValidator(parser)](#createtypevalidatorparser)
 - [createValidatorTest(code, test, message?, getParams?)](#createvalidatortestcode-test-message-getparams)
 - [valid({ value, field })](#valid-value-field-)
 - [invalid({ code, params, message, value, field, errors })](#invalid-code-params-message-value-field-errors-)
@@ -1050,64 +1055,47 @@ How a validator's results map to Standard Schema results:
 - A valid result gives `{ value }`, the parsed value. Its type is the validator's value type, which includes `null` and `undefined` only for `optional()` validators.
 - An invalid result gives one issue per leaf of its [errors tree](#errors-tree), with the leaf's `message`, `code` and `params`. The object keys and array indexes down to the leaf form its `path`, and a failure without children has no path. An `items` or `properties` failure reports only its children, or itself when its tree holds no failure.
 
-#### createTypeValidatorTest(defaultConfig, applyConfig)
+#### createTypeValidator(parser)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object the validator starts from. It must include a `parser` function, which returns a result as described in [Unreadable input and throws](#unreadable-input-and-throws), and the config type declares `parser` and any options, such as `messages`. The validator parses the input with the config's `parser`, then `applyConfig` gets the parsed value and the config, and returns the value to check. The resulting validator is required by default, takes `messages` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`.
+Makes a custom validation type from `parser`, which can be any validator: a validation type with its tests, a custom validator, or one made with `createValidator()`. It returns a function with the validation types' call shape, `(config?, ...tests)`, where `config` takes `default` and `messages`. The resulting validator is required by default, runs its tests on the parsed value, works with `optional()`, and is a [Standard Schema][standard-schema], like the built-in ones.
 
-The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
-
-In TypeScript, the value type and the config type are inferred from `applyConfig`, so the validator accepts options that `defaultConfig` doesn't set. Passing them as type arguments, as in `createTypeValidatorTest<number, MoneyConfig>(…)`, still works.
+The parser reads present input only, with the field name: `undefined` and `null` skip it as missing, and a parsed `undefined` or `null` counts as missing too. Its valid value is the parsed value. Its failure is the custom type's own, with its own `code`, `params`, `message` and `errors`, and `messages` words it when it has no message. In TypeScript, the value and error types are the parser's, without `null` and `undefined`.
 
 ```ts
 import {
-  createTypeValidatorTest,
+  createTypeValidator,
   invalid,
-  type Messages,
-  type Result,
+  min,
+  string,
+  uuid,
   valid,
 } from 'validator-fns';
 
-interface MoneyConfig {
-  parser: (
-    value: unknown,
-    field?: string,
-  ) => Promise<Result<number | null | undefined>>;
-  messages?: Messages;
-  /** Convert the amount to cents. */
-  cents?: boolean;
-}
+const uuidString = createTypeValidator(string(uuid()));
+
+await uuidString()(42);
+// { state: 'invalid', code: 'type', params: { expected: 'string' }, ... }
+await uuidString()('nope');
+// { state: 'invalid', code: 'uuid', ... }
 
 /** Reads a number or a numeric string, and fails anything else. */
-async function parseAmount(
-  value: unknown,
-  field?: string,
-): Promise<Result<number | null | undefined>> {
-  const amount = typeof value === 'string' ? Number.parseFloat(value) : value;
-  if (typeof amount === 'number') {
-    return valid({ value: amount, field });
-  }
+const amount = createTypeValidator(async (value, field) => {
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed)
+    ? valid({ value: parsed, field })
+    : invalid({
+        code: 'type',
+        params: { expected: 'amount' },
+        message: 'Must be an amount.',
+        value,
+        field,
+      });
+});
 
-  return invalid({ code: 'type', message: 'Must be an amount.', field });
-}
-
-function applyMoneyConfig(
-  amount: number | null | undefined,
-  config: MoneyConfig,
-): number | null | undefined {
-  return config.cents && typeof amount === 'number'
-    ? Math.round(amount * 100)
-    : amount;
-}
-
-const money = createTypeValidatorTest(
-  { parser: parseAmount },
-  applyMoneyConfig,
-);
-
-await money({ cents: true })('12.5');
-// { state: 'valid', value: 1250, ... }
-await money()(true);
-// { state: 'invalid', code: 'type', message: 'Must be an amount.', ... }
+await amount({ messages: { required: 'Enter an amount.' } }, min(0))('12.5');
+// { state: 'valid', value: 12.5, ... }
+await amount()(true);
+// { state: 'invalid', code: 'type', params: { expected: 'amount' }, message: 'Must be an amount.', ... }
 ```
 
 #### createValidatorTest(code, test, message?, getParams?)
