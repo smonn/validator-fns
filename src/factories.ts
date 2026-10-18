@@ -146,8 +146,15 @@ export function createParser<T>(
   expected: string,
   isType = (value: unknown): value is T => typeof value === expected,
 ): (value: unknown, field?: string) => Result<T, never> {
-  return (value, field) =>
-    isType(value)
-      ? validResult({ value, field })
-      : failure({ code: 'type', params: { expected }, value, field });
+  return (value, field) => {
+    try {
+      if (isType(value)) {
+        return validResult({ value, field });
+      }
+    } catch {
+      // Input such as a revoked Proxy, on which Array.isArray throws, isn't of
+      // the type.
+    }
+    return failure({ code: 'type', params: { expected }, value, field });
+  };
 }
