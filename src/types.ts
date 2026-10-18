@@ -163,17 +163,3 @@ export type BuiltInCode =
   | 'unknownKeys'
   | 'items'
   | 'properties';
-
-/**
- * Sets an own property. Plain assignment of `__proto__` calls the
- * `Object.prototype.__proto__` setter instead of creating the property.
- * @internal
- */
-export function setOwn(target: object, key: PropertyKey, value: unknown) {
-  Object.defineProperty(target, key, {
-    value,
-    enumerable: true,
-    writable: true,
-    configurable: true,
-  });
-}
