@@ -263,7 +263,7 @@ test('should fail a missing object with required when a child fails', async () =
   );
 });
 
-test('should run the object-level tests on a built object', async () => {
+test('should run the collection tests on a built object', async () => {
   const validate = object(
     { theme: string({ default: 'light' }) },
     check((value) => value.theme === 'dark', 'dark'),
