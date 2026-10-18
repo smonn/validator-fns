@@ -1,5 +1,5 @@
 import { formatMessage } from './failures/index.js';
-import type { ValidatorMessage } from './shared.js';
+import type { ValidatorMessage } from './types.js';
 
 /**
  * Whether `value` is an array. A revoked Proxy, on which `Array.isArray`

@@ -1,5 +1,5 @@
 import { fillOwn } from '../failures/index.js';
-import type { Messages, Result } from '../shared.js';
+import type { Messages, Result } from '../types.js';
 import { type Def, type Exit, isMissing } from './def.js';
 import { andThen, type MaybePromise } from './promises.js';
 import { runSteps } from './steps.js';

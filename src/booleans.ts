@@ -1,5 +1,5 @@
 import { defineScalar } from './pipeline/index.js';
-import type { ConfigBase } from './shared.js';
+import type { ConfigBase } from './types.js';
 
 /**
  * Configuration for boolean validation.

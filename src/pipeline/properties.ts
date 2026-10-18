@@ -1,5 +1,5 @@
 import { childField } from '../failures/index.js';
-import type { Result } from '../shared.js';
+import type { Result } from '../types.js';
 import { runEach } from './children.js';
 import type { Shape } from './def.js';
 import { andThen, type MaybePromise } from './promises.js';

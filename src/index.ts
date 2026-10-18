@@ -31,9 +31,9 @@ export type {
   MinValidatorMessageParameters,
 } from './limits';
 export { FailureError, messageTree } from './failures/index';
-export { invalid } from './invalid';
+export { invalid } from './results';
 export { parse } from './parse';
-export { valid } from './shared';
+export { valid } from './types';
 export type {
   BuiltInCode,
   ExtractError,
@@ -46,7 +46,7 @@ export type {
   Validator,
   ValidatorMessage,
   ValidatorMessageParameters,
-} from './shared';
+} from './types';
 export { email, matches, string, url, uuid } from './strings';
 export type {
   MatchesValidatorMessageParameters,

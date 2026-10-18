@@ -13,7 +13,7 @@ import {
   type Messages,
   type Test,
   type Validator,
-} from './shared.js';
+} from './types.js';
 
 export type ObjectParameter = Record<string, Validator>;
 

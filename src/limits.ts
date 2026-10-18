@@ -4,7 +4,7 @@ import type {
   Test,
   ValidatorMessage,
   ValidatorMessageParameters,
-} from './shared.js';
+} from './types.js';
 
 /** @internal */
 type SharedValueType = string | number | unknown[];

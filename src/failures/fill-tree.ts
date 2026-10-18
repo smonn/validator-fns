@@ -1,4 +1,4 @@
-import type { Result } from '../shared.js';
+import type { Result } from '../types.js';
 import { fillFailure, type Translation } from './fill.js';
 import { readFailure } from './read.js';
 

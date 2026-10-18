@@ -1,4 +1,4 @@
-import { type Result, validResult } from '../shared.js';
+import { type Result, validResult } from '../types.js';
 import { afterPromise, isThenable, type MaybePromise } from './promises.js';
 import type { Step } from './sync.js';
 

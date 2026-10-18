@@ -4,7 +4,7 @@ import type {
   Test,
   ValidatorMessage,
   ValidatorMessageParameters,
-} from './shared.js';
+} from './types.js';
 
 export interface OneOfValidatorMessageParameters<
   T,

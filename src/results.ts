@@ -1,5 +1,5 @@
 import { failure } from './failures/index.js';
-import type { Result, ValidatorMessage } from './shared.js';
+import type { Result, ValidatorMessage } from './types.js';
 
 /** @internal */
 type InvalidFields<E> = {

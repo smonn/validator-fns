@@ -3,7 +3,7 @@ import {
   hasOwnProperty,
   type Messages,
   type ValidatorMessage,
-} from '../shared.js';
+} from '../types.js';
 import { failure, unworded } from './make.js';
 
 /**

@@ -1,5 +1,5 @@
 import { amount } from './en-amount.js';
-import type { BuiltInCode, Messages } from './shared.js';
+import type { BuiltInCode, Messages } from './types.js';
 
 /**
  * English messages for every built-in code, for `withMessages()`. Compose

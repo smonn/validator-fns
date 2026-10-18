@@ -1,5 +1,5 @@
 import { issues } from '../failures/index.js';
-import type { Validator } from '../shared.js';
+import type { Validator } from '../types.js';
 import type { StandardSchemaV1 } from '../standard-schema.js';
 
 /**

@@ -4,7 +4,7 @@ import {
   type Result,
   type Validator,
   validResult,
-} from '../shared.js';
+} from '../types.js';
 import { runEach } from './children.js';
 import type { Children } from './def.js';
 import { andThen } from './promises.js';

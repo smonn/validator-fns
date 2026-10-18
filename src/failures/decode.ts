@@ -1,4 +1,4 @@
-import type { Failure } from '../shared.js';
+import type { Failure } from '../types.js';
 import type { StandardSchemaV1 } from '../standard-schema.js';
 import { readFailure } from './read.js';
 import { entriesOf, isContainer, type Visits } from './walk.js';

@@ -1,5 +1,5 @@
 import { fillTree, type Translation } from '../failures/index.js';
-import type { Messages, Validator } from '../shared.js';
+import type { Messages, Validator } from '../types.js';
 import { optional } from './optional.js';
 import { andThen } from './promises.js';
 import type { TypeValidator } from './standard.js';
