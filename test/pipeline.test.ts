@@ -107,8 +107,6 @@ const untyped =
 
 const trim = transform((value: string) => value.trim());
 
-// Strings
-
 const atLeastFive = untyped(min(5, 'min:{min}'));
 const atMostFive = untyped(max(5, 'max:{max}'));
 const anEmail = untyped(email('invalid email'));
@@ -368,8 +366,6 @@ const stringRows: Row[] = [
   ),
 ];
 
-// Numbers
-
 const fromMinusTenToTen = number(
   { messages: { required: 'Must enter a value.' } },
   min(-10, 'Must be at least -10.'),
@@ -523,8 +519,6 @@ const numberRows: Row[] = [
   ),
 ];
 
-// Booleans
-
 const aBoolean = boolean({ messages: { required: 'required' } });
 const trueByDefault = boolean({ default: true });
 
@@ -560,8 +554,6 @@ const booleanRows: Row[] = [
     pass(false),
   ),
 ];
-
-// Dates
 
 const now = new Date();
 const tomorrow = new Date(now);
@@ -710,8 +702,6 @@ const dateRows: Row[] = [
   ),
 ];
 
-// Tests called directly
-
 const builtInTests: [string, Validator, Record<string, unknown>][] = [
   ['min', untyped(min(0, 'failed')), { min: 0, amount: Number.NaN }],
   ['max', untyped(max(1, 'failed')), { max: 1, amount: Number.NaN }],
@@ -846,8 +836,6 @@ const testRows: Row[] = [
     pass(new Date(0)),
   ),
 ];
-
-// Missing values, defaults and optional()
 
 const typeValidators: [string, Validator][] = [
   ['string()', string()],
@@ -991,8 +979,6 @@ const missingRows: Row[] = [
   ),
   row('a custom validator passes its value', notOk, 'ok', pass('ok')),
 ];
-
-// Arrays
 
 const threeLetterWords = array(
   string(min(3, 'min:{min}')),
@@ -1157,8 +1143,6 @@ const arrayRows: Row[] = [
     pass(['a', undefined, null]),
   ),
 ];
-
-// Objects
 
 const adult = object({
   username: string(
@@ -1508,8 +1492,6 @@ const objectRows: Row[] = [
     pass('a'),
   ),
 ];
-
-// Custom types
 
 const uuidString = createTypeValidator(string(uuid()));
 
