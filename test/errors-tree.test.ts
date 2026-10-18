@@ -842,3 +842,60 @@ test.each(decoders)(
     assert.include(String(error), 'more than 1000000 entries');
   },
 );
+
+/** An errors array whose `keys()` lists its indices in `order`. */
+class Listed<T> extends Array<T> {
+  order: number[] = [];
+
+  override keys(): ArrayIterator<number> {
+    return this.order.values();
+  }
+}
+
+/** An `items` failure of two unworded items, `a` and `b`, keyed in `order`. */
+async function listed(order: number[]): Promise<Result> {
+  const errors = new Listed<Result>();
+  errors.push(
+    await invalid({ code: 'a', field: '[0]' }),
+    await invalid({ code: 'b', field: '[1]' }),
+  );
+  errors.order = order;
+  return invalid({ code: 'items', field: undefined, errors });
+}
+
+/** `made`, worded by `withMessages()`, which rebuilds its errors tree. */
+async function worded(made: Result): Promise<Result> {
+  const validator = createValidator(async () => made);
+  return withMessages(validator, { a: 'A.', b: 'B.' })();
+}
+
+test('should keep each item at its index when its errors list their keys out of order', async () => {
+  const made = await listed([1, 0]);
+  assert.deepEqual(messageTree(made), ['a', 'b']);
+  const filled = await worded(made);
+  assert.deepEqual(messageTree(filled), ['A.', 'B.']);
+  assert.deepEqual(
+    filled.state === 'invalid' &&
+      Array.isArray(filled.errors) &&
+      filled.errors.map((item: Result) => item.field),
+    ['[0]', '[1]'],
+  );
+});
+
+test('should leave a hole for an index its errors leave unlisted', async () => {
+  const made = await listed([1]);
+  const tree = messageTree(made);
+  assert.deepEqual(Array.isArray(tree) && [tree.length, Object.keys(tree)], [
+    2,
+    ['1'],
+  ]);
+  const filled = await worded(made);
+  assert.deepEqual(
+    filled.state === 'invalid' &&
+      Array.isArray(filled.errors) && [
+        filled.errors.length,
+        Object.keys(filled.errors),
+      ],
+    [2, ['1']],
+  );
+});
