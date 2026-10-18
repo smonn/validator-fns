@@ -37,27 +37,27 @@ export function readDate(value: unknown): Date | undefined {
 }
 
 /**
- * The fields of a date, in the order `Date.UTC()` takes them.
+ * The components of a date, in the order `Date.UTC()` takes them.
  * @internal
  */
-type DateFields = Readonly<Required<Parameters<typeof Date.UTC>>>;
+type DateComponents = Readonly<Required<Parameters<typeof Date.UTC>>>;
 
 /**
- * Builds a date from its fields, in UTC or in local time.
- * @param fields Fields of the date, with the year as written
- * @param utc Whether the fields are in UTC
+ * Builds a date from its components, in UTC or in local time.
+ * @param components Components of the date, with the year as written
+ * @param utc Whether the components are in UTC
  * @internal
  */
-function buildDate(fields: DateFields, utc: boolean): Date {
-  if (fields[0] >= 100) {
-    return utc ? new Date(Date.UTC(...fields)) : new Date(...fields);
+function buildDate(components: DateComponents, utc: boolean): Date {
+  if (components[0] >= 100) {
+    return utc ? new Date(Date.UTC(...components)) : new Date(...components);
   }
 
   // `new Date()` and `Date.UTC()` read the years 0 to 99 as 1900 to 1999, so
   // those are built 400 years later and moved back. The calendar repeats every
   // 400 years, and both eras predate time zone rules, so the local offset is
   // the same.
-  const [year, ...rest] = fields;
+  const [year, ...rest] = components;
   const date = buildDate([year + 400, ...rest], utc);
   date.setUTCFullYear(date.getUTCFullYear() - 400);
   return date;
