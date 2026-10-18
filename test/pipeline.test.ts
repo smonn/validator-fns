@@ -962,7 +962,7 @@ const coerceRows: Row[] = [
     '17/10/2026',
     '20261017',
     '2026-10-17T',
-    // A part out of its range (#787)
+    // A part out of its range
     '2026-02-30',
     '2025-02-29',
     '1900-02-29',

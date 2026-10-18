@@ -95,7 +95,7 @@ test('minDate() and maxDate() throw for a limit that is not a valid date', () =>
     '2020-01-01x',
     'tomorrow',
     '12/31/2020',
-    // ISO 8601 strings with a part out of its range (#787)
+    // ISO 8601 strings with a part out of its range
     '2020-00',
     '2020-13',
     '2020-01-00',
