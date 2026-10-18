@@ -56,9 +56,10 @@ export type Validator<T = unknown, E = unknown> = (
 ) => Promise<Result<T, E>>;
 
 /**
- * A test, such as `min()`: it checks a parsed value. Type validators run
- * their tests on the parsed value once it's present, so a test takes the
- * validator's value type. Its own result value is never read.
+ * A test, such as `min()`: a step on a parsed value. Type validators run
+ * their tests in order on the parsed value once it's present, and each test's
+ * valid value goes to the next, so a test can change the value but not its
+ * type. The last one is the result's value.
  * @typeParam T The value type the test checks
  * @typeParam E The error type
  * @category Types
@@ -66,7 +67,7 @@ export type Validator<T = unknown, E = unknown> = (
 export type Test<T = unknown, E = unknown> = (
   value: T,
   field?: string,
-) => Promise<Result<unknown, E>>;
+) => Promise<Result<T, E>>;
 
 /**
  * Extracts the generic error type from a Validator.

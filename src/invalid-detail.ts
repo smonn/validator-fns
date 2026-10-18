@@ -1,12 +1,41 @@
 import { childField, itemsTree } from './failures/index.js';
-import type { Failure, Result, Test, Validator } from './shared.js';
+import {
+  type Failure,
+  type Result,
+  type Test,
+  type Validator,
+  validResult,
+} from './shared.js';
 
 /**
- * Runs tests on a value in order, stopping at the first failure, for the
- * collection-level tests of `array()` and `object()`.
+ * Runs tests on a value in order, for the collection-level tests of
+ * `object()`. Each test's valid value goes to the next, and the first failure
+ * ends the run.
  * @param tests Tests to run
  * @param value Value to test
  * @param field Field name
+ * @internal
+ */
+export async function runTests<V, E>(
+  tests: Test<V, E>[],
+  value: V,
+  field: string | undefined,
+): Promise<Result<V, E>> {
+  let current = value;
+  for (const validatorTest of tests) {
+    const result = await validatorTest(current, field);
+    if (result.state === 'invalid') {
+      return result;
+    }
+    current = result.value;
+  }
+
+  return validResult({ value: current, field });
+}
+
+/**
+ * The first failure of `array()`'s collection-level tests, which don't pass
+ * values on yet (#757).
  * @internal
  */
 export async function findInvalidResult<V, E>(
@@ -14,14 +43,8 @@ export async function findInvalidResult<V, E>(
   value: V,
   field: string | undefined,
 ): Promise<Failure<E> | undefined> {
-  for (const validatorTest of tests) {
-    const result = await validatorTest(value, field);
-    if (result.state === 'invalid') {
-      return result;
-    }
-  }
-
-  return undefined;
+  const result = await runTests(tests, value, field);
+  return result.state === 'invalid' ? result : undefined;
 }
 
 /**

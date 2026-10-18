@@ -4,7 +4,7 @@ import {
   fillOwn,
   propertiesTree,
 } from './failures/index.js';
-import { findInvalidResult } from './invalid-detail.js';
+import { runTests } from './invalid-detail.js';
 import { parseRecord, requirable } from './optional.js';
 import { ownValue, propertiesOf } from './properties.js';
 import type { TypeValidator } from './standard.js';
@@ -15,7 +15,6 @@ import {
   type Messages,
   type Result,
   setOwn,
-  valid,
   type Test,
   type Validator,
 } from './shared.js';
@@ -127,7 +126,6 @@ export function object<P extends ObjectParameter>(
         }
       }
 
-      const value = asObjectValue<P>(resolvedValues);
       const errors = propertiesTree<ObjectErrors<P>>(results, {});
       if (errors && isMissing) {
         return onEmpty(values, field);
@@ -143,8 +141,12 @@ export function object<P extends ObjectParameter>(
         return fillOwn(container, messages);
       }
 
-      const own = await findInvalidResult(allTests, value, field);
-      return own ? fillOwn(own, messages) : valid({ value, field });
+      const result = await runTests(
+        allTests,
+        asObjectValue<P>(resolvedValues),
+        field,
+      );
+      return result.state === 'invalid' ? fillOwn(result, messages) : result;
     },
   );
 }

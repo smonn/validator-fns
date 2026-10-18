@@ -159,7 +159,7 @@ test('should prefer the message passed to a test over the messages config', asyn
 test.each(['constructor', 'toString', '__proto__'])(
   'should fall back to the code %s when the messages config lacks it',
   async (code) => {
-    const fails = createValidatorTest(code, () => false);
+    const fails = createValidatorTest<string>(code, () => false);
     assert.deepInclude(await string({ messages: {} }, fails)('x'), {
       code,
       message: code,
@@ -173,7 +173,7 @@ test.each<[string, Messages]>([
 ])(
   'should word the code %s from its own messages key',
   async (code, messages) => {
-    const fails = createValidatorTest(code, () => false);
+    const fails = createValidatorTest<string>(code, () => false);
     assert.deepInclude(await string({ messages }, fails)('x'), {
       code,
       message: 'Own.',

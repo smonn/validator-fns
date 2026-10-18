@@ -234,6 +234,8 @@ test('min(), max(), minDate() and maxDate() take no exclusive argument', () => {
 
 const anyValue = async (value: unknown, field?: string) =>
   valid({ value, field });
+const sameValue = async <T>(value: T, field?: string) =>
+  valid({ value, field });
 
 test('validation tests take the parsed value', () => {
   expectTypeOf(min(1, 'min')).toEqualTypeOf<
@@ -243,12 +245,15 @@ test('validation tests take the parsed value', () => {
     check((value: { name: string }) => value.name !== '', 'empty'),
   ).toEqualTypeOf<Test<{ name: string }, never>>();
 
-  // A test for another type doesn't fit, and a test on unknown fits any type.
+  // A test for another type doesn't fit, and neither does one whose valid
+  // value is wider, since it goes on to the next test. A test that keeps any
+  // value's type fits any type.
   const isTrue = createValidatorTest('true', (value: boolean) => value);
   expectTypeOf(isTrue).not.toExtend<Test<string, string>>();
   expectTypeOf(isTrue).toExtend<Test<boolean, string>>();
-  expectTypeOf(anyValue).toExtend<Test<string, string>>();
-  string(min(1, 'min'), anyValue);
+  expectTypeOf(anyValue).not.toExtend<Test<string, string>>();
+  expectTypeOf(sameValue).toExtend<Test<string, string>>();
+  string(min(1, 'min'), sameValue);
 });
 
 const annotated = (parameters: MinValidatorMessageParameters) =>

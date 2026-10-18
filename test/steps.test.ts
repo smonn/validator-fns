@@ -1,0 +1,79 @@
+import { assert, test } from 'vitest';
+import {
+  check,
+  createTypeValidatorTest,
+  max,
+  messageTree,
+  min,
+  number,
+  object,
+  optional,
+  string,
+  valid,
+} from '../src/index.js';
+
+// Hand-written tests, which have no synchronous twin.
+const double = async (value: number, field?: string) =>
+  valid({ value: value * 2, field });
+const shout = async (value: string, field?: string) =>
+  valid({ value: value.toUpperCase(), field });
+
+test('a test passes its valid value to the next test', async () => {
+  const validate = number(double, max(10, 'max'));
+
+  assert.deepInclude(await validate(6), {
+    state: 'invalid',
+    code: 'max',
+    params: { max: 10, amount: 12 },
+  });
+  assert.deepEqual(await validate(4), {
+    state: 'valid',
+    value: 8,
+    field: undefined,
+  });
+});
+
+test('the last test value is the result value', async () => {
+  assert.deepEqual(await string(min(1), shout)('abc', 'name'), {
+    state: 'valid',
+    value: 'ABC',
+    field: 'name',
+  });
+  assert.deepInclude(await optional(number(double, double))(3), {
+    state: 'valid',
+    value: 12,
+  });
+});
+
+const custom = createTypeValidatorTest(
+  { parser: async (value: unknown, field?: string) => valid({ value, field }) },
+  (value: unknown) => value,
+);
+const wrap = async (value: unknown, field?: string) =>
+  valid({ value: [value], field });
+
+test('a custom type validator passes values on the same way', async () => {
+  assert.deepInclude(await custom(wrap, wrap)('a'), { value: [['a']] });
+});
+
+test('an object test passes its valid value to the next object test', async () => {
+  const validate = object(
+    { count: number() },
+    async (value, field) => valid({ value: { count: value.count + 1 }, field }),
+    check('count', (value) => value.count < 3, 'tooMany'),
+  );
+
+  assert.deepInclude(await validate({ count: 1 }), {
+    state: 'valid',
+    value: { count: 2 },
+  });
+  const failed = await validate({ count: 2 });
+  assert.deepInclude(failed, { state: 'invalid', code: 'properties' });
+  assert.deepEqual(messageTree(failed), { count: 'tooMany' });
+});
+
+test('~standard.validate returns the value after the tests', async () => {
+  assert.deepEqual(await string(shout)['~standard'].validate('a'), {
+    value: 'A',
+  });
+});
