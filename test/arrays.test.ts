@@ -2,6 +2,7 @@ import { assert, test } from 'vitest';
 import {
   array,
   createTypeValidator,
+  number,
   object,
   string,
   valid,
@@ -48,4 +49,22 @@ test('array() rejects the 2.x order, config before the item validator', () => {
     TypeError,
     'array(item, config?, ...tests)',
   );
+});
+
+/** `['bad']`, with its own `key` property set to `own`. */
+function withOwn(key: string, own: unknown): unknown[] {
+  return Object.defineProperty(['bad'], key, { value: own });
+}
+
+// [label, an array with its own property named like an array method]
+test.each<[string, unknown[]]>([
+  ['its own values() generator', withOwn('values', function* empty() {})],
+  ['its own values that is not a function', withOwn('values', 'nope')],
+  ['its own entries() generator', withOwn('entries', function* empty() {})],
+  ['its own entries that is not a function', withOwn('entries', 'nope')],
+])('should validate the items of an array with %s', async (_label, input) => {
+  assert.deepInclude(await array(number())(input), {
+    state: 'invalid',
+    code: 'items',
+  });
 });
