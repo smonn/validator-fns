@@ -23,10 +23,22 @@
         "*.config.{ts,mjs}",
         "scripts/*.mjs",
       ],
+      // The layout decided in #744. Imports flow one way: types.ts, then
+      // failures/, results.ts, pipeline/, the type modules and tests, and
+      // index.ts last. A folder imports anything inside itself, and from
+      // outside only its index.ts is imported. Every other file lists exactly
+      // what it imports.
       "moduleBoundaries": [
         {
+          // The public types. No runtime code.
           "name": "types",
           "pattern": "src/types.ts",
+          "deny": ["src/**"],
+        },
+        {
+          // Types copied from @standard-schema/spec, with no imports.
+          "name": "standard-schema",
+          "pattern": "src/standard-schema.ts",
           "deny": ["src/**"],
         },
         {
@@ -35,13 +47,22 @@
           "deny": ["src/**"],
         },
         {
+          // Makes and words failures.
+          "name": "failures",
+          "pattern": "src/failures/**",
+          "allow": [
+            "src/types.ts",
+            "src/standard-schema.ts",
+            "src/failures/**",
+          ],
+        },
+        {
           "name": "results",
           "pattern": "src/results.ts",
           "allow": ["src/types.ts", "src/failures/index.ts"],
         },
         {
-          // The type-validator pipeline. Only its index is imported from
-          // outside the folder.
+          // The type-validator pipeline.
           "name": "pipeline",
           "pattern": "src/pipeline/**",
           "allow": [
@@ -61,34 +82,14 @@
           "deny": ["src/standard-schema.ts"],
         },
         {
-          "name": "validators",
-          "pattern": "src/{booleans,check,common,limits}.ts",
-          "allow": [
-            "src/types.ts",
-            "src/pipeline/index.ts",
-            "src/failures/index.ts",
-            "src/results.ts",
-            "src/valid-date.ts",
-          ],
-        },
-        {
-          "name": "scalar-validators",
-          "pattern": "src/{numbers,strings}.ts",
-          "allow": ["src/types.ts", "src/pipeline/index.ts"],
-        },
-        {
-          "name": "collection-validators",
-          "pattern": "src/{arrays,objects}.ts",
-          "allow": [
-            "src/types.ts",
-            "src/failures/index.ts",
-            "src/pipeline/index.ts",
-          ],
-        },
-        {
           "name": "valid-date",
           "pattern": "src/valid-date.ts",
           "deny": ["src/**"],
+        },
+        {
+          "name": "type-validators",
+          "pattern": "src/{arrays,booleans,limits,numbers,objects,strings}.ts",
+          "allow": ["src/types.ts", "src/pipeline/index.ts"],
         },
         {
           "name": "dates",
@@ -101,34 +102,36 @@
           ],
         },
         {
+          "name": "common",
+          "pattern": "src/common.ts",
+          "allow": [
+            "src/types.ts",
+            "src/results.ts",
+            "src/pipeline/index.ts",
+            "src/valid-date.ts",
+          ],
+        },
+        {
+          "name": "check",
+          "pattern": "src/check.ts",
+          "allow": ["src/types.ts", "src/failures/index.ts", "src/results.ts"],
+        },
+        {
+          "name": "parse",
+          "pattern": "src/parse.ts",
+          "allow": ["src/types.ts", "src/failures/index.ts"],
+        },
+        {
           // Only the coerce namespace; each twin lives in its type's module.
           "name": "coerce",
           "pattern": "src/coerce.ts",
           "allow": ["src/{booleans,dates,numbers}.ts"],
         },
         {
-          // Types copied from @standard-schema/spec, with no imports.
-          "name": "standard-schema",
-          "pattern": "src/standard-schema.ts",
-          "deny": ["src/**"],
-        },
-        {
-          // Makes and words failures. Only its index is imported from outside
-          // the folder, and it imports only types.ts and the Standard Schema
-          // types.
-          "name": "failures",
-          "pattern": "src/failures/**",
-          "allow": [
-            "src/types.ts",
-            "src/standard-schema.ts",
-            "src/failures/**",
-          ],
-        },
-        {
           "name": "entry",
           "pattern": "src/index.ts",
           "allow": [
-            "src/*.ts",
+            "src/{arrays,booleans,check,coerce,common,dates,limits,numbers,objects,parse,results,strings,types}.ts",
             "src/failures/index.ts",
             "src/pipeline/index.ts",
           ],
@@ -136,12 +139,13 @@
         {
           // The validator-fns/en subpath: the English translation.
           "name": "en",
-          "pattern": "src/{en,en-amount}.ts",
-          "allow": [
-            "src/types.ts",
-            "src/failures/index.ts",
-            "src/en-amount.ts",
-          ],
+          "pattern": "src/en.ts",
+          "allow": ["src/types.ts", "src/en-amount.ts"],
+        },
+        {
+          "name": "en-amount",
+          "pattern": "src/en-amount.ts",
+          "allow": ["src/types.ts", "src/failures/index.ts"],
         },
         {
           "name": "tests",
