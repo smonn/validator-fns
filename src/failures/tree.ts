@@ -26,7 +26,7 @@ export function childField(
   key: string | number,
 ): string {
   if (typeof key === 'number') {
-    return `${field ?? ''}[${key}]`;
+    return `${field || ''}[${key}]`;
   }
 
   return field ? `${field}.${key}` : key;
