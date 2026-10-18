@@ -213,7 +213,23 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    array(string(), { default: [] }, min(2, 'Pick two.'));
    ```
 
-5. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { messages }, ...tests)`. A missing object now fails with `required` instead of reporting each field as missing; wrap it in `optional()` to accept one.
+5. **Check `object()` calls with a second argument**: it's a config object or the first object-level test, as in `object(schema, { messages }, ...tests)`. A missing object is still built from its properties when they all accept a missing value, such as ones with a `default` or wrapped in `optional()`. When one doesn't, the object now fails with `required` instead of reporting each field as missing; wrap it in `optional()` to accept one. The object-level tests run on a built object, inside `optional()` too, so a check that needs at least one field fails a missing object:
+
+   ```js
+   const contact = optional(
+     object(
+       { email: optional(string()), phone: optional(string()) },
+       check(
+         (value) => value.email !== undefined || value.phone !== undefined,
+         'contact',
+       ),
+     ),
+   );
+   await contact(undefined); // { state: 'invalid', code: 'contact', ... }
+   ```
+
+   To accept a missing object, let the check pass the object built from it, where every field is `undefined`. To reject it, drop `optional()`.
+
 6. **Replace `standard()`**: remove it around built-in validators, which are Standard Schemas themselves, and change `standard(fn)` to `createValidator(fn)`:
 
    ```js
@@ -359,6 +375,16 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     | `object()`  | objects other than arrays, functions and boxed primitives, except a boxed Symbol or BigInt whose prototype was replaced, which `object()` can't tell from a plain object without a throwing check; class instances count | `[]`, `() => {}`, `new String('a')`  |
 
     A `minDate()` or `maxDate()` limit that isn't a valid date, such as `null`, `undefined`, `''`, `NaN`, a timestamp out of a date's range or an invalid `Date`, now throws ``TypeError('`limit` must be a valid date')`` when the test is built. An unreadable string throws the same error instead of `Failed to parse value to date.` `min` and `max` in their messages are now always a `Date`. `minDate()`, `maxDate()` and `oneOf()` compare dates by `getTime()`, so a date's own `valueOf` no longer changes the outcome.
+
+23. **Expect `default` to fill only `undefined` and `null`.** `string({ default })` no longer replaces `''`, and `array({ default })` no longer replaces `[]`. The tests still run on the default:
+
+    ```js
+    // 2.x
+    await string({ default: 'none' })(''); // { state: 'valid', value: 'none', ... }
+
+    // 3.x
+    await string({ default: 'none' })(''); // { state: 'valid', value: '', ... }
+    ```
 
 ## API Reference
 
@@ -521,7 +547,7 @@ In TypeScript, `Messages<C>` maps codes to messages, and `BuiltInCode` is the un
 
 ### Required and optional values
 
-Every validation type rejects a missing value: `undefined` or `null`. Every other value is present, including `''`, `0`, `false`, `NaN`, an invalid date and `[]`. A missing value skips the parser, and a `default` fills it before the check. The tests only run on present values. `string()` accepts `''`, so use `min(1)` to reject it.
+Every validation type rejects a missing value: `undefined` or `null`. Every other value is present, including `''`, `0`, `false`, `NaN`, an invalid date and `[]`. A missing value skips the parser. A `default` fills only a missing value, and the tests run on it, so `number({ default: 0 }, min(1))(undefined)` fails with `min`. The default is the value as written, the same instance on every call, so don't mutate an array or `Date` default. Without a default, the tests only run on present values. `string()` accepts `''`, so use `min(1)` to reject it. A missing object is built from its properties; see [object()](#objectschema-config-tests).
 
 A missing value fails with the `required` code. Its message is `'required'` unless the config's `messages` sets one, a [validation error message](#validation-error-message):
 
@@ -538,7 +564,7 @@ await number({ messages: { required: '{field} is required.' } })(
 
 #### optional(validator)
 
-Returns a validator that accepts a missing value, `undefined` or `null`. The missing value skips the parser and the tests, and becomes the result's `value` as it is. Present values go through `validator` as usual, so `optional(number())('')` fails with `type`. The validator passed in is unchanged.
+Returns a validator that accepts a missing value, `undefined` or `null`. A `default` fills it first, so `optional(string({ default: 'x' }))(undefined)` is `'x'`. Otherwise the missing value skips the parser and the tests, and becomes the result's `value` as it is. Present values go through `validator` as usual, so `optional(number())('')` fails with `type`. The validator passed in is unchanged.
 
 ```js
 const nickname = optional(string(min(2, 'Too short.')));
@@ -598,7 +624,7 @@ When items fail, the array's own failure has the `items` code, and its `errors` 
 
 | option     | type     | description                                                                                                              |
 | :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `default`  | string   | Optional. Value used for `undefined`, `null`, or an empty array `[]`.                                                    |
+| `default`  | array    | Optional. Value used for `undefined` or `null`.                                                                          |
 | `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 | `parser`   | function | Optional. Used to customize how a value is converted into an array.                                                      |
 
@@ -656,7 +682,17 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 #### object(schema, config?, ...tests)
 
-Accepts an object other than an array, a function or a boxed primitive, such as `new String('a')`, except a boxed Symbol or BigInt whose prototype was replaced, which `object()` can't tell from a plain object without a throwing check. Class instances, such as a `Map`, count, but only own properties are read, so a getter on a class's prototype reads as missing. Anything else fails with the `type` code. It has no parser and no default fallback value option. `config` is optional; when the second argument is a function, it's the first of the `tests`. A missing object, `undefined` or `null`, fails with `required` without checking its fields. Instead, the schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit. A schema property that isn't a validator throws a `TypeError` naming its key when the validator is built.
+Accepts an object other than an array, a function or a boxed primitive, such as `new String('a')`, except a boxed Symbol or BigInt whose prototype was replaced, which `object()` can't tell from a plain object without a throwing check. Class instances, such as a `Map`, count, but only own properties are read, so a getter on a class's prototype reads as missing. Anything else fails with the `type` code. It has no parser and no `default` option. `config` is optional; when the second argument is a function, it's the first of the `tests`. The schema is an object where its properties are validation types such as `string`, `array`, `number`, etc. Nested `object` validators are allowed, but not recommended due to their complexity and potential performance hit. A schema property that isn't a validator throws a `TypeError` naming its key when the validator is built.
+
+A missing object, `undefined` or `null`, is built from its properties: each property's validator runs on `undefined`. When every one is valid, such as one with a `default` or wrapped in `optional()`, the built object is the value, and the object-level tests run on it. Otherwise the object fails with `required`, without its properties' errors. `optional()` of it gives the built object when there is one, and the missing value otherwise:
+
+```js
+await object({ theme: string({ default: 'light' }) })(undefined);
+// { state: 'valid', value: { theme: 'light' }, ... }
+
+await object({ name: string() })(undefined);
+// { state: 'invalid', code: 'required', message: 'required', ... }
+```
 
 When fields fail, the object's own failure has the `properties` code, and its `errors` hold each failed field's failure under its key. See [Errors tree](#errors-tree).
 
@@ -706,7 +742,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 | option     | type     | description                                                                                                              |
 | :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
 | `trim`     | boolean  | Optional. If true, clears whitespace from the start and end of the string.                                               |
-| `default`  | string   | Optional. Value used for `undefined`, `null`, or an empty string `''`.                                                   |
+| `default`  | string   | Optional. Value used for `undefined` or `null`.                                                                          |
 | `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 | `parser`   | function | Optional. Used to customize how a value is converted into a string.                                                      |
 
