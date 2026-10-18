@@ -17,6 +17,7 @@ export { createValidator } from './standard';
 export type { TypeValidator } from './standard';
 export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';
 export { oneOf } from './common';
+export { transform } from './transform';
 export type { OneOfValidatorMessageParameters } from './common';
 export { createTypeValidatorTest, createValidatorTest } from './factories';
 export { exact, max, min } from './limits';

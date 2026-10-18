@@ -135,6 +135,7 @@ test('should export only the v3 surface', () => {
     'optional',
     'parse',
     'string',
+    'transform',
     'url',
     'uuid',
     'valid',

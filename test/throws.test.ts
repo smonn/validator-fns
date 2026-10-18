@@ -15,6 +15,7 @@ import {
   optional,
   parse,
   string,
+  transform,
   valid,
   type Failure,
   type TypeValidator,
@@ -58,6 +59,8 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   ['an array() test', array(string(), throwBug), ['a']],
   ['an object() test', object({ a: string() }, throwBug), { a: 'a' }],
   ['a custom type test', custom(throwBug), 'a'],
+  ['a string() transform', string(transform(throwBug)), 'a'],
+  ['an object() transform', object({}, transform(throwBug)), {}],
   ['a built-in test message', string(min(5, throwBug)), 'abc'],
   [
     'a string() required message',

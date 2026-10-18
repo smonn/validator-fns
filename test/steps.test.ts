@@ -9,6 +9,7 @@ import {
   object,
   optional,
   string,
+  transform,
   valid,
 } from '../src/index.js';
 
@@ -76,4 +77,49 @@ test('~standard.validate returns the value after the tests', async () => {
   assert.deepEqual(await string(shout)['~standard'].validate('a'), {
     value: 'A',
   });
+  const upper = string(transform((value) => value.toUpperCase()));
+  assert.deepEqual(await upper['~standard'].validate('a'), { value: 'A' });
+});
+
+const trimmed = string(
+  transform((value) => value.trim()),
+  min(2, 'min'),
+);
+
+test('transform() changes the value for the next test', async () => {
+  for (const blank of ['  ', ' a ']) {
+    assert.deepInclude(await trimmed(blank), { state: 'invalid', code: 'min' });
+  }
+  assert.deepEqual(await trimmed(' ab ', 'name'), {
+    state: 'valid',
+    value: 'ab',
+    field: 'name',
+  });
+});
+
+test('a transformed value is never missing, inside optional() too', async () => {
+  assert.deepInclude(await optional(trimmed)('  '), {
+    state: 'invalid',
+    code: 'min',
+    params: { min: 2, amount: 0 },
+  });
+});
+
+test('transform() makes a test that never fails', async () => {
+  const negate = transform((value: number) => -value);
+
+  assert.deepEqual(await negate(2, 'n'), {
+    state: 'valid',
+    value: -2,
+    field: 'n',
+  });
+  assert.deepInclude(
+    await object(
+      { count: number() },
+      transform(({ count }) => ({ count: count * 10 })),
+    )({
+      count: 2,
+    }),
+    { state: 'valid', value: { count: 20 } },
+  );
 });
