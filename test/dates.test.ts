@@ -113,6 +113,24 @@ test('maxDate', async () => {
   });
 });
 
+test('minDate() and maxDate() compare times, which an own valueOf cannot change', async () => {
+  const spoof = new Date(0);
+  spoof.valueOf = () => 5;
+  assert.deepInclude(await minDate(new Date(1))(spoof), { code: 'minDate' });
+  assert.deepInclude(await maxDate(new Date(-1))(spoof), { code: 'maxDate' });
+  assert.deepInclude(await minDate(spoof)(new Date(1)), { state: 'valid' });
+  assert.deepInclude(await maxDate(spoof)(new Date(-1)), { state: 'valid' });
+
+  const throwing = new Date(0);
+  throwing.valueOf = () => {
+    throw new Error('valueOf');
+  };
+  assert.deepInclude(await date(minDate(new Date(0)))(throwing), {
+    state: 'valid',
+  });
+  assert.deepInclude(await maxDate(throwing)(new Date(0)), { state: 'valid' });
+});
+
 test('should fail every date when the minDate() or maxDate() limit is missing', async () => {
   // JSON.parse returns any, which lets the test pass values the types reject.
   const limits = JSON.parse('[null]');

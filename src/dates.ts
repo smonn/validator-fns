@@ -13,15 +13,21 @@ import type {
 import { readDate } from './parse-date.js';
 
 /**
- * Whether a value is a valid date, from any realm. `getTime` throws unless
- * `this` is a `Date`, which `instanceof` can't tell across realms.
+ * The time of a date from any realm, or `NaN` for any other value. `getTime`
+ * throws unless `this` is a `Date`, which `instanceof` can't tell across
+ * realms, and unlike `valueOf` the value can't override it.
  */
-function isValidDate(value: unknown): value is Date {
+function timeOf(value: unknown): number {
   try {
-    return !Number.isNaN(Date.prototype.getTime.call(value));
+    return Date.prototype.getTime.call(value);
   } catch {
-    return false;
+    return Number.NaN;
   }
+}
+
+/** Whether a value is a valid date, from any realm. */
+function isValidDate(value: unknown): value is Date {
+  return !Number.isNaN(timeOf(value));
 }
 
 /**
@@ -87,8 +93,7 @@ export function minDate(
   const parsedDate = parseLimit(limit);
   return createValidatorTest(
     'minDate',
-    (value: Date) =>
-      parsedDate !== null && parsedDate !== undefined && value >= parsedDate,
+    (value: Date) => timeOf(value) >= timeOf(parsedDate),
     message,
     () => ({ min: parsedDate }),
   );
@@ -114,8 +119,7 @@ export function maxDate(
   const parsedDate = parseLimit(limit);
   return createValidatorTest(
     'maxDate',
-    (value: Date) =>
-      parsedDate !== null && parsedDate !== undefined && value <= parsedDate,
+    (value: Date) => timeOf(value) <= timeOf(parsedDate),
     message,
     () => ({ max: parsedDate }),
   );

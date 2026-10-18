@@ -358,7 +358,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     | `array()`   | arrays                                                                           | `new Set()`, `'abc'`                 |
     | `object()`  | objects other than arrays, functions and boxed primitives; class instances count | `[]`, `() => {}`, `new String('a')`  |
 
-    A `minDate()` or `maxDate()` limit that is an invalid `Date` now throws a `TypeError` when the test is built, as an unreadable string does.
+    A `minDate()` or `maxDate()` limit that is an invalid `Date` now throws a `TypeError` when the test is built, as an unreadable string does. `minDate()`, `maxDate()` and `oneOf()` compare dates by `getTime()`, so a date's own `valueOf` no longer changes the outcome.
 
 ## API Reference
 
