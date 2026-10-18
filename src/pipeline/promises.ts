@@ -1,4 +1,4 @@
-import { hasOwnProperty, type Result, type Validator } from '../shared.js';
+import type { Result, Validator } from '../shared.js';
 
 /**
  * A result, or a promise of one once a step or child is async.
@@ -28,28 +28,17 @@ export function isThenable<T extends object>(
   return 'then' in value;
 }
 
-/** @internal */
-async function awaitThen<T, R>(
+/**
+ * Runs `next` on a promised result once it settles. `await` adopts it, so a
+ * thenable's `then` is read once and a Promise's own or inherited `then` not
+ * at all. `.then()` or `Promise.resolve()` would read the Promise's.
+ * @internal
+ */
+export async function afterPromise<T, R>(
   promise: PromiseLike<T>,
   next: (done: T) => MaybePromise<R>,
 ): Promise<R> {
   return next(await promise);
-}
-
-/**
- * Runs `next` on a promised result once it settles, adopting it as `await`
- * would: a thenable's `then` is read once, and a Promise's own `then` not at
- * all. One with its own `then` is awaited; any other goes through
- * `Promise.resolve()`, which costs less.
- * @internal
- */
-export function afterPromise<T, R>(
-  promise: PromiseLike<T>,
-  next: (done: T) => MaybePromise<R>,
-): Promise<R> {
-  return hasOwnProperty(promise, 'then')
-    ? awaitThen(promise, next)
-    : Promise.resolve(promise).then(next);
 }
 
 /**
