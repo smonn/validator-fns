@@ -65,9 +65,8 @@ export function entriesOf(
     throw new TypeError('An errors tree must be an object');
   }
 
-  // Object.keys rather than Object.entries, which would add an ES2017
-  // built-in to the supported environments list. An array's keys are read
-  // one at a time, so a hole throws before the rest are listed.
+  // Keys rather than entries: an array's keys are read one at a time, so a
+  // hole throws before the rest are listed.
   const keys = Array.isArray(errors) ? errors.keys() : Object.keys(errors);
   const entries: [PropertyKey, Failure<unknown> | null][] = [];
   for (const key of keys) {
