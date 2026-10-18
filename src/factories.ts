@@ -14,22 +14,20 @@ import {
 export { createParser } from './optional.js';
 
 /**
- * Key for the synchronous twin of each test `createValidatorTest` makes. A
- * type validator runs a test's twin when it has one, which skips the promise
- * and await around every built-in test (#523). The tests themselves stay
- * async. Module-private, so only tests made here carry it.
+ * Key for the synchronous twin of each test `withSyncTwin` makes. A type
+ * validator runs a test's twin when it has one, which skips the promise and
+ * await around every built-in test (#523). The tests themselves stay async.
+ * Module-private, so only tests made here carry it.
  * @internal
  */
 const syncTwin = Symbol('sync');
 
-/** @internal */
-type SyncTwin<T> = {
-  // The twins never set errors, so their error type is never.
-  readonly [syncTwin]?: (
-    value: T,
-    field: string | undefined,
-  ) => Result<T, never>;
-};
+/**
+ * A test's synchronous twin. The twins never set errors, so their error type
+ * is never.
+ * @internal
+ */
+type Twin<T> = (value: T, field: string | undefined) => Result<T, never>;
 
 /**
  * Creates a type validator.
@@ -51,7 +49,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 ) => TypeValidator<T, string> {
   return (config, ...tests) => {
     // Typed with the twin, which only tests made here carry.
-    const allTests: (Test<T, string> & SyncTwin<T>)[] =
+    const allTests: (Test<T, string> & { [syncTwin]?: Twin<T> })[] =
       typeof config === 'function' ? [config, ...tests] : tests;
     const finalConfig: C = {
       ...defaultConfig,
@@ -123,7 +121,7 @@ export function createValidatorTest<T, E>(
   message?: ValidatorMessage<T, Record<string, unknown>>,
   getParams?: (value: T) => Record<string, unknown>,
 ): Test<T, E> {
-  const twin = (value: T, field: string | undefined): Result<T, never> => {
+  return withSyncTwin((value: T, field) => {
     // Wider than T, since JavaScript callers can pass a missing value.
     const given: unknown = value;
     if (given !== null && given !== undefined && test(value, field)) {
@@ -132,8 +130,15 @@ export function createValidatorTest<T, E>(
 
     const params = getParams ? getParams(value) : {};
     return failure({ code, params, message, value, field });
-  };
-  const validationTest: Test<T, E> = async (value, field) => twin(value, field);
+  });
+}
 
+/**
+ * Makes a test from its synchronous twin, which type validators run in its
+ * place.
+ * @internal
+ */
+export function withSyncTwin<T, E>(twin: Twin<T>): Test<T, E> {
+  const validationTest: Test<T, E> = async (value, field) => twin(value, field);
   return Object.assign(validationTest, { [syncTwin]: twin });
 }
