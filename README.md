@@ -440,7 +440,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     await age(''); // valid undefined
     ```
 
-29. **Check your browsers against the new floor.** 3.x supports Chrome and Edge 93+, Firefox 92+ and Safari 15.4+ (iOS 15.4+), up from 2.x's Chrome and Edge 85+, Firefox 77+ and Safari 13.1+, because it uses `Object.hasOwn`. For an older browser, polyfill the built-ins listed in [Supported environments](#supported-environments).
+29. **Check your browsers against the new floor.** 3.x supports Chrome and Edge 93+, Firefox 92+ and Safari 15.4+ (iOS 15.4+), up from 2.x's Chrome and Edge 85+, Firefox 77+ and Safari 13.1+, because it uses `Object.hasOwn`. For an older browser, polyfill `Object.hasOwn` and transpile logical assignment (`||=`, `??=`), which 3.x also uses, along with the rest of the list in [Supported environments](#supported-environments).
 
 ## API Reference
 
@@ -1230,7 +1230,8 @@ Supports Node versions in active or maintenance LTS at release time. Dropping on
 To support older environments, transpile or polyfill these:
 
 - `Object.hasOwn` (ES2022)
-- `String.prototype.replaceAll` (ES2021)
+- Logical assignment (`||=`, `&&=`, `??=`) and `String.prototype.replaceAll` (ES2021)
+- Optional chaining (`?.`) and nullish coalescing (`??`) (ES2020)
 - `Object.fromEntries` and optional catch binding (ES2019)
 - Object spread (`...`, ES2018)
 - `Object.entries`, `async`, `await` (ES2017)
