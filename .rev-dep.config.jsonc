@@ -1,10 +1,13 @@
 {
-  "configVersion": "2.0",
-  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/2.0.schema.json?raw=true",
+  "configVersion": "2.1",
+  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/2.1.schema.json?raw=true",
   "nodeModulesResolution": {
     "resolutionType": "entry-package",
     "includeDevDepsFromRoot": false,
   },
+  // A workspace that matches no files would pass most checks with nothing
+  // checked (#765).
+  "failOnEmptyWorkspace": true,
   "ignoreFiles": [
     // A separate project with its own package.json and lockfile. Its imports
     // (benchmarkify, validator-fns) resolve only inside benchmark/, so rev-dep
