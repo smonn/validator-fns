@@ -5,6 +5,7 @@ import {
   array,
   boolean,
   date,
+  messageTree,
   number,
   object,
   oneOf,
@@ -123,6 +124,21 @@ test.each(types)(
         `${label} given ${inspect(input)}`,
       );
     }
+  },
+);
+
+test.each(types)(
+  '%s fails a revoked Proxy with type',
+  async (_label, validate, expected) => {
+    const { proxy, revoke } = Proxy.revocable({}, {});
+    revoke();
+    assert.deepInclude(await validate(proxy), {
+      code: 'type',
+      params: { expected },
+    });
+    assert.deepEqual(messageTree(await object({ a: validate })({ a: proxy })), {
+      a: 'type',
+    });
   },
 );
 
