@@ -14,6 +14,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
 - [API Reference](#api-reference)
   - [Validation result](#validation-result)
   - [Errors tree](#errors-tree)
+  - [Safe call and parse()](#safe-call-and-parse)
   - [Validation error message](#validation-error-message)
   - [Required and optional values](#required-and-optional-values)
   - [Unreadable input and throws](#unreadable-input-and-throws)
@@ -378,7 +379,7 @@ await user({ a: { b: 'x' }, tags: [{ name: 'ok' }, { name: 'x' }] }, 'user');
 // }
 ```
 
-`messageTree()` and Standard Schema read the tree, including one a custom validator built, and throw a `TypeError` for a tree that's a bug: an entry that is neither a whole failure nor `null` for a valid item, more than 1000 levels of `items` and `properties` failures, which a cyclic tree also reaches, or more than 1,000,000 entries. A failure shared by several entries counts once for each, so a few failures that each hold the previous one twice reach the entry limit quickly. The limits are far beyond any schema and keep such a tree from overflowing the stack or running for minutes. Reusing a failure is allowed.
+`messageTree()`, Standard Schema and `FailureError` read the tree, including one a custom validator built, and throw a `TypeError` for a tree that's a bug: an entry that is neither a whole failure nor `null` for a valid item, more than 1000 levels of `items` and `properties` failures, which a cyclic tree also reaches, or more than 1,000,000 entries. A failure shared by several entries counts once for each, so a few failures that each hold the previous one twice reach the entry limit quickly. The limits are far beyond any schema and keep such a tree from overflowing the stack or running for minutes. Reusing a failure is allowed.
 
 In TypeScript, an array's errors are `(Failure<E> | null)[]`, with the item validator's `E`, and an object's have an optional `Failure` per key.
 
@@ -397,6 +398,50 @@ messageTree(
 ```
 
 In TypeScript, its return type follows the validator's errors type, such as `string | { a?: string | { b?: string }; tags?: … } | undefined` for `user`.
+
+### Safe call and parse()
+
+A validator has two entry points:
+
+- **The safe call**, `await validator(value, field?)`, resolves to a [result](#validation-result). It never rejects for invalid input, so read `state` to tell valid from a failure.
+- **`parse()`** resolves to the parsed value and rejects with a `FailureError` for invalid input.
+
+Both reject with a bug's thrown value as it is, so `instanceof FailureError` tells a failure from a bug. See [Unreadable input and throws](#unreadable-input-and-throws).
+
+#### parse(validator, value, field?)
+
+Takes any validator, built-in or a plain async function, and resolves to its parsed value. Invalid input rejects with a `FailureError` carrying the failure the safe call gives.
+
+```js
+const user = object({ name: string(min(2)) });
+
+await parse(user, { name: 'Ada' }, 'user'); // { name: 'Ada' }
+
+try {
+  await parse(user, { name: 'x' }, 'user');
+} catch (error) {
+  if (error instanceof FailureError) {
+    error.failure; // the whole failure: code 'properties', with its errors tree
+    error.message; // 'user.name: min'
+    messageTree(error.failure); // { name: 'min' }
+  } else {
+    throw error; // a bug
+  }
+}
+```
+
+In TypeScript, `parse()` resolves to the validator's value type `T`.
+
+#### FailureError
+
+An `Error` subclass, with `name` set to `'FailureError'`. Its `failure` is the whole failure, with its `code`, `params`, `message`, `field` and [errors tree](#errors-tree). Its `message` has one line for each leaf in the tree, as `field: message`, or the message alone for a leaf without a field. It joins the messages the failure already has, so it adds no wording of its own:
+
+```text
+user.a.b: min
+user.tags[1].name: min
+```
+
+`new FailureError(failure)` makes one from a failure, and throws a `TypeError` for anything else. In TypeScript, `FailureError<E>` carries a `Failure<E>`.
 
 ### Validation error message
 
@@ -484,7 +529,7 @@ In TypeScript, a validator's value type is `T`, and `optional()` adds `null` and
 
 Input a validation type can't read gives an invalid result. For example, `number()` fails `'abc'` with the `type` code and `{ expected: 'number' }`. A validator never rejects for its input.
 
-A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a `parser`, `createTypeValidatorTest()`'s `applyConfig`, and a validator passed to `array()` or `object()`. `~standard.validate` rejects the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
+A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a `parser`, `createTypeValidatorTest()`'s `applyConfig`, and a validator passed to `array()` or `object()`. `parse()` and `~standard.validate` reject the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
 
 A custom `parser` takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. A parsed `undefined` or `null` counts as missing, as with the built-in parsers.
 
