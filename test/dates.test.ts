@@ -135,6 +135,11 @@ test('should give an invalid date when parseDate gets an object that only looks 
   }
 });
 
+test('should give an invalid date when a date has a plain object prototype', () => {
+  const reprototyped = Object.setPrototypeOf(new Date(0), Object.prototype);
+  assert.strictEqual(parseDate(reprototyped), invalidDate);
+});
+
 test('should pass the date through when date() gets a date from another realm', async () => {
   const foreign: Date = runInNewContext('new Date(0)');
   assert.strictEqual((await date()(foreign)).value, foreign);
