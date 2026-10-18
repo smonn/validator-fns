@@ -13,45 +13,59 @@ type Issue = StandardSchemaV1.Issue & {
 };
 
 /**
- * Adds a failure's issues to `found`: its children's for a container, or its
- * own for a leaf and for a container whose tree holds no failure.
+ * A leaf failure in an errors tree with the path to it.
  * @internal
  */
-function collectIssues(
+type Leaf = [made: Failure<unknown>, path: PropertyKey[]];
+
+/**
+ * Adds a failure's leaves to `found`: its children's for an `items` or
+ * `properties` failure, or itself for a leaf and for one whose tree holds no
+ * failure.
+ * @internal
+ */
+function collectLeaves(
   made: Failure<unknown>,
   path: PropertyKey[],
-  found: Issue[],
+  found: Leaf[],
   visits: Visits,
 ) {
   const before = found.length;
   if (isContainer(made)) {
     for (const [key, child] of entriesOf(made.errors, path.length, visits)) {
       if (child) {
-        collectIssues(child, [...path, key], found, visits);
+        collectLeaves(child, [...path, key], found, visits);
       }
     }
   }
 
   if (found.length === before) {
-    const { message, code, params } = made;
-    found.push(
-      path.length > 0
-        ? { message, code, params, path }
-        : { message, code, params },
-    );
+    found.push([made, path]);
   }
 }
 
 /**
- * A failure's Standard Schema issues: one for each leaf in its errors tree,
- * with its code, params and path. A container whose tree holds no failure
- * counts as a leaf.
+ * Each leaf in a failure's errors tree with its path. An `items` or
+ * `properties` failure whose tree holds no failure counts as a leaf.
  * @internal
  */
-export function issues(made: Failure<unknown>): Issue[] {
-  const found: Issue[] = [];
-  collectIssues(readFailure(made, "A validator's result"), [], found, {
+function leavesOf(made: Failure<unknown>): Leaf[] {
+  const found: Leaf[] = [];
+  collectLeaves(readFailure(made, "A validator's result"), [], found, {
     entries: 0,
   });
   return found;
+}
+
+/**
+ * A failure's Standard Schema issues: one for each leaf in its errors tree,
+ * with its code, params and path.
+ * @internal
+ */
+export function issues(made: Failure<unknown>): Issue[] {
+  return leavesOf(made).map(([{ message, code, params }, path]) =>
+    path.length > 0
+      ? { message, code, params, path }
+      : { message, code, params },
+  );
 }
