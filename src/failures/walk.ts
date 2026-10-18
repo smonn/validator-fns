@@ -1,4 +1,4 @@
-import type { Failure } from '../shared.js';
+import type { Failure } from '../types.js';
 import { readFailure } from './read.js';
 
 /**

@@ -1,4 +1,4 @@
-import type { Result, Test } from '../shared.js';
+import type { Result, Test } from '../types.js';
 import type { MaybePromise } from './promises.js';
 
 /**

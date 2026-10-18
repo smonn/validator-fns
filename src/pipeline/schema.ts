@@ -5,7 +5,7 @@ import {
   setOwn,
   type Validator,
   validResult,
-} from '../shared.js';
+} from '../types.js';
 import type { Shape } from './def.js';
 import { runOf } from './twins.js';
 import type { Run } from './promises.js';

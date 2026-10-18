@@ -1,4 +1,4 @@
-import { type Validator, validResult } from '../shared.js';
+import { type Validator, validResult } from '../types.js';
 import { isMissing } from './def.js';
 import { type TypeValidator, withStandard } from './standard.js';
 import { optionalOf } from './twins.js';

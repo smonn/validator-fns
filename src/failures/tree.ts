@@ -1,4 +1,4 @@
-import { type Failure, type Result, setOwn } from '../shared.js';
+import { type Failure, type Result, setOwn } from '../types.js';
 import { failure } from './make.js';
 import { ownData } from './own.js';
 

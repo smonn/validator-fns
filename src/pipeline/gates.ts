@@ -1,5 +1,5 @@
 import { failure } from '../failures/index.js';
-import { type Test, validResult } from '../shared.js';
+import { type Test, validResult } from '../types.js';
 import type { Runs } from './schema.js';
 import { type Twin, twinOf } from './sync.js';
 

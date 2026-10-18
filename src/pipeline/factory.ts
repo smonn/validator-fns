@@ -1,4 +1,4 @@
-import type { ConfigBase, Test, Validator } from '../shared.js';
+import type { ConfigBase, Test, Validator } from '../types.js';
 import { configAndTests } from './config.js';
 import { type Def, keepValue, type Parser } from './def.js';
 import { defineType, runOf } from './twins.js';

@@ -1,4 +1,4 @@
-import { setOwn, type ValidatorMessageParameters } from '../shared.js';
+import { setOwn, type ValidatorMessageParameters } from '../types.js';
 
 /**
  * The value of an object's own data property, or `undefined` for anything

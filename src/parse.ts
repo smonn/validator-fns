@@ -1,5 +1,5 @@
 import { FailureError } from './failures/index.js';
-import type { Validator } from './shared.js';
+import type { Validator } from './types.js';
 
 /**
  * Resolves to the parsed value, or rejects with a `FailureError` carrying the

@@ -1,4 +1,4 @@
-import type { ValidatorMessage } from '../shared.js';
+import type { ValidatorMessage } from '../types.js';
 import { ownData, parametersOf } from './own.js';
 
 /** @internal */

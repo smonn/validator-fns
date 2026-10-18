@@ -1,4 +1,4 @@
-import type { Validator } from '../shared.js';
+import type { Validator } from '../types.js';
 import { type Def, type Exit, keepValue, reject } from './def.js';
 import { runType } from './run.js';
 import { type TypeValidator, withStandard } from './standard.js';

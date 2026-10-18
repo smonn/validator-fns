@@ -1,4 +1,4 @@
-import type { Result } from '../shared.js';
+import type { Result } from '../types.js';
 import { type Def, type Exit, isMissing, typeFailure } from './def.js';
 import { runPresent, wordOwn } from './present.js';
 import { andThen, type MaybePromise } from './promises.js';

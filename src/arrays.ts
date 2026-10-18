@@ -12,7 +12,7 @@ import {
   type Failure,
   type Test,
   type Validator,
-} from './shared.js';
+} from './types.js';
 
 /**
  * Configuration for array validation.

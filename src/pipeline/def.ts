@@ -4,7 +4,7 @@ import {
   type Messages,
   type Result,
   validResult,
-} from '../shared.js';
+} from '../types.js';
 import type { MaybePromise } from './promises.js';
 import type { Step, Twin } from './sync.js';
 

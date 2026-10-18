@@ -1,5 +1,5 @@
 import { failure } from '../failures/index.js';
-import { type Test, validResult, type ValidatorMessage } from '../shared.js';
+import { type Test, validResult, type ValidatorMessage } from '../types.js';
 import { isMissing } from './def.js';
 import { withSyncTwin } from './sync.js';
 

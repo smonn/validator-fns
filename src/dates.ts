@@ -5,7 +5,7 @@ import type {
   ValidatorMessage,
   Test,
   ValidatorMessageParameters,
-} from './shared.js';
+} from './types.js';
 import { readDate } from './parse-date.js';
 import { isValidDate, timeOf } from './valid-date.js';
 

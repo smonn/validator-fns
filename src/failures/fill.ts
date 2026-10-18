@@ -1,4 +1,4 @@
-import { type Failure, setOwn, type ValidatorMessage } from '../shared.js';
+import { type Failure, setOwn, type ValidatorMessage } from '../types.js';
 import { reword } from './reword.js';
 import { checkDepth, entriesOf, isContainer, type Visits } from './walk.js';
 

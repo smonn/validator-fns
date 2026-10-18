@@ -1,4 +1,4 @@
-import type { Test } from '../shared.js';
+import type { Test } from '../types.js';
 
 /**
  * Splits a type validator's arguments into its config and its tests.

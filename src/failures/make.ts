@@ -1,4 +1,4 @@
-import type { Failure, ValidatorMessage } from '../shared.js';
+import type { Failure, ValidatorMessage } from '../types.js';
 import { wordMessage } from './format.js';
 
 /**

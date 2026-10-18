@@ -1,4 +1,4 @@
-import { type Failure, type Result, setOwn } from '../shared.js';
+import { type Failure, type Result, setOwn } from '../types.js';
 import { entriesOf, isContainer, type Visits } from './walk.js';
 import { readFailure } from './read.js';
 

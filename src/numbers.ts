@@ -1,5 +1,5 @@
 import { createValidatorTest, defineScalar } from './pipeline/index.js';
-import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
+import type { ConfigBase, Test, ValidatorMessage } from './types.js';
 
 /**
  * Ensures a number value is an integer.

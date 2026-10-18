@@ -1,4 +1,4 @@
-import type { Result, Validator } from '../shared.js';
+import type { Result, Validator } from '../types.js';
 
 /**
  * A result, or a promise of one once a step or child is async.
