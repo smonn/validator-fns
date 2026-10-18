@@ -1,4 +1,4 @@
-import { withSyncTwin } from './factories.js';
+import { withSyncTwin } from './pipeline/index.js';
 import { type Test, validResult } from './shared.js';
 
 /**

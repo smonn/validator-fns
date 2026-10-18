@@ -12,14 +12,17 @@ export { integer, number } from './numbers';
 export type { NumberConfig } from './numbers';
 export { check } from './check';
 export { object } from './objects';
-export { optional } from './optional';
-export { createValidator } from './standard';
-export type { TypeValidator } from './standard';
+export {
+  createTypeValidator,
+  createValidator,
+  createValidatorTest,
+  optional,
+} from './pipeline/index';
+export type { TypeValidator } from './pipeline/index';
 export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';
 export { oneOf } from './common';
 export { transform } from './transform';
 export type { OneOfValidatorMessageParameters } from './common';
-export { createTypeValidator, createValidatorTest } from './factories';
 export { exact, max, min } from './limits';
 export type {
   ExactValidatorMessageParameters,

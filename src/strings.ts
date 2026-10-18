@@ -1,8 +1,4 @@
-import {
-  createParser,
-  createValidatorTest,
-  typeValidatorOf,
-} from './factories.js';
+import { createValidatorTest, defineScalar } from './pipeline/index.js';
 import {
   type ConfigBase,
   type MessageExtras,
@@ -34,12 +30,6 @@ const isUuid = (value: string) => uuidPattern.test(value);
  * @category Types
  */
 export type StringConfig = ConfigBase<string>;
-
-/**
- * Parses a value into a string. Fails anything but a string.
- * @internal
- */
-const parseString = createParser<string>('string');
 
 export interface MatchesValidatorMessageParameters extends ValidatorMessageParameters<string> {
   pattern: RegExp;
@@ -120,4 +110,4 @@ export function url(
  * Validates a string value.
  * @category Type Validators
  */
-export const string = typeValidatorOf<string, string>(parseString);
+export const string = defineScalar<string>('string');

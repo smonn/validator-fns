@@ -34,37 +34,31 @@ export function childField(
 
 /**
  * An array's errors tree: each item's failure as it returned it, and `null`
- * for a valid item. `undefined` when every item is valid.
+ * for a valid item.
  * @internal
  */
 export function itemsTree<E>(
   results: Result<unknown, E>[],
-): (Failure<E> | null)[] | undefined {
-  const tree = results.map((result) =>
-    result.state === 'invalid' ? result : null,
-  );
-  return tree.some((entry) => entry !== null) ? tree : undefined;
+): (Failure<E> | null)[] {
+  return results.map((result) => (result.state === 'invalid' ? result : null));
 }
 
 /**
  * Fills `tree`, typed by the caller as the object's errors, with each failed
  * property's failure as it returned it, as own keys in the order given.
- * `undefined` when every property is valid.
  * @internal
  */
 export function propertiesTree<Tree extends object>(
   results: [key: string, result: Result][],
   tree: Tree,
-): Tree | undefined {
-  let isValid = true;
+): Tree {
   for (const [key, result] of results) {
     if (result.state === 'invalid') {
-      isValid = false;
       setOwn(tree, key, result);
     }
   }
 
-  return isValid ? undefined : tree;
+  return tree;
 }
 
 /**

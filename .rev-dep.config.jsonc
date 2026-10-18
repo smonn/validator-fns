@@ -40,29 +40,15 @@
           "allow": ["src/shared.ts", "src/failures/index.ts"],
         },
         {
-          "name": "invalid-detail",
-          "pattern": "src/invalid-detail.ts",
-          "allow": ["src/shared.ts", "src/failures/index.ts"],
-        },
-        {
-          "name": "optional",
-          "pattern": "src/optional.ts",
+          // The type-validator pipeline. Only its index is imported from
+          // outside the folder.
+          "name": "pipeline",
+          "pattern": "src/pipeline/**",
           "allow": [
             "src/shared.ts",
-            "src/failures/index.ts",
-            "src/standard.ts",
             "src/standard-schema.ts",
-          ],
-        },
-        {
-          "name": "factories",
-          "pattern": "src/factories.ts",
-          "allow": [
-            "src/shared.ts",
             "src/failures/index.ts",
-            "src/optional.ts",
-            "src/standard.ts",
-            "src/standard-schema.ts",
+            "src/pipeline/**",
           ],
         },
         {
@@ -70,14 +56,14 @@
           "pattern": "src/{booleans,check,common,limits,transform}.ts",
           "allow": [
             "src/shared.ts",
-            "src/factories.ts",
+            "src/pipeline/index.ts",
             "src/failures/index.ts",
           ],
         },
         {
           "name": "scalar-validators",
           "pattern": "src/{numbers,strings}.ts",
-          "allow": ["src/shared.ts", "src/factories.ts"],
+          "allow": ["src/shared.ts", "src/pipeline/index.ts"],
         },
         {
           "name": "collection-validators",
@@ -85,38 +71,23 @@
           "allow": [
             "src/shared.ts",
             "src/failures/index.ts",
-            "src/factories.ts",
-            "src/invalid-detail.ts",
-            "src/optional.ts",
-            "src/properties.ts",
-            "src/standard.ts",
-            "src/standard-schema.ts",
+            "src/pipeline/index.ts",
           ],
-        },
-        {
-          "name": "properties",
-          "pattern": "src/properties.ts",
-          "allow": ["src/shared.ts"],
         },
         {
           "name": "dates",
           "pattern": "src/dates.ts",
-          "allow": ["src/shared.ts", "src/factories.ts", "src/parse-date.ts"],
+          "allow": [
+            "src/shared.ts",
+            "src/pipeline/index.ts",
+            "src/parse-date.ts",
+          ],
         },
         {
           // Types copied from @standard-schema/spec, with no imports.
           "name": "standard-schema",
           "pattern": "src/standard-schema.ts",
           "deny": ["src/**"],
-        },
-        {
-          "name": "standard",
-          "pattern": "src/standard.ts",
-          "allow": [
-            "src/shared.ts",
-            "src/standard-schema.ts",
-            "src/failures/index.ts",
-          ],
         },
         {
           // Makes and words failures. Only its index is imported from outside
@@ -133,7 +104,11 @@
         {
           "name": "entry",
           "pattern": "src/index.ts",
-          "allow": ["src/*.ts", "src/failures/index.ts"],
+          "allow": [
+            "src/*.ts",
+            "src/failures/index.ts",
+            "src/pipeline/index.ts",
+          ],
         },
         {
           "name": "tests",
