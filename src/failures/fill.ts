@@ -1,4 +1,4 @@
-import type { Failure, Messages } from '../shared.js';
+import { type Failure, hasOwnProperty, type Messages } from '../shared.js';
 import { failure, unworded } from './make.js';
 
 /**
@@ -10,7 +10,12 @@ export function fillOwn<E>(
   made: Failure<E>,
   messages: Messages | undefined,
 ): Failure<E> {
-  const message = messages?.[made.code];
+  // Own keys only, so a code such as `constructor` isn't read from the
+  // prototype.
+  const message =
+    messages !== undefined && hasOwnProperty(messages, made.code)
+      ? messages[made.code]
+      : undefined;
   if (message === undefined || !unworded.has(made)) {
     return made;
   }
