@@ -1,9 +1,8 @@
-import { failure } from './failures/index.js';
+import { failure, fillAsOwn, fillOwn } from './failures/index.js';
 import { isBlank, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
-  formatMessage,
   type Test,
   validResult,
   type ValidatorMessage,
@@ -56,7 +55,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
     };
 
     return requirable<T, string>(
-      finalConfig.requiredMessage,
+      finalConfig.messages,
       async (value, field, onEmpty) => {
         const parsing = finalConfig.parser(value, field);
         // Built-in parsers return a result synchronously, which skips an
@@ -64,7 +63,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
         // instance of this realm's Promise.
         const parsed = 'then' in parsing ? await parsing : parsing;
         if (parsed.state === 'invalid') {
-          return failure({ message: parsed.message, field });
+          return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
         }
 
         const parsedValue = applyConfig(parsed.value, finalConfig);
@@ -87,7 +86,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
             result = await validatorTest(parsedValue, field);
           }
           if (result.state === 'invalid') {
-            return result;
+            return fillOwn(result, finalConfig.messages);
           }
         }
 
@@ -99,30 +98,30 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
 
 /**
  * Captures basic validator test pattern. The test gets the parsed value, and
- * fails a missing one, which type validators never pass (#660).
+ * fails a missing one, which type validators never pass (#660). A failure has
+ * `code`, the params from `getParams`, and `message` or else the code.
+ * @param code What failed, such as `min`
  * @param test Test function
  * @param message Error message
- * @param getExtras Extra parameters for the error message
+ * @param getParams The code's parameters, also given to the message
  */
 export function createValidatorTest<T, E = never>(
+  code: string,
   test: (value: T, field?: string) => boolean,
-  message: ValidatorMessage<T>,
+  message?: ValidatorMessage<T>,
 ): Test<T, E>;
-export function createValidatorTest<T, E, X extends object>(
+export function createValidatorTest<T, E, P extends Record<string, unknown>>(
+  code: string,
   test: (value: T, field?: string) => boolean,
-  message: ValidatorMessage<T, X>,
-  getExtras: (value: T) => X,
+  message: ValidatorMessage<T, P> | undefined,
+  getParams: (value: T) => P,
 ): Test<T, E>;
-export function createValidatorTest<T, E, X extends object>(
+export function createValidatorTest<T, E>(
+  code: string,
   test: (value: T, field?: string) => boolean,
-  ...format:
-    | [message: ValidatorMessage<T>]
-    | [message: ValidatorMessage<T, X>, getExtras: (value: T) => X]
+  message?: ValidatorMessage<T, Record<string, unknown>>,
+  getParams?: (value: T) => Record<string, unknown>,
 ): Test<T, E> {
-  const formatFor = (value: T, field: string | undefined) =>
-    format.length === 1
-      ? formatMessage<T>(format[0], { value, field })
-      : formatMessage(format[0], { ...format[1](value), value, field });
   const twin = (
     value: T,
     field: string | undefined,
@@ -133,7 +132,8 @@ export function createValidatorTest<T, E, X extends object>(
       return validResult({ value, field });
     }
 
-    return failure({ message: formatFor(value, field), field });
+    const params = getParams ? getParams(value) : {};
+    return failure({ code, params, message, value, field });
   };
   const validationTest: Test<T, E> = async (value, field) => twin(value, field);
 
@@ -142,18 +142,19 @@ export function createValidatorTest<T, E, X extends object>(
 
 /**
  * Makes a built-in parser from `read`, which converts a present value and
- * returns `undefined` for input it can't read. `undefined` and `null` stay as
- * they are, for the missing check.
+ * returns `undefined` for input it can't read, a `type` failure with the
+ * `expected` type. `undefined` and `null` stay as they are, for the missing
+ * check.
  * @internal
  */
 export function createParser<T>(
   read: (value: unknown) => T | undefined,
-  message: string,
+  expected: string,
 ): (value: unknown, field?: string) => Result<T | null | undefined, never> {
   return (value, field) => {
     const parsed = value === null || value === undefined ? value : read(value);
     return parsed === undefined && value !== undefined
-      ? failure({ message, field })
+      ? failure({ code: 'type', params: { expected }, value, field })
       : validResult({ value: parsed, field });
   };
 }

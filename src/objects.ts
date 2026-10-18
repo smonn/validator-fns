@@ -1,4 +1,4 @@
-import { failure } from './failures/index.js';
+import { failure, fillOwn } from './failures/index.js';
 import { findInvalidResult, invalidDetail } from './invalid-detail.js';
 import { requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
@@ -6,10 +6,10 @@ import {
   type ExtractError,
   type ExtractValue,
   hasOwnProperty,
+  type Messages,
   setOwn,
   valid,
   type Test,
-  type ValidatorMessage,
   type Validator,
 } from './shared.js';
 
@@ -70,10 +70,10 @@ function asObjectValue<P extends ObjectParameter>(
  */
 export interface ObjectConfig {
   /**
-   * Message for a missing object, `undefined` or `null`. Defaults to
-   * `'Required.'`.
+   * Messages for the object's own failures, keyed by code, such as `required`
+   * for a missing object, `undefined` or `null`.
    */
-  requiredMessage?: ValidatorMessage<unknown>;
+  messages?: Messages;
 }
 
 /**
@@ -92,11 +92,10 @@ export function object<P extends ObjectParameter>(
   }
 
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
-  const requiredMessage =
-    typeof config === 'object' ? config.requiredMessage : undefined;
+  const messages = typeof config === 'object' ? config.messages : undefined;
 
   return requirable<ObjectValue<P>, ObjectErrors<P>>(
-    requiredMessage,
+    messages,
     async (values, field, onEmpty) => {
       if (values === null || values === undefined) {
         return onEmpty(values, field);
@@ -118,7 +117,12 @@ export function object<P extends ObjectParameter>(
             : undefined;
           const result = await (typeof validator === 'function'
             ? validator(value, key)
-            : failure({ field: key, message: 'No validator set' }));
+            : failure({
+                code: 'validator',
+                params: {},
+                message: 'No validator set',
+                field: key,
+              }));
 
           if (result.state === 'invalid') {
             isValid = false;
@@ -129,22 +133,18 @@ export function object<P extends ObjectParameter>(
         }
       }
 
-      if (!isValid) {
-        return failure({ message: '', field, errors });
-      }
-
       const parsed = asObjectValue<P>(resolvedValues);
-      const objectInvalidResult = await findInvalidResult(
-        allTests,
-        parsed,
-        field,
-      );
-      if (objectInvalidResult) {
-        return failure({
-          message: objectInvalidResult.message,
-          field,
-          errors: objectInvalidResult.errors,
-        });
+      const own = isValid
+        ? await findInvalidResult(allTests, parsed, field)
+        : failure({
+            code: 'properties',
+            params: {},
+            value: values,
+            field,
+            errors,
+          });
+      if (own) {
+        return fillOwn(own, messages);
       }
 
       return valid({ value: parsed, field });

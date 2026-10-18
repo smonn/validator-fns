@@ -3,8 +3,8 @@
 // with skipLibCheck off so errors inside the declarations count. The fixture is
 // the README's createTypeValidatorTest example, without type arguments. A
 // second fixture imports the 2.x type names v3 removes, and must fail on each,
-// and a third makes calls with the 2.x options v3 removes, and must fail on
-// each line.
+// and a third makes calls with the options v3 removes, from 2.x and from its
+// prereleases, and must fail on each line.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -35,13 +35,13 @@ const fixture = `import {
   createTypeValidatorTest,
   type ExtractValue,
   invalid,
+  type Messages,
   object,
   optional,
   type Result,
   string,
   valid,
   type Validator,
-  type ValidatorMessage,
 } from 'validator-fns';
 
 interface MoneyConfig {
@@ -49,7 +49,7 @@ interface MoneyConfig {
     value: unknown,
     field?: string,
   ) => Promise<Result<number | null | undefined>>;
-  requiredMessage?: ValidatorMessage<number>;
+  messages?: Messages;
   /** Convert the amount to cents. */
   cents?: boolean;
 }
@@ -64,7 +64,7 @@ async function parseAmount(
     return valid({ value: amount, field });
   }
 
-  return invalid({ message: 'Must be an amount.', field });
+  return invalid({ code: 'type', message: 'Must be an amount.', field });
 }
 
 function applyMoneyConfig(
@@ -83,7 +83,7 @@ const money = createTypeValidatorTest(
 
 export const price: Validator<number, string> = money({ cents: true });
 export const order = object({
-  name: string({ requiredMessage: 'Required.' }),
+  name: string({ messages: { required: 'Required.' } }),
   note: optional(string()),
   price,
 });
@@ -120,13 +120,15 @@ const removedNames = [
 ];
 const removedFixture = `import type { ${removedNames.join(', ')} } from 'validator-fns';\n`;
 
-/** Calls with the 2.x options v3 removes, one per line after the import. */
+/** Calls with the options v3 removes, one per line after the import. */
 const removedCalls = [
   "number({ round: 'floor' });",
   "min(1, 'Too small.', true);",
   "max(1, 'Too big.', true);",
   "minDate(0, 'Too early.', true);",
   "maxDate(0, 'Too late.', true);",
+  "number({ requiredMessage: 'Required.' });",
+  'min(1, ({ limit }) => `${limit}`);',
 ];
 const removedCallsFixture = `import { max, maxDate, min, minDate, number } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
 

@@ -24,7 +24,11 @@ export type Valid<T> = {
 export type Failure<E> = {
   /** `invalid` if the value failed a test. */
   state: 'invalid';
-  /** Error message if `state` is invalid. */
+  /** What failed, such as `min` for `min()` or `required` for a missing value. */
+  code: string;
+  /** The code's parameters, such as `{ min, amount }` for `min`. */
+  params: Record<string, unknown>;
+  /** The message passed to the test or set in the config, or else the code. */
   message: string;
   /** Field name if provided. Automatically provided if using object validation. */
   field?: string | undefined;
@@ -99,10 +103,11 @@ export interface ConfigBase<T> {
   /** Provide a fallback value in case the original value is undefined. */
   default?: T;
   /**
-   * Message for a missing value: `undefined`, `null`, an empty string, `NaN`
-   * or an invalid date after parsing and `default`. Defaults to `'Required.'`.
+   * Messages for the validator's own failures, keyed by code, such as
+   * `required` for a missing value: `undefined`, `null`, an empty string,
+   * `NaN` or an invalid date after parsing and `default`.
    */
-  requiredMessage?: ValidatorMessage<T>;
+  messages?: Messages;
 }
 
 export interface ValidatorMessageParameters<T> {
@@ -132,6 +137,37 @@ export type MessageExtras<P extends ValidatorMessageParameters<unknown>> = Omit<
 export type ValidatorMessage<T, X extends object = object> =
   | string
   | ((parameters: X & ValidatorMessageParameters<T>) => string);
+
+/**
+ * Messages keyed by code. A message function gets the failure's params with
+ * the value and field.
+ * @typeParam C The codes
+ * @category Types
+ */
+export type Messages<C extends string = string> = {
+  [K in C]: ValidatorMessage<unknown, Record<string, unknown>>;
+};
+
+/**
+ * The codes of the built-in tests and type validators.
+ * @category Types
+ */
+export type BuiltInCode =
+  | 'min'
+  | 'max'
+  | 'exact'
+  | 'minDate'
+  | 'maxDate'
+  | 'oneOf'
+  | 'matches'
+  | 'url'
+  | 'integer'
+  | 'email'
+  | 'uuid'
+  | 'required'
+  | 'type'
+  | 'items'
+  | 'properties';
 
 /**
  * Paths into nested plain objects, as lists of property names, for `check()`.

@@ -34,10 +34,7 @@ function readNumber(value: unknown): number | undefined {
  * than blank text.
  * @internal
  */
-const parseNumber = createParser(
-  readNumber,
-  'Failed to parse value to number.',
-);
+const parseNumber = createParser(readNumber, 'number');
 
 /**
  * Applies a configuration to the parsed number value.
@@ -61,13 +58,14 @@ function applyNumberConfig(
 
 /**
  * Ensures a number value is an integer.
- * @param message Error message
+ * @param message Error message, or else the code
  * @category Validation Tests
  */
 export function integer(
-  message: ValidatorMessage<number>,
+  message?: ValidatorMessage<number>,
 ): Test<number, never> {
   return createValidatorTest(
+    'integer',
     (value: number) => Number.isFinite(value) && Math.floor(value) === value,
     message,
   );

@@ -15,17 +15,18 @@ export interface OneOfValidatorMessageParameters<
 /**
  * Ensures a value is one in a predefined list.
  * @param values List of allowed values.
- * @param message Error message
+ * @param message Error message, or else the code
  * @category Validation Tests
  */
 export function oneOf<T extends string | number | boolean | Date>(
   values: readonly T[],
-  message: ValidatorMessage<
+  message?: ValidatorMessage<
     T,
     MessageExtras<OneOfValidatorMessageParameters<T>>
   >,
 ): Test<T, never> {
   return createValidatorTest(
+    'oneOf',
     (value: T) =>
       values.includes(value) ||
       (value instanceof Date &&

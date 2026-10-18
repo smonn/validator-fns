@@ -47,7 +47,7 @@
         {
           "name": "invalid-detail",
           "pattern": "src/invalid-detail.ts",
-          "allow": ["src/shared.ts"],
+          "allow": ["src/shared.ts", "src/failures/index.ts"],
         },
         {
           "name": "optional",
@@ -111,7 +111,11 @@
         {
           "name": "standard",
           "pattern": "src/standard.ts",
-          "allow": ["src/shared.ts", "src/standard-schema.ts"],
+          "allow": [
+            "src/shared.ts",
+            "src/standard-schema.ts",
+            "src/failures/index.ts",
+          ],
         },
         {
           // Makes and words failures. Only its index is imported from outside

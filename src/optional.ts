@@ -1,18 +1,11 @@
-import { failure } from './failures/index.js';
+import { failure, fillOwn } from './failures/index.js';
 import {
-  formatMessage,
   validResult,
-  type ValidatorMessage,
+  type Messages,
   type Result,
   type Validator,
 } from './shared.js';
 import { type TypeValidator, withStandard } from './standard.js';
-
-/**
- * Message for a missing value when the validator's config sets none.
- * @internal
- */
-const defaultRequiredMessage = 'Required.';
 
 /**
  * Key for the twin that `optional()` returns, set on every built-in type
@@ -40,15 +33,15 @@ export function isBlank(value: unknown): boolean {
 }
 
 /**
- * Makes a type validator that rejects a missing value with `requiredMessage`,
- * and the twin `optional()` returns, which accepts it. `validate` parses the
- * input and hands a missing parsed value to `onEmpty`; the two differ only in
- * what `onEmpty` returns. Both return `validate`'s promise as is, since another
- * async layer would cost a microtask per call.
+ * Makes a type validator that fails a missing value with `required`, worded
+ * by `messages`, and the twin `optional()` returns, which accepts it.
+ * `validate` parses the input and hands a missing parsed value to `onEmpty`;
+ * the two differ only in what `onEmpty` returns. Both return `validate`'s
+ * promise as is, since another async layer would cost a microtask per call.
  * @internal
  */
 export function requirable<T, E>(
-  requiredMessage: ValidatorMessage<T> | undefined,
+  messages: Messages | undefined,
   validate: <V>(
     value: unknown,
     field: string | undefined,
@@ -58,13 +51,11 @@ export function requirable<T, E>(
     ) => Result<V, E>,
   ) => Promise<Result<T | V, E>>,
 ): TypeValidator<T, E> {
-  const message =
-    requiredMessage === undefined ? defaultRequiredMessage : requiredMessage;
   const reject = (parsed: T | null | undefined, field: string | undefined) =>
-    failure<E>({
-      message: formatMessage(message, { value: parsed, field }),
-      field,
-    });
+    fillOwn(
+      failure<E>({ code: 'required', params: {}, value: parsed, field }),
+      messages,
+    );
   const accept = (parsed: T | null | undefined, field: string | undefined) =>
     validResult<T | null | undefined, E>({ value: parsed, field });
   const required: Validator<T, E> = (value, field) =>

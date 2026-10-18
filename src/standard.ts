@@ -1,38 +1,63 @@
-import type { Validator } from './shared.js';
+import { isContainer } from './failures/index.js';
+import type { Failure, Validator } from './shared.js';
 import type { StandardSchemaV1 } from './standard-schema.js';
 
-/** @internal */
-const fallbackMessage = 'Invalid value.';
+/**
+ * An issue, with the failure's `code` and `params` when it has them.
+ * @internal
+ */
+type Issue = StandardSchemaV1.Issue & {
+  readonly code?: string;
+  readonly params?: Record<string, unknown>;
+};
 
 /**
  * Turns the `errors` of an invalid result into issues: object keys and array
  * indexes become path segments, and each string becomes an issue. `null` marks
- * a valid array item. An empty string, which v3 records for a failure without
- * a message, and any other value get a fallback message.
+ * a valid array item. Any other value gets `code`, the failed result's code,
+ * as its message.
  * @internal
  */
 function collectIssues(
   errors: unknown,
   path: PropertyKey[],
-  issues: StandardSchemaV1.Issue[],
+  issues: Issue[],
+  code: string,
 ) {
   if (typeof errors === 'string') {
-    issues.push({ message: errors || fallbackMessage, path });
+    issues.push({ message: errors, path });
   } else if (Array.isArray(errors)) {
     for (const [index, item] of errors.entries()) {
       if (item !== null) {
-        collectIssues(item, [...path, index], issues);
+        collectIssues(item, [...path, index], issues, code);
       }
     }
   } else if (typeof errors === 'object' && errors !== null) {
     // Object.keys rather than Object.entries, which would add an ES2017
     // built-in to the supported environments list.
     for (const key of Object.keys(errors)) {
-      collectIssues(Reflect.get(errors, key), [...path, key], issues);
+      collectIssues(Reflect.get(errors, key), [...path, key], issues, code);
     }
   } else {
-    issues.push({ message: fallbackMessage, path });
+    issues.push({ message: code, path });
   }
+}
+
+/**
+ * The issues of a failure: its own, with its code and params, then one for
+ * each error in `errors`. A container reports only its children's.
+ * @internal
+ */
+function issuesOf(failure: Failure<unknown>): Issue[] {
+  const { code, params, message, errors } = failure;
+  const issues: Issue[] = isContainer(failure)
+    ? []
+    : [{ message, code, params }];
+  if (errors !== undefined) {
+    collectIssues(errors, [], issues, code);
+  }
+
+  return issues.length > 0 ? issues : [{ message, code, params }];
 }
 
 /**
@@ -76,16 +101,7 @@ export function withStandard<T, E>(
       return { value: result.value };
     }
 
-    const issues: StandardSchemaV1.Issue[] = result.message
-      ? [{ message: result.message }]
-      : [];
-    if (result.errors !== undefined) {
-      collectIssues(result.errors, [], issues);
-    }
-
-    return {
-      issues: issues.length > 0 ? issues : [{ message: fallbackMessage }],
-    };
+    return { issues: issuesOf(result) };
   };
 
   const typeValidator = Object.assign(validator, {

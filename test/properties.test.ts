@@ -89,7 +89,7 @@ test('type validators reject undefined and null unless optional()', async () => 
       async (validate: Validator, value) => {
         assert.deepInclude(await validate(value), {
           state: 'invalid',
-          message: 'Required.',
+          message: 'required',
         });
         assert.deepEqual(await optional(validate)(value), {
           state: 'valid',
@@ -151,7 +151,12 @@ const fixedResult =
   async (value, field) =>
     passes
       ? valid({ value, field })
-      : invalid({ message: `${String(field)} failed`, value, field });
+      : invalid({
+          code: 'custom',
+          message: `${String(field)} failed`,
+          value,
+          field,
+        });
 
 // fc.string makes names like __proto__ and constructor on purpose, but in
 // under a fifth of runs, so the Object.prototype names are also drawn directly.

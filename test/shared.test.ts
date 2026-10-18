@@ -11,10 +11,11 @@ import {
 
 test('format string message', async () => {
   const result = await invalid({
+    code: 'custom',
     message: 'Hello {name}!',
     value: '',
     field: undefined,
-    extras: { name: 'World' },
+    params: { name: 'World' },
   });
 
   assert.deepInclude(result, { message: 'Hello World!' });
@@ -22,10 +23,11 @@ test('format string message', async () => {
 
 test('format function message', async () => {
   const result = await invalid({
+    code: 'custom',
     message: ({ name }: { name: string }) => `Hello ${name}!`,
     value: '',
     field: undefined,
-    extras: { name: 'World' },
+    params: { name: 'World' },
   });
 
   assert.deepInclude(result, { message: 'Hello World!' });
@@ -40,6 +42,8 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate('foo'), {
     state: 'invalid',
+    code: 'exact',
+    params: { exact: 5, amount: 3 },
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -51,6 +55,8 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate(4), {
     state: 'invalid',
+    code: 'exact',
+    params: { exact: 5, amount: 4 },
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -62,6 +68,8 @@ test('exact', async () => {
   });
   assert.deepEqual(await validate(Array.from({ length: 2 })), {
     state: 'invalid',
+    code: 'exact',
+    params: { exact: 5, amount: 2 },
     message: 'exact:5',
     field: undefined,
     errors: undefined,
@@ -78,6 +86,8 @@ test('enums', async () => {
   const strings = oneOf<string>(['foo', 'bar', 'baz'], 'oneOf:{values}');
   assert.deepEqual(await strings('asdf'), {
     state: 'invalid',
+    code: 'oneOf',
+    params: { values: ['foo', 'bar', 'baz'] },
     message: 'oneOf:foo,bar,baz',
     field: undefined,
     errors: undefined,
@@ -137,7 +147,8 @@ test('should return a promise when a built-in test is called directly', async ()
 test('should stop at a custom test when it fails between built-in tests', async () => {
   const validate = string(
     min(1, 'min'),
-    async (value, field) => invalid({ message: 'custom', value, field }),
+    async (value, field) =>
+      invalid({ code: 'custom', message: 'custom', value, field }),
     min(10, 'min'),
   );
 

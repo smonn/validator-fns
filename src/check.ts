@@ -3,57 +3,75 @@ import {
   type AtPath,
   errorAt,
   errorAtKey,
-  formatMessage,
   type KeyPath,
   type Test,
   validResult,
   type ValidatorMessage,
 } from './shared.js';
 
+/** @internal */
+type CheckArgs<T> = [
+  test: (value: T) => boolean,
+  code: string,
+  message?: ValidatorMessage<T> | undefined,
+];
+
 /**
- * Makes the test. `toErrors` turns a failure's formatted message into the
- * object's errors; without it, the message is the object's own.
+ * The test `check()` returns. `toErrors` turns the failure's message into the
+ * object's errors, under a `properties` failure; without it, the failure is
+ * the object's own.
  * @internal
  */
 function checkWith<T, E>(
-  test: (value: T) => boolean,
-  message: ValidatorMessage<T>,
-  toErrors?: (formatted: string) => E,
+  toErrors: ((message: string) => E) | undefined,
+  ...[test, code, message]: CheckArgs<T>
 ): Test<T, E> {
   return async (value, field) => {
     if (test(value)) {
       return validResult({ value, field });
     }
 
-    const formatted = formatMessage(message, { value, field });
+    const own = failure<E, T>({ code, params: {}, message, value, field });
     return toErrors
-      ? failure({ message: '', field, errors: toErrors(formatted) })
-      : failure({ message: formatted, field });
+      ? failure({
+          code: 'properties',
+          params: {},
+          value,
+          field,
+          errors: toErrors(own.message),
+        })
+      : own;
   };
 }
 
 /**
- * An object-level test for `object()`. It fails when `test` returns false for
- * the parsed object. The message goes to the error at `path`, a property name
- * or a list of names into nested objects, or to the object's own message
- * without a path. The message gets the parsed object as `value` and the
- * object's `field`. The path is checked against the object's type, and so are
- * the errors it produces.
+ * Whether `check()` got no path, since its first argument is the test.
+ * @internal
+ */
+function isWithoutPath<T>(
+  args: CheckArgs<T> | [path: unknown, ...CheckArgs<T>],
+): args is CheckArgs<T> {
+  return typeof args[0] === 'function';
+}
+
+/**
+ * An object-level test for `object()`. It fails with `code` when `test`
+ * returns false for the parsed object. The message, or else the code, goes to
+ * the error at `path`, a property name or a list of names into nested objects,
+ * under a `properties` failure. Without a path, the failure is the object's
+ * own. The message gets the parsed object as `value` and the object's
+ * `field`. The path is checked against the object's type, and so are the
+ * errors it produces.
  * @category Validation Tests
  */
-export function check<T>(
-  test: (value: T) => boolean,
-  message: ValidatorMessage<T>,
-): Test<T, never>;
+export function check<T>(...args: CheckArgs<T>): Test<T, never>;
 export function check<T, const K extends keyof T & string>(
   path: K,
-  test: (value: T) => boolean,
-  message: ValidatorMessage<T>,
+  ...args: CheckArgs<T>
 ): Test<T, { [P in K]?: string }>;
 export function check<T, const Path extends KeyPath<T>>(
   path: Path,
-  test: (value: T) => boolean,
-  message: ValidatorMessage<T>,
+  ...args: CheckArgs<T>
 ): Test<T, AtPath<Path>>;
 export function check<
   T,
@@ -61,20 +79,14 @@ export function check<
   // Not KeyPath<T>, which TypeScript can't expand for a generic T here.
   Path extends readonly string[],
 >(
-  ...args:
-    | [test: (value: T) => boolean, message: ValidatorMessage<T>]
-    | [
-        path: K | Path,
-        test: (value: T) => boolean,
-        message: ValidatorMessage<T>,
-      ]
+  ...args: CheckArgs<T> | [path: K | Path, ...CheckArgs<T>]
 ): Test<T, never> | Test<T, { [P in K]?: string }> | Test<T, AtPath<Path>> {
-  if (args.length === 2) {
-    return checkWith<T, never>(args[0], args[1]);
+  if (isWithoutPath(args)) {
+    return checkWith<T, never>(undefined, ...args);
   }
 
-  const [path, test, message] = args;
+  const [path, ...rest] = args;
   return typeof path === 'string'
-    ? checkWith(test, message, (formatted) => errorAtKey(path, formatted))
-    : checkWith(test, message, (formatted) => errorAt(path, formatted));
+    ? checkWith((own) => errorAtKey(path, own), ...rest)
+    : checkWith((own) => errorAt(path, own), ...rest);
 }

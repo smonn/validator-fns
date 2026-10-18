@@ -17,12 +17,12 @@ import {
 test('object', async () => {
   const validate = object({
     username: string(
-      { requiredMessage: 'Username is required.' },
+      { messages: { required: 'Username is required.' } },
       min(5, 'At least five characters.'),
       max(20, 'At most 20 characters.'),
     ),
     age: number(
-      { requiredMessage: 'Must enter your age.' },
+      { messages: { required: 'Must enter your age.' } },
       min(18, 'At least 18 years old'),
       max(150, 'Are you really over 150 years old?'),
       integer('Half-years do not count.'),
@@ -51,8 +51,10 @@ test('object', async () => {
     }),
     {
       state: 'invalid',
+      code: 'properties',
+      params: {},
       field: undefined,
-      message: '',
+      message: 'properties',
       errors: {
         age: 'Must enter your age.',
       },
@@ -76,7 +78,7 @@ test('empty object config accepts any object', async () => {
 });
 
 test('inherited properties of the config are not validated', async () => {
-  const inherited = { name: string({ requiredMessage: 'required' }) };
+  const inherited = { name: string({ messages: { required: 'required' } }) };
   const prototype: object = Object.create(inherited);
   const properties = Object.assign(prototype, {
     age: number(),
@@ -92,26 +94,32 @@ test('inherited properties of the config are not validated', async () => {
 
 test('should report a field as missing when its name is on Object.prototype', async () => {
   const validate = object({
-    constructor: string({ requiredMessage: 'Required' }),
-    toString: string({ requiredMessage: 'Required' }),
+    constructor: string({ messages: { required: 'Required' } }),
+    toString: string({ messages: { required: 'Required' } }),
   });
 
   assert.deepEqual(await validate({}), {
     state: 'invalid',
+    code: 'properties',
+    params: {},
     field: undefined,
-    message: '',
+    message: 'properties',
     errors: { constructor: 'Required', toString: 'Required' },
   });
 });
 
 test('should report a field as missing when the input only inherits it', async () => {
   const input: object = Object.create({ name: 'inherited' });
-  const validate = object({ name: string({ requiredMessage: 'Required' }) });
+  const validate = object({
+    name: string({ messages: { required: 'Required' } }),
+  });
 
   assert.deepEqual(await validate(input), {
     state: 'invalid',
+    code: 'properties',
+    params: {},
     field: undefined,
-    message: '',
+    message: 'properties',
     errors: { name: 'Required' },
   });
 });
@@ -119,7 +127,7 @@ test('should report a field as missing when the input only inherits it', async (
 test('should keep a __proto__ field as an own property when it is in the schema', async () => {
   const validate = object(
     Object.fromEntries([
-      ['__proto__', string({ requiredMessage: 'Required' })],
+      ['__proto__', string({ messages: { required: 'Required' } })],
     ]),
   );
 
@@ -160,8 +168,8 @@ test('nested object', async () => {
   // While this is technically possible, it's not recommended usage as it quickly gets quite complex
   const validate = object({
     person: object({
-      firstName: string({ requiredMessage: 'required' }),
-      lastName: string({ requiredMessage: 'required' }),
+      firstName: string({ messages: { required: 'required' } }),
+      lastName: string({ messages: { required: 'required' } }),
       age: optional(number()),
     }),
   });
@@ -195,7 +203,9 @@ test('nested object', async () => {
     }),
     {
       state: 'invalid',
-      message: '',
+      code: 'properties',
+      params: {},
+      message: 'properties',
       errors: {
         person: {
           lastName: 'required',
@@ -219,7 +229,7 @@ test('invalid configuration', async () => {
 
 // Fails with an empty message and no errors, which built-in tests never do.
 const silent: Validator = async (value, field) =>
-  invalid({ message: '', value, field });
+  invalid({ code: 'custom', message: '', value, field });
 
 test('object records an empty message for a field that fails without one', async () => {
   const result = await object({ silent, name: string() })({
@@ -234,17 +244,24 @@ test('object records an empty message for a field that fails without one', async
 
 const signup = object(
   {
-    password: string({ requiredMessage: 'Required' }),
-    confirm: string({ requiredMessage: 'Required' }),
+    password: string({ messages: { required: 'Required' } }),
+    confirm: string({ messages: { required: 'Required' } }),
   },
-  check('confirm', (value) => value.confirm === value.password, 'Must match.'),
+  check(
+    'confirm',
+    (value) => value.confirm === value.password,
+    'match',
+    'Must match.',
+  ),
 );
 
 test('should put an object-level error on the named field when the check fails', async () => {
   assert.deepEqual(await signup({ password: 'secret', confirm: 'other' }), {
     state: 'invalid',
+    code: 'properties',
+    params: {},
     field: undefined,
-    message: '',
+    message: 'properties',
     errors: { confirm: 'Must match.' },
   });
 });
@@ -260,17 +277,19 @@ test('should return the parsed object when every object-level test passes', asyn
 test('should skip object-level tests when a field is invalid', async () => {
   let calls = 0;
   const validate = object(
-    { password: string({ requiredMessage: 'Required' }) },
+    { password: string({ messages: { required: 'Required' } }) },
     check(() => {
       calls++;
       return false;
-    }, 'Never reported.'),
+    }, 'never'),
   );
 
   assert.deepEqual(await validate({}), {
     state: 'invalid',
+    code: 'properties',
+    params: {},
     field: undefined,
-    message: '',
+    message: 'properties',
     errors: { password: 'Required' },
   });
   assert.strictEqual(calls, 0);
@@ -282,6 +301,7 @@ test('should compare parsed values when an object-level test runs', async () => 
     check(
       'end',
       (value) => (value.end ?? 0) > (value.start ?? 0),
+      'order',
       'Must follow the start date.',
     ),
   );
@@ -297,12 +317,15 @@ test('should put the message on the object when the check names no field', async
     { min: number(), max: number() },
     check(
       (value) => (value.min ?? 0) <= (value.max ?? 0),
+      'range',
       '{field}: min must not exceed max.',
     ),
   );
 
   assert.deepEqual(await validate({ min: 3, max: 1 }, 'range'), {
     state: 'invalid',
+    code: 'range',
+    params: {},
     field: 'range',
     message: 'range: min must not exceed max.',
     errors: undefined,
@@ -318,6 +341,7 @@ test('should nest an object-level error when the check names a path', async () =
     check(
       ['shipping', 'zip'],
       (value) => value.shipping?.zip === value.billing?.zip,
+      'match',
       'Must match the billing zip.',
     ),
   );
@@ -334,8 +358,8 @@ test('should nest an object-level error when the check names a path', async () =
 test('should stop at the first failing object-level test', async () => {
   const validate = object(
     { name: string() },
-    createValidatorTest(() => false, 'First.'),
-    createValidatorTest(() => false, 'Second.'),
+    createValidatorTest('first', () => false, 'First.'),
+    createValidatorTest('second', () => false, 'Second.'),
   );
 
   assert.deepInclude(await validate({ name: 'a' }), { message: 'First.' });
@@ -350,6 +374,6 @@ test('should type the check value as the parsed object when used in object()', (
         age: number;
       }>();
       return true;
-    }, 'message'),
+    }, 'code'),
   );
 });

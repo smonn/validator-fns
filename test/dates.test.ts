@@ -74,6 +74,8 @@ test('minDate', async () => {
   yesterday.setDate(now.getDate() - 1);
   assert.deepEqual(await validate(yesterday), {
     state: 'invalid',
+    code: 'minDate',
+    params: { min: now },
     message: `min:${now.toISOString()}`,
     field: undefined,
     errors: undefined,
@@ -92,6 +94,8 @@ test('maxDate', async () => {
   tomorrow.setDate(now.getDate() + 1);
   assert.deepEqual(await validate(tomorrow), {
     state: 'invalid',
+    code: 'maxDate',
+    params: { max: now },
     message: `max:${now.toISOString()}`,
     field: undefined,
     errors: undefined,
@@ -127,7 +131,7 @@ test('date', async () => {
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   const validate = date(
-    { requiredMessage: 'required' },
+    { messages: { required: 'required' } },
     minDate(now, 'min'),
     maxDate(nextMonth, 'max'),
   );
@@ -148,18 +152,24 @@ test('date', async () => {
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
+    code: 'required',
+    params: {},
     message: 'required',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(null), {
     state: 'invalid',
+    code: 'required',
+    params: {},
     message: 'required',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'invalid',
+    code: 'required',
+    params: {},
     message: 'required',
     field: undefined,
     errors: undefined,
@@ -210,7 +220,9 @@ test('date() fails input it cannot read apart from a missing one', async () => {
   for (const value of unreadable) {
     const parseError: Failure<string> = {
       state: 'invalid',
-      message: 'Failed to parse value to date.',
+      code: 'type',
+      params: { expected: 'date' },
+      message: 'type',
       field: 'start',
       errors: undefined,
     };
@@ -218,8 +230,8 @@ test('date() fails input it cannot read apart from a missing one', async () => {
     assert.deepEqual(await optional(date())(value, 'start'), parseError);
   }
 
-  assert.deepInclude(await date()('  '), { message: 'Required.' });
-  assert.deepInclude(await date()(invalidDate), { message: 'Required.' });
+  assert.deepInclude(await date()('  '), { message: 'required' });
+  assert.deepInclude(await date()(invalidDate), { message: 'required' });
   assert.deepInclude(await optional(date())('  '), {
     state: 'valid',
     value: invalidDate,
