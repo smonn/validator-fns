@@ -1,7 +1,7 @@
 import {
   createParser,
-  createTypeValidatorTest,
   createValidatorTest,
+  typeValidatorOf,
 } from './factories.js';
 import type {
   ConfigBase,
@@ -48,23 +48,6 @@ function parseLimit(limit: SharedDateValueType): Date {
   }
 
   return parsed;
-}
-
-/**
- * Applies a configuration to the parsed date value.
- * @param value Parsed value
- * @param config Configuration to apply
- * @internal
- */
-function applyDateConfig(
-  value: Date | null | undefined,
-  config: DateConfig,
-): Date | null | undefined {
-  if (config.default !== undefined && (value === undefined || value === null)) {
-    return config.default;
-  }
-
-  return value;
 }
 
 /** @internal */
@@ -132,7 +115,4 @@ export type DateConfig = ConfigBase<Date>;
  * Validates a date value.
  * @category Type Validators
  */
-export const date = createTypeValidatorTest(
-  { parser: parseDate },
-  applyDateConfig,
-);
+export const date = typeValidatorOf<Date, string>(parseDate);

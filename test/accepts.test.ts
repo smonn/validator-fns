@@ -4,6 +4,7 @@ import { assert, test, vi } from 'vitest';
 import {
   array,
   boolean,
+  createTypeValidator,
   date,
   messageTree,
   number,
@@ -202,21 +203,12 @@ test('a custom parser is never called with undefined or null', async () => {
     seen.push(value);
     return valid({ value: String(value), field });
   };
-  const validate = string({ parser });
+  const validate = createTypeValidator(parser)();
 
   for (const input of [undefined, null]) {
     assert.deepInclude(await validate(input), { code: 'required' });
     assert.deepInclude(await optional(validate)(input), { state: 'valid' });
   }
-  assert.deepInclude(
-    await array({
-      parser: async (value, field) => {
-        seen.push(value);
-        return valid({ value: [], field });
-      },
-    })(null),
-    { code: 'required' },
-  );
   assert.deepInclude(await validate(''), { state: 'valid', value: '' });
   assert.deepEqual(seen, ['']);
 });

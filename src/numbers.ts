@@ -1,7 +1,7 @@
 import {
   createParser,
-  createTypeValidatorTest,
   createValidatorTest,
+  typeValidatorOf,
 } from './factories.js';
 import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 
@@ -12,23 +12,6 @@ import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 const parseNumber = createParser('number', (value): value is number =>
   Number.isFinite(value),
 );
-
-/**
- * Applies a configuration to the parsed number value.
- * @param value Parsed value
- * @param config Configuration to apply
- * @internal
- */
-function applyNumberConfig(
-  value: number | null | undefined,
-  config: NumberConfig,
-): number | null | undefined {
-  if (config.default !== undefined && (value === undefined || value === null)) {
-    return config.default;
-  }
-
-  return value;
-}
 
 /**
  * Ensures a number value is an integer.
@@ -55,9 +38,4 @@ export type NumberConfig = ConfigBase<number>;
  * Validates a number value.
  * @category Type Validators
  */
-export const number = createTypeValidatorTest(
-  {
-    parser: parseNumber,
-  },
-  applyNumberConfig,
-);
+export const number = typeValidatorOf<number, string>(parseNumber);

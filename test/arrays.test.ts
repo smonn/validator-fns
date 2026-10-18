@@ -1,5 +1,12 @@
 import { assert, test } from 'vitest';
-import { array, object, string, valid, type Validator } from '../src/index.js';
+import {
+  array,
+  createTypeValidator,
+  object,
+  string,
+  valid,
+  type Validator,
+} from '../src/index.js';
 
 test('array item field names', async () => {
   const fields: (string | undefined)[] = [];
@@ -22,9 +29,9 @@ test('array item field names', async () => {
 
 test('should return the parsed items when the item validator parses', async () => {
   const validate = array(
-    string({
-      parser: async (value, field) => valid({ value: String(value), field }),
-    }),
+    createTypeValidator(async (value: unknown, field?: string) =>
+      valid({ value: String(value), field }),
+    )(),
   );
 
   assert.deepEqual(await validate([1, 2.5]), {

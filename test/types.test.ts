@@ -6,6 +6,7 @@ import {
   type BooleanConfig,
   type BuiltInCode,
   check,
+  createTypeValidator,
   createValidatorTest,
   date,
   invalid,
@@ -55,6 +56,48 @@ test('type validators carry their value type and string errors', () => {
   >();
   expectTypeOf(boolean()).toEqualTypeOf<TypeValidator<boolean, string>>();
   expectTypeOf(date()).toEqualTypeOf<TypeValidator<Date, string>>();
+});
+
+const readNumber = async (value: unknown, field?: string) =>
+  valid({ value: Number(value), field });
+const syncParser = (value: unknown): Result<unknown, never> => ({
+  state: 'valid',
+  value,
+});
+
+test('createTypeValidator() takes its value and error types from its parser', () => {
+  expectTypeOf(createTypeValidator(string())()).toEqualTypeOf<
+    TypeValidator<string, string>
+  >();
+  expectTypeOf(
+    createTypeValidator(object({ name: string() }))({ default: { name: 'a' } }),
+  ).toEqualTypeOf<
+    TypeValidator<{ name: string }, { name?: Failure<string> }>
+  >();
+  expectTypeOf(createTypeValidator(readNumber)(min(1))).toEqualTypeOf<
+    TypeValidator<number, never>
+  >();
+  // A parsed undefined or null counts as missing, so it isn't in the value.
+  expectTypeOf(createTypeValidator(optional(string()))()).toEqualTypeOf<
+    TypeValidator<string, string>
+  >();
+  // @ts-expect-error -- a parser is a validator, which returns a promise
+  createTypeValidator(syncParser);
+});
+
+test('createTypeValidator() takes no parser option and no applyConfig', () => {
+  const custom = createTypeValidator(string());
+  type CustomConfig = Exclude<
+    Parameters<typeof custom>[0],
+    ((...args: never[]) => unknown) | undefined
+  >;
+  expectTypeOf<CustomConfig>().not.toHaveProperty('parser');
+  expectTypeOf<CustomConfig>().toEqualTypeOf<
+    Partial<{ default: string; messages: Messages }>
+  >();
+  expectTypeOf<StringConfig>().not.toHaveProperty('parser');
+  expectTypeOf<NumberConfig>().not.toHaveProperty('parser');
+  expectTypeOf<ArrayConfig>().not.toHaveProperty('parser');
 });
 
 test('built-in tests and results without errors have never as the error type', () => {

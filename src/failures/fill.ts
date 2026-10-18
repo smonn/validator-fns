@@ -24,21 +24,3 @@ export function fillOwn<E>(
   const value = unworded.get(made);
   return failure({ code, params, message, value, field, errors });
 }
-
-/**
- * A failure the validator returns as its own, such as its parser's, with
- * `errors` in place of its own and worded from `messages`.
- * @internal
- */
-export function fillAsOwn<E>(
-  made: Failure<unknown>,
-  errors: E | undefined,
-  messages: Messages | undefined,
-): Failure<E> {
-  const copy: Failure<E> = { ...made, errors };
-  if (unworded.has(made)) {
-    unworded.set(copy, unworded.get(made));
-  }
-
-  return fillOwn(copy, messages);
-}

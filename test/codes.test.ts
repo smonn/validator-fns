@@ -3,7 +3,7 @@ import {
   array,
   boolean,
   check,
-  createTypeValidatorTest,
+  createTypeValidator,
   createValidatorTest,
   date,
   email,
@@ -328,14 +328,10 @@ test('should make a failure with a custom code through invalid()', async () => {
   );
 });
 
-const money = createTypeValidatorTest(
-  {
-    parser: async (value: unknown, field?: string) =>
-      typeof value === 'number' || value === undefined
-        ? valid({ value, field })
-        : invalid({ code: 'type', params: { expected: 'money' }, field }),
-  },
-  (value: number | null | undefined) => value,
+const money = createTypeValidator(async (value: unknown, field?: string) =>
+  typeof value === 'number'
+    ? valid({ value, field })
+    : invalid({ code: 'type', params: { expected: 'money' }, field }),
 );
 
 test('should word a custom type validator from its messages config', async () => {
@@ -352,18 +348,4 @@ test('should word a custom type validator from its messages config', async () =>
     message: 'Not money.',
   });
   assert.deepInclude(await money()('x'), { code: 'type', message: 'type' });
-});
-
-test('should keep the message of a worded parser failure over the messages config', async () => {
-  const worded = createTypeValidatorTest(
-    {
-      parser: async (value: unknown, field?: string) =>
-        invalid({ code: 'type', message: 'Not money.', value, field }),
-    },
-    (value: number | null | undefined) => value,
-  );
-  assert.deepInclude(await worded({ messages: { type: 'config' } })('x'), {
-    code: 'type',
-    message: 'Not money.',
-  });
 });

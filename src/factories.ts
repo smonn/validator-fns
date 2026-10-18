@@ -1,10 +1,11 @@
-import { failure, fillAsOwn, fillOwn } from './failures/index.js';
-import { parsePresent, requirable } from './optional.js';
+import { failure, fillOwn } from './failures/index.js';
+import { type Parser, parsePresent, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ConfigBase,
   type Test,
   validResult,
+  type Validator,
   type ValidatorMessage,
   type Result,
 } from './shared.js';
@@ -30,45 +31,34 @@ const syncTwin = Symbol('sync');
 type Twin<T> = (value: T, field: string | undefined) => Result<T, never>;
 
 /**
- * Creates a type validator.
- * @typeParam T The basic type for the final value to be validated.
- * @typeParam C The configuration type.
- * @param defaultConfig Configuration with at least the `parser`, which
- * converts the input into the type.
- * @param applyConfig Function that applies configuration to the parsed value.
- * @category Helpers
+ * Makes the factory of a type validator that reads input with `parser`.
+ * @internal
  */
-export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
-  // NoInfer makes TypeScript infer C from applyConfig's config parameter, so C
-  // keeps the options that defaultConfig leaves out. Needs TypeScript 5.4.
-  defaultConfig: NoInfer<C>,
-  applyConfig: (value: T | null | undefined, config: C) => T | null | undefined,
+export function typeValidatorOf<T, E>(
+  parser: Parser<T, E>,
 ): (
-  config?: Partial<C> | Test<T, string>,
-  ...tests: Test<T, string>[]
-) => TypeValidator<T, string> {
+  config?: Partial<ConfigBase<T>> | Test<T, E>,
+  ...tests: Test<T, E>[]
+) => TypeValidator<T, E> {
   return (config, ...tests) => {
     // Typed with the twin, which only tests made here carry.
-    const allTests: (Test<T, string> & { [syncTwin]?: Twin<T> })[] =
+    const allTests: (Test<T, E> & { [syncTwin]?: Twin<T> })[] =
       typeof config === 'function' ? [config, ...tests] : tests;
-    const finalConfig: C = {
-      ...defaultConfig,
-      ...(typeof config === 'function' ? undefined : config),
-    };
+    const finalConfig = typeof config === 'function' ? {} : (config ?? {});
 
-    return requirable<T, string>(
+    return requirable<T, E>(
       finalConfig.messages,
       async (value, field, onEmpty) => {
-        const parsing = parsePresent(finalConfig.parser, value, field);
+        const parsing = parsePresent(parser, value, field);
         // Built-in parsers return a result synchronously, which skips an
         // await. Checks for `then`, as a promise from another realm isn't an
         // instance of this realm's Promise.
         const parsed = 'then' in parsing ? await parsing : parsing;
         if (parsed.state === 'invalid') {
-          return fillAsOwn<never>(parsed, undefined, finalConfig.messages);
+          return fillOwn(parsed, finalConfig.messages);
         }
 
-        let parsedValue = applyConfig(parsed.value, finalConfig);
+        let parsedValue = parsed.value ?? finalConfig.default ?? parsed.value;
         if (parsedValue === null || parsedValue === undefined) {
           return onEmpty(parsedValue, field);
         }
@@ -77,7 +67,7 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
           const syncTest = validatorTest[syncTwin];
           // Not a ternary: @vitest/coverage-v8 5 gives the branch after an
           // await in a ternary arm a negative count.
-          let result: Result<T, string>;
+          let result: Result<T, E>;
           if (syncTest) {
             result = syncTest(parsedValue, field);
           } else {
@@ -93,6 +83,23 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
       },
     );
   };
+}
+
+/**
+ * Makes a custom type validator from a parser, which can be any validator. It
+ * reads present input, and its failure is the type validator's own, with its
+ * code, params and errors. The type validator adds the missing check,
+ * `default`, `messages`, the tests and `optional()`.
+ * @param parser Validator that reads the input into the type
+ * @category Helpers
+ */
+export function createTypeValidator<T, E>(
+  parser: Validator<T | null | undefined, E>,
+): (
+  config?: Partial<ConfigBase<T>> | Test<T, E>,
+  ...tests: Test<T, E>[]
+) => TypeValidator<T, E> {
+  return typeValidatorOf(parser);
 }
 
 /**

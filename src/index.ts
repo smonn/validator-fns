@@ -19,7 +19,7 @@ export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';
 export { oneOf } from './common';
 export { transform } from './transform';
 export type { OneOfValidatorMessageParameters } from './common';
-export { createTypeValidatorTest, createValidatorTest } from './factories';
+export { createTypeValidator, createValidatorTest } from './factories';
 export { exact, max, min } from './limits';
 export type {
   ExactValidatorMessageParameters,

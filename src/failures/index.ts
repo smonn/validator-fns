@@ -1,5 +1,5 @@
 export { FailureError, issues } from './decode.js';
-export { fillAsOwn, fillOwn } from './fill.js';
+export { fillOwn } from './fill.js';
 export { failure } from './make.js';
 export { messageTree } from './message-tree.js';
 export {

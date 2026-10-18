@@ -1,7 +1,6 @@
 import { failure, fillOwn } from './failures/index.js';
 import {
   validResult,
-  type ConfigBase,
   type Messages,
   type Result,
   type Validator,
@@ -88,15 +87,25 @@ export function createParser<T>(
 export const parseRecord = createParser('object', isRecordLike);
 
 /**
+ * Reads present input into a type validator's type: a built-in parser, or the
+ * validator `createTypeValidator()` takes.
+ * @internal
+ */
+export type Parser<T, E> = (
+  value: unknown,
+  field?: string,
+) => Result<T | null | undefined, E> | Promise<Result<T | null | undefined, E>>;
+
+/**
  * Runs `parser` on a present value. A missing value, `undefined` or `null`,
  * never reaches a parser and stays as it is.
  * @internal
  */
-export function parsePresent<T>(
-  parser: ConfigBase<T>['parser'],
+export function parsePresent<T, E>(
+  parser: Parser<T, E>,
   value: unknown,
   field: string | undefined,
-): ReturnType<ConfigBase<T>['parser']> {
+): ReturnType<Parser<T, E>> {
   return value === null || value === undefined
     ? validResult({ value, field })
     : parser(value, field);

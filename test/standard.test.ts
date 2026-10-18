@@ -3,7 +3,7 @@ import * as validatorFns from '../src/index.js';
 import {
   array,
   boolean,
-  createTypeValidatorTest,
+  createTypeValidator,
   createValidator,
   date,
   invalid,
@@ -109,7 +109,7 @@ test('should export only the v3 surface', () => {
     'array',
     'boolean',
     'check',
-    'createTypeValidatorTest',
+    'createTypeValidator',
     'createValidator',
     'createValidatorTest',
     'date',
@@ -136,12 +136,8 @@ test('should export only the v3 surface', () => {
   ]);
 });
 
-const money = createTypeValidatorTest(
-  {
-    parser: async (value: unknown, field?: string) =>
-      valid({ value: typeof value === 'number' ? value : null, field }),
-  },
-  (value: number | null | undefined) => value,
+const money = createTypeValidator(async (value: unknown, field?: string) =>
+  valid({ value: typeof value === 'number' ? value : null, field }),
 );
 
 // Every kind of type validator, with an input it accepts and one it rejects.
@@ -157,7 +153,7 @@ const typeValidators: [
   ['date', date(), new Date(0), undefined],
   ['array', array(string()), ['a'], [1]],
   ['object', object({ name: string() }), { name: 'a' }, {}],
-  ['createTypeValidatorTest', money(), 1, null],
+  ['createTypeValidator', money(), 1, 'x'],
   ['optional()', optional(string(min(2, 'short'))), undefined, 'a'],
   [
     'optional() of a custom validator',
