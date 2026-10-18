@@ -96,7 +96,7 @@ test('array default', async () => {
   });
   assert.deepEqual(await validate([]), {
     state: 'valid',
-    value: ['hello'],
+    value: [],
     field: undefined,
   });
   assert.deepEqual(await validate(['other']), {

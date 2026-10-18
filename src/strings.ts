@@ -55,10 +55,12 @@ function applyStringConfig(
   config: StringConfig,
 ): string | null | undefined {
   const parsedValue =
-    config.default !== undefined &&
-    (value === undefined || value === null || value === '')
-      ? config.default
-      : value;
+    value === undefined || value === null ? config.default : value;
+  // Missing input without a default stays as it is.
+  if (parsedValue === undefined || parsedValue === null) {
+    return value;
+  }
+
   return config.trim && typeof parsedValue === 'string'
     ? parsedValue.trim()
     : parsedValue;

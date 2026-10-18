@@ -147,6 +147,48 @@ test('default fills a missing value before it is checked', async () => {
   });
 });
 
+test('default fills only a missing value', async () => {
+  const validateString = string({ default: 'x' });
+  assert.deepInclude(await validateString(null), { value: 'x' });
+  assert.deepInclude(await validateString(''), { state: 'valid', value: '' });
+  assert.deepInclude(await number({ default: 1 })(0), { value: 0 });
+  assert.deepInclude(await boolean({ default: true })(false), {
+    value: false,
+  });
+  assert.deepInclude(await array(string(), { default: ['a'] })([]), {
+    state: 'valid',
+    value: [],
+  });
+});
+
+test('default skips the parser, and the tests run on it', async () => {
+  const parsed: unknown[] = [];
+  const validate = string({
+    default: 'x',
+    parser: (value, field) => {
+      parsed.push(value);
+      return valid({ value: String(value), field });
+    },
+  });
+  assert.deepInclude(await validate(undefined), { value: 'x' });
+  assert.deepEqual(parsed, []);
+
+  assert.deepInclude(await number({ default: 0 }, min(1))(undefined), {
+    state: 'invalid',
+    code: 'min',
+  });
+  assert.deepInclude(await string({ default: ' x ', trim: true })(null), {
+    value: 'x',
+  });
+});
+
+test('default applies before optional()', async () => {
+  assert.deepInclude(await optional(string({ default: 'x' }))(undefined), {
+    state: 'valid',
+    value: 'x',
+  });
+});
+
 test('optional() accepts only undefined and null for a custom validator', async () => {
   const seen: unknown[] = [];
   const custom: Validator<string, string> = async (value, field) => {
