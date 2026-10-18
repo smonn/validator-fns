@@ -1,7 +1,7 @@
 import type { Failure } from '../shared.js';
 import type { StandardSchemaV1 } from '../standard-schema.js';
 import { readFailure } from './read.js';
-import { entriesOf, isContainer } from './walk.js';
+import { entriesOf, isContainer, type Visits } from './walk.js';
 
 /**
  * A Standard Schema issue with its failure's `code` and `params`.
@@ -21,12 +21,13 @@ function collectIssues(
   made: Failure<unknown>,
   path: PropertyKey[],
   found: Issue[],
+  visits: Visits,
 ) {
   const before = found.length;
   if (isContainer(made)) {
-    for (const [key, child] of entriesOf(made.errors, path.length)) {
+    for (const [key, child] of entriesOf(made.errors, path.length, visits)) {
       if (child) {
-        collectIssues(child, [...path, key], found);
+        collectIssues(child, [...path, key], found, visits);
       }
     }
   }
@@ -49,6 +50,8 @@ function collectIssues(
  */
 export function issues(made: Failure<unknown>): Issue[] {
   const found: Issue[] = [];
-  collectIssues(readFailure(made, "A validator's result"), [], found);
+  collectIssues(readFailure(made, "A validator's result"), [], found, {
+    entries: 0,
+  });
   return found;
 }
