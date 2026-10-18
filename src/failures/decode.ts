@@ -25,15 +25,28 @@ export function isContainer(made: Failure<unknown>): boolean {
 }
 
 /**
+ * How many containers an errors tree may nest, far beyond any schema. The
+ * bound keeps a cyclic or hand-built tree from overflowing the stack.
+ * @internal
+ */
+const maxDepth = 1000;
+
+/**
  * Each entry of a container's errors tree with its key: an array index or an
- * own property name. A tree that isn't an object, or an entry that is neither
- * a whole failure nor `null`, is a bug in the code that built it, so it
- * throws (ADR 0001).
+ * own property name. A tree that isn't an object, nests deeper than
+ * `maxDepth`, or has an entry that is neither a whole failure nor `null`, is
+ * a bug in the code that built it, so it throws (ADR 0001).
+ * @param depth How many containers hold this one
  * @internal
  */
 export function entriesOf(
   errors: unknown,
+  depth: number,
 ): [PropertyKey, Failure<unknown> | null][] {
+  if (depth >= maxDepth) {
+    throw new TypeError(`An errors tree is deeper than ${maxDepth} levels`);
+  }
+
   if (typeof errors !== 'object' || errors === null) {
     throw new TypeError('An errors tree must be an object');
   }
@@ -68,7 +81,7 @@ function collectIssues(
 ) {
   const before = found.length;
   if (isContainer(made)) {
-    for (const [key, child] of entriesOf(made.errors)) {
+    for (const [key, child] of entriesOf(made.errors, path.length)) {
       if (child) {
         collectIssues(child, [...path, key], found);
       }
