@@ -6,11 +6,11 @@ import {
 } from './failures/index.js';
 import { findInvalidResult } from './invalid-detail.js';
 import { parseRecord, requirable } from './optional.js';
+import { ownValue, propertiesOf } from './properties.js';
 import type { TypeValidator } from './standard.js';
 import {
   type ExtractError,
   type ExtractValue,
-  hasOwnProperty,
   type Failure,
   type Messages,
   type Result,
@@ -97,16 +97,7 @@ export function object<P extends ObjectParameter>(
     throw new TypeError('`properties` must be a configuration object');
   }
 
-  const validators: [key: string, validator: Validator][] = [];
-  for (const key in properties) {
-    if (hasOwnProperty(properties, key)) {
-      const validator = properties[key];
-      if (typeof validator !== 'function') {
-        throw new TypeError(`\`${key}\` must be a validator`);
-      }
-      validators.push([key, validator]);
-    }
-  }
+  const validators = propertiesOf(properties);
 
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const messages = typeof config === 'object' ? config.messages : undefined;
@@ -127,12 +118,10 @@ export function object<P extends ObjectParameter>(
       const resolvedValues: Partial<Record<keyof P, unknown>> = {};
 
       for (const [key, validator] of validators) {
-        // Only own properties, so a missing key named like an inherited one,
-        // such as `constructor`, reads as missing.
-        const value: unknown = hasOwnProperty(parsed.value, key)
-          ? Reflect.get(parsed.value, key)
-          : undefined;
-        const result = await validator(value, childField(field, key));
+        const result = await validator(
+          ownValue(parsed.value, key),
+          childField(field, key),
+        );
         results.push([key, result]);
         if (result.state === 'valid') {
           setOwn(resolvedValues, key, result.value);
