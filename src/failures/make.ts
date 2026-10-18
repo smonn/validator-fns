@@ -32,7 +32,9 @@ export function failure<
     code,
     params,
     message:
-      message === undefined ? code : wordMessage(message, params, value, field),
+      message === undefined
+        ? code
+        : wordMessage(code, message, params, value, field),
     field,
     errors,
   };

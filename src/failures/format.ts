@@ -47,17 +47,25 @@ export function formatMessage(template: string, parameters: object): string {
 
 /**
  * A failure's message, from a template or a function, with the parameters
- * `parametersOf()` copies.
+ * `parametersOf()` copies. A function that returns anything but a string is
+ * a bug, so it throws a `TypeError` naming the code (ADR 0001).
  * @internal
  */
 export function wordMessage<T, P extends Record<string, unknown>>(
+  code: string,
   message: ValidatorMessage<T, P>,
   params: P,
   value: T | null | undefined,
   field: string | undefined,
 ): string {
   const parameters = parametersOf(params, value, field);
-  return typeof message === 'string'
-    ? formatMessage(message, parameters)
-    : message(parameters);
+  if (typeof message === 'string') {
+    return formatMessage(message, parameters);
+  }
+
+  const worded: unknown = message(parameters);
+  if (typeof worded !== 'string') {
+    throw new TypeError(`The message for \`${code}\` must return a string`);
+  }
+  return worded;
 }
