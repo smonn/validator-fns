@@ -5,25 +5,12 @@ import type {
   ValidatorMessage,
   ValidatorMessageParameters,
 } from './types.js';
+import { timeOf } from './valid-date.js';
 
 export interface OneOfValidatorMessageParameters<
   T,
 > extends ValidatorMessageParameters<T> {
   values: readonly T[];
-}
-
-/**
- * The time of a date from any realm, or `NaN` for any other value. `getTime`
- * throws unless `this` is a `Date`, which `instanceof` can't tell across
- * realms, and unlike `valueOf` the value can't override it.
- * @internal
- */
-function timeOf(value: unknown): number {
-  try {
-    return Date.prototype.getTime.call(value);
-  } catch {
-    return Number.NaN;
-  }
 }
 
 /**
