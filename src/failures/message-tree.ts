@@ -1,4 +1,5 @@
-import { type Failure, type Result, setOwn } from '../types.js';
+import type { Failure, Result } from '../types.js';
+import { treeOf } from './own.js';
 import { entriesOf, isContainer, type Visits } from './walk.js';
 import { readFailure } from './read.js';
 
@@ -42,12 +43,12 @@ function messagesOf(
     return made.message;
   }
 
-  const tree = Array.isArray(made.errors) ? [] : {};
+  const entries: [PropertyKey, unknown][] = [];
   for (const [key, child] of entriesOf(made.errors, depth, visits)) {
-    setOwn(tree, key, child && messagesOf(child, depth + 1, visits));
+    entries.push([key, child && messagesOf(child, depth + 1, visits)]);
   }
 
-  return tree;
+  return treeOf(made.errors, entries);
 }
 
 /**

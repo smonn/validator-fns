@@ -1,6 +1,21 @@
 import type { ValidatorMessageParameters } from '../types.js';
 
 /**
+ * A container's errors tree made from `entries`, as `entriesOf` lists them:
+ * an array when `errors` is one, and otherwise an object with each key as an
+ * own key, `__proto__` included.
+ * @internal
+ */
+export function treeOf(
+  errors: unknown,
+  entries: [PropertyKey, unknown][],
+): object {
+  return Array.isArray(errors)
+    ? entries.map(([, entry]) => entry)
+    : Object.fromEntries(entries);
+}
+
+/**
  * The value of an object's own data property, or `undefined` for anything
  * else: a target that isn't an object, a missing or inherited key, a getter,
  * which it doesn't run, or a target such as a revoked Proxy, whose trap
