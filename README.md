@@ -13,6 +13,7 @@ Small asynchronous validation library. Tries to be as small as possible and use 
 - [API Reference](#api-reference)
   - [Validation result](#validation-result)
   - [Validation error message](#validation-error-message)
+  - [Date values](#date-values)
   - [Validation types](#validation-types)
   - [Validation tests](#validation-tests)
   - [Custom validation](#custom-validation)
@@ -191,6 +192,10 @@ The `message` argument in the validation tests must be a static string, a templa
 
 The parsed `value` is always provided. If available, `field` is also provided. Depending on the validator, additional fields may be available.
 
+### Date values
+
+Wherever a value or a limit is a `Date`, the library reads its timestamp and ISO text through `Date.prototype.getTime` and `Date.prototype.toISOString`. So `number()`, `string()`, the `default` fallback of `date()`, `minDate`, `maxDate`, `oneOf`, and `required` ignore a date's own or subclass `getTime`, `valueOf`, and `toISOString`. A date from another realm, such as an iframe or `vm.runInNewContext()`, counts as a date. An object that only inherits from `Date.prototype`, a `Proxy` around a date, and a date whose prototype was set to `Object.prototype` or `null` don't.
+
 ### Validation types
 
 A **validation type** is expected to parse and prepare the value for the provided validation tests. For example, the `string` validation type ensures the provided value is a string, `null` or `undefined`. It must be a function that takes a value of any type and returns a promise which resolves to a validation result (see above).
@@ -244,7 +249,7 @@ Supported validation tests: `oneOf` and `required`.
 
 #### date(config?, ...tests)
 
-Casts value to a date, `null` or `undefined` if using the default date parser. `config` is optional.
+Casts value to a date, `null` or `undefined` if using the default date parser. `config` is optional. See [Date values](#date-values) for which values count as dates.
 
 Supported validation tests: `maxDate`, `minDate`, `oneOf`, and `required`.
 
@@ -261,7 +266,7 @@ The default parser only accepts dates, numbers, and a subset of [ISO 8601][iso86
 
 #### number(config?, ...tests)
 
-Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional.
+Casts value to a number, `null` or `undefined` if using the default number parser. `config` is optional. A date becomes its timestamp; see [Date values](#date-values).
 
 Supported validation tests: `exact`, `integer`, `max`, `min`, `oneOf`, and `required`.
 
@@ -302,7 +307,7 @@ To use this with a library such as [Formik][formik], you can use the resulting `
 
 #### string(config?, ...tests)
 
-Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional.
+Casts value to a string, `null` or `undefined` if using the default string parser. `config` is optional. A date becomes its ISO text; see [Date values](#date-values).
 
 Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, `required`, `url`, and `uuid`.
 
@@ -414,7 +419,7 @@ Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `m
 
 #### maxDate(limit, message, exclusive?)
 
-Ensures value is on or before the specified date. Works with dates. `max` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
+Ensures value is on or before the specified date. Works with dates, compared by timestamp; see [Date values](#date-values). `max` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -442,7 +447,7 @@ Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `
 
 #### minDate(limit, message, exclusive?)
 
-Ensures value is on or after the specified date. Works with dates. `min` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
+Ensures value is on or after the specified date. Works with dates, compared by timestamp; see [Date values](#date-values). `min` (also as the deprecated `limit`) and the deprecated `exclusive` are provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -456,7 +461,7 @@ Ensures value is on or after the specified date. Works with dates. `min` (also a
 
 #### oneOf(values, message)
 
-Ensures value is one of the specified values. Works with strings, arrays, booleans, and dates. `values` is provided to the message.
+Ensures value is one of the specified values. Works with strings, arrays, booleans, and dates. A date matches a listed date or number with the same timestamp; see [Date values](#date-values). `values` is provided to the message.
 
 <details><summary>arguments</summary>
 
@@ -471,7 +476,7 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 
 > **Deprecated.** v3 removes `required()`: v3 validators are required by default, and `optional()` wraps the others.
 
-Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date. Works with all types.
+Ensures value is **not** one of: `undefined`, `null`, `NaN`, an empty string, or an invalid date. Works with all types. See [Date values](#date-values) for which values count as dates.
 
 <details><summary>arguments</summary>
 
