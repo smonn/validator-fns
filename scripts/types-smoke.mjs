@@ -84,6 +84,15 @@ const tsconfig = {
 };
 
 /**
+ * @param {unknown} error
+ */
+function stdoutOf(error) {
+  return error && typeof error === 'object' && 'stdout' in error
+    ? String(error.stdout)
+    : '';
+}
+
+/**
  * @param {string} command
  * @param {string[]} args
  * @param {string} cwd
@@ -124,12 +133,8 @@ try {
     try {
       run(process.execPath, [tsc, '--project', 'tsconfig.json'], consumer);
     } catch (error) {
-      const output =
-        error && typeof error === 'object' && 'stdout' in error
-          ? String(error.stdout)
-          : '';
       throw new Error(
-        `The declarations fail to type-check on the ${name} TypeScript (${version}):\n${output}`,
+        `The declarations fail to type-check on the ${name} TypeScript (${version}):\n${stdoutOf(error)}`,
         { cause: error },
       );
     }
