@@ -90,7 +90,7 @@ const validate = object({
     email('Must be a valid email address.'),
   ),
   age: number(
-    { round: 'floor', requiredMessage: 'Age is required.' },
+    { requiredMessage: 'Age is required.' },
     integer('Age must be a whole number.'),
     min(18, 'Must be at least {min} years old.'),
   ),
@@ -178,12 +178,12 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    ```js
    // 2.x
    string(required('Enter a name.'), min(2, 'Too short.'));
-   number({ round: 'floor' }, required('Enter your age.'));
+   string({ trim: true }, required('Enter your city.'));
    array(string(), required('Pick some.'));
 
    // 3.x
    string({ requiredMessage: 'Enter a name.' }, min(2, 'Too short.'));
-   number({ round: 'floor', requiredMessage: 'Enter your age.' });
+   string({ trim: true, requiredMessage: 'Enter your city.' });
    array(string(), { requiredMessage: 'Pick some.' });
    ```
 
@@ -242,6 +242,32 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    await number(min(5, 'Too small.'))('3');
    // { state: 'invalid', message: 'Too small.', ... }
    ```
+
+10. **Replace the helpers 3.x no longer exports**:
+
+    | 2.x                                                                         | 3.x                                                                                                                                       |
+    | :-------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+    | `parseArray`, `parseBoolean`, `parseDate`, `parseNumber`, `parseString`     | The type validator, such as `number()`.                                                                                                   |
+    | `applyArrayConfig` and the other `apply…Config` functions                   | The type validator, with its config.                                                                                                      |
+    | `formatMessage`                                                             | `invalid()` and `createValidatorTest()`, which format their message.                                                                      |
+    | `hasOwnProperty`                                                            | `Object.prototype.hasOwnProperty.call(object, key)`.                                                                                      |
+    | `isObject`                                                                  | `Object.prototype.toString.call(value) === '[object Object]'`.                                                                            |
+    | `invalidDate`                                                               | `new Date('')`.                                                                                                                           |
+    | `ConfigBase`                                                                | A config type that declares `parser` and its options, as in [createTypeValidatorTest](#createtypevalidatortestdefaultconfig-applyconfig). |
+    | `DeepPartial`, `ValidatorFactory`, `SharedValueType`, `SharedDateValueType` | Your own type.                                                                                                                            |
+
+11. **Replace `round` with `integer()`**, which rejects a number that isn't an integer instead of rounding it, **and `exclusive` with `check()`**. Messages for `min()`, `max()`, `minDate()` and `maxDate()` no longer get `exclusive`:
+
+    ```js
+    // 2.x
+    number({ round: 'floor' }, min(0, 'Must be positive.', true));
+
+    // 3.x
+    number(
+      integer('Must be a whole number.'),
+      check((value) => value > 0, 'Must be positive.'),
+    );
+    ```
 
 ## API Reference
 
@@ -385,7 +411,6 @@ Supported validation tests: `exact`, `integer`, `max`, `min`, and `oneOf`.
 
 | option            | type               | description                                                                                |
 | :---------------- | :----------------- | :----------------------------------------------------------------------------------------- |
-| `round`           | string             | Optional. Rounding method to use, one of `nearest`, `ceil`, `floor`                        |
 | `default`         | number             | Optional. Value used if the parser returns `undefined`, `null` or an invalid number `NaN`. |
 | `requiredMessage` | string or function | Optional. Message for a missing value. Defaults to `'Required.'`.                          |
 | `parser`          | function           | Optional. Used to customize how a value is converted into a number.                        |
@@ -457,10 +482,10 @@ In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of t
 - [exact(limit, message)](#exactlimit-message)
 - [integer(message)](#integermessage)
 - [matches(pattern, message)](#matchespattern-message)
-- [max(limit, message, exclusive?)](#maxlimit-message-exclusive)
-- [maxDate(limit, message, exclusive?)](#maxdatelimit-message-exclusive)
-- [min(limit, message, exclusive?)](#minlimit-message-exclusive)
-- [minDate(limit, message, exclusive?)](#mindatelimit-message-exclusive)
+- [max(limit, message)](#maxlimit-message)
+- [maxDate(limit, message)](#maxdatelimit-message)
+- [min(limit, message)](#minlimit-message)
+- [minDate(limit, message)](#mindatelimit-message)
 - [oneOf(values, message)](#oneofvalues-message)
 - [url(message, protocols?)](#urlmessage-protocols)
 - [uuid(message)](#uuidmessage)
@@ -531,59 +556,55 @@ Ensures value matches the specified pattern. Works with strings. `pattern` is pr
 
 </details>
 
-#### max(limit, message, exclusive?)
+#### max(limit, message)
 
-Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
+Ensures value is of at most `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `max`) and `amount` (string length, array length, or numeric value) are provided to the message. For a strict bound, use [`check()`](#checkpath-test-message), such as `check((value) => value < 10, 'Must be under 10.')`.
 
 <details><summary>arguments</summary>
 
-| name        | type               | description                                                                      |
-| :---------- | :----------------- | :------------------------------------------------------------------------------- |
-| `limit`     | number             | The maximum string length, array length, or numeric value allowed.               |
-| `message`   | string or function | The validation error message.                                                    |
-| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name      | type               | description                                                        |
+| :-------- | :----------------- | :----------------------------------------------------------------- |
+| `limit`   | number             | The maximum string length, array length, or numeric value allowed. |
+| `message` | string or function | The validation error message.                                      |
 
 </details>
 
-#### maxDate(limit, message, exclusive?)
+#### maxDate(limit, message)
 
-Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) and `exclusive` are provided to the message.
+Ensures value is on or before the specified date. Works with dates. `limit` (aliased as `max`) is provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type                    | description                                                                      |
-| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
-| `limit`     | date, number, or string | The maximum date allowed. Uses the internal date parser.                         |
-| `message`   | string or function      | The validation error message.                                                    |
-| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name      | type                    | description                                              |
+| :-------- | :---------------------- | :------------------------------------------------------- |
+| `limit`   | date, number, or string | The maximum date allowed. Uses the internal date parser. |
+| `message` | string or function      | The validation error message.                            |
 
 </details>
 
-#### min(limit, message, exclusive?)
+#### min(limit, message)
 
-Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`), `amount` (string length, array length, or numeric value), and `exclusive` are provided to the message.
+Ensures value is of at least `limit`. Works with strings, arrays, and numbers. `limit` (aliased as `min`) and `amount` (string length, array length, or numeric value) are provided to the message. For a strict bound, use [`check()`](#checkpath-test-message), such as `check((value) => value > 0, 'Must be positive.')`.
 
 <details><summary>arguments</summary>
 
-| name        | type               | description                                                                      |
-| :---------- | :----------------- | :------------------------------------------------------------------------------- |
-| `limit`     | number             | The minimum string length, array length, or numeric value allowed.               |
-| `message`   | string or function | The validation error message.                                                    |
-| `exclusive` | boolean            | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name      | type               | description                                                        |
+| :-------- | :----------------- | :----------------------------------------------------------------- |
+| `limit`   | number             | The minimum string length, array length, or numeric value allowed. |
+| `message` | string or function | The validation error message.                                      |
 
 </details>
 
-#### minDate(limit, message, exclusive?)
+#### minDate(limit, message)
 
-Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) and `exclusive` are provided to the message.
+Ensures value is on or after the specified date. Works with dates. `limit` (aliased as `min`) is provided to the message.
 
 <details><summary>arguments</summary>
 
-| name        | type                    | description                                                                      |
-| :---------- | :---------------------- | :------------------------------------------------------------------------------- |
-| `limit`     | date, number, or string | The minimum date allowed. Uses the internal date parser.                         |
-| `message`   | string or function      | The validation error message.                                                    |
-| `exclusive` | boolean                 | Optional. If true, makes comparison exclusive instead of the default, inclusive. |
+| name      | type                    | description                                              |
+| :-------- | :---------------------- | :------------------------------------------------------- |
+| `limit`   | date, number, or string | The minimum date allowed. Uses the internal date parser. |
+| `message` | string or function      | The validation error message.                            |
 
 </details>
 
@@ -627,10 +648,9 @@ Ensures the value is a UUID as defined by [RFC 9562](https://www.rfc-editor.org/
 
 ### Custom validation
 
-Custom validation types and validators can be created and used as needed. There are some helpers that, while used internally, are considered part of the public API.
+Custom validation types and validators can be created and used as needed, with these helpers.
 
 - [createValidator(fn)](#createvalidatorfn)
-- [formatMessage(template, params)](#formatmessagetemplate-params)
 - [createTypeValidatorTest(defaultConfig, applyConfig)](#createtypevalidatortestdefaultconfig-applyconfig)
 - [valid({ value, field })](#valid-value-field-)
 - [invalid({ message, value, field, errors, extras })](#invalid-message-value-field-errors-extras-)
@@ -663,28 +683,31 @@ How a validator's results map to Standard Schema results:
 - An invalid result gives one issue per error message. Object keys and array indexes in `errors` form each issue's `path`, and a non-empty `message`, such as an array-level error, is an issue with no path. An error with no message gets `'Invalid value.'`.
 - An `object` field that fails both an array-level test and item tests keeps only the array-level message, because `object` stores a field's message in place of its errors, so only that message becomes an issue.
 
-#### formatMessage(template, params)
-
-Formats a string for use as an error message. `template` can be a plain string with `{keys}` replaced by the `params` or a function that returns a string and accepts `params` as a parameter.
-
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`, which is still a `Validator`, so factories typed with `ValidatorFactory` keep working.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. It must include a `parser` function, which turns the input into the value type, and the config type declares `parser` and any options, such as `requiredMessage`. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`.
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
 In TypeScript, the value type and the config type are inferred from `applyConfig`, so the validator accepts options that `defaultConfig` doesn't set. Passing them as type arguments, as in `createTypeValidatorTest<number, MoneyConfig>(…)`, still works.
 
 ```ts
-import {
-  type ConfigBase,
-  createTypeValidatorTest,
-  parseNumber,
-} from 'validator-fns';
+import { createTypeValidatorTest, type ValidatorMessage } from 'validator-fns';
 
-interface MoneyConfig extends ConfigBase<number> {
+interface MoneyConfig {
+  parser: (value: unknown) => number | null | undefined;
+  requiredMessage?: ValidatorMessage<number>;
   /** Convert the amount to cents. */
   cents?: boolean;
+}
+
+/** Reads a number or a numeric string. Anything else is missing. */
+function parseAmount(value: unknown): number | undefined {
+  if (typeof value === 'string') {
+    return Number.parseFloat(value);
+  }
+
+  return typeof value === 'number' ? value : undefined;
 }
 
 function applyMoneyConfig(
@@ -698,7 +721,7 @@ function applyMoneyConfig(
 }
 
 const money = createTypeValidatorTest(
-  { parser: parseNumber },
+  { parser: parseAmount },
   applyMoneyConfig,
 );
 
@@ -712,7 +735,7 @@ Formats a successful validation result. `value` is the parsed value and `field` 
 
 #### invalid({ message, value, field, errors, extras })
 
-Formats a failed validation result. `message` is the same as the `formatMessage`'s template. `value` is optional and only goes to the message; the result has no `value`. `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
+Formats a failed validation result. `message` is a [validation error message](#validation-error-message), with `{keys}` replaced by `value`, `field` and `extras`. `value` is optional and only goes to the message; the result has no `value`. `field` is the same as above, `errors` is additional error details used by `array` and `object` validators, and `extras` are optional extra parameters that can be used in the message.
 
 In TypeScript, a message function gets `value` as `unknown`, since `invalid()` takes any value. A message that reads extra parameters needs `extras` with them; without `extras`, it's a type error.
 
