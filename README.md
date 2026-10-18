@@ -619,7 +619,7 @@ Input of another type, or that a custom type's parser can't read, gives an inval
 
 A throw from your own code is a bug, so the validator rejects with the thrown value as it is, without wrapping it. That covers a test, a message function, a custom type's parser, and a validator passed to `array()` or `object()`. `parse()` and `~standard.validate` reject the same way. Bad configuration, such as `object('nope')` or `minDate('nonsense', message)`, throws a `TypeError` when the validator or test is built.
 
-A recursive schema, whose custom validator calls the schema again, validates input nested to any depth: past 100 nested calls, a validator starts on a later microtask, so the stack never overflows.
+A schema validates input nested to any depth, whether it's recursive, with a custom validator that calls the schema again, or built deep by a loop. Past 100 type validators running one inside another, the next starts on a later microtask, which unwinds the stack.
 
 A custom type's parser, the validator passed to [createTypeValidator(parser)](#createtypevalidatorparser), takes the input and the field name, and returns a result: `valid()` with the parsed value, or `invalid()` for input it can't read. It never gets `undefined` or `null`, which skip the parser as missing. A parsed `undefined` or `null` counts as missing too.
 
