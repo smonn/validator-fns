@@ -3,15 +3,10 @@ import { primitiveToString } from './primitives.js';
 import type { ConfigBase, Test, ValidatorMessage } from './shared.js';
 
 /**
- * Parses a value into a number.
- * @param value Value to parse
- * @internal
+ * Reads a number from a present value, or `undefined` if it can't.
+ * @param value Value to read
  */
-function parseNumber(value: unknown): number | null | undefined {
-  if (value === null || value === undefined) {
-    return value;
-  }
-
+function readNumber(value: unknown): number | undefined {
   if (typeof value === 'number') {
     return value;
   }
@@ -21,9 +16,27 @@ function parseNumber(value: unknown): number | null | undefined {
   }
 
   const text = primitiveToString(value);
-  const parsed = text === undefined ? Number.NaN : Number.parseFloat(text);
+  if (text === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number.parseFloat(text);
   // Blank input stays empty, as NaN, for `required` and `default` to handle.
-  if (Number.isNaN(parsed) && (text === undefined || text.trim() !== '')) {
+  return Number.isNaN(parsed) && text.trim() !== '' ? undefined : parsed;
+}
+
+/**
+ * Parses a value into a number.
+ * @param value Value to parse
+ * @internal
+ */
+function parseNumber(value: unknown): number | null | undefined {
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  const parsed = readNumber(value);
+  if (parsed === undefined) {
     throw new TypeError('Failed to parse value to number.');
   }
 

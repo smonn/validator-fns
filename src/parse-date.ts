@@ -57,6 +57,30 @@ const dateParts = [
 const parseErrorMessage = 'Failed to parse value to date.';
 
 /**
+ * Reads a date from a present value: a date, a number or an ISO 8601 string.
+ * Returns `undefined` for a non-blank string that isn't ISO 8601, and for
+ * input that isn't a date, number, or string.
+ * @param value Value to read
+ */
+function readDate(value: unknown): Date | undefined {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return new Date(value);
+  }
+
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  // A blank string stays empty, as an invalid date, for `default` and
+  // `optional()` to handle.
+  return value.trim() === '' ? invalidDate : parseIsoDate(value);
+}
+
+/**
  * Parses a value into a date. Throws a `TypeError` for a non-blank string that
  * isn't ISO 8601, and for input that isn't a date, number, or string.
  * @param value Value to parse
@@ -67,34 +91,25 @@ export function parseDate(value: unknown): Date | null | undefined {
     return value;
   }
 
-  if (value instanceof Date) {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return new Date(value);
-  }
-
-  if (typeof value !== 'string') {
+  const parsed = readDate(value);
+  if (parsed === undefined) {
     throw new TypeError(parseErrorMessage);
   }
 
-  // A blank string stays empty, as an invalid date, for `default` and
-  // `optional()` to handle.
-  return value.trim() === '' ? invalidDate : parseIsoDate(value);
+  return parsed;
 }
 
 /**
  * Parses an ISO 8601 string into a date. Without a timezone, the date is local.
- * Throws for a string that isn't ISO 8601.
+ * Returns `undefined` for a string that isn't ISO 8601.
  * @param value String to parse
  * @internal
  */
-function parseIsoDate(value: string): Date {
+function parseIsoDate(value: string): Date | undefined {
   const parts = isoDatePattern.exec(value);
 
   if (parts === null) {
-    throw new TypeError(parseErrorMessage);
+    return undefined;
   }
 
   const [
