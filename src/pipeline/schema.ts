@@ -1,10 +1,5 @@
 import { failure, propertiesTree } from '../failures/index.js';
-import {
-  hasOwnProperty,
-  type Result,
-  setOwn,
-  type Validator,
-} from '../types.js';
+import { hasOwnProperty, type Result, type Validator } from '../types.js';
 import { validResult } from '../results.js';
 import type { Shape } from './def.js';
 import { runOf } from './twins.js';
@@ -54,14 +49,14 @@ export function propertiesResult<V, Tree extends object>(
   field: string | undefined,
   shape: Shape<V, Tree>,
 ): Result<V, Tree> {
-  const values: Record<string, unknown> = {};
+  const values: [key: string, value: unknown][] = [];
   for (const [key, result] of results) {
     if (result.state === 'invalid') {
       const errors = propertiesTree(results, shape.tree());
       return failure({ code: 'properties', params: {}, value, field, errors });
     }
-    setOwn(values, key, result.value);
+    values.push([key, result.value]);
   }
 
-  return validResult({ value: shape.value(values), field });
+  return validResult({ value: shape.value(Object.fromEntries(values)), field });
 }

@@ -1,4 +1,4 @@
-import { setOwn, type ValidatorMessageParameters } from '../types.js';
+import type { ValidatorMessageParameters } from '../types.js';
 
 /**
  * The value of an object's own data property, or `undefined` for anything
@@ -66,10 +66,6 @@ export function parametersOf(
   try {
     return { ...params, value, field };
   } catch {
-    const parameters = {};
-    for (const [key, data] of dataOf(params)) {
-      setOwn(parameters, key, data);
-    }
-    return { ...parameters, value, field };
+    return { ...Object.fromEntries(dataOf(params)), value, field };
   }
 }

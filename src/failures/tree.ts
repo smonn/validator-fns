@@ -80,11 +80,8 @@ export function nestAt(
     return made;
   }
 
-  const errors = {};
-  setOwn(
-    errors,
-    key,
-    nestAt(rest, made, childField(field, key), ownData(value, key)),
-  );
+  const errors = {
+    [key]: nestAt(rest, made, childField(field, key), ownData(value, key)),
+  };
   return failure({ code: 'properties', params: {}, value, field, errors });
 }
