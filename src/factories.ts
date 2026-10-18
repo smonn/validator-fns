@@ -46,20 +46,13 @@ export function createTypeValidatorTest<T, C extends ConfigBase<T>>(
   ...tests: Test<T, string>[]
 ) => TypeValidator<T, string> {
   return (config, ...tests) => {
-    let finalConfig = defaultConfig;
     // Typed with the twin, which only tests made here carry.
-    let allTests: (Test<T, string> & SyncTwin<T>)[] = tests;
-
-    if (config !== undefined) {
-      if (typeof config === 'function') {
-        allTests = [config, ...tests];
-      } else {
-        finalConfig = {
-          ...defaultConfig,
-          ...config,
-        };
-      }
-    }
+    const allTests: (Test<T, string> & SyncTwin<T>)[] =
+      typeof config === 'function' ? [config, ...tests] : tests;
+    const finalConfig: C = {
+      ...defaultConfig,
+      ...(typeof config === 'function' ? undefined : config),
+    };
 
     return requirable<T, string>(
       finalConfig.requiredMessage,
