@@ -174,6 +174,15 @@ test.each([
   ['Intl.Segmenter', 'export const a = new globalThis.Intl.Segmenter();'],
   ['WeakRef', 'export const a = new WeakRef();'],
   ['WeakRef', 'export const a = new globalThis.WeakRef();'],
+  ['DisposableStack', 'export const a = new globalThis.DisposableStack();'],
+  [
+    'AggregateError',
+    'export const a = (b: unknown) => b instanceof globalThis.AggregateError;',
+  ],
+  [
+    'AggregateError',
+    'export const a = (b: unknown) => b instanceof self.AggregateError;',
+  ],
 ])('finds %s built from %s', (api, source) => {
   // The minifier drops a constructor's empty parentheses.
   const files = build(source);
