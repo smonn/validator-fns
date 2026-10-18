@@ -137,3 +137,31 @@ test('an array length check sees the input array, not an earlier test value', as
     params: { min: 2, amount: 1 },
   });
 });
+
+test('a run of built-in tests settles before the next microtask (ADR 0005)', async () => {
+  const validate = object({ tags: array(string(min(1))), age: number(max(9)) });
+  const order: string[] = [];
+  const settled = validate({ tags: ['a'], age: 1 }).then(() => {
+    order.push('validator');
+  });
+  await Promise.resolve();
+  order.push('next microtask');
+  await settled;
+
+  assert.deepEqual(order, ['validator', 'next microtask']);
+});
+
+const elsewhere = async (value: string) => valid({ value, field: 'other' });
+
+test('the tests give the value with the validator field, whatever field a test returns', async () => {
+  assert.deepEqual(await string(elsewhere)('a', 'name'), {
+    state: 'valid',
+    value: 'a',
+    field: 'name',
+  });
+  assert.deepEqual(await string(elsewhere, elsewhere)('a', 'name'), {
+    state: 'valid',
+    value: 'a',
+    field: 'name',
+  });
+});
