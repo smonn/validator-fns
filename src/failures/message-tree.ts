@@ -1,5 +1,5 @@
 import { type Failure, type Result, setOwn } from '../shared.js';
-import { entriesOf, isContainer } from './decode.js';
+import { entriesOf, isContainer } from './walk.js';
 import { readFailure } from './read.js';
 
 /**
