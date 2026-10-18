@@ -1,6 +1,39 @@
 import { failure } from './failures/index.js';
 import type { Result, ValidatorMessage } from './types.js';
 
+/**
+ * Creates a valid result
+ * @param result Result fields
+ * @param result.value Parsed value
+ * @param result.field Field name
+ * @category Helpers
+ */
+export async function valid<T, E = never>(result: {
+  value: T;
+  field: string | undefined;
+}): Promise<Result<T, E>> {
+  return validResult(result);
+}
+
+/**
+ * Creates a valid result synchronously, for `valid` and the built-in tests'
+ * synchronous twins.
+ * @internal
+ */
+export function validResult<T, E = never>({
+  value,
+  field,
+}: {
+  value: T;
+  field: string | undefined;
+}): Result<T, E> {
+  return {
+    state: 'valid',
+    value,
+    field,
+  };
+}
+
 /** @internal */
 type InvalidFields<E> = {
   code: string;

@@ -1,5 +1,6 @@
 import { withSyncTwin } from './pipeline/index.js';
-import { type Test, validResult } from './types.js';
+import type { Test } from './types.js';
+import { validResult } from './results.js';
 
 /**
  * Makes a test that changes the value and never fails. `fn` is synchronous and

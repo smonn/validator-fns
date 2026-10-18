@@ -1,4 +1,5 @@
-import { type Result, validResult } from '../types.js';
+import type { Result } from '../types.js';
+import { validResult } from '../results.js';
 import { afterPromise, isThenable, type MaybePromise } from './promises.js';
 import type { Step } from './sync.js';
 

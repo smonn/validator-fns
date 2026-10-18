@@ -1,4 +1,5 @@
-import { type Validator, validResult } from '../types.js';
+import type { Validator } from '../types.js';
+import { validResult } from '../results.js';
 import { isMissing } from './def.js';
 import { type TypeValidator, withStandard } from './standard.js';
 import { optionalOf } from './twins.js';

@@ -1,5 +1,6 @@
 import { type AtPath, childField, failure, nestAt } from './failures/index.js';
-import { type Test, validResult, type ValidatorMessage } from './types.js';
+import type { Test, ValidatorMessage } from './types.js';
+import { validResult } from './results.js';
 
 /**
  * Paths into nested plain objects, as lists of property names, for `check()`.
