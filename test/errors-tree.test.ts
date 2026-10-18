@@ -12,6 +12,7 @@ import {
   string,
   type TypeValidator,
   valid,
+  type Validator,
 } from '../src/index.js';
 
 /** A failure as the safe call returns it. */
@@ -517,29 +518,85 @@ test('should type the message tree of a readonly array or an interface', async (
   ).toEqualTypeOf<string | { child?: string } | undefined>();
 });
 
+/** What a promise rejects with, or `'resolved'`. */
+const rejection = async (promise: unknown) =>
+  Promise.resolve(promise).then(
+    () => 'resolved',
+    (error: unknown) => error,
+  );
+
+/** What `messageTree()` throws and `~standard.validate` rejects with. */
+async function decoderErrors(validator: TypeValidator<unknown, unknown>) {
+  const made = await validator({});
+  let thrown: unknown = 'returned';
+  try {
+    messageTree(made);
+  } catch (error) {
+    thrown = error;
+  }
+
+  return [thrown, await rejection(validator['~standard'].validate({}))];
+}
+
 // A hand-built container whose errors aren't a tree is a bug (ADR 0001).
-test.each<[string, unknown]>([
-  ['a number', 5],
-  ['a string', 'oops'],
-  ['an object entry that is not a failure', { a: 'Too short.' }],
-  ['an array entry that is not a failure', [{ code: 'min' }]],
-  ['a hole in an array', Object.assign([], { 1: null })],
+test.each<[string, unknown, string]>([
+  ['a number', 5, 'errors tree must be an object'],
+  ['a string', 'oops', 'errors tree must be an object'],
+  [
+    'an object entry that is not a failure',
+    { a: 'Too short.' },
+    "entry at a isn't a failure",
+  ],
+  [
+    'an array entry that is not a failure',
+    [{ code: 'min' }],
+    "entry at 0 isn't a failure",
+  ],
+  [
+    'a hole in an array',
+    Object.assign([], { 1: null }),
+    "entry at 0 isn't a failure",
+  ],
+  [
+    'an entry with only its state',
+    { a: { state: 'invalid' } },
+    "entry at a isn't a failure",
+  ],
+  [
+    'an entry without params',
+    { a: { state: 'invalid', code: 'min', message: 'min' } },
+    "entry at a isn't a failure",
+  ],
+  [
+    'an entry whose message is not a string',
+    { a: { state: 'invalid', code: 'min', params: {}, message: 1 } },
+    "entry at a isn't a failure",
+  ],
 ])(
   'should throw when a container decodes errors that hold %s',
-  async (_, errors) => {
+  async (_, errors, text) => {
     const malformed = createValidator(async (value: unknown, field?: string) =>
       invalid({ code: 'properties', value, field, errors }),
     );
-
-    const made = await malformed({});
-    assert.throws(() => messageTree(made), TypeError, 'errors tree');
-    const rejection = await Promise.resolve(
-      malformed['~standard'].validate({}),
-    ).then(
-      () => 'resolved',
-      (error: unknown) => error,
-    );
-    assert.instanceOf(rejection, TypeError);
-    assert.include(String(rejection), 'errors tree');
+    for (const error of await decoderErrors(malformed)) {
+      assert.instanceOf(error, TypeError);
+      assert.include(String(error), text);
+    }
   },
 );
+
+// A custom validator that resolves to something other than a result is a bug.
+test.each<[string, string]>([
+  ['an empty object', '{}'],
+  ['an unknown state', '{ "state": "pending" }'],
+  [
+    'a failure without params and message',
+    '{ "state": "invalid", "code": "x" }',
+  ],
+])('should throw when a decoder reads %s as a result', async (_, json) => {
+  const bogus: Validator = async () => JSON.parse(json);
+  for (const error of await decoderErrors(createValidator(bogus))) {
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), "result isn't a failure");
+  }
+});
