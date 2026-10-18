@@ -26,8 +26,8 @@ export function fillOwn<E>(
 }
 
 /**
- * A failure the validator returns as its own, such as its parser's or an
- * array test's, with `errors` in place of its own and worded from `messages`.
+ * A failure the validator returns as its own, such as its parser's, with
+ * `errors` in place of its own and worded from `messages`.
  * @internal
  */
 export function fillAsOwn<E>(

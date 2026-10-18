@@ -164,7 +164,7 @@ test('should return the transformed items when the item validator transforms', a
   });
 });
 
-test('array() takes an array test right after the item validator', async () => {
+test('array() takes a test right after the item validator', async () => {
   const validate = array(string(), max(1, 'max:{max}'), min(1, 'min:{min}'));
   assert.deepEqual(await validate(['a']), {
     state: 'valid',

@@ -58,13 +58,13 @@ function isWithoutPath<T>(
 }
 
 /**
- * An object-level test for `object()`. It fails with `code` when `test`
- * returns false for the parsed object. With a `path`, a property name or a
- * list of names into nested objects, the failure sits at that path in the
- * object's errors, with the full field, under a `properties` failure for the
- * object and each name. Without a path, the failure is the object's own. The
- * message gets the parsed object as `value`. The path is checked against the
- * object's type, and so are the errors it produces.
+ * A collection test for `object()`, or without a path for `array()`. It fails
+ * with `code` when `test` returns false for the parsed value. With a `path`, a
+ * property name or a list of names into nested objects, the failure sits at
+ * that path in the object's errors, with the full field, under a `properties`
+ * failure for the object and each name. Without a path, the failure is the
+ * collection's own. The message gets the parsed value as `value`. The path is
+ * checked against the object's type, and so are the errors it produces.
  * @category Validation Tests
  */
 export function check<T>(...args: CheckArgs<T>): Test<T, never>;

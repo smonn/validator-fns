@@ -343,7 +343,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 16. **Read `min`, `max` or `exact` instead of `limit`** in the messages of `min()`, `max()`, `exact()`, `minDate()` and `maxDate()`. `email()` and `uuid()` no longer give their `pattern` to the message.
 17. **Expect codes in Standard Schema issues.** An issue for a failure carries its `code` and `params`, and an `array()` or `object()` whose children failed reports only their issues. An error without a message no longer gets `'Invalid value.'`.
 18. **Give every schema property a validator.** `object()` throws a `TypeError` naming the key when it's built with a property that isn't a function, instead of failing that field with `'No validator set'` on every call.
-19. **Read an `array()` or `object()` failure's `errors` as an [errors tree](#errors-tree) of failures.** Each failed item or field keeps its whole failure, with its `code`, `params`, `message`, `field` and own `errors`, in place of its message, and a valid item is still `null`. A failed array test, such as `max()`, no longer carries the items' errors. Pass a result to `messageTree()` for the nested messages 2.x gave, such as for Formik. `ArrayItemValidatorResult` is gone: in TypeScript, an array's errors are `(Failure<E> | null)[]`, and an object's have a `Failure` per key.
+19. **Read an `array()` or `object()` failure's `errors` as an [errors tree](#errors-tree) of failures.** Each failed item or field keeps its whole failure, with its `code`, `params`, `message`, `field` and own `errors`, in place of its message, and a valid item is still `null`. A failed length check, such as `max()`, no longer carries the items' errors. Pass a result to `messageTree()` for the nested messages 2.x gave, such as for Formik. `ArrayItemValidatorResult` is gone: in TypeScript, an array's errors are `(Failure<E> | null)[]`, and an object's have a `Failure` per key.
 
     ```js
     // 2.x
@@ -749,7 +749,7 @@ await point({ x: 1, y: 2, z: 3 });
 
 In TypeScript, a field of the valid value is required unless its validator is wrapped in `optional()`, as in `{ name: string; age?: number | null | undefined }`. A missing optional field is still set on the value, as `undefined`.
 
-The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Each test's valid value goes to the next, and the last one is the result's value, as with [`transform()`](#transformfn). Use [`check`](#checkpath-test-code-message) to compare fields and put the error on one of them:
+The remaining `tests` are collection tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Each test's valid value goes to the next, and the last one is the result's value, as with [`transform()`](#transformfn). Use [`check`](#checkpath-test-code-message) to compare fields and put the error on one of them:
 
 ```ts
 const signup = object(
@@ -770,7 +770,7 @@ await signup({ password: 'secret', confirm: 'other' });
 //   errors: { confirm: { state: 'invalid', code: 'match', message: 'Must match.', field: 'confirm', ... } }, ... }
 ```
 
-A field's own error takes precedence: object-level tests don't run while any property is invalid, so they always compare valid, parsed values.
+A field's own error takes precedence: collection tests don't run while any property is invalid, so they always compare valid, parsed values.
 
 <details><summary>config</summary>
 
@@ -825,7 +825,7 @@ Each test fails with its own [code](#error-codes), and its `message` is optional
 
 #### check(path?, test, code, message?)
 
-An object-level test for `object`. It fails with `code` when `test` returns `false` for the parsed object. With a `path`, a property name or a list of names into nested objects, such as `['shipping', 'zip']`, the failure sits at that path in the object's `errors` with the full field, such as `shipping.zip`, under a `properties` failure for the object and each name. Without a `path`, the failure is the object's own. The parsed object is provided to the message as `value`.
+A collection test for `object`, or without a `path` for `array`. It fails with `code` when `test` returns `false` for the parsed value. With a `path`, a property name or a list of names into nested objects, such as `['shipping', 'zip']`, the failure sits at that path in the object's `errors` with the full field, such as `shipping.zip`, under a `properties` failure for the object and each name. Without a `path`, the failure is the collection's own. The parsed value is provided to the message as `value`.
 
 In TypeScript, `path` is checked against the parsed object's type, so a misspelled property is a type error, and the test's error type is the errors it produces, such as `{ shipping?: Failure<{ zip?: Failure<never> }> }`. A path ends at an array, a date or a function.
 

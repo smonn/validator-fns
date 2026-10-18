@@ -317,7 +317,7 @@ const signup = object(
   ),
 );
 
-test('should put an object-level error on the named field when the check fails', async () => {
+test('should put a collection test error on the named field when the check fails', async () => {
   const result = await signup({ password: 'secret', confirm: 'other' });
   assert.deepInclude(result, {
     state: 'invalid',
@@ -329,7 +329,7 @@ test('should put an object-level error on the named field when the check fails',
   assert.deepEqual(messageTree(result), { confirm: 'Must match.' });
 });
 
-test('should return the parsed object when every object-level test passes', async () => {
+test('should return the parsed object when every collection test passes', async () => {
   assert.deepEqual(await signup({ password: 'secret', confirm: 'secret' }), {
     state: 'valid',
     field: undefined,
@@ -337,7 +337,7 @@ test('should return the parsed object when every object-level test passes', asyn
   });
 });
 
-test('should skip object-level tests when a field is invalid', async () => {
+test('should skip collection tests when a field is invalid', async () => {
   let calls = 0;
   const validate = object(
     { password: string({ messages: { required: 'Required' } }) },
@@ -351,7 +351,7 @@ test('should skip object-level tests when a field is invalid', async () => {
   assert.strictEqual(calls, 0);
 });
 
-test('should compare parsed values when an object-level test runs', async () => {
+test('should compare parsed values when a collection test runs', async () => {
   const isoDate = date({
     parser: async (value, field) =>
       valid({ value: new Date(String(value)), field }),
@@ -392,7 +392,7 @@ test('should put the message on the object when the check names no field', async
   });
 });
 
-test('should nest an object-level error when the check names a path', async () => {
+test('should nest a collection test error when the check names a path', async () => {
   const validate = object(
     {
       billing: object({ zip: string() }),
@@ -414,7 +414,7 @@ test('should nest an object-level error when the check names a path', async () =
   );
 });
 
-test('should stop at the first failing object-level test', async () => {
+test('should stop at the first failing collection test', async () => {
   const validate = object(
     { name: string() },
     createValidatorTest('first', () => false, 'First.'),
