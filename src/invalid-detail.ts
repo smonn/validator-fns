@@ -8,7 +8,7 @@ import {
 } from './shared.js';
 
 /**
- * Runs tests on a value in order, for the collection-level tests of
+ * Runs tests on a value in order, for the collection tests of `array()` and
  * `object()`. Each test's valid value goes to the next, and the first failure
  * ends the run.
  * @param tests Tests to run
@@ -32,34 +32,6 @@ export async function runTests<V, E>(
 
   return validResult({ value: current, field });
 }
-
-/**
- * The first failure of `array()`'s collection-level tests, which each check
- * the input array, since `array()` returns its items and not their value.
- * TODO(#757): pass their values on with runTests once they are typed.
- * @internal
- */
-export async function findInvalidResult<V, E>(
-  tests: Test<V, E>[],
-  value: V,
-  field: string | undefined,
-): Promise<Failure<E> | undefined> {
-  for (const validatorTest of tests) {
-    const result = await validatorTest(value, field);
-    if (result.state === 'invalid') {
-      return result;
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * A test on an array itself, such as `max()`. It runs on the parsed array,
- * before the item validator, so the items are `unknown`.
- * @internal
- */
-export type ArrayTest = Test<unknown[]>;
 
 /**
  * The result of an array's items: valid with each item as the item validator
