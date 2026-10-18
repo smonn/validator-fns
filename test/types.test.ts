@@ -204,6 +204,15 @@ test('invalid() takes value only for the message, and may leave it out', () => {
   ).toEqualTypeOf<Promise<Result<unknown, never>>>();
 });
 
+test('default is a plain value, and object() takes none', () => {
+  expectTypeOf<() => string>().not.toExtend<StringConfig['default']>();
+  expectTypeOf<() => unknown[]>().not.toExtend<ArrayConfig['default']>();
+  expectTypeOf<ObjectConfig>().not.toHaveProperty('default');
+  expectTypeOf<{ default: object }>().not.toExtend<
+    Parameters<typeof object>[1]
+  >();
+});
+
 test('number() takes no round option', () => {
   expectTypeOf<NumberConfig>().not.toHaveProperty('round');
 });

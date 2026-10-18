@@ -220,10 +220,15 @@ test('string', async () => {
 
 test('string default', async () => {
   const validate = string({ default: 'hello' });
-  assert.deepEqual(await validate(''), {
+  assert.deepEqual(await validate(undefined), {
     state: 'valid',
     field: undefined,
     value: 'hello',
+  });
+  assert.deepEqual(await validate(''), {
+    state: 'valid',
+    field: undefined,
+    value: '',
   });
   assert.deepEqual(await validate('other'), {
     state: 'valid',

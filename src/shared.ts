@@ -100,7 +100,10 @@ export interface ConfigBase<T> {
     value: unknown,
     field?: string,
   ) => Result<T | null | undefined> | Promise<Result<T | null | undefined>>;
-  /** Provide a fallback value in case the original value is undefined. */
+  /**
+   * Value for missing input, `undefined` or `null`. It skips the parser, and
+   * the tests run on it.
+   */
   default?: T;
   /**
    * Messages for the validator's own failures, keyed by code, such as

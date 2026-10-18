@@ -40,10 +40,7 @@ function applyArrayConfig(
   config: ArrayConfig,
   value: unknown[] | null | undefined,
 ): unknown[] | null | undefined {
-  if (
-    config.default !== undefined &&
-    (value === undefined || value === null || value.length === 0)
-  ) {
+  if (config.default !== undefined && (value === undefined || value === null)) {
     return config.default;
   }
 
