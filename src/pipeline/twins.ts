@@ -26,6 +26,28 @@ const same = (input: unknown) => input;
 const registry = new WeakMap<object, Built<unknown, unknown>>();
 
 /**
+ * Makes a type validator from its run, and registers the run and `rebuild`,
+ * which `optional()` calls once and returns on every call.
+ * @internal
+ */
+function fromRun<T, E>(
+  run: Run<T, E>,
+  rebuild: () => TypeValidator<T | null | undefined, E>,
+): TypeValidator<T, E> {
+  const validator = withStandard(toValidator(run));
+  let rebuilt: TypeValidator<T | null | undefined, E> | undefined;
+  const optional = () => {
+    // Not ??=, which Safari 13.1 and Firefox 77, both supported, can't parse.
+    if (rebuilt === undefined) {
+      rebuilt = rebuild();
+    }
+    return rebuilt;
+  };
+  registry.set(validator, { run, optional });
+  return validator;
+}
+
+/**
  * Builds a type validator from its def, with `exit` for missing input. A
  * coerce twin's run reads the input first.
  * @internal
@@ -35,21 +57,10 @@ function build<T, E, P, V>(
   exit: Exit<V, E>,
 ): TypeValidator<T | V, E> {
   const { coerce = same } = def;
-  const run: Run<T | V, E> = guardRun((value, field) =>
-    runType(def, exit, coerce(value), field),
+  return fromRun<T | V, E>(
+    guardRun((value, field) => runType(def, exit, coerce(value), field)),
+    () => build(def, keepValue),
   );
-  const validator = withStandard(toValidator(run));
-  // Rebuilt once, on the first optional() call, so each call returns it.
-  let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
-  const rebuild = () => {
-    // Not ??=, which Safari 13.1 and Firefox 77, both supported, can't parse.
-    if (rebuilt === undefined) {
-      rebuilt = build(def, keepValue);
-    }
-    return rebuilt;
-  };
-  registry.set(validator, { run, optional: rebuild });
-  return validator;
 }
 
 /**
