@@ -20,6 +20,7 @@ import {
   type Failure,
   type Result,
   type TypeValidator,
+  type Validator,
 } from '../src/index.js';
 
 // Not an Error, so a wrapped or converted rejection can't pass for it.
@@ -205,15 +206,25 @@ type Settle<R> = (
 ) => void;
 
 /**
- * A thenable that isn't a Promise, as JavaScript code can return from a test,
- * child or parser. Its `then` is `settle`, so it returns nothing, where a
- * Promise's returns a new Promise. Typed as the Promise it stands in for.
+ * `target` with its own `then` from `descriptor`: a thenable that isn't a
+ * Promise, as JavaScript code can return from a test, child or parser, or a
+ * Promise with its own `then`. Typed as the Promise it stands in for.
  */
-function thenable<R>(settle: Settle<R>): Promise<R>;
-function thenable(settle: Settle<unknown>): object {
-  // oxlint-disable-next-line unicorn/no-thenable -- these tests need a thenable that isn't a Promise
-  return { then: settle };
+function defineThen<R>(
+  target: object,
+  descriptor: TypedPropertyDescriptor<Settle<R> | undefined>,
+): Promise<R>;
+function defineThen(target: object, descriptor: PropertyDescriptor): object {
+  // oxlint-disable-next-line unicorn/no-thenable -- these tests need a thenable that isn't a Promise, or a Promise with its own `then`
+  return Object.defineProperty(target, 'then', descriptor);
 }
+
+/**
+ * A thenable whose `then` is `settle`, so it returns nothing, where a
+ * Promise's returns a new Promise.
+ */
+const thenable = <R>(settle: Settle<R>) =>
+  defineThen<R>({}, { value: settle, enumerable: true });
 
 const resolving = <R>(result: R) =>
   thenable<R>((resolve) => {
@@ -288,6 +299,75 @@ test('should take only the first value of a thenable that calls back twice', asy
   assert.deepInclude(await string(twice, counted)('a'), { value: 'a' });
   assert.strictEqual(calls, 1);
 });
+
+/** How many times a `readOnce` thenable's `then` has been read. */
+let reads = 0;
+// A thenable whose `then` settles only on the first read, as a getter can.
+const readOnce = (_value: unknown, field?: string) =>
+  defineThen<Result<string, never>>(
+    {},
+    {
+      get() {
+        reads += 1;
+        return reads === 1
+          ? (resolve: (result: Result<string, never>) => void) => {
+              resolve(ok('parsed', field));
+            }
+          : undefined;
+      },
+    },
+  );
+// A fulfilled Promise whose own `then` throws when read, which `await` skips.
+const throwingThen = (value: unknown, field?: string) =>
+  defineThen<Result<string, never>>(Promise.resolve(ok(String(value), field)), {
+    get: throwBug,
+  });
+
+// [label, validator, input, the validator's value]
+const adopters: [
+  string,
+  (step: Validator<string, never>) => TypeValidator<unknown, unknown>,
+  unknown,
+  (parsed: unknown) => unknown,
+][] = [
+  ['a test', (step) => string(step), 'a', (parsed) => parsed],
+  [
+    'an array() item',
+    (step) => array(createValidator(step)),
+    ['a'],
+    (parsed) => [parsed],
+  ],
+  [
+    'an object() property',
+    (step) => object({ a: createValidator(step) }),
+    { a: 'a' },
+    (parsed) => ({ a: parsed }),
+  ],
+  ['a parser', (step) => createTypeValidator(step)(), 'a', (parsed) => parsed],
+];
+
+test.each(adopters)(
+  'should read the `then` of a thenable from %s once',
+  async (_label, build, input, expected) => {
+    reads = 0;
+
+    assert.deepInclude(await build(readOnce)(input), {
+      state: 'valid',
+      value: expected('parsed'),
+    });
+    assert.strictEqual(reads, 1);
+  },
+);
+
+test.each(adopters)(
+  'should await a Promise from %s without reading its own `then`',
+  async (_label, build, input, expected) => {
+    assert.deepInclude(await build(throwingThen)(input), {
+      state: 'valid',
+      value: expected('a'),
+    });
+  },
+);
 
 test('should take a result with a `then` that is not a function as a result', async () => {
   assert.deepEqual(await string(withThen)('a'), {
