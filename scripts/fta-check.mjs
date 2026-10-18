@@ -4,7 +4,8 @@
 // compares at. The check fails when a file scores worse than its baseline, and
 // also when it scores better, so that the baseline moves with it. `--update`
 // lowers and removes baselines to match the current scores. It never raises a
-// baseline or adds one; that loosens the check and needs approval.
+// baseline or adds one; that loosens the check and needs approval. The mean
+// file score it prints is for information, with no threshold.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runFta } from 'fta-cli';
@@ -70,6 +71,10 @@ for (const [file, score] of scores) {
     );
   }
 }
+const mean =
+  [...scores.values()].reduce((sum, score) => sum + score, 0) / scores.size;
+console.log(`Mean: ${Math.round(mean * 100) / 100} (no threshold)`);
+
 for (const file of Object.keys(baselines)) {
   if (!scores.has(file)) {
     stale.push(`${file} has a baseline but no longer exists.`);

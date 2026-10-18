@@ -12,6 +12,18 @@ import { assert, test } from 'vitest';
 
 const root = path.join(import.meta.dirname, '..');
 
+/** A file that scores 7.93. */
+const small = `export function one(value: number): number {
+  return value + 1;
+}
+
+export function two(value: number): number {
+  return value * 2;
+}
+
+export const three = 3;
+`;
+
 /**
  * A file of one function with `count` branches. The scores, with fta-cli
  * pinned at 3.0.1: 44 scores 48.3, 46 scores 49.23, 47 scores 49.7 and 48
@@ -72,4 +84,15 @@ test('should fail a file that scores just above the cap of 50', () => {
     result.stderr,
     'src/above.ts scores 50.14. A file without a baseline must score below 50.',
   );
+});
+
+test('should print the mean file score', () => {
+  const result = run({ 'small.ts': small, 'branches.ts': branches(46) });
+  assert.include(result.stdout, 'Mean: 28.58 (no threshold)');
+});
+
+test('should pass when the mean is near the cap', () => {
+  const result = run({ 'a.ts': branches(44), 'b.ts': branches(47) });
+  assert.include(result.stdout, 'Mean: 49 (no threshold)');
+  assert.strictEqual(result.status, 0, result.stderr);
 });
