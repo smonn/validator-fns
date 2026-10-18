@@ -1,8 +1,5 @@
-import {
-  hasOwnProperty,
-  type ValidatorMessage,
-  type ValidatorMessageParameters,
-} from '../shared.js';
+import type { ValidatorMessage } from '../shared.js';
+import { ownData, parametersOf } from './own.js';
 
 /** @internal */
 const formatPattern = /{(\w+)}/g;
@@ -38,25 +35,29 @@ function toText(value: unknown): string {
 }
 
 /**
- * Formats a message using a squiggly bracket `{}` template. A `{name}` reads
- * only an own parameter, so `{constructor}` isn't read from the prototype.
- * @param template Message template as string or function
- * @param parameters Params to inject into template
+ * Formats a squiggly bracket `{}` template. A `{name}` reads only an own data
+ * property of `parameters`, so `{constructor}` isn't read from the prototype.
  * @internal
  */
-export function formatMessage<T, X extends object = object>(
-  template: ValidatorMessage<T, X>,
-  parameters: X & ValidatorMessageParameters<T>,
-): string {
-  if (typeof template === 'string') {
-    return template.replaceAll(formatPattern, (_, key: string) =>
-      toText(
-        hasOwnProperty(parameters, key)
-          ? Reflect.get(parameters, key)
-          : undefined,
-      ),
-    );
-  }
+export function formatMessage(template: string, parameters: object): string {
+  return template.replaceAll(formatPattern, (_, key: string) =>
+    toText(ownData(parameters, key)),
+  );
+}
 
-  return template(parameters);
+/**
+ * A failure's message, from a template or a function, with the parameters
+ * `parametersOf()` copies.
+ * @internal
+ */
+export function wordMessage<T, P extends Record<string, unknown>>(
+  message: ValidatorMessage<T, P>,
+  params: P,
+  value: T | null | undefined,
+  field: string | undefined,
+): string {
+  const parameters = parametersOf(params, value, field);
+  return typeof message === 'string'
+    ? formatMessage(message, parameters)
+    : message(parameters);
 }

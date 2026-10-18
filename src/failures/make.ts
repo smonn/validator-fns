@@ -1,5 +1,5 @@
 import type { Failure, ValidatorMessage } from '../shared.js';
-import { formatMessage } from './format.js';
+import { wordMessage } from './format.js';
 
 /**
  * Each failure made without a message, with the value it was made for, so a
@@ -32,9 +32,7 @@ export function failure<
     code,
     params,
     message:
-      message === undefined
-        ? code
-        : formatMessage(message, { ...params, value, field }),
+      message === undefined ? code : wordMessage(message, params, value, field),
     field,
     errors,
   };

@@ -24,6 +24,7 @@ import {
   url,
   uuid,
   valid,
+  withMessages,
   type Messages,
   type Result,
   type Validator,
@@ -205,6 +206,38 @@ test.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
     );
   },
 );
+
+const { proxy: revokedParams, revoke: revokeParams } = Proxy.revocable(
+  { n: 1 },
+  {},
+);
+revokeParams();
+
+test.each<[string, Record<string, unknown>]>([
+  [
+    'a throwing getter',
+    {
+      get n(): number {
+        throw new Error('getter');
+      },
+    },
+  ],
+  ['a revoked Proxy', revokedParams],
+])('should word a message when the params have %s', async (_, params) => {
+  assert.deepInclude(
+    await invalid({ code: 'x', params, message: 'n is {n}', field: 'f' }),
+    { code: 'x', message: 'n is undefined' },
+  );
+  assert.deepInclude(
+    await withMessages(
+      createValidator(async (value: unknown, field?: string) =>
+        invalid({ code: 'x', params, value, field }),
+      ),
+      { x: '{n} at {field}' },
+    )('v', 'f'),
+    { message: 'undefined at f' },
+  );
+});
 
 test('should prefer the message passed to a test over the messages config', async () => {
   const result = await string(
