@@ -6,7 +6,7 @@ import type { TypeValidator } from './standard.js';
 import { fromRun, runOf } from './twins.js';
 
 /**
- * Reads a translation's own messages once. A translation that isn't an
+ * Reads a translation's own enumerable messages once. A translation that isn't an
  * object, or a message that is neither a string nor a function, throws a
  * `TypeError`.
  * @internal
@@ -51,8 +51,9 @@ function translate<T, E>(
  * `messages` by its code, so a message passed to a test or set in a
  * `messages` config, or an inner `withMessages()`, wins. The result and
  * `~standard` carry the messages, and `optional()` works around it in either
- * order. `messages` is read once, here; a validator that isn't a function or
- * a message that is neither a string nor a function throws a `TypeError`.
+ * order. `messages`' own enumerable keys are read once, here. A validator
+ * that isn't a function, a `messages` that isn't an object, or a message
+ * that is neither a string nor a function throws a `TypeError`.
  * @param validator Any validator
  * @param messages Messages keyed by code, such as `en` from `validator-fns/en`
  * @category Helpers

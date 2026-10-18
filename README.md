@@ -561,7 +561,7 @@ The `message` argument in the validation tests is optional. It's a static string
 
 A message always gets the parsed `value`, although the failure has none. If available, `field` is also provided. It also gets the failure's `params`, such as `min` for `min()`.
 
-A template's `{name}` reads only an own parameter, so `{constructor}` reads `undefined` rather than `Object.prototype`'s. A value without a string form, such as `Object.create(null)` or `Object(Symbol())`, reads as its tag, such as `[object Object]`, so wording a failure never throws.
+A template's `{name}` reads only an own parameter, so `{constructor}` reads `undefined` rather than `Object.prototype`'s. A value without a string form, such as `Object.create(null)` or `Object(Symbol())`, reads as its tag, such as `[object Object]`, and params that can't be spread, such as ones with a getter that throws, give the message only their own data properties, so wording a template never throws. A message function that throws is a bug, so the validator rejects with its error, and one that returns anything but a string rejects with a `TypeError` naming the code.
 
 In TypeScript, a message function's parameters are typed: `ValidatorMessage<T, X>` gets the value and field, `X & ValidatorMessageParameters<T>`, where `X` holds the test's params. Each test's exported parameters type, such as `MinValidatorMessageParameters`, still describes everything a message gets, so a message annotated with it fits.
 
@@ -631,13 +631,13 @@ messageTree(await signup({ name: 'A', password: 'secret', username: 'admin' }));
 // { name: 'Name is too short.', password: 'Must be at least 8 characters.', username: 'That name is taken.' }
 ```
 
-`en`'s `min`, `max` and `exact` messages word a string's length as characters and an array's as items, such as `'Must have at least 2 items.'`. `en` is frozen; copy it with spread to change a message.
+`en`'s `min`, `max` and `exact` messages word a string's length in characters and an array's in items, singular for a limit of 1, such as `'Must have at least 2 items.'` or `'Must be at least 1 character.'`. `en` is frozen; copy it with spread to change a message.
 
 #### withMessages(validator, messages)
 
 Returns a validator that runs `validator`, then words each failure in its result's [errors tree](#errors-tree) that was made without a message, from `messages` by its code. A failure keeps the message passed to its test or set in its validator's `messages` config, and a failure copied with spread counts as worded. Translations nest: an inner `withMessages()` wins, and an outer one words the codes the inner one lacks. The result and `~standard` carry the messages, and `optional()` works around it in either order, so `optional(withMessages(v, en))` and `withMessages(optional(v), en)` both accept a missing value.
 
-`validator` is any validator, built-in or a plain async function. `messages` is read once, when `withMessages()` is called, and only its own keys count, so a code such as `constructor` isn't read from `Object.prototype`. A `messages` that isn't an object, or a message that is neither a string nor a function, throws a `TypeError`. The fill reads the errors tree as `messageTree()` does, so it rejects with the same `TypeError` for a tree that's a bug, including one more than 1000 levels deep. A failure shared by several entries is worded once, and the result shares the worded copy.
+`validator` is any validator, built-in or a plain async function. `messages` is read once, when `withMessages()` is called, and only its own enumerable keys count, as with spread, so a code such as `constructor` isn't read from `Object.prototype`. A `messages` that isn't an object, or a message that is neither a string nor a function, throws a `TypeError`. The fill reads the errors tree as `messageTree()` does, so it rejects with the same `TypeError` for a tree that's a bug, including one more than 1000 levels deep. A failure shared by several entries is worded once, and the result shares the worded copy.
 
 In TypeScript, it returns a `TypeValidator<T, E>` with `validator`'s types.
 
