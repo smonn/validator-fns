@@ -635,7 +635,7 @@ Accepts an array. Anything else, such as a `Set` or a string, fails with the `ty
 
 A valid result's `value` holds each item as `itemTest` returned it, so `array(string(transform((s) => s.trim())))` trims each item.
 
-Supported validation tests: `max` and `min`.
+Supported validation tests: `max` and `min`. For now, the array's own `tests` only check: a value they return is ignored, so a `transform()` there has no effect, and they get the input array itself.
 
 When items fail, the array's own failure has the `items` code, and its `errors` hold each item's failure, `null` for a valid item. See [Errors tree](#errors-tree). A failed array test gives its own code, without the items' failures.
 
@@ -770,7 +770,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values, so a built-in test fails `null` and `undefined` when it's called with them directly. An empty string is a string like any other: `min(1, …)` fails it and `max(1, …)` accepts it. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
-Tests are steps: a validation type runs them in order, and each test's valid value goes to the next, so a test can change the value. The last one is the result's value. The built-in tests return the value unchanged, and [`transform()`](#transformfn) makes a test that changes it. A failure ends the run.
+Tests are steps: a validation type runs them in order, and each test's valid value goes to the next, so a test can change the value. The last one is the result's value. The built-in tests return the value unchanged, and [`transform()`](#transformfn) makes a test that changes it. A failure ends the run. `array()`'s own tests are the exception for now: they only check.
 
 In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of type `T` and resolves to a `Result<T, E>`, so a step keeps the type. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. `min()`, `max()` and `exact()` take their type from the validator they're passed to; one built apart from it needs the type, as in `min<string>(2)`. A custom test that keeps any type, such as `async <T>(value: T, field?: string) => valid({ value, field })`, fits every validation type.
 
@@ -927,6 +927,8 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 Makes a test that changes the value: its valid value is what `fn` returns for the value, and it never fails. `fn` is synchronous and returns a value of the same type; in TypeScript, an `async` function or one that changes the type is a type error. A throw from `fn` is a bug, and the validator rejects with it. An async step, or one that can fail, is a custom test that resolves to `valid()` or `invalid()`.
 
 The value a transform returns is never missing, even inside `optional()`: only the input is checked for `undefined` and `null`. Trimming a blank string gives `''`, which the next tests check.
+
+The value isn't copied, so `fn` gets the input's own object, array or `Date`. Return a new value rather than changing it in place, which would change the caller's input too.
 
 ```ts
 const name = string(
