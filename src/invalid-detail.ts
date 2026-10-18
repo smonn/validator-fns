@@ -34,8 +34,8 @@ export async function runTests<V, E>(
 }
 
 /**
- * The first failure of `array()`'s collection-level tests, which don't pass
- * values on yet (#757).
+ * The first failure of `array()`'s collection-level tests.
+ * TODO(#757): pass their values on with runTests once they are typed.
  * @internal
  */
 export async function findInvalidResult<V, E>(
