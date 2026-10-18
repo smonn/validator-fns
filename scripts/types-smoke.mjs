@@ -5,8 +5,8 @@
 // check() at a path read through messageTree(), and parse() with a
 // FailureError told from a bug. A second fixture imports the
 // 2.x type names v3 removes, and must fail on each, and a third makes calls
-// with the options v3 removes, from 2.x and from its prereleases, and must
-// fail on each line.
+// with the options v3 removes, from 2.x and from its prereleases, and other
+// 2.x calls v3's types reject, and must fail on each line.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -151,7 +151,10 @@ const removedNames = [
 ];
 const removedFixture = `import type { ${removedNames.join(', ')} } from 'validator-fns';\n`;
 
-/** Calls with the options v3 removes, one per line after the import. */
+/**
+ * Calls with the options v3 removes, and 2.x calls v3's types reject, one per
+ * line after the import.
+ */
 const removedCalls = [
   "number({ round: 'floor' });",
   "min(1, 'Too small.', true);",
@@ -160,8 +163,12 @@ const removedCalls = [
   "maxDate(0, 'Too late.', true);",
   "number({ requiredMessage: 'Required.' });",
   'min(1, ({ limit }) => `${limit}`);',
+  'string({ trim: true });',
+  // A test is typed by the validator it's passed to (#756), so one built
+  // apart needs the type, as in min<string>(2).
+  'const atLeastTwo = min(2); string(atLeastTwo);',
 ];
-const removedCallsFixture = `import { max, maxDate, min, minDate, number } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
+const removedCallsFixture = `import { max, maxDate, min, minDate, number, string } from 'validator-fns';\n${removedCalls.join('\n')}\n`;
 
 /**
  * @param {unknown} error
