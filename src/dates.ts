@@ -9,6 +9,14 @@ import { isDate, timeOf } from './date-check.js';
 import { parseDate } from './parse-date.js';
 
 /**
+ * The time of a parsed date. A custom parser may return a non-date with its
+ * own `getTime`, which 2.x reads.
+ */
+function readTime(parsed: { getTime(): number }): number {
+  return isDate(parsed) ? timeOf(parsed) : parsed.getTime();
+}
+
+/**
  * Applies a configuration to the date value.
  * @param value Value to modify
  * @param config Configuration to apply
@@ -24,7 +32,7 @@ export function applyDateConfig(
     config.default !== undefined &&
     (parsedValue === undefined ||
       parsedValue === null ||
-      Number.isNaN(timeOf(parsedValue)))
+      Number.isNaN(readTime(parsedValue)))
   ) {
     parsedValue = config.default;
   }

@@ -52,7 +52,9 @@ export function oneOf<T extends string | number | boolean | Date>(
       value === null ||
       values.includes(value as T) ||
       (isDate(value) &&
-        values.some((x) => isDate(x) && timeOf(x) === timeOf(value))),
+        values.some(
+          (x) => (isDate(x) ? timeOf(x) : x.valueOf()) === timeOf(value),
+        )),
     message,
     () => ({ values }),
   );
