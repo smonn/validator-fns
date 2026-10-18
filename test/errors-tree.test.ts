@@ -457,6 +457,7 @@ test('should type the message tree from the error type', async () => {
 
 // A hand-built container whose errors aren't a tree is a bug (ADR 0001).
 test.each<[string, unknown]>([
+  ['a number', 5],
   ['a string', 'oops'],
   ['an object entry that is not a failure', { a: 'Too short.' }],
   ['an array entry that is not a failure', [{ code: 'min' }]],
@@ -469,7 +470,7 @@ test.each<[string, unknown]>([
     );
 
     const made = await malformed({});
-    assert.throws(() => messageTree(made), TypeError);
+    assert.throws(() => messageTree(made), TypeError, 'errors tree');
     const rejection = await Promise.resolve(
       malformed['~standard'].validate({}),
     ).then(
@@ -477,5 +478,6 @@ test.each<[string, unknown]>([
       (error: unknown) => error,
     );
     assert.instanceOf(rejection, TypeError);
+    assert.include(String(rejection), 'errors tree');
   },
 );
