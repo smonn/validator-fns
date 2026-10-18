@@ -41,7 +41,11 @@ function run(files: Record<string, string>, readme = readmeListing()) {
   for (const [name, code] of Object.entries(files)) {
     writeFileSync(path.join(root, 'dist', name), code);
   }
-  return spawnSync(process.execPath, [copy], { encoding: 'utf8' });
+  // A timeout, so a regex that backtracks fails the test instead of hanging.
+  return spawnSync(process.execPath, [copy], {
+    encoding: 'utf8',
+    timeout: 10_000,
+  });
 }
 
 test.each([
@@ -232,6 +236,13 @@ test.each([
 test('fails on code quoted in a string', () => {
   const result = run({ 'index.js': 'let a=`Call b.at(-1)`;' });
   assert.strictEqual(result.status, 1);
+});
+
+test('scans unclosed Error options in linear time', () => {
+  const started = performance.now();
+  const result = run({ 'index.js': `Error(a${',{'.repeat(1e6)}` });
+  assert.strictEqual(result.status, 0, result.stderr);
+  assert.isBelow(performance.now() - started, 5000);
 });
 
 test('names the API, line and column', () => {
