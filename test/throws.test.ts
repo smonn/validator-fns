@@ -323,6 +323,14 @@ const throwingThen = (value: unknown, field?: string) =>
     get: throwBug,
   });
 
+// The same, its `then` inherited from a prototype between it and Promise's.
+const inheritedThrowingThen = (value: unknown, field?: string) => {
+  const promise = Promise.resolve(ok(String(value), field));
+  const prototype: object = Object.create(Promise.prototype);
+  Object.setPrototypeOf(promise, defineThen(prototype, { get: throwBug }));
+  return promise;
+};
+
 // [label, validator, input, the validator's value]
 const adopters: [
   string,
@@ -363,6 +371,16 @@ test.each(adopters)(
   'should await a Promise from %s without reading its own `then`',
   async (_label, build, input, expected) => {
     assert.deepInclude(await build(throwingThen)(input), {
+      state: 'valid',
+      value: expected('a'),
+    });
+  },
+);
+
+test.each(adopters)(
+  'should await a Promise from %s without reading its inherited `then`',
+  async (_label, build, input, expected) => {
+    assert.deepInclude(await build(inheritedThrowingThen)(input), {
       state: 'valid',
       value: expected('a'),
     });
