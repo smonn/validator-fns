@@ -92,7 +92,7 @@ test('requiredMessage sets the message for a missing value', async () => {
   });
 });
 
-test('a missing value fails without errors and keeps the parsed value', async () => {
+test('should fail without errors or a value when required input is missing', async () => {
   assert.deepEqual(await number()('', 'age'), {
     state: 'invalid',
     message: 'Required.',
