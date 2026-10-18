@@ -61,6 +61,7 @@ import {
   oneOf,
   optional,
   string,
+  transform,
   url,
   valid,
   invalid,
@@ -87,7 +88,8 @@ const customValidator = createValidator(async (value, field) => {
 
 const validate = object({
   firstName: string(
-    { trim: true, messages: { required: 'First name is required.' } },
+    { messages: { required: 'First name is required.' } },
+    transform((value) => value.trim()),
     min(1, 'First name is required.'),
   ),
   emailAddress: string(
@@ -188,7 +190,10 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
    // 3.x
    string({ messages: { required: 'Enter a name.' } }, min(2, 'Too short.'));
-   string({ trim: true, messages: { required: 'Enter your city.' } });
+   string(
+     { messages: { required: 'Enter your city.' } },
+     transform((s) => s.trim()), // trim is gone, see item 24
+   );
    array(string(), { messages: { required: 'Pick some.' } });
    ```
 
@@ -350,7 +355,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 20. **Expect full field paths.** A nested field is the whole path from the caller's field, such as `user.a.b` or `user.tags[1].name`. 2.x gave a nested object's field its bare key, such as `b` or `name`, and an item's field left out the caller's, such as `tags[1]`. An item of a root array is `[1]`. Messages that use `{field}` get the full path too, so `'{field} is required.'` reads `user.a.b is required.`.
 
-21. **Treat only `undefined` and `null` as missing.** `''`, `NaN` and an invalid `Date` are present values, so they reach the parser and the tests. `string()` accepts `''`, and `string({ trim: true })` accepts `'  '` as `''`; add `min(1)` to reject them. `number()`, `date()` and `boolean()` fail `''`, `NaN` and an invalid `Date` with `type`, inside `optional()` too. A custom `parser` no longer gets `undefined` or `null`:
+21. **Treat only `undefined` and `null` as missing.** `''`, `NaN` and an invalid `Date` are present values, so they reach the parser and the tests. `string()` accepts `''`, and `string(transform((s) => s.trim()))` accepts `'  '` as `''`; add `min(1)` to reject them. `number()`, `date()` and `boolean()` fail `''`, `NaN` and an invalid `Date` with `type`, inside `optional()` too. A custom `parser` no longer gets `undefined` or `null`:
 
     ```js
     // 2.x
@@ -386,21 +391,35 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     await string({ default: 'none' })(''); // { state: 'valid', value: '', ... }
     ```
 
+24. **Replace `trim` with `transform()`**, and expect a test's valid value to change the value. Tests are now steps: each test's valid value goes to the next, and the last one is the result's value. `string({ trim: true })` becomes `string(transform((s) => s.trim()))`; the trimmed value isn't checked for missing again, so `'  '` becomes `''` instead of failing with `required`. A custom test that resolves to `valid()` with a different value now changes the value; return the value it got to keep it. In TypeScript, a test resolves to a result of its own value type, so a custom test whose valid value is `unknown` or another type is a type error, and `min()`, `max()` or `exact()` built apart from its validator needs the type, as in `min<string>(2)`:
+
+    ```js
+    // 2.x
+    string({ trim: true, messages: { required: 'Enter a name.' } });
+
+    // 3.x
+    string(
+      { messages: { required: 'Enter a name.' } },
+      transform((s) => s.trim()),
+      min(1, 'Enter a name.'),
+    );
+    ```
+
 ## API Reference
 
 ### Validation result
 
 All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `Result<T, E>`, either `Valid<T>` or `Failure<E>`, and a validator is `Validator<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
 
-| property  | type   | description                                                              |
-| :-------- | :----- | :----------------------------------------------------------------------- |
-| `state`   | string | Either `valid` or `invalid`.                                             |
-| `field`   | string | Either the field name or `undefined`.                                    |
-| `value`   | `T`    | The parsed value. Only if `state` is `valid`; a failure has no `value`.  |
-| `code`    | string | What failed, unless `state` is `valid`. See [Error codes](#error-codes). |
-| `params`  | object | The code's parameters, unless `state` is `valid`.                        |
-| `message` | string | The error message unless `state` is `valid`. Without one, the code.      |
-| `errors`  | `E`    | Only if `state` is `invalid`. See [Errors tree](#errors-tree).           |
+| property  | type   | description                                                                                           |
+| :-------- | :----- | :---------------------------------------------------------------------------------------------------- |
+| `state`   | string | Either `valid` or `invalid`.                                                                          |
+| `field`   | string | Either the field name or `undefined`.                                                                 |
+| `value`   | `T`    | The parsed value, as the last test returned it. Only if `state` is `valid`; a failure has no `value`. |
+| `code`    | string | What failed, unless `state` is `valid`. See [Error codes](#error-codes).                              |
+| `params`  | object | The code's parameters, unless `state` is `valid`.                                                     |
+| `message` | string | The error message unless `state` is `valid`. Without one, the code.                                   |
+| `errors`  | `E`    | Only if `state` is `invalid`. See [Errors tree](#errors-tree).                                        |
 
 ### Errors tree
 
@@ -614,7 +633,7 @@ Every validation type, and every validator `optional()` returns, is also a [Stan
 
 Accepts an array. Anything else, such as a `Set` or a string, fails with the `type` code. `itemTest` is the validation type or test to be applied on each value within the array value. `config` is optional and comes after `itemTest`, as `object()`'s does. All remaining `tests` are applied to the array as a whole. Without `itemTest`, `array(config?)` keeps the items as they are and takes no tests.
 
-A valid result's `value` holds each item as `itemTest` returned it, so `array(string({ trim: true }))` trims each item.
+A valid result's `value` holds each item as `itemTest` returned it, so `array(string(transform((s) => s.trim())))` trims each item.
 
 Supported validation tests: `max` and `min`.
 
@@ -698,7 +717,7 @@ When fields fail, the object's own failure has the `properties` code, and its `e
 
 In TypeScript, a field of the valid value is required unless its validator is wrapped in `optional()`, as in `{ name: string; age?: number | null | undefined }`. A missing optional field is still set on the value, as `undefined`.
 
-The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Use [`check`](#checkpath-test-code-message) to compare fields and put the error on one of them:
+The remaining `tests` are object-level tests. They run in order on the parsed object, only once every property is valid, and the first failure becomes the result. Each test's valid value goes to the next, and the last one is the result's value, as with [`transform()`](#transformfn). Use [`check`](#checkpath-test-code-message) to compare fields and put the error on one of them:
 
 ```ts
 const signup = object(
@@ -741,7 +760,6 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 | option     | type     | description                                                                                                              |
 | :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `trim`     | boolean  | Optional. If true, clears whitespace from the start and end of the string.                                               |
 | `default`  | string   | Optional. Value used for `undefined` or `null`.                                                                          |
 | `messages` | object   | Optional. Messages for the validator's own failures, keyed by code, such as `required`. See [Error codes](#error-codes). |
 | `parser`   | function | Optional. Used to customize how a value is converted into a string.                                                      |
@@ -752,7 +770,9 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values, so a built-in test fails `null` and `undefined` when it's called with them directly. An empty string is a string like any other: `min(1, …)` fails it and `max(1, …)` accepts it. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
-In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of type `T`. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. A custom test that takes `unknown` fits every validation type.
+Tests are steps: a validation type runs them in order, and each test's valid value goes to the next, so a test can change the value. The last one is the result's value. The built-in tests return the value unchanged, and [`transform()`](#transformfn) makes a test that changes it. A failure ends the run.
+
+In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of type `T` and resolves to a `Result<T, E>`, so a step keeps the type. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. `min()`, `max()` and `exact()` take their type from the validator they're passed to; one built apart from it needs the type, as in `min<string>(2)`. A custom test that keeps any type, such as `async <T>(value: T, field?: string) => valid({ value, field })`, fits every validation type.
 
 - [check(path?, test, code, message?)](#checkpath-test-code-message)
 - [email(message?)](#emailmessage)
@@ -764,10 +784,11 @@ In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of t
 - [min(limit, message?)](#minlimit-message)
 - [minDate(limit, message?)](#mindatelimit-message)
 - [oneOf(values, message?)](#oneofvalues-message)
+- [transform(fn)](#transformfn)
 - [url(message?, protocols?)](#urlmessage-protocols)
 - [uuid(message?)](#uuidmessage)
 
-Each test fails with its own [code](#error-codes), and its `message` is optional.
+Each test fails with its own [code](#error-codes), and its `message` is optional. `transform()` never fails.
 
 #### check(path?, test, code, message?)
 
@@ -898,6 +919,37 @@ Ensures value is one of the specified values. Works with strings, arrays, boolea
 | :-------- | :----------------- | :------------------------------------------------------------------- |
 | `values`  | array              | List of allowed values. May be strings, numbers, booleans, or dates. |
 | `message` | string or function | Optional. The validation error message.                              |
+
+</details>
+
+#### transform(fn)
+
+Makes a test that changes the value: its valid value is what `fn` returns for the value, and it never fails. `fn` is synchronous and returns a value of the same type; in TypeScript, an `async` function or one that changes the type is a type error. A throw from `fn` is a bug, and the validator rejects with it. An async step, or one that can fail, is a custom test that resolves to `valid()` or `invalid()`.
+
+The value a transform returns is never missing, even inside `optional()`: only the input is checked for `undefined` and `null`. Trimming a blank string gives `''`, which the next tests check.
+
+```ts
+const name = string(
+  transform((s) => s.trim()),
+  min(2, 'Too short.'),
+);
+
+await name(' ab ');
+// { state: 'valid', value: 'ab', field: undefined }
+await name('  ');
+// { state: 'invalid', code: 'min', params: { min: 2, amount: 0 }, message: 'Too short.', ... }
+
+string(
+  email(),
+  transform((s) => s.toLowerCase()),
+);
+```
+
+<details><summary>arguments</summary>
+
+| name | type     | description                                                 |
+| :--- | :------- | :---------------------------------------------------------- |
+| `fn` | function | Gets the value and returns the new value, of the same type. |
 
 </details>
 
