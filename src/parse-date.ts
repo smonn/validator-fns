@@ -26,27 +26,6 @@ function parseTimezone(timezone: string): number {
   return multiplier * offset;
 }
 
-const BASE = 10;
-
-const dateParts = [
-  // Skip
-  () => 0,
-  // Year, which the date pattern always captures
-  (part?: string) => Number(part),
-  // Month
-  (part = '1') => Number.parseInt(part, BASE) - 1,
-  // Day
-  (part = '1') => Number.parseInt(part, BASE),
-  // Hour
-  (part = '0') => Number.parseInt(part, BASE),
-  // Minute
-  (part = '0') => Number.parseInt(part, BASE),
-  // Second
-  (part = '0') => Number.parseInt(part, BASE),
-  // Millisecond
-  (part = '0') => Number.parseFloat(part) * 1e3,
-];
-
 /**
  * Reads a date from a number or an ISO 8601 string. Returns `undefined` for a
  * string that isn't ISO 8601, and for input that isn't a number or string.
@@ -79,30 +58,38 @@ function parseIsoDate(value: string): Date | undefined {
 
   const [
     ,
-    year = 0,
-    month = 0,
-    day = 0,
-    hour = 0,
-    minute = 0,
-    second = 0,
-    millisecond = 0,
-  ] = dateParts.map((parse, index) => parse(parts[index]));
-
-  const timezone = parts[8];
+    year,
+    month = '01',
+    day = '01',
+    hour = '00',
+    minute = '00',
+    second = '00',
+    fraction = '0',
+    timezone,
+  ] = parts;
+  const milliseconds = Number(fraction) * 1e3;
 
   if (!timezone) {
-    return new Date(year, month, day, hour, minute, second, millisecond);
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+      milliseconds,
+    );
   }
 
   return new Date(
     Date.UTC(
-      year,
-      month,
-      day,
-      hour,
-      minute + parseTimezone(timezone),
-      second,
-      millisecond,
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute) + parseTimezone(timezone),
+      Number(second),
+      milliseconds,
     ),
   );
 }
