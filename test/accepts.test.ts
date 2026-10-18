@@ -232,3 +232,17 @@ test('oneOf() matches a date from another realm', async () => {
     code: 'oneOf',
   });
 });
+
+test('object() accepts objects where BigInt is missing, as before Safari 14', async () => {
+  const bigInt: unknown = Reflect.get(globalThis, 'BigInt');
+  Reflect.deleteProperty(globalThis, 'BigInt');
+  try {
+    assert.deepInclude(await object({})({}), { state: 'valid' });
+    assert.deepInclude(await object({ name: string() })({ name: 'Ada' }), {
+      state: 'valid',
+    });
+    assert.deepInclude(await object({})(Object('a')), { code: 'type' });
+  } finally {
+    Reflect.set(globalThis, 'BigInt', bigInt);
+  }
+});

@@ -28,10 +28,15 @@ type OptionalTwin<T, E> = {
  * @internal
  */
 function isRecordLike(value: unknown): value is object {
+  // BigInt is missing before Safari 14, and no boxed BigInt exists without it.
+  const wrappers =
+    typeof BigInt === 'function'
+      ? [String, Number, Boolean, Symbol, BigInt]
+      : [String, Number, Boolean, Symbol];
   return (
     typeof value === 'object' &&
     !Array.isArray(value) &&
-    ![String, Number, Boolean, BigInt, Symbol].some(({ prototype }) => {
+    !wrappers.some(({ prototype }) => {
       try {
         Reflect.apply(prototype.valueOf, value, []);
         return true;
