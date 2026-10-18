@@ -37,6 +37,7 @@ test.each([
   ['class static block', 'class A{static a(){}}', 'class A{static{}}'],
   ['class field', 'class A{a(){return{b:1}}}', 'class A{a=1}'],
   ['class field', 'class A{static a(){}}', 'class A{static a=1}'],
+  ['class field', 'a={class:b},c={d};e.class;f={g};', 'class A{a=1}'],
   [
     'regex named group or lookbehind',
     'let a=/(?:a)(?=b)(?!c)/;',
