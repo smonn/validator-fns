@@ -442,7 +442,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
 
 29. **Check your browsers against the new floor.** 3.x supports Chrome and Edge 93+, Firefox 92+ and Safari 15.4+ (iOS 15.4+), up from 2.x's Chrome and Edge 85+, Firefox 77+ and Safari 13.1+, because it uses `Object.hasOwn`. For an older browser, polyfill `Object.hasOwn` and transpile logical assignment (`||=`, `??=`), which 3.x also uses, along with the rest of the list in [Supported environments](#supported-environments).
 
-30. **Expect a date string with a part out of its range to fail.** 2.x rolled it over: `'2020-13'` was January 2021, `'2020-02-30'` was 1 March, and `'2020-01-01T24:00'` was the next day. It also read the years 0 to 99 as 1900 to 1999. In 3.x, a `minDate()` or `maxDate()` limit with a month, day, hour or UTC offset out of its range throws ``TypeError('`limit` must be a valid date')`` when the test is built, and `coerce.date()` fails it with `type`. `'0050-01-01'` is the year 50:
+30. **Expect a date string with a part out of its range to fail.** 2.x's `minDate()` and `maxDate()` rolled such a limit over into a neighbouring day, month or year: `'2020-13'` was January 2021, `'2020-02-30'` was 1 March, and `'2020-01-01T24:00'` was the next day. They also read the years 0 to 99 as 1900 to 1999. In 3.x, a limit with a month, day, hour or UTC offset out of its range throws ``TypeError('`limit` must be a valid date')`` when the test is built, and `coerce.date()` fails such text with `type`. `'0050-01-01'` is the year 50:
 
     ```js
     // 2.x
