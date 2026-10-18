@@ -3,11 +3,28 @@ import {
   type AtPath,
   errorAt,
   errorAtKey,
-  type KeyPath,
   type Test,
   validResult,
   type ValidatorMessage,
 } from './shared.js';
+
+/**
+ * Paths into nested plain objects, as lists of property names, for `check()`.
+ * Arrays, dates and functions end a path.
+ * @internal
+ */
+type KeyPath<T> = T extends
+  | readonly unknown[]
+  | Date
+  | ((...args: never[]) => unknown)
+  ? never
+  : T extends object
+    ? {
+        [K in keyof T & string]:
+          | readonly [K]
+          | readonly [K, ...KeyPath<NonNullable<T[K]>>];
+      }[keyof T & string]
+    : never;
 
 /** @internal */
 type CheckArgs<T> = [

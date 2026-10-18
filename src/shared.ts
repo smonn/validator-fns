@@ -170,24 +170,6 @@ export type BuiltInCode =
   | 'properties';
 
 /**
- * Paths into nested plain objects, as lists of property names, for `check()`.
- * Arrays, dates and functions end a path.
- * @internal
- */
-export type KeyPath<T> = T extends
-  | readonly unknown[]
-  | Date
-  | ((...args: never[]) => unknown)
-  ? never
-  : T extends object
-    ? {
-        [K in keyof T & string]:
-          | readonly [K]
-          | readonly [K, ...KeyPath<NonNullable<T[K]>>];
-      }[keyof T & string]
-    : never;
-
-/**
  * The errors with a message at `Path` that `check()` produces, such as
  * `{ shipping?: { zip?: string } }` for `['shipping', 'zip']`.
  * @internal
