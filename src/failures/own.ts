@@ -20,16 +20,25 @@ export function ownData(target: unknown, key: PropertyKey): unknown {
 }
 
 /**
- * A target's own property descriptors, or none for a target such as a revoked
- * Proxy, whose trap throws.
+ * A target's own enumerable data properties as entries, symbol keys included,
+ * as spread copies them, read without running a getter. A trap that throws,
+ * as a revoked Proxy's does, ends the list there.
  * @internal
  */
-function descriptorsOf(target: object): Record<string, PropertyDescriptor> {
+function dataOf(target: object): [PropertyKey, unknown][] {
+  const data: [PropertyKey, unknown][] = [];
   try {
-    return Object.getOwnPropertyDescriptors(target);
+    for (const key of Reflect.ownKeys(target)) {
+      // A Proxy can list a key it has no descriptor for, which spread skips.
+      const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+      if (descriptor?.enumerable && 'value' in descriptor) {
+        data.push([key, descriptor.value]);
+      }
+    }
   } catch {
-    return {};
+    // The entries read before the throw stay.
   }
+  return data;
 }
 
 /**
@@ -57,12 +66,9 @@ export function parametersOf(
   try {
     return { ...params, value, field };
   } catch {
-    const parameters: Record<string, unknown> = {};
-    const descriptors = descriptorsOf(params);
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (descriptor.enumerable && 'value' in descriptor) {
-        setOwn(parameters, key, descriptor.value);
-      }
+    const parameters = {};
+    for (const [key, data] of dataOf(params)) {
+      setOwn(parameters, key, data);
     }
     return { ...parameters, value, field };
   }

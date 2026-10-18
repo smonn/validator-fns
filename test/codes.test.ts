@@ -221,6 +221,57 @@ test('should keep the params own enumerable data when a getter in them throws', 
   );
 });
 
+const kept = Symbol('kept');
+const hidden = Symbol('hidden');
+
+test('should keep the params own enumerable symbol data when a getter in them throws', async () => {
+  const params = {
+    [kept]: 'kept',
+    get broken(): string {
+      throw new Error('broken');
+    },
+  };
+  Object.defineProperty(params, hidden, { value: 'hidden', enumerable: false });
+  // Only the message is compared, since printing the failure runs the getter.
+  const made = await invalid({
+    code: 'x',
+    params,
+    message: (parameters) =>
+      `${String(Reflect.get(parameters, kept))} ${String(Reflect.get(parameters, hidden))}`,
+    field: undefined,
+  });
+  assert.strictEqual(
+    made.state === 'invalid' && made.message,
+    'kept undefined',
+  );
+});
+
+/** Params that list a key they lack, then `a`, then `b`, whose read throws. */
+const listing = new Proxy<Record<string, unknown>>(
+  { a: 'A', b: 'B' },
+  {
+    ownKeys: () => ['ghost', 'a', 'b'],
+    getOwnPropertyDescriptor: (target, key) => {
+      if (key === 'b') {
+        throw new Error('trap');
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  },
+);
+
+test('should keep the params data read before a trap throws, when a Proxy lists a key it lacks', async () => {
+  assert.deepInclude(
+    await invalid({
+      code: 'x',
+      params: listing,
+      message: '{a} {ghost} {b}',
+      field: undefined,
+    }),
+    { message: 'A undefined undefined' },
+  );
+});
+
 const { proxy: revokedParams, revoke: revokeParams } = Proxy.revocable(
   { n: 1 },
   {},
