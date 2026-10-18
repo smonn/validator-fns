@@ -48,18 +48,21 @@ const unsupported = [
 // message doesn't. Code quoted in a string, such as 'Object.hasOwn(', still
 // fails, and so does a call behind a feature check. Error options passed in a
 // variable, aliases and computed members aren't seen.
-const notMember = String.raw`(?<![\w$])(?<!(?<!\b(?:globalThis|self|window))\.)`;
+const globalObject = 'globalThis|self|window';
+const notMember = String.raw`(?<![\w$])(?<!(?<!\b(?:${globalObject}))\.)`;
+// The minifier drops a constructor's empty parentheses: `new Intl.Segmenter`.
+const constructed = String.raw`\bnew\s+(?:(?:${globalObject})\.)?`;
 // `)` covers the target's lowering of `a.at?.(1)` to `(t=a.at)==null?...`.
 const called = String.raw`(?:\s*(?:\?\.\s*)?\(|\.(?:call|apply|bind)\b|\))`;
 
 /** @param {string} name @returns {Api} */
 function matchGlobal(name) {
-  const pattern = String.raw`${notMember}${name}(?:\s*(?:\?\.\s*)?\(|\.[\w$])|\b(?:new|instanceof)\s+${name}\b`;
+  const pattern = String.raw`${notMember}${name}(?:\s*(?:\?\.\s*)?\(|\.[\w$])|(?:${constructed}|\binstanceof\s+)${name}\b`;
   return [new RegExp(pattern, 'g'), [name]];
 }
 /** @param {string} owner @param {string} name @returns {Api} */
 function matchMember(owner, name) {
-  const pattern = String.raw`${notMember}${owner}\.${name}${called}`;
+  const pattern = String.raw`${notMember}${owner}\.${name}${called}|${constructed}${owner}\.${name}\b`;
   return [new RegExp(pattern, 'g'), [`${owner}.${name}`]];
 }
 /** @param {string[]} owners @param {string} name @returns {Api} */
