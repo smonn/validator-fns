@@ -1,8 +1,5 @@
-import {
-  type Failure,
-  formatMessage,
-  type ValidatorMessage,
-} from '../shared.js';
+import type { Failure, ValidatorMessage } from '../shared.js';
+import { formatMessage } from './format.js';
 
 /**
  * Each failure made without a message, with the value it was made for, so a
