@@ -50,7 +50,7 @@ const validate = object({
     email('Must be a valid email address.'),
   ),
   age: number(
-    { round: 'floor', requiredMessage: 'Age is required.' },
+    { requiredMessage: 'Age is required.' },
     integer('Age must be a whole number.'),
     min(18, 'Must be at least 18 years old.'),
   ),

@@ -124,20 +124,13 @@ test('min(), max() and exact() agree with a plain comparison', async () => {
     fc.asyncProperty(
       sized,
       fc.integer({ min: -5, max: 10 }),
-      fc.boolean(),
-      async (value, limit, exclusive) => {
+      async (value, limit) => {
         const amount = amountOf(value);
         const isValid = async (validate: Test<SharedValueType>) =>
           (await validate(value)).state === 'valid';
 
-        assert.equal(
-          await isValid(min(limit, 'min', exclusive)),
-          exclusive ? amount > limit : amount >= limit,
-        );
-        assert.equal(
-          await isValid(max(limit, 'max', exclusive)),
-          exclusive ? amount < limit : amount <= limit,
-        );
+        assert.equal(await isValid(min(limit, 'min')), amount >= limit);
+        assert.equal(await isValid(max(limit, 'max')), amount <= limit);
         assert.equal(await isValid(exact(limit, 'exact')), amount === limit);
       },
     ),

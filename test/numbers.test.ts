@@ -1,5 +1,6 @@
 import { assert, test } from 'vitest';
 import {
+  check,
   integer,
   max,
   min,
@@ -9,7 +10,7 @@ import {
 } from '../src/index.js';
 
 test('min', async () => {
-  const validate = min(5, 'min:{min}', true);
+  const validate = min(5, 'min:{min}');
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     message: 'min:5',
@@ -28,10 +29,9 @@ test('min', async () => {
     field: undefined,
   });
   assert.deepEqual(await validate(5), {
-    state: 'invalid',
-    message: 'min:5',
+    state: 'valid',
+    value: 5,
     field: undefined,
-    errors: undefined,
   });
   assert.deepEqual(await validate(4.99), {
     state: 'invalid',
@@ -42,7 +42,7 @@ test('min', async () => {
 });
 
 test('max', async () => {
-  const validate = max(5, 'max:{max}', true);
+  const validate = max(5, 'max:{max}');
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     message: 'max:5',
@@ -61,10 +61,9 @@ test('max', async () => {
     errors: undefined,
   });
   assert.deepEqual(await validate(5), {
-    state: 'invalid',
-    message: 'max:5',
+    state: 'valid',
+    value: 5,
     field: undefined,
-    errors: undefined,
   });
   assert.deepEqual(await validate(4.99), {
     state: 'valid',
@@ -153,37 +152,14 @@ test('number', async () => {
   });
 });
 
-test('rounding', async () => {
-  const nearest = number({ round: 'nearest' });
-  const floor = number({ round: 'floor' });
-  const ceil = number({ round: 'ceil' });
-  // defineProperty types the config as {}, so it can hold a round value the
-  // config type rejects.
-  const badRounding = number(
-    Object.defineProperty({}, 'round', { value: 'bad', enumerable: true }),
-  );
+test('should write a strict bound with check()', async () => {
+  const validate = number(check((value: number) => value > 0, 'positive'));
 
-  assert.deepEqual(await nearest(0.9), {
-    value: 1,
-    state: 'valid',
-    field: undefined,
-  });
-  assert.deepEqual(await floor(0.9), {
-    value: 0,
-    state: 'valid',
-    field: undefined,
-  });
-  assert.deepEqual(await ceil(0.1), {
-    value: 1,
-    state: 'valid',
-    field: undefined,
-  });
-  assert.deepEqual(await badRounding(1), {
-    errors: undefined,
+  assert.deepInclude(await validate(0), {
     state: 'invalid',
-    message: 'Unknown round type: bad',
-    field: undefined,
+    message: 'positive',
   });
+  assert.deepInclude(await validate(0.1), { state: 'valid', value: 0.1 });
 });
 
 test('number default', async () => {

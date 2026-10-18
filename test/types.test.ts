@@ -10,7 +10,9 @@ import {
   date,
   invalid,
   max,
+  maxDate,
   min,
+  minDate,
   number,
   object,
   optional,
@@ -18,7 +20,11 @@ import {
   valid,
   type ExtractValue,
   type Failure,
+  type MaxDateValidatorMessageParameters,
+  type MaxValidatorMessageParameters,
+  type MinDateValidatorMessageParameters,
   type MinValidatorMessageParameters,
+  type NumberConfig,
   type Result,
   type SharedValueType,
   type Test,
@@ -47,9 +53,7 @@ test('type validators carry their value type and string errors', () => {
 });
 
 test('built-in tests and results without errors have never as the error type', () => {
-  expectTypeOf(min(1, 'min')).toEqualTypeOf<
-    Test<string | number | unknown[], never>
-  >();
+  expectTypeOf(min(1, 'min')).toEqualTypeOf<Test<SharedValueType, never>>();
   expectTypeOf(createValidatorTest(() => true, 'message')).toEqualTypeOf<
     Test<unknown, never>
   >();
@@ -199,6 +203,25 @@ test('applyArrayConfig returns unknown items and takes no type argument', () => 
   expectTypeOf(applyArrayConfig).toEqualTypeOf<
     (config: ArrayConfig, value: unknown) => unknown[] | null | undefined
   >();
+});
+
+test('number() takes no round option', () => {
+  expectTypeOf<NumberConfig>().not.toHaveProperty('round');
+});
+
+test('min(), max(), minDate() and maxDate() take no exclusive argument', () => {
+  expectTypeOf<Parameters<typeof min>['length']>().toEqualTypeOf<2>();
+  expectTypeOf<Parameters<typeof max>['length']>().toEqualTypeOf<2>();
+  expectTypeOf<Parameters<typeof minDate>['length']>().toEqualTypeOf<2>();
+  expectTypeOf<Parameters<typeof maxDate>['length']>().toEqualTypeOf<2>();
+  expectTypeOf<MinValidatorMessageParameters>().not.toHaveProperty('exclusive');
+  expectTypeOf<MaxValidatorMessageParameters>().not.toHaveProperty('exclusive');
+  expectTypeOf<MinDateValidatorMessageParameters>().not.toHaveProperty(
+    'exclusive',
+  );
+  expectTypeOf<MaxDateValidatorMessageParameters>().not.toHaveProperty(
+    'exclusive',
+  );
 });
 
 const anyValue = async (value: unknown, field?: string) =>
