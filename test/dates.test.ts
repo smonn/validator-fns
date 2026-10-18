@@ -98,24 +98,6 @@ test('maxDate', async () => {
   });
 });
 
-test('exclusive', async () => {
-  const now = new Date();
-  const min = minDate(now, 'must be after now', true);
-  assert.deepEqual(await min(now), {
-    state: 'invalid',
-    message: 'must be after now',
-    field: undefined,
-    errors: undefined,
-  });
-  const max = maxDate(now, 'must be before now', true);
-  assert.deepEqual(await max(now), {
-    state: 'invalid',
-    message: 'must be before now',
-    field: undefined,
-    errors: undefined,
-  });
-});
-
 test('date', async () => {
   const now = new Date();
   const nextMonth = new Date(now);

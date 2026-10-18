@@ -92,7 +92,7 @@ const complexValidate = V.object({
     V.email('Must be a valid email address.'),
   ),
   age: V.number(
-    { round: 'floor', requiredMessage: 'Age is required.' },
+    { requiredMessage: 'Age is required.' },
     V.integer('Age must be a whole number.'),
     V.min(18, 'Must be at least 18 years old.'),
   ),

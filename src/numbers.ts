@@ -50,26 +50,6 @@ export function applyNumberConfig(
     parsedValue = config.default;
   }
 
-  if (config.round && typeof parsedValue === 'number') {
-    switch (config.round) {
-      case 'nearest': {
-        parsedValue = Math.round(parsedValue);
-        break;
-      }
-      case 'ceil': {
-        parsedValue = Math.ceil(parsedValue);
-        break;
-      }
-      case 'floor': {
-        parsedValue = Math.floor(parsedValue);
-        break;
-      }
-      default: {
-        throw new Error(`Unknown round type: ${String(config.round)}`);
-      }
-    }
-  }
-
   return parsedValue;
 }
 
@@ -91,10 +71,7 @@ export function integer(
  * Configuration for number validation.
  * @category Types
  */
-export interface NumberConfig extends ConfigBase<number> {
-  /** Apply rounding mechanism before validation. */
-  round?: 'nearest' | 'floor' | 'ceil';
-}
+export type NumberConfig = ConfigBase<number>;
 
 /**
  * Validates a number value.

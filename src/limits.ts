@@ -27,14 +27,12 @@ export interface MaxValidatorMessageParameters extends ValidatorMessageParameter
   max: number;
   amount: number | null | undefined;
   limit: number;
-  exclusive?: boolean | undefined;
 }
 
 /**
  * Ensures a string, number, or array value is at most a certain amount.
  * @param limit Size or value limit
  * @param message Error message
- * @param exclusive Use exclusive comparison instead of inclusive
  * @category Validation Tests
  */
 export function max(
@@ -43,19 +41,14 @@ export function max(
     SharedValueType,
     MessageExtras<MaxValidatorMessageParameters>
   >,
-  exclusive?: boolean,
 ): Test<SharedValueType, never> {
   return createValidatorTest(
-    (value: SharedValueType) => {
-      const amount = getAmount(value);
-      return exclusive ? amount < limit : amount <= limit;
-    },
+    (value: SharedValueType) => getAmount(value) <= limit,
     message,
     (value) => ({
       max: limit,
       limit,
       amount: getAmount(value),
-      exclusive,
     }),
   );
 }
@@ -64,14 +57,12 @@ export interface MinValidatorMessageParameters extends ValidatorMessageParameter
   min: number;
   limit: number;
   amount: number | null | undefined;
-  exclusive?: boolean | undefined;
 }
 
 /**
- * Ensures a string, number, or array value is at most a certain amount.
+ * Ensures a string, number, or array value is at least a certain amount.
  * @param limit Size or value limit
  * @param message Error message
- * @param exclusive Use exclusive comparison instead of inclusive
  * @category Validation Tests
  */
 export function min(
@@ -80,19 +71,14 @@ export function min(
     SharedValueType,
     MessageExtras<MinValidatorMessageParameters>
   >,
-  exclusive?: boolean,
 ): Test<SharedValueType, never> {
   return createValidatorTest(
-    (value: SharedValueType) => {
-      const amount = getAmount(value);
-      return exclusive ? amount > limit : amount >= limit;
-    },
+    (value: SharedValueType) => getAmount(value) >= limit,
     message,
     (value) => ({
       min: limit,
       limit,
       amount: getAmount(value),
-      exclusive,
     }),
   );
 }

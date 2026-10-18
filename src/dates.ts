@@ -36,14 +36,12 @@ export type SharedDateValueType = Date | string | number;
 export interface MinDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   min: Date | null | undefined;
   limit: Date | null | undefined;
-  exclusive?: boolean | undefined;
 }
 
 /**
  * Ensures a date value is on or after a date.
  * @param limit Minimum date
  * @param message Error message
- * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function minDate(
@@ -52,19 +50,15 @@ export function minDate(
     Date,
     MessageExtras<MinDateValidatorMessageParameters>
   >,
-  exclusive?: boolean,
 ): Test<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value: Date) =>
-      parsedDate !== null &&
-      parsedDate !== undefined &&
-      (exclusive ? value > parsedDate : value >= parsedDate),
+      parsedDate !== null && parsedDate !== undefined && value >= parsedDate,
     message,
     () => ({
       min: parsedDate,
       limit: parsedDate,
-      exclusive,
     }),
   );
 }
@@ -72,14 +66,12 @@ export function minDate(
 export interface MaxDateValidatorMessageParameters extends ValidatorMessageParameters<Date> {
   max: Date | null | undefined;
   limit: Date | null | undefined;
-  exclusive?: boolean | undefined;
 }
 
 /**
  * Ensures a date value is on or before a date.
  * @param limit Maximum date
  * @param message Error message
- * @param exclusive Makes comparison exclusive instead of inclusive
  * @category Validation Tests
  */
 export function maxDate(
@@ -88,19 +80,15 @@ export function maxDate(
     Date,
     MessageExtras<MaxDateValidatorMessageParameters>
   >,
-  exclusive?: boolean,
 ): Test<Date, never> {
   const parsedDate = parseDate(limit);
   return createValidatorTest(
     (value: Date) =>
-      parsedDate !== null &&
-      parsedDate !== undefined &&
-      (exclusive ? value < parsedDate : value <= parsedDate),
+      parsedDate !== null && parsedDate !== undefined && value <= parsedDate,
     message,
     () => ({
       max: parsedDate,
       limit: parsedDate,
-      exclusive,
     }),
   );
 }
