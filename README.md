@@ -316,7 +316,7 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
     )();
     ```
 
-14. **Read the code, not the wording.** Every failure has a `code`, such as `min` or `required`, and `params`, such as `{ min, amount }`, beside its `message`. See [Error codes](#error-codes). No English default remains: a message is optional on every built-in test, and a failure without one reads its code. For English messages, wrap the schema in [`withMessages(schema, en)`](#withmessagesvalidator-messages), with `en` from `validator-fns/en`. `'Required.'` is now `'required'`, and `'Failed to parse value to number.'` is `'type'`, with `{ expected: 'number' }`.
+14. **Read the code, not the wording.** Every failure has a `code`, such as `min` or `required`, and `params`, such as `{ min, amount }`, beside its `message`. See [Error codes](#error-codes). No English default remains: a message is optional on every built-in test, and a failure without one reads its code. For English messages, wrap the validator in [`withMessages(validator, en)`](#withmessagesvalidator-messages), with `en` from `validator-fns/en`. `'Required.'` is now `'required'`, and `'Failed to parse value to number.'` is `'type'`, with `{ expected: 'number' }`.
 15. **Give each custom failure a code**: `createValidatorTest(code, test, message?, getParams?)`, `check(path?, test, code, message?)` and `invalid({ code, params?, message?, value?, field, errors? })`. `invalid()` takes `params` in place of `extras`. A 2.x `check(test, message)` still runs, but its message becomes the code:
 
     ```js
