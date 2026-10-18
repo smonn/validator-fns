@@ -332,3 +332,17 @@ test('should word a custom type validator from its messages config', async () =>
   });
   assert.deepInclude(await money()('x'), { code: 'type', message: 'type' });
 });
+
+test('should keep the message of a worded parser failure over the messages config', async () => {
+  const worded = createTypeValidatorTest(
+    {
+      parser: async (value: unknown, field?: string) =>
+        invalid({ code: 'type', message: 'Not money.', value, field }),
+    },
+    (value: number | null | undefined) => value,
+  );
+  assert.deepInclude(await worded({ messages: { type: 'config' } })('x'), {
+    code: 'type',
+    message: 'Not money.',
+  });
+});
