@@ -1,5 +1,6 @@
 import { assert, test } from 'vitest';
 import {
+  array,
   check,
   createTypeValidatorTest,
   max,
@@ -121,5 +122,19 @@ test('transform() makes a test that never fails', async () => {
   assert.deepInclude(await tenfold({ count: 2 }), {
     state: 'valid',
     value: { count: 20 },
+  });
+});
+
+test('each array test sees the input array, as array tests only check until #757', async () => {
+  const validate = array(
+    number(),
+    transform(() => [1, 2]),
+    min(2, 'min'),
+  );
+
+  assert.deepInclude(await validate([1]), {
+    state: 'invalid',
+    code: 'min',
+    params: { min: 2, amount: 1 },
   });
 });

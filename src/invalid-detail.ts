@@ -34,7 +34,8 @@ export async function runTests<V, E>(
 }
 
 /**
- * The first failure of `array()`'s collection-level tests.
+ * The first failure of `array()`'s collection-level tests, which each check
+ * the input array, since `array()` returns its items and not their value.
  * TODO(#757): pass their values on with runTests once they are typed.
  * @internal
  */
@@ -43,8 +44,14 @@ export async function findInvalidResult<V, E>(
   value: V,
   field: string | undefined,
 ): Promise<Failure<E> | undefined> {
-  const result = await runTests(tests, value, field);
-  return result.state === 'invalid' ? result : undefined;
+  for (const validatorTest of tests) {
+    const result = await validatorTest(value, field);
+    if (result.state === 'invalid') {
+      return result;
+    }
+  }
+
+  return undefined;
 }
 
 /**
