@@ -265,10 +265,15 @@ test.each([
   ['a cause passed to another call', 'let a=f(`a`,{cause:b});'],
   ['an Error option named like cause', 'throw Error(`a`,{causes:b});'],
   ['a function named like an Error', 'let a=formatError(b,{cause:c});'],
-  ['a cause after the Error statement', 'throw Error(a);let b={cause:c};'],
 ])('passes %s', (_, code) => {
   const result = run({ 'index.js': code });
   assert.strictEqual(result.status, 0, result.stderr);
+});
+
+test('fails on a cause key soon after an Error statement ends', () => {
+  const result = run({ 'index.js': 'throw Error(a);let b={cause:c};' });
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, '`Error.cause`');
 });
 
 test('fails on code quoted in a string', () => {

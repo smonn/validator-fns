@@ -46,8 +46,9 @@ const unsupported = [
 //
 // Only calls, `new`, `instanceof` and member access match, so a name in a
 // message doesn't. Code quoted in a string, such as 'Object.hasOwn(', still
-// fails, and so does a call behind a feature check. Error options passed in a
-// variable, aliases and computed members aren't seen.
+// fails, and so does a call behind a feature check, or a `cause` key soon
+// after an Error call ends (`throw Error(a);f({cause:b})`). Error options
+// passed in a variable, aliases and computed members aren't seen.
 const globalObject = 'globalThis|self|window';
 const notMember = String.raw`(?<![\w$])(?<!(?<!\b(?:${globalObject}))\.)`;
 const qualifier = String.raw`(?:(?:${globalObject})\.)?`;
@@ -129,10 +130,11 @@ const newerApis = [
   matchMethod(['Map', 'WeakMap'], 'getOrInsert'), // 145, 144, 26.2
   matchMethod(['Map', 'WeakMap'], 'getOrInsertComputed'), // 145, 144, 26.2
   [
-    // `cause` in an options object, within a call to a built-in Error or to
-    // `super`. The window steps over whole string literals, so a `;` in the
-    // message doesn't end it, and its bounds keep the scan linear.
-    /(?<![\w$.])(?:(?:Aggregate|Eval|Range|Reference|Syntax|Type|URI)?Error|super)\s*\((?:'(?:[^'\\]|\\[\s\S]){0,300}'|"(?:[^"\\]|\\[\s\S]){0,300}"|`(?:[^`\\]|\\[\s\S]){0,300}`|[^;'"`]){0,300}?[{,]\s*cause\s*[:,}]/g,
+    // `cause` as a key within 300 characters after a built-in Error's or
+    // `super`'s opening parenthesis. The window ignores literals and
+    // statements, which a regex can't follow, and its bound keeps the scan
+    // linear.
+    /(?<![\w$.])(?:(?:Aggregate|Eval|Range|Reference|Syntax|Type|URI)?Error|super)\s*\([\s\S]{0,300}?[{,]\s*cause\s*[:,}]/g,
     ['Error.cause'], // 93, 91, 15
   ],
 ];
