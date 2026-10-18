@@ -21,8 +21,7 @@ export {
 } from './pipeline/index';
 export type { TypeValidator } from './pipeline/index';
 export type { ObjectConfig, ObjectParameter as ObjectParam } from './objects';
-export { oneOf } from './common';
-export { transform } from './transform';
+export { oneOf, transform } from './common';
 export type { OneOfValidatorMessageParameters } from './common';
 export { exact, max, min } from './limits';
 export type {

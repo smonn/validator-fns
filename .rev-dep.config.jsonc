@@ -62,7 +62,7 @@
         },
         {
           "name": "validators",
-          "pattern": "src/{booleans,check,common,limits,transform}.ts",
+          "pattern": "src/{booleans,check,common,limits}.ts",
           "allow": [
             "src/types.ts",
             "src/pipeline/index.ts",
