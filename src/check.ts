@@ -27,13 +27,8 @@ function checkWith<T, E>(
 
     const formatted = formatMessage(message, { value, field });
     return toErrors
-      ? invalidResult({
-          message: '',
-          value,
-          field,
-          errors: toErrors(formatted),
-        })
-      : invalidResult({ message: formatted, value, field });
+      ? invalidResult({ message: '', field, errors: toErrors(formatted) })
+      : invalidResult({ message: formatted, field });
   };
 }
 

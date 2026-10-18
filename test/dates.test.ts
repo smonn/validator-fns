@@ -67,7 +67,6 @@ test('minDate', async () => {
   yesterday.setDate(now.getDate() - 1);
   assert.deepEqual(await validate(yesterday), {
     state: 'invalid',
-    value: yesterday,
     message: `min:${now.toISOString()}`,
     field: undefined,
     errors: undefined,
@@ -86,7 +85,6 @@ test('maxDate', async () => {
   tomorrow.setDate(now.getDate() + 1);
   assert.deepEqual(await validate(tomorrow), {
     state: 'invalid',
-    value: tomorrow,
     message: `max:${now.toISOString()}`,
     field: undefined,
     errors: undefined,
@@ -105,7 +103,6 @@ test('exclusive', async () => {
   const min = minDate(now, 'must be after now', true);
   assert.deepEqual(await min(now), {
     state: 'invalid',
-    value: now,
     message: 'must be after now',
     field: undefined,
     errors: undefined,
@@ -113,7 +110,6 @@ test('exclusive', async () => {
   const max = maxDate(now, 'must be before now', true);
   assert.deepEqual(await max(now), {
     state: 'invalid',
-    value: now,
     message: 'must be before now',
     field: undefined,
     errors: undefined,
@@ -148,21 +144,18 @@ test('date', async () => {
   });
   assert.deepEqual(await validate(''), {
     state: 'invalid',
-    value: invalidDate,
     message: 'required',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(null), {
     state: 'invalid',
-    value: null,
     message: 'required',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'invalid',
-    value: undefined,
     message: 'required',
     field: undefined,
     errors: undefined,
@@ -212,7 +205,6 @@ test('date() fails an unreadable string apart from a missing one', async () => {
   const parseError: Failure<string> = {
     state: 'invalid',
     message: 'Failed to parse value to date.',
-    value: 'garbage',
     field: 'start',
     errors: undefined,
   };
@@ -243,7 +235,6 @@ test('date() fails input that is not a date, number, or string', async () => {
     const parseError: Failure<string> = {
       state: 'invalid',
       message: 'Failed to parse value to date.',
-      value,
       field: 'start',
       errors: undefined,
     };

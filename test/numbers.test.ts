@@ -12,14 +12,12 @@ test('min', async () => {
   const validate = min(5, 'min:{min}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
-    value: Number.NaN,
     message: 'min:5',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(0), {
     state: 'invalid',
-    value: 0,
     message: 'min:5',
     field: undefined,
     errors: undefined,
@@ -31,7 +29,6 @@ test('min', async () => {
   });
   assert.deepEqual(await validate(5), {
     state: 'invalid',
-    value: 5,
     message: 'min:5',
     field: undefined,
     errors: undefined,
@@ -40,7 +37,6 @@ test('min', async () => {
     state: 'invalid',
     field: undefined,
     message: 'min:5',
-    value: 4.99,
     errors: undefined,
   });
 });
@@ -49,7 +45,6 @@ test('max', async () => {
   const validate = max(5, 'max:{max}', true);
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
-    value: Number.NaN,
     message: 'max:5',
     field: undefined,
     errors: undefined,
@@ -61,14 +56,12 @@ test('max', async () => {
   });
   assert.deepEqual(await validate(5.01), {
     state: 'invalid',
-    value: 5.01,
     message: 'max:5',
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(5), {
     state: 'invalid',
-    value: 5,
     message: 'max:5',
     field: undefined,
     errors: undefined,
@@ -84,7 +77,6 @@ test('integer', async () => {
   const validate = integer('integer');
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
-    value: Number.NaN,
     message: 'integer',
     field: undefined,
     errors: undefined,
@@ -96,14 +88,12 @@ test('integer', async () => {
   });
   assert.deepEqual(await validate(0.1), {
     state: 'invalid',
-    value: 0.1,
     field: undefined,
     message: 'integer',
     errors: undefined,
   });
   assert.deepEqual(await validate(1e-1), {
     state: 'invalid',
-    value: 1e-1,
     field: undefined,
     message: 'integer',
     errors: undefined,
@@ -135,21 +125,18 @@ test('number', async () => {
   assert.deepEqual(await validate(11), {
     state: 'invalid',
     message: 'Must be at most 10.',
-    value: 11,
     errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(-11), {
     state: 'invalid',
     message: 'Must be at least -10.',
-    value: -11,
     errors: undefined,
     field: undefined,
   });
   assert.deepEqual(await validate(Number.NaN), {
     state: 'invalid',
     message: 'Must enter a value.',
-    value: Number.NaN,
     errors: undefined,
     field: undefined,
   });
@@ -161,7 +148,6 @@ test('number', async () => {
   assert.deepEqual(await validate({}), {
     state: 'invalid',
     message: 'Failed to parse value to number.',
-    value: {},
     errors: undefined,
     field: undefined,
   });
@@ -194,7 +180,6 @@ test('rounding', async () => {
   });
   assert.deepEqual(await badRounding(1), {
     errors: undefined,
-    value: 1,
     state: 'invalid',
     message: 'Unknown round type: bad',
     field: undefined,
@@ -230,7 +215,7 @@ test('number accepts primitives, dates, and boxed primitives', async () => {
   for (const [value, expected] of accepted) {
     assert.deepEqual(parseNumber(value), expected, String(expected));
     const result = await validate(value);
-    assert.equal(result.state, 'valid', String(expected));
+    assert(result.state === 'valid', String(expected));
     assert.deepEqual(result.value, expected, String(expected));
   }
 });
@@ -265,6 +250,5 @@ test('number returns an invalid result for input it cannot parse', async () => {
       'Failed to parse value to number.',
       label,
     );
-    assert.equal(result.value, value, label);
   }
 });

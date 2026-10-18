@@ -96,14 +96,12 @@ test('a missing value fails without errors and keeps the parsed value', async ()
   assert.deepEqual(await number()('', 'age'), {
     state: 'invalid',
     message: 'Required.',
-    value: Number.NaN,
     field: 'age',
     errors: undefined,
   });
   assert.deepEqual(await array(string())(null), {
     state: 'invalid',
     message: 'Required.',
-    value: null,
     field: undefined,
     errors: undefined,
   });
@@ -205,7 +203,6 @@ test('object() takes a config object as its second argument', async () => {
   assert.deepEqual(await validate(null, 'person'), {
     state: 'invalid',
     message: 'Enter a person.',
-    value: null,
     field: 'person',
     errors: undefined,
   });

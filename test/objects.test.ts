@@ -53,10 +53,6 @@ test('object', async () => {
       state: 'invalid',
       field: undefined,
       message: '',
-      value: {
-        username: 'hello',
-        age: null,
-      },
       errors: {
         age: 'Must enter your age.',
       },
@@ -104,7 +100,6 @@ test('should report a field as missing when its name is on Object.prototype', as
     state: 'invalid',
     field: undefined,
     message: '',
-    value: {},
     errors: { constructor: 'Required', toString: 'Required' },
   });
 });
@@ -117,7 +112,6 @@ test('should report a field as missing when the input only inherits it', async (
     state: 'invalid',
     field: undefined,
     message: '',
-    value: input,
     errors: { name: 'Required' },
   });
 });
@@ -130,7 +124,7 @@ test('should keep a __proto__ field as an own property when it is in the schema'
   );
 
   const validResult = await validate(JSON.parse('{"__proto__": "x"}'));
-  assert.equal(validResult.state, 'valid');
+  assert(validResult.state === 'valid');
   assert.deepEqual(Object.getOwnPropertyNames(validResult.value), [
     '__proto__',
   ]);
@@ -154,6 +148,7 @@ test('should not change the prototype of the value when a __proto__ field is an 
 
   const result = await validate(JSON.parse('{"__proto__": {"admin": "yes"}}'));
 
+  assert(result.state === 'valid');
   assert.equal(Object.getPrototypeOf(result.value), Object.prototype);
   assert.deepEqual(
     Object.getOwnPropertyDescriptor(result.value, '__proto__')?.value,
@@ -201,12 +196,6 @@ test('nested object', async () => {
     {
       state: 'invalid',
       message: '',
-      value: {
-        person: {
-          firstName: 'foo',
-          age: '22',
-        },
-      },
       errors: {
         person: {
           lastName: 'required',
@@ -256,7 +245,6 @@ test('should put an object-level error on the named field when the check fails',
     state: 'invalid',
     field: undefined,
     message: '',
-    value: { password: 'secret', confirm: 'other' },
     errors: { confirm: 'Must match.' },
   });
 });
@@ -283,7 +271,6 @@ test('should skip object-level tests when a field is invalid', async () => {
     state: 'invalid',
     field: undefined,
     message: '',
-    value: {},
     errors: { password: 'Required' },
   });
   assert.strictEqual(calls, 0);
@@ -318,7 +305,6 @@ test('should put the message on the object when the check names no field', async
     state: 'invalid',
     field: 'range',
     message: 'range: min must not exceed max.',
-    value: { min: 3, max: 1 },
     errors: undefined,
   });
 });

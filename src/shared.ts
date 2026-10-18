@@ -16,15 +16,14 @@ export type Valid<T> = {
 };
 
 /**
- * The result for invalid input.
+ * The result for invalid input. It has no `value`, so reading a result's
+ * `value` needs `state === 'valid'` first.
  * @typeParam E The error type
  * @category Types
  */
 export type Failure<E> = {
   /** `invalid` if the value failed a test. */
   state: 'invalid';
-  /** The parsed value. Note that may be different than the original value. */
-  value: unknown;
   /** Error message if `state` is invalid. */
   message: string;
   /** Field name if provided. Automatically provided if using object validation. */
@@ -315,17 +314,14 @@ export function invalidResult<E = never>({
   errors,
   field,
   message,
-  value,
 }: {
   message: string;
-  value: unknown;
   field: string | undefined;
   errors?: E | undefined;
 }): Failure<E> {
   return {
     state: 'invalid',
     message,
-    value,
     field,
     errors,
   };

@@ -118,23 +118,19 @@ export function object<P extends ObjectParameter>(
             : undefined;
           const result = await (typeof validator === 'function'
             ? validator(value, key)
-            : invalidResult({
-                field: key,
-                message: 'No validator set',
-                value,
-              }));
-
-          setOwn(resolvedValues, key, result.value);
+            : invalidResult({ field: key, message: 'No validator set' }));
 
           if (result.state === 'invalid') {
             isValid = false;
             setOwn(errors, key, invalidDetail(result));
+          } else {
+            setOwn(resolvedValues, key, result.value);
           }
         }
       }
 
       if (!isValid) {
-        return invalidResult({ message: '', value: values, field, errors });
+        return invalidResult({ message: '', field, errors });
       }
 
       const parsed = asObjectValue<P>(resolvedValues);
@@ -146,7 +142,6 @@ export function object<P extends ObjectParameter>(
       if (objectInvalidResult) {
         return invalidResult({
           message: objectInvalidResult.message,
-          value: values,
           field,
           errors: objectInvalidResult.errors,
         });

@@ -8,14 +8,12 @@ test('boolean', async () => {
   assert.deepEqual(await validate(null), {
     state: 'invalid',
     message: 'required',
-    value: null,
     field: undefined,
     errors: undefined,
   });
   assert.deepEqual(await validate(), {
     state: 'invalid',
     message: 'required',
-    value: undefined,
     field: undefined,
     errors: undefined,
   });

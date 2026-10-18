@@ -120,7 +120,7 @@ test('kitchen sink valid', async () => {
     startDate,
   });
 
-  assert.strictEqual(result.state, 'valid');
+  assert(result.state === 'valid');
   assert.deepEqual(result.value, {
     age: 20,
     custom: 'hello',
@@ -152,19 +152,6 @@ test('kitchen sink invalid', async () => {
     startDate,
   });
 
-  assert.strictEqual(result.state, 'invalid');
-  assert.deepEqual(result.value, {
-    age: 10,
-    custom: 'goodbye',
-    emailAddress: 'invalid-email',
-    favoriteCarMakers: ['Nissan', 'Volvo'],
-    firstName: '',
-    fruit: 'strawberry',
-    homepage: 'invalid-url',
-    notRobot: 10,
-    postalCode: '1234',
-    startDate,
-  });
   assert(result.state === 'invalid');
   assert.deepEqual(result.errors, {
     firstName: 'First name is required.',
