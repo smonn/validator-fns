@@ -84,7 +84,7 @@ const tsconfig = {
   include: ['index.ts'],
 };
 
-/** The 2.x type names v3 removes, with no aliases. */
+/** The 2.x type names v3 removes. */
 const removedNames = [
   'InvalidResult',
   'ValidationTest',
@@ -104,8 +104,7 @@ function stdoutOf(error) {
 }
 
 /**
- * Returns the removed names the declarations still export, by compiling the
- * removed-names fixture.
+ * Returns the removed names the declarations still export.
  * @param {string} tsc
  * @param {string} cwd
  */
