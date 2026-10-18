@@ -276,15 +276,28 @@ test('fails on code quoted in a string', () => {
   assert.strictEqual(result.status, 1);
 });
 
-test('finds a cause after a semicolon in the built message', () => {
-  const files = build(
-    "export const fail = (e: unknown) => {\n  throw new Error('Could not validate; parser rejected input', { cause: e });\n};\n",
-  );
-  assert.include(files['index.js'], 'validate; parser');
-  const result = run(files);
-  assert.strictEqual(result.status, 1);
-  assert.include(result.stderr, '`Error.cause`');
-});
+test.each([
+  [
+    "throw new Error('Could not validate; parser rejected input', { cause: e });",
+    'validate; parser',
+  ],
+  // Review thread 4307364497: a nested template's `;`.
+  [
+    'throw new Error(`Could not validate ${flag ? `nested; ${e}` : `other`}`, { cause: e });',
+    '`nested; ${',
+  ],
+])(
+  'finds a cause after a semicolon in the built message of %s',
+  (statement, kept) => {
+    const files = build(
+      `export const fail = (flag: boolean, e: unknown) => {\n  ${statement}\n};\n`,
+    );
+    assert.include(files['index.js'], kept);
+    const result = run(files);
+    assert.strictEqual(result.status, 1);
+    assert.include(result.stderr, '`Error.cause`');
+  },
+);
 
 test.each([
   ['nested `,{`', `Error(a${',{'.repeat(1e6)}`],
