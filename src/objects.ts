@@ -105,34 +105,34 @@ export function object<P extends ObjectParameter>(
   const allTests = typeof config === 'function' ? [config, ...tests] : tests;
   const { messages, strict }: ObjectConfig =
     typeof config === 'object' ? config : {};
-  const checkKeys = unknownKeysGate(validators, strict);
+  const findUnknownKeys = unknownKeysGate(validators, strict);
 
   return requirable<ObjectValue<P>, ObjectErrors<P>>(
     messages,
-    async (values, field, onEmpty) => {
+    async (input, field, onEmpty) => {
       // Missing input has no properties, so each child runs on undefined, and
       // the object is built from the children when they're all valid.
-      const isMissing = values === null || values === undefined;
-      const parsed = parseRecord(isMissing ? {} : values, field);
+      const isMissing = input === null || input === undefined;
+      const parsed = parseRecord(isMissing ? {} : input, field);
       if (parsed.state === 'invalid') {
         return fillOwn(parsed, messages);
       }
-      const gated = checkKeys(parsed.value, field);
-      if (gated) {
-        return fillOwn(gated, messages);
+      const keysFailure = findUnknownKeys(parsed.value, field);
+      if (keysFailure) {
+        return fillOwn(keysFailure, messages);
       }
 
       const { errors, values: resolvedValues } = await validateProperties<
         ObjectErrors<P>
       >(validators, (key) => ownValue(parsed.value, key), field, {});
       if (errors && isMissing) {
-        return onEmpty(values, field);
+        return onEmpty(input, field);
       }
       if (errors) {
         const container = failure({
           code: 'properties',
           params: {},
-          value: values,
+          value: input,
           field,
           errors,
         });
