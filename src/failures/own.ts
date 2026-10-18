@@ -12,8 +12,7 @@ export function ownData(target: unknown, key: PropertyKey): unknown {
   }
 
   try {
-    const descriptor = Object.getOwnPropertyDescriptor(target, key);
-    return descriptor && 'value' in descriptor ? descriptor.value : undefined;
+    return Object.getOwnPropertyDescriptor(target, key)?.value;
   } catch {
     return undefined;
   }
