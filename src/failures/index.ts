@@ -1,5 +1,6 @@
 export { FailureError, issues } from './decode.js';
-export { fillTree, type Translation } from './fill.js';
+export type { Translation } from './fill.js';
+export { fillTree } from './fill-tree.js';
 export { failure } from './make.js';
 export { fillOwn } from './reword.js';
 export { formatMessage } from './format.js';
