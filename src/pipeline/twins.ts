@@ -1,55 +1,74 @@
-import type { Result, Test } from '../shared.js';
-import type { MaybePromise } from './promises.js';
+import type { Validator } from '../shared.js';
+import { type Def, type Exit, keepValue, reject } from './def.js';
+import { runType } from './run.js';
+import { type TypeValidator, withStandard } from './standard.js';
+import { type Run, toValidator } from './promises.js';
 
 /**
- * Key for the synchronous twin of each test `withSyncTwin` makes. The step
- * loop runs a test's twin when it has one, which keeps a run of built-in tests
- * synchronous (#523). The tests themselves stay async. Module-private, so only
- * tests made here carry it.
+ * Key for what the pipeline keeps on each type validator it builds: its run,
+ * and the rebuild of its def that `optional()` returns. Module-private, so
+ * only validators built here carry it.
  * @internal
  */
-const syncTwin = Symbol('sync');
+const built = Symbol('pipeline');
+
+/** @internal */
+type Built<T, E> = {
+  readonly [built]?: {
+    run: Run<T, E>;
+    optional: () => TypeValidator<T | null | undefined, E>;
+  };
+};
 
 /**
- * A test's synchronous twin. The twins never set errors, so their error type
- * is never.
+ * Builds a type validator from its def, with `exit` for missing input.
  * @internal
  */
-export type Twin<T> = (value: T, field: string | undefined) => Result<T, never>;
-
-/**
- * A test made by `withSyncTwin`.
- * @internal
- */
-export type Twinned<T> = { readonly [syncTwin]: Twin<T> };
-
-/**
- * Makes a test from its synchronous twin, which the step loop runs in its
- * place.
- * @internal
- */
-export function withSyncTwin<T, E>(twin: Twin<T>): Test<T, E> {
-  const validationTest: Test<T, E> = async (value, field) => twin(value, field);
-  return Object.assign(validationTest, { [syncTwin]: twin });
+function build<T, E, P, V>(
+  def: Def<T, E, P>,
+  exit: Exit<V, E>,
+): TypeValidator<T | V, E> & Built<T | V, E> {
+  const run: Run<T | V, E> = (value, field) => runType(def, exit, value, field);
+  const validator = withStandard(toValidator(run));
+  // Rebuilt once, on the first optional() call, so each call returns it.
+  let rebuilt: TypeValidator<T | V | null | undefined, E> | undefined;
+  const rebuild = () => {
+    // Not ??=, which Safari 13.1 and Firefox 77, both supported, can't parse.
+    if (rebuilt === undefined) {
+      rebuilt = build(def, keepValue);
+    }
+    return rebuilt;
+  };
+  return Object.assign(validator, { [built]: { run, optional: rebuild } });
 }
 
 /**
- * A test's synchronous twin.
+ * Builds a type validator from its def. It fails missing input it can't fill
+ * with `required`.
  * @internal
  */
-export function twinOf<T>(test: Twinned<T>): Twin<T> {
-  return test[syncTwin];
+export function defineType<T, E, P>(def: Def<T, E, P>): TypeValidator<T, E> {
+  return build(def, reject<E>);
 }
 
 /**
- * Runs a step, or its twin in its place.
+ * A validator's run: its own for one built here, which stays synchronous, or
+ * else the validator itself.
  * @internal
  */
-export function runStep<T, E>(
-  step: Test<T, E> & Partial<Twinned<T>>,
-  value: T,
-  field: string | undefined,
-): MaybePromise<Result<T, E>> {
-  const twin = step[syncTwin];
-  return twin ? twin(value, field) : step(value, field);
+export function runOf<T, E>(
+  validator: Validator<T, E> & Built<T, E>,
+): Run<T, E> {
+  return validator[built]?.run ?? validator;
+}
+
+/**
+ * The rebuild of a validator built here with the optional exit, which
+ * `optional()` returns, or `undefined` for any other validator.
+ * @internal
+ */
+export function optionalOf<T, E>(
+  validator: Validator<T, E> & Built<T, E>,
+): TypeValidator<T | null | undefined, E> | undefined {
+  return validator[built]?.optional();
 }

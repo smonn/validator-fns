@@ -1,7 +1,7 @@
 import { type Validator, validResult } from '../shared.js';
 import { isMissing } from './def.js';
 import { type TypeValidator, withStandard } from './standard.js';
-import { optionalOf } from './define.js';
+import { optionalOf } from './twins.js';
 
 /**
  * Lets a type validator accept a missing value, `undefined` or `null`, that

@@ -1,6 +1,6 @@
 import { type Result, type Test, validResult } from '../shared.js';
 import { isThenable, type MaybePromise } from './promises.js';
-import { runStep, type Twinned } from './twins.js';
+import { runStep, type Twinned } from './sync.js';
 
 /**
  * The steps' result from the last step's: its failure, or its value with the
