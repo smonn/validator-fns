@@ -2,6 +2,7 @@ import {
   configAndTests,
   defineType,
   properties as propertiesOf,
+  runsOf,
   type TypeValidator,
   unknownKeys,
 } from './pipeline/index.js';
@@ -135,7 +136,8 @@ export function object<P extends ObjectParameter>(
     throw new TypeError('`properties` must be a configuration object');
   }
 
-  const children = propertiesOf(properties, {
+  const runs = runsOf(properties);
+  const children = propertiesOf(runs, {
     tree: (): ObjectErrors<P> => ({}),
     value: asObjectValue<P>,
   });
@@ -145,7 +147,7 @@ export function object<P extends ObjectParameter>(
     expected: 'object',
     build: {},
     messages: options.messages,
-    gate: options.strict ? [unknownKeys(properties)] : [],
+    gate: options.strict ? [unknownKeys(runs)] : [],
     children,
     steps,
   });

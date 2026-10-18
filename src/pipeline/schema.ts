@@ -20,13 +20,18 @@ export function ownValue(value: object, key: string): unknown {
 }
 
 /**
- * Each property's key and its validator's run. Reads `schema` once, and throws
- * a `TypeError` naming a key whose value isn't a function.
+ * Each property's key and its validator's run, read from the schema once.
  * @internal
  */
-export function runsOf(
-  schema: Record<string, Validator>,
-): [key: string, run: Run<unknown, unknown>][] {
+export type Runs = readonly [key: string, run: Run<unknown, unknown>][];
+
+/**
+ * The runs of a schema's properties. Reads `schema` once, so the strict-keys
+ * gate and the children take the same keys, and throws a `TypeError` naming a
+ * key whose value isn't a function.
+ * @internal
+ */
+export function runsOf(schema: Record<string, Validator>): Runs {
   const runs: [key: string, run: Run<unknown, unknown>][] = [];
   for (const [key, validator] of Object.entries(schema)) {
     if (typeof validator !== 'function') {
