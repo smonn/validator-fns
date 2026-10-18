@@ -28,6 +28,17 @@ export function isThenable<T extends object>(
 }
 
 /**
+ * Runs `next` on a result, once it settles when it's a promise.
+ * @internal
+ */
+export function andThen<T extends object, R>(
+  result: MaybePromise<T>,
+  next: (done: T) => MaybePromise<R>,
+): MaybePromise<R> {
+  return isThenable(result) ? result.then(next) : next(result);
+}
+
+/**
  * Key for the synchronous twin of each test `withSyncTwin` makes. The step
  * loop runs a test's twin when it has one, which keeps a run of built-in tests
  * synchronous (#523). The tests themselves stay async. Module-private, so only

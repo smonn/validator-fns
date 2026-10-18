@@ -7,7 +7,7 @@ import {
   validResult,
 } from '../shared.js';
 import { runEach } from './children.js';
-import { isThenable, type MaybePromise, type Run } from './steps.js';
+import { andThen, type MaybePromise, type Run } from './steps.js';
 import { runOf } from './define.js';
 
 /**
@@ -73,12 +73,10 @@ export function properties<V, Tree extends object>(
   return (value, field) => {
     const results = runEach(runs.entries(), ([key, run]) => {
       const result = run(ownValue(value, key), childField(field, key));
-      return isThenable(result)
-        ? result.then((done): [string, Result] => [key, done])
-        : ([key, result] satisfies [string, Result]);
+      return andThen(result, (done): [string, Result] => [key, done]);
     });
-    return isThenable(results)
-      ? results.then((done) => propertiesResult(done, value, field, shape))
-      : propertiesResult(results, value, field, shape);
+    return andThen(results, (done) =>
+      propertiesResult(done, value, field, shape),
+    );
   };
 }
