@@ -6,4 +6,4 @@ An `array()` or `object()` failure's `errors` tree holds each failed child's fai
 
 Every `field` is the full path from the caller's field, such as `user.a.b`, `user.tags[1].name`, or `[1]` for a root array's item, and messages with `{field}` get it. `check()` with a path puts its failure, with the full field, under a `properties` failure for the object and each name.
 
-The new `messageTree(result)` gives the nested messages, `undefined` for a valid result, for form libraries such as Formik. Standard Schema issues carry `code` and `params` at every depth, one per leaf of the tree.
+The new `messageTree(result)` gives the nested messages, `undefined` for a valid result, for form libraries such as Formik. Standard Schema issues carry `code` and `params` at every depth, one per leaf of the tree. Both throw a `TypeError` for a tree that isn't one, such as an entry that isn't a whole failure, or one nested more than 1000 levels deep, which a cyclic tree also reaches.
