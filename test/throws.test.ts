@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   array,
@@ -76,6 +77,11 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
   ['a date() parser', date({ parser: throwBug }), new Date(0)],
   ['an array() parser', array(string(), { parser: throwBug }), ['a']],
   ['a custom type parser', custom({ parser: throwBug }), 'a'],
+  [
+    'a parser promise from another realm',
+    string({ parser: () => runInNewContext('Promise.reject(bug)', { bug }) }),
+    'a',
+  ],
   [
     'a custom type applyConfig',
     createTypeValidatorTest(
@@ -156,6 +162,15 @@ test('should not call the tests when the parser fails', async () => {
   const validate = string({ parser: unreadable }, throwBug);
 
   assert.deepInclude(await validate('x'), { state: 'invalid' });
+});
+
+test('should await a parser promise from another realm', async () => {
+  const validate = string({
+    parser: () =>
+      runInNewContext('Promise.resolve({ state: "valid", value: "parsed" })'),
+  });
+
+  assert.deepInclude(await validate('x'), { state: 'valid', value: 'parsed' });
 });
 
 // [label, builds a validator or test from bad configuration]
