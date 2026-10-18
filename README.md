@@ -221,13 +221,21 @@ Version 3 makes every type validator required by default. In 2.x, a validator wi
    createValidator(async (value, field) => valid({ value, field }));
    ```
 
-7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `ValidatorTest<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out. `check()`'s `path` must name properties of the parsed object, and an empty path `[]` is a type error; leave the path out instead. Validation tests are typed `ValidationTest<T, E>` and take the validator's value type, so a custom test that takes another type, or a test called directly with `null`, is a type error. A message function passed to `invalid()` gets `value` as `unknown`, and one that reads extra parameters needs them in `extras`.
+7. **In TypeScript**, a valid result's `value` no longer includes `null` or `undefined` unless the validator is wrapped in `optional()`, and `object()` makes only `optional()` keys optional. `valid()` takes a value of the validator's type, so a custom validator that returns `null` or `undefined` needs them in its type, such as `Validator<string | undefined>`. `object()` takes one type parameter, the schema, so explicit type arguments such as `object<Schema, Value, Errors>(…)` become `object<Schema>(…)`, or can be left out. `check()`'s `path` must name properties of the parsed object, and an empty path `[]` is a type error; leave the path out instead. Validation tests are typed `Test<T, E>` and take the validator's value type, so a custom test that takes another type, or a test called directly with `null`, is a type error. A message function passed to `invalid()` gets `value` as `unknown`, and one that reads extra parameters needs them in `extras`.
+8. **Rename the TypeScript types** that 3.x removes, with no aliases. The last 2.x release deprecates them and adds the new names, so the rename can come first:
+
+   | 2.x, deprecated   | 3.x         |
+   | :---------------- | :---------- |
+   | `ValidatorResult` | `Result`    |
+   | `ValidResult`     | `Valid`     |
+   | `InvalidResult`   | `Failure`   |
+   | `ValidatorTest`   | `Validator` |
 
 ## API Reference
 
 ### Validation result
 
-All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `ValidatorResult<T, E>` and a validation test is `ValidatorTest<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
+All validation tests yield one of two results: `valid` and `invalid`. Both are objects. In TypeScript the result is `Result<T, E>`, either `Valid<T>` or `Failure<E>`, and a validator is `Validator<T, E>`, where `T` is the value type and `E` the `errors` type. Both default to `unknown`.
 
 | property  | type   | description                                                                |
 | :-------- | :----- | :------------------------------------------------------------------------- |
@@ -291,7 +299,7 @@ A **validation type** is expected to parse and prepare the value for the provide
 - [object(schema, config?, ...tests)](#objectschema-config-tests)
 - [string(config?, ...tests)](#stringconfig-tests)
 
-Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [createValidator(fn)](#createvalidatorfn) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `ValidatorTest<T, E>` with a `~standard` property.
+Every validation type, and every validator `optional()` returns, is also a [Standard Schema][standard-schema], so libraries that accept one can use it directly. See [createValidator(fn)](#createvalidatorfn) for how results map to issues. In TypeScript, their type is `TypeValidator<T, E>`: a `Validator<T, E>` with a `~standard` property.
 
 #### array(itemTest?, config?, ...tests)
 
@@ -430,7 +438,7 @@ Supported validation tests: `email`, `exact`, `matches`, `max`, `min`, `oneOf`, 
 
 A **validation test** is a simplified version of a validation type. It accepts a value of a specific type and returns a promise that resolves to a validation result. Validation types only run tests on present values, so a built-in test fails `null` and `undefined` when it's called with them directly. An empty string is a string like any other: `min(1, …)` fails it and `max(1, …)` accepts it. You can use a validation test directly without the validation type, but it's not recommended as you lose the parsing step and you can't apply multiple tests to the same field as easily.
 
-In TypeScript, a test's type is `ValidationTest<T, E>`, a function that takes a value of type `T`. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. A custom test that takes `unknown` fits every validation type.
+In TypeScript, a test's type is `Test<T, E>`, a function that takes a value of type `T`. A validation type takes tests on its value type: `string()` takes `min()`, which checks strings, numbers and arrays, but not a test on booleans. A custom test that takes `unknown` fits every validation type.
 
 - [check(path?, test, message)](#checkpath-test-message)
 - [email(message)](#emailmessage)
@@ -649,7 +657,7 @@ Formats a string for use as an error message. `template` can be a plain string w
 
 #### createTypeValidatorTest(defaultConfig, applyConfig)
 
-Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`, which is still a `ValidatorTest`, so factories typed with `ValidatorFactory` keep working.
+Useful helper for simple validation types such as strings, numbers, etc. `defaultConfig` is the configuration object that the `applyConfig` function will use when parsing the value being validated. At least this should include a `parser` function. The resulting validator is required by default, takes `requiredMessage` in its config, works with `optional()`, and is a Standard Schema, like the built-in ones. Its return type is a `TypeValidator`, which is still a `Validator`, so factories typed with `ValidatorFactory` keep working.
 
 The validation tests passed to the resulting validator report their errors as strings, as the built-in ones do; a test whose `errors` has another type is a type error.
 
