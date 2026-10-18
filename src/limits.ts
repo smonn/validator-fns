@@ -38,19 +38,20 @@ export interface MaxValidatorMessageParameters extends ValidatorMessageParameter
 
 /**
  * Ensures a string, number, or array value is at most a certain amount.
+ * @typeParam T The value type, inferred from the validator the test is passed to
  * @param limit Size or value limit
  * @param message Error message, or else the code
  * @category Validation Tests
  */
-export function max(
+export function max<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<MaxValidatorMessageParameters>,
-): Test<SharedValueType, never> {
+): Test<T, never> {
   return createValidatorTest(
     'max',
-    (value: SharedValueType) => getAmount(value) <= limit,
+    (value: T) => getAmount(value) <= limit,
     message,
-    (value: SharedValueType) => ({ max: limit, amount: getAmount(value) }),
+    (value: T) => ({ max: limit, amount: getAmount(value) }),
   );
 }
 
@@ -61,19 +62,20 @@ export interface MinValidatorMessageParameters extends ValidatorMessageParameter
 
 /**
  * Ensures a string, number, or array value is at least a certain amount.
+ * @typeParam T The value type, inferred from the validator the test is passed to
  * @param limit Size or value limit
  * @param message Error message, or else the code
  * @category Validation Tests
  */
-export function min(
+export function min<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<MinValidatorMessageParameters>,
-): Test<SharedValueType, never> {
+): Test<T, never> {
   return createValidatorTest(
     'min',
-    (value: SharedValueType) => getAmount(value) >= limit,
+    (value: T) => getAmount(value) >= limit,
     message,
-    (value: SharedValueType) => ({ min: limit, amount: getAmount(value) }),
+    (value: T) => ({ min: limit, amount: getAmount(value) }),
   );
 }
 
@@ -84,18 +86,19 @@ export interface ExactValidatorMessageParameters extends ValidatorMessageParamet
 
 /**
  * Ensures a string, number, or array value is exactly a certain amount.
+ * @typeParam T The value type, inferred from the validator the test is passed to
  * @param limit Size or value limit
  * @param message Error message, or else the code
  * @category Validation Tests
  */
-export function exact(
+export function exact<T extends SharedValueType>(
   limit: number,
   message?: AmountMessage<ExactValidatorMessageParameters>,
-): Test<SharedValueType, never> {
+): Test<T, never> {
   return createValidatorTest(
     'exact',
-    (value: SharedValueType) => getAmount(value) === limit,
+    (value: T) => getAmount(value) === limit,
     message,
-    (value: SharedValueType) => ({ exact: limit, amount: getAmount(value) }),
+    (value: T) => ({ exact: limit, amount: getAmount(value) }),
   );
 }
