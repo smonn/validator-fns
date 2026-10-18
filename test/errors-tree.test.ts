@@ -4,12 +4,14 @@ import {
   check,
   createValidator,
   type Failure,
+  FailureError,
   invalid,
   max,
   messageTree,
   min,
   type Result,
   object,
+  parse,
   string,
   type TypeValidator,
   valid,
@@ -111,6 +113,8 @@ type Row = {
   issues: object[];
   /** `messageTree()` of the safe call's failure. */
   messages: unknown;
+  /** The message of the `FailureError` that `parse()` rejects with. */
+  error: string;
 };
 
 const rows: Row[] = [
@@ -141,6 +145,7 @@ const rows: Row[] = [
       },
     ],
     messages: { a: { b: 'min' }, tags: [null, { name: 'min' }] },
+    error: 'user.a.b: min\nuser.tags[1].name: min',
   },
   {
     label: 'nested objects and arrays without a field',
@@ -167,6 +172,7 @@ const rows: Row[] = [
       },
     ],
     messages: { a: { b: 'min' }, tags: [{ name: 'min' }] },
+    error: 'a.b: min\ntags[0].name: min',
   },
   {
     label: 'a root array without a field',
@@ -185,6 +191,7 @@ const rows: Row[] = [
       },
     ],
     messages: [null, { name: 'min' }],
+    error: '[1].name: min',
   },
   {
     label: 'nested arrays with a caller field',
@@ -198,6 +205,7 @@ const rows: Row[] = [
       { message: 'required', code: 'required', params: {}, path: [0, 1] },
     ],
     messages: [[null, 'required']],
+    error: 'grid[0][1]: required',
   },
   {
     label: 'a {field} template in a nested message',
@@ -222,6 +230,7 @@ const rows: Row[] = [
       },
     ],
     messages: { a: { b: 'user.a.b is required.' } },
+    error: 'user.a.b: user.a.b is required.',
   },
   {
     label: 'a leaf failure at the root',
@@ -231,6 +240,7 @@ const rows: Row[] = [
     failure: tooShort('name'),
     issues: [{ message: 'min', code: 'min', params: { min: 2, amount: 1 } }],
     messages: 'min',
+    error: 'name: min',
   },
   {
     label: 'an array test failure, a leaf even when items fail',
@@ -245,6 +255,7 @@ const rows: Row[] = [
       { message: 'At most two.', code: 'max', params: { max: 2, amount: 3 } },
     ],
     messages: 'At most two.',
+    error: 'tags: At most two.',
   },
   {
     label: 'check() with a key',
@@ -258,6 +269,7 @@ const rows: Row[] = [
       { message: 'Must match.', code: 'match', params: {}, path: ['confirm'] },
     ],
     messages: { confirm: 'Must match.' },
+    error: 'signup.confirm: Must match.',
   },
   {
     label: 'check() with a path',
@@ -282,6 +294,7 @@ const rows: Row[] = [
     messages: {
       shipping: { zip: 'order.shipping.zip must match the billing zip.' },
     },
+    error: 'order.shipping.zip: order.shipping.zip must match the billing zip.',
   },
   {
     label: 'check() without a path',
@@ -294,6 +307,7 @@ const rows: Row[] = [
     failure: failed('never', 'form', { message: 'Never passes.' }),
     issues: [{ message: 'Never passes.', code: 'never', params: {} }],
     messages: 'Never passes.',
+    error: 'form: Never passes.',
   },
   {
     label: 'a __proto__ key',
@@ -316,6 +330,7 @@ const rows: Row[] = [
       },
     ],
     messages: withProto({ admin: 'required' }),
+    error: '__proto__.admin: required',
   },
   {
     label: 'keys named like Object.prototype members',
@@ -343,6 +358,7 @@ const rows: Row[] = [
       },
     ],
     messages: { constructor: 'required', toString: ['required'] },
+    error: 'form.constructor: required\nform.toString[0]: required',
   },
   {
     label: 'a custom failure with its own errors, a leaf',
@@ -363,6 +379,7 @@ const rows: Row[] = [
       },
     ],
     messages: { hello: 'Must be "hello".' },
+    error: 'hello: Must be "hello".',
   },
   {
     label: 'a child that fails with an empty message',
@@ -371,6 +388,7 @@ const rows: Row[] = [
     failure: items(undefined, [failed('custom', '[0]', { message: '' })]),
     issues: [{ message: '', code: 'custom', params: {}, path: [0] }],
     messages: [''],
+    error: '[0]: ',
   },
   {
     label: 'an items failure without errors, a leaf',
@@ -381,6 +399,7 @@ const rows: Row[] = [
     failure: failed('items', undefined, { message: 'No items.' }),
     issues: [{ message: 'No items.', code: 'items', params: {} }],
     messages: 'No items.',
+    error: 'No items.',
   },
   {
     label: 'a container whose errors hold no failure',
@@ -391,6 +410,7 @@ const rows: Row[] = [
     failure: items(undefined, [null]),
     issues: [{ message: 'items', code: 'items', params: {} }],
     messages: [null],
+    error: 'items',
   },
   {
     label: 'a nested container whose tree holds no failure',
@@ -410,6 +430,7 @@ const rows: Row[] = [
       },
     ],
     messages: { tags: [null], name: 'min' },
+    error: 'tags: Need tags.\nname: min',
   },
   {
     label: 'a properties failure with an empty tree',
@@ -418,6 +439,7 @@ const rows: Row[] = [
     failure: failed('properties', undefined, { message: 'Empty.', errors: {} }),
     issues: [{ message: 'Empty.', code: 'properties', params: {} }],
     messages: {},
+    error: 'Empty.',
   },
   {
     label: 'an empty properties failure nested in an array',
@@ -428,6 +450,7 @@ const rows: Row[] = [
     ]),
     issues: [{ message: 'Empty.', code: 'properties', params: {}, path: [0] }],
     messages: [{}],
+    error: '[0]: Empty.',
   },
   {
     label: 'an items failure of valid items nested in an object',
@@ -441,6 +464,7 @@ const rows: Row[] = [
     }),
     issues: [{ message: 'Empty.', code: 'items', params: {}, path: ['tags'] }],
     messages: { tags: [null, null] },
+    error: 'tags: Empty.',
   },
   {
     label: 'a container with an empty tree',
@@ -451,6 +475,7 @@ const rows: Row[] = [
     failure: items(undefined, []),
     issues: [{ message: 'items', code: 'items', params: {} }],
     messages: [],
+    error: 'items',
   },
 ];
 
@@ -473,6 +498,12 @@ for (const row of rows) {
       messageTree(await row.validator(row.input, row.field)),
       row.messages,
     );
+  });
+
+  test(`should join the leaves into the FailureError message for ${row.label}`, async () => {
+    const error = await rejection(parse(row.validator, row.input, row.field));
+    assert.instanceOf(error, FailureError);
+    assert.strictEqual(error.message, row.error);
   });
 }
 
@@ -526,17 +557,50 @@ const rejection = async (promise: unknown) =>
     (error: unknown) => error,
   );
 
-/** What `messageTree()` throws and `~standard.validate` rejects with. */
-async function decoderErrors(validator: TypeValidator<unknown, unknown>) {
-  const made = await validator({});
-  let thrown: unknown = 'returned';
+/** What `fn` throws, or `'returned'`. */
+const thrownBy = (fn: () => unknown) => {
   try {
-    messageTree(made);
+    fn();
   } catch (error) {
-    thrown = error;
+    return error;
   }
 
-  return [thrown, await rejection(validator['~standard'].validate({}))];
+  return 'returned';
+};
+
+/** Decodes a validator's failure, and gives what that throws or rejects with. */
+type Decoder = (validator: TypeValidator<unknown, unknown>) => Promise<unknown>;
+
+const decoders: [string, Decoder][] = [
+  [
+    'messageTree()',
+    async (validator) => {
+      const made = await validator({});
+      return thrownBy(() => messageTree(made));
+    },
+  ],
+  [
+    'the FailureError constructor',
+    async (validator) => {
+      const made = await validator({});
+      return thrownBy(() => Reflect.construct(FailureError, [made]));
+    },
+  ],
+  [
+    '~standard.validate',
+    async (validator) => rejection(validator['~standard'].validate({})),
+  ],
+  ['parse()', async (validator) => rejection(parse(validator, {}))],
+];
+
+/** What each decoder throws or rejects with. */
+async function decoderErrors(validator: TypeValidator<unknown, unknown>) {
+  const errors: unknown[] = [];
+  for (const [, decode] of decoders) {
+    errors.push(await decode(validator));
+  }
+
+  return errors;
 }
 
 // A hand-built container whose errors aren't a tree is a bug (ADR 0001).
@@ -681,35 +745,50 @@ const flatValidator = (entries: number) =>
     }),
   );
 
-test('should decode an errors tree with 1000000 entries', async () => {
+test('should give the message tree of an errors tree with 1000000 entries', async () => {
   const flat = flatValidator(1_000_000);
   assert.lengthOf(Object(messageTree(await flat({}))), 1_000_000);
-  const result = await flat['~standard'].validate({});
+});
+
+test('should give one issue for an errors tree with 1000000 entries', async () => {
+  const result = await flatValidator(1_000_000)['~standard'].validate({});
   assert.lengthOf(result.issues ?? [], 1);
 });
 
-test('should throw before decoding an errors tree with 1000001 entries', async () => {
-  for (const error of await decoderErrors(flatValidator(1_000_001))) {
-    assert.instanceOf(error, TypeError);
-    assert.include(String(error), 'more than 1000000 entries');
-  }
+test('should reject with a FailureError for an errors tree with 1000000 entries', async () => {
+  const error = await rejection(parse(flatValidator(1_000_000), {}));
+  assert.instanceOf(error, FailureError);
+  assert.strictEqual(error.message, 'items');
 });
 
-// Shared children are walked once per reference, doubling the work per level.
-test('should throw when shared children multiply past 1000000 entries', async () => {
-  const doubling = createValidator(async () => {
-    let made: Result = await invalid({ code: 'min', field: undefined });
-    for (let level = 0; level < 20; level++) {
-      made = await invalid({
-        code: 'properties',
-        field: undefined,
-        errors: { a: made, b: made },
-      });
-    }
-    return made;
-  });
-  for (const error of await decoderErrors(doubling)) {
+// One test per decoder, as each walks a million entries before it throws.
+test.each(decoders)(
+  'should throw before %s decodes an errors tree with 1000001 entries',
+  async (_, decode) => {
+    const error = await decode(flatValidator(1_000_001));
     assert.instanceOf(error, TypeError);
     assert.include(String(error), 'more than 1000000 entries');
+  },
+);
+
+// Shared children are walked once per reference, doubling the work per level.
+const doubling = createValidator(async () => {
+  let made: Result = await invalid({ code: 'min', field: undefined });
+  for (let level = 0; level < 20; level++) {
+    made = await invalid({
+      code: 'properties',
+      field: undefined,
+      errors: { a: made, b: made },
+    });
   }
+  return made;
 });
+
+test.each(decoders)(
+  'should throw when shared children multiply past 1000000 entries in %s',
+  async (_, decode) => {
+    const error = await decode(doubling);
+    assert.instanceOf(error, TypeError);
+    assert.include(String(error), 'more than 1000000 entries');
+  },
+);

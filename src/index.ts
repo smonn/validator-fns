@@ -25,8 +25,9 @@ export type {
   MaxValidatorMessageParameters,
   MinValidatorMessageParameters,
 } from './limits';
-export { messageTree } from './failures/index';
+export { FailureError, messageTree } from './failures/index';
 export { invalid } from './invalid';
+export { parse } from './parse';
 export { valid } from './shared';
 export type {
   BuiltInCode,

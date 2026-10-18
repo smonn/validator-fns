@@ -111,6 +111,7 @@ test('should take only async functions', () => {
 
 test('should export only the v3 surface', () => {
   assert.deepEqual(Object.keys(validatorFns).toSorted(), [
+    'FailureError',
     'array',
     'boolean',
     'check',
@@ -132,6 +133,7 @@ test('should export only the v3 surface', () => {
     'object',
     'oneOf',
     'optional',
+    'parse',
     'string',
     'url',
     'uuid',

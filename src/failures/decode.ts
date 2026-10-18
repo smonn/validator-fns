@@ -69,3 +69,31 @@ export function issues(made: Failure<unknown>): Issue[] {
       : { message, code, params },
   );
 }
+
+/**
+ * What `parse()` rejects with for invalid input, so `instanceof FailureError`
+ * tells a failure from a bug. Its message has a `field: message` line for each
+ * leaf in the errors tree, or the message alone for a leaf without a field.
+ * @typeParam E The error type
+ * @category Helpers
+ */
+export class FailureError<E = unknown> extends Error {
+  /** The whole failure, with its errors tree. */
+  declare readonly failure: Failure<E>;
+
+  /**
+   * @param failure A validator's failure. Anything else, or an errors tree
+   * the decoders can't read, is a bug, so it throws a `TypeError` (ADR 0001).
+   */
+  constructor(failure: Failure<E>) {
+    super(
+      leavesOf(failure)
+        .map(([{ message, field }]) =>
+          field ? `${field}: ${message}` : message,
+        )
+        .join('\n'),
+    );
+    this.name = 'FailureError';
+    this.failure = failure;
+  }
+}

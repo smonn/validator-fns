@@ -13,6 +13,7 @@ import {
   number,
   object,
   optional,
+  parse,
   string,
   valid,
   type Failure,
@@ -133,6 +134,7 @@ test.each<[string, TypeValidator<unknown, unknown>, unknown]>([
       await rejection(Promise.resolve(validate['~standard'].validate(input))),
       bug,
     );
+    assert.strictEqual(await rejection(parse(validate, input)), bug);
   },
 );
 
