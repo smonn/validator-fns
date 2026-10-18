@@ -94,11 +94,14 @@ test('should let an outer translation word a container whose child an inner one 
 
 test('should keep a worded container message while wording its children', async () => {
   const form = withMessages(
-    object(
-      { a: string(min(2)) },
-      { messages: { properties: 'Fix the form.' } },
+    withMessages(
+      object(
+        { a: string(min(2)) },
+        { messages: { properties: 'Fix the form.' } },
+      ),
+      { min: 'Too short.' },
     ),
-    { min: 'Too short.', properties: 'translated' },
+    { properties: 'translated' },
   );
   const result = await form({ a: 'x' });
   assert.deepInclude(result, { message: 'Fix the form.' });
@@ -248,6 +251,27 @@ test('should throw a TypeError when the validator is not a function', () => {
     TypeError,
     '`validator` must be a validator',
   );
+});
+
+const bogus: Validator = async () => JSON.parse('{ "state": "invalid" }');
+
+test('should reject with a TypeError when the result is not a failure', async () => {
+  const error = await rejection(withMessages(bogus, {})('x'));
+  assert.instanceOf(error, TypeError);
+  assert.include(String(error), "A validator's result isn't a failure");
+});
+
+test('should reject with a TypeError for an errors tree with 1000001 entries', async () => {
+  const flat = createValidator(async () =>
+    invalid({
+      code: 'items',
+      field: undefined,
+      errors: Array.from({ length: 1_000_001 }, () => null),
+    }),
+  );
+  const error = await rejection(withMessages(flat, {})({}));
+  assert.instanceOf(error, TypeError);
+  assert.include(String(error), 'more than 1000000 entries');
 });
 
 test('should reject with what the validator throws', async () => {
