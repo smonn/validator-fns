@@ -10,7 +10,7 @@ import {
 const invalidDate = new Date('');
 
 /** The value `date()` parses, with a blank one kept by `optional()`. */
-async function parseDate(value: unknown) {
+async function parsedDate(value: unknown) {
   const result = await optional(date())(value);
   assert(result.state === 'valid');
   return result.value;
@@ -18,39 +18,39 @@ async function parseDate(value: unknown) {
 
 test('date() parses dates, timestamps and ISO 8601 strings', async () => {
   const now = new Date();
-  assert.deepEqual(await parseDate(now), now);
-  assert.deepEqual(await parseDate(0), new Date(0));
-  assert.deepEqual(await parseDate(''), invalidDate);
-  assert.deepEqual(await parseDate('2020'), new Date(2020, 0));
-  assert.deepEqual(await parseDate('2020-13'), new Date(2021, 0));
-  assert.deepEqual(await parseDate('2020-01'), new Date(2020, 0));
-  assert.deepEqual(await parseDate('2020-01-31'), new Date(2020, 0, 31));
+  assert.deepEqual(await parsedDate(now), now);
+  assert.deepEqual(await parsedDate(0), new Date(0));
+  assert.deepEqual(await parsedDate(''), invalidDate);
+  assert.deepEqual(await parsedDate('2020'), new Date(2020, 0));
+  assert.deepEqual(await parsedDate('2020-13'), new Date(2021, 0));
+  assert.deepEqual(await parsedDate('2020-01'), new Date(2020, 0));
+  assert.deepEqual(await parsedDate('2020-01-31'), new Date(2020, 0, 31));
   assert.deepEqual(
-    await parseDate('2020-01-31 12:45'),
+    await parsedDate('2020-01-31 12:45'),
     new Date(2020, 0, 31, 12, 45),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32'),
+    await parsedDate('2020-01-31T12:45:32'),
     new Date(2020, 0, 31, 12, 45, 32),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32Z'),
+    await parsedDate('2020-01-31T12:45:32Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32)),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32+01:30'),
+    await parsedDate('2020-01-31T12:45:32+01:30'),
     new Date(Date.UTC(2020, 0, 31, 14, 15, 32)),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32-0200'),
+    await parsedDate('2020-01-31T12:45:32-0200'),
     new Date(Date.UTC(2020, 0, 31, 10, 45, 32)),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32.123'),
+    await parsedDate('2020-01-31T12:45:32.123'),
     new Date(2020, 0, 31, 12, 45, 32, 123),
   );
   assert.deepEqual(
-    await parseDate('2020-01-31T12:45:32.001242Z'),
+    await parsedDate('2020-01-31T12:45:32.001242Z'),
     new Date(Date.UTC(2020, 0, 31, 12, 45, 32, 1.242)),
   );
 });
@@ -209,5 +209,5 @@ test('date() fails input it cannot read apart from a missing one', async () => {
     state: 'valid',
     value: invalidDate,
   });
-  assert.strictEqual(await parseDate(invalidDate), invalidDate);
+  assert.strictEqual(await parsedDate(invalidDate), invalidDate);
 });
