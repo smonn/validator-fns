@@ -2,7 +2,8 @@
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
 // the README's createTypeValidatorTest example, without type arguments, and a
-// check() at a path read through messageTree(). A second fixture imports the
+// check() at a path read through messageTree(), and parse() with a
+// FailureError told from a bug. A second fixture imports the
 // 2.x type names v3 removes, and must fail on each, and a third makes calls
 // with the options v3 removes, from 2.x and from its prereleases, and must
 // fail on each line.
@@ -36,11 +37,13 @@ const fixture = `import {
   check,
   createTypeValidatorTest,
   type ExtractValue,
+  FailureError,
   invalid,
   type Messages,
   messageTree,
   object,
   optional,
+  parse,
   type Result,
   string,
   valid,
@@ -104,6 +107,17 @@ export const shipping = object(
 export async function shippingMessages(value: unknown) {
   const messages = messageTree(await shipping(value));
   return typeof messages === 'object' ? messages.shipping : messages;
+}
+export async function orderName(value: unknown): Promise<string> {
+  try {
+    return (await parse(order, value, 'order')).name;
+  } catch (error) {
+    if (error instanceof FailureError) {
+      return error.failure.code + ': ' + error.message;
+    }
+
+    throw error;
+  }
 }
 `;
 
