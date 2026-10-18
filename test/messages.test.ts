@@ -1,6 +1,7 @@
 import { assert, test } from 'vitest';
 import {
   array,
+  check,
   createValidator,
   createValidatorTest,
   invalid,
@@ -99,6 +100,30 @@ test('should word failures nested in arrays and objects', async () => {
     null,
     { name: '[1].name is short.' },
   ]);
+});
+
+test('should give each check() path level its own value', async () => {
+  const addresses = withMessages(
+    object(
+      { shipping: object({ zip: string() }) },
+      check(['shipping', 'zip'], () => false, 'match'),
+    ),
+    {
+      properties: ({ value }) => JSON.stringify(value),
+      match: ({ value }) => `match ${JSON.stringify(value)}`,
+    },
+  );
+  const input = { shipping: { zip: '1' } };
+  const result = await addresses(input);
+  assert.deepInclude(result, { message: JSON.stringify(input) });
+  assert.deepEqual(messageTree(result), {
+    shipping: { zip: `match ${JSON.stringify(input)}` },
+  });
+  assert.deepInclude(
+    result.state === 'invalid' &&
+      Reflect.get(Object(result.errors), 'shipping'),
+    { message: JSON.stringify(input.shipping) },
+  );
 });
 
 test('should word a custom validator failure made without a message', async () => {
