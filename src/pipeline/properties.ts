@@ -1,9 +1,9 @@
 import { childField } from '../failures/index.js';
-import type { Result, Validator } from '../shared.js';
+import type { Result } from '../shared.js';
 import { runEach } from './children.js';
 import type { Shape } from './def.js';
 import { andThen, type MaybePromise } from './promises.js';
-import { ownValue, propertiesResult, runsOf } from './schema.js';
+import { ownValue, propertiesResult, type Runs } from './schema.js';
 
 /**
  * Runs each property's validator on the object's own value for its key, with
@@ -11,10 +11,9 @@ import { ownValue, propertiesResult, runsOf } from './schema.js';
  * @internal
  */
 export function properties<V, Tree extends object>(
-  schema: Record<string, Validator>,
+  runs: Runs,
   shape: Shape<V, Tree>,
 ): (value: object, field: string | undefined) => MaybePromise<Result<V, Tree>> {
-  const runs = runsOf(schema);
   return (value, field) => {
     const results = runEach(runs, ([key, run]) => {
       const result = run(ownValue(value, key), childField(field, key));

@@ -2,6 +2,7 @@ export { items } from './items.js';
 export { type Children, keepValue } from './def.js';
 export { asLengthGate, isLengthGate, unknownKeys } from './gates.js';
 export { properties } from './properties.js';
+export { runsOf } from './schema.js';
 export { createValidator, type TypeValidator } from './standard.js';
 export { twinOf, withSyncTwin } from './sync.js';
 export { createValidatorTest } from './tests.js';

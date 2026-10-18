@@ -1,5 +1,6 @@
 import { failure } from '../failures/index.js';
-import { type Test, type Validator, validResult } from '../shared.js';
+import { type Test, validResult } from '../shared.js';
+import type { Runs } from './schema.js';
 import type { Twin, Twinned } from './sync.js';
 
 /**
@@ -32,12 +33,12 @@ export function isLengthGate<V, E>(
 
 /**
  * The gate of a strict `object()`: an `unknownKeys` failure for a value with
- * own enumerable string keys that `schema` doesn't name. A key such as
+ * own enumerable string keys that the runs don't name. A key such as
  * `constructor` or `__proto__` is unknown unless the schema has it.
  * @internal
  */
-export function unknownKeys(schema: Record<string, Validator>): Twin<object> {
-  const known = new Set(Object.keys(schema));
+export function unknownKeys(runs: Runs): Twin<object> {
+  const known = new Set(runs.map(([key]) => key));
   return (value, field) => {
     const keys = Object.keys(value).filter((key) => !known.has(key));
     return keys.length > 0
