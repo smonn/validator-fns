@@ -1,6 +1,6 @@
 import type { Failure, Result } from '../types.js';
 import { failure } from './make.js';
-import { ownData } from './own.js';
+import { ownData, setOwn } from './own.js';
 
 /**
  * The errors `check()` produces at `Path`: a `properties` failure for each
@@ -42,20 +42,6 @@ export function itemsTree<E>(
   results: Result<unknown, E>[],
 ): (Failure<E> | null)[] {
   return results.map((result) => (result.state === 'invalid' ? result : null));
-}
-
-/**
- * Sets an own property. Plain assignment of `__proto__` calls the
- * `Object.prototype.__proto__` setter instead of creating the property.
- * @internal
- */
-function setOwn(target: object, key: PropertyKey, value: unknown) {
-  Object.defineProperty(target, key, {
-    value,
-    enumerable: true,
-    writable: true,
-    configurable: true,
-  });
 }
 
 /**

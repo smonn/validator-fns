@@ -1,6 +1,20 @@
 import type { ValidatorMessageParameters } from '../types.js';
 
 /**
+ * Sets an own property. Plain assignment of `__proto__` calls the
+ * `Object.prototype.__proto__` setter instead of creating the property.
+ * @internal
+ */
+export function setOwn(target: object, key: PropertyKey, value: unknown) {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
+}
+
+/**
  * A container's errors tree made from `entries`, as `entriesOf` lists them:
  * an array when `errors` is one, and otherwise an object with each key as an
  * own key, `__proto__` included.
