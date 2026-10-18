@@ -76,7 +76,7 @@
   "scripts": {
     "build": "tsdown",
     "check": "run-s changeset:status check:code",
-    "check:code": "run-s ignores format:check lint typecheck deps fta coverage build publint attw smoke types:smoke bench:smoke lint:bench",
+    "check:code": "run-s ignores format:check lint typecheck deps fta coverage test:tz build publint attw smoke types:smoke bench:smoke lint:bench",
     "changeset:status": "node scripts/changeset-status.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -95,6 +95,9 @@
     "bench:smoke": "pnpm --dir benchmark install --frozen-lockfile && node benchmark/index.mjs --smoke",
     "test": "vitest",
     "coverage": "vitest run --coverage",
+    "test:tz": "run-s 'test:tz:*'",
+    "test:tz:new-york": "TZ=America/New_York vitest run test/dates.test.ts test/pipeline.test.ts test/accepts.test.ts",
+    "test:tz:kolkata": "TZ=Asia/Kolkata vitest run test/dates.test.ts test/pipeline.test.ts test/accepts.test.ts",
     "mutation": "stryker run",
     "prepublishOnly": "pnpm check",
     "prepare": "husky"
