@@ -1,4 +1,4 @@
-import { childField, itemsTree } from './failures/index.js';
+import { childField, failure, itemsTree } from './failures/index.js';
 import {
   type Failure,
   type Result,
@@ -62,14 +62,11 @@ export async function findInvalidResult<V, E>(
 export type ArrayTest = Test<unknown[]>;
 
 /**
- * Each valid item as the item validator parsed it, and the array's errors
- * tree, `undefined` when every item is valid.
+ * The result of an array's items: valid with each item as the item validator
+ * parsed it, or an `items` failure whose errors tree holds each item's.
  * @internal
  */
-export type ValidatedItems<T, E> = {
-  errors: (Failure<E> | null)[] | undefined;
-  values: T[];
-};
+export type ItemsResult<T, E> = Result<T[], (Failure<E> | null)[]>;
 
 /**
  * Runs the item validator on every item, with the item's full field.
@@ -82,7 +79,7 @@ export async function validateItems<T, E>(
   validateItem: Validator<T, E>,
   arrayValue: unknown[],
   field: string | undefined,
-): Promise<ValidatedItems<T, E>> {
+): Promise<ItemsResult<T, E>> {
   const results: Result<T, E>[] = [];
   // Only valid items' values, which are only used when every item is valid.
   const values: T[] = [];
@@ -95,17 +92,22 @@ export async function validateItems<T, E>(
     }
   }
 
-  return { errors: itemsTree(results), values };
+  const errors = itemsTree(results);
+  return errors
+    ? failure({ code: 'items', params: {}, value: arrayValue, field, errors })
+    : validResult({ value: values, field });
 }
 
 /**
  * Without an item validator, there is nothing to check, and the values are the
  * array as given.
  * @param arrayValue Parsed array
+ * @param field Field name
  * @internal
  */
 export async function keepItems(
   arrayValue: unknown[],
-): Promise<ValidatedItems<unknown, unknown>> {
-  return { errors: undefined, values: arrayValue };
+  field: string | undefined,
+): Promise<ItemsResult<unknown, unknown>> {
+  return validResult({ value: arrayValue, field });
 }

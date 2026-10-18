@@ -1,20 +1,15 @@
 import { createParser } from './factories.js';
-import { failure, fillAsOwn } from './failures/index.js';
+import { fillAsOwn, fillOwn } from './failures/index.js';
 import {
   type ArrayTest,
   findInvalidResult,
+  type ItemsResult,
   keepItems,
   validateItems,
-  type ValidatedItems,
 } from './invalid-detail.js';
 import { parsePresent, requirable } from './optional.js';
 import type { TypeValidator } from './standard.js';
-import {
-  valid,
-  type ConfigBase,
-  type Failure,
-  type Validator,
-} from './shared.js';
+import { type ConfigBase, type Failure, type Validator } from './shared.js';
 
 /**
  * Configuration for array validation.
@@ -55,7 +50,7 @@ function arrayOf<T, E>(
   checkItems: (
     arrayValue: unknown[],
     field: string | undefined,
-  ) => Promise<ValidatedItems<T, E>>,
+  ) => Promise<ItemsResult<T, E>>,
   config: Partial<ArrayConfig> | ArrayTest | undefined,
   tests: ArrayTest[],
 ): TypeValidator<T[], (Failure<E> | null)[]> {
@@ -85,16 +80,14 @@ function arrayOf<T, E>(
       );
       const items = await checkItems(arrayValue, field);
 
-      if (arrayInvalidResult || items.errors) {
-        const own =
-          arrayInvalidResult ??
-          failure({ code: 'items', params: {}, value: arrayValue, field });
-        // An array test's failure is a leaf, without the items' failures.
-        const errors = arrayInvalidResult ? undefined : items.errors;
-        return fillAsOwn(own, errors, finalConfig.messages);
+      // An array test's failure is a leaf, without the items' failures.
+      if (arrayInvalidResult) {
+        return fillAsOwn(arrayInvalidResult, undefined, finalConfig.messages);
       }
 
-      return valid({ value: items.values, field });
+      return items.state === 'invalid'
+        ? fillOwn(items, finalConfig.messages)
+        : items;
     },
   );
 }
