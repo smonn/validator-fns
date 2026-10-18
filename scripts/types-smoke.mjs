@@ -1,10 +1,11 @@
 // Type-checks a consumer project against the packed package's declarations,
 // on the lowest TypeScript version the README states and on the current one,
 // with skipLibCheck off so errors inside the declarations count. The fixture is
-// the README's createTypeValidatorTest example, without type arguments. A
-// second fixture imports the 2.x type names v3 removes, and must fail on each,
-// and a third makes calls with the options v3 removes, from 2.x and from its
-// prereleases, and must fail on each line.
+// the README's createTypeValidatorTest example, without type arguments, and a
+// check() at a path read through messageTree(). A second fixture imports the
+// 2.x type names v3 removes, and must fail on each, and a third makes calls
+// with the options v3 removes, from 2.x and from its prereleases, and must
+// fail on each line.
 // Update `lowest` and the typescript-5.4 dev dependency with the README.
 import { execFileSync } from 'node:child_process';
 import {
@@ -32,10 +33,12 @@ const compilers = [
 ];
 
 const fixture = `import {
+  check,
   createTypeValidatorTest,
   type ExtractValue,
   invalid,
   type Messages,
+  messageTree,
   object,
   optional,
   type Result,
@@ -89,6 +92,19 @@ export const order = object({
 });
 // note is optional and name required, on every TypeScript version.
 export const minimal: ExtractValue<typeof order> = { name: 'a', price: 1 };
+
+export const shipping = object(
+  { billing: object({ zip: string() }), shipping: object({ zip: string() }) },
+  check(
+    ['shipping', 'zip'],
+    (value) => value.shipping.zip === value.billing.zip,
+    'match',
+  ),
+);
+export async function shippingMessages(value: unknown) {
+  const messages = messageTree(await shipping(value));
+  return typeof messages === 'object' ? messages.shipping : messages;
+}
 `;
 
 const tsconfig = {

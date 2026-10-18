@@ -300,6 +300,33 @@ const rows: Row[] = [
     messages: withProto({ admin: 'required' }),
   },
   {
+    label: 'keys named like Object.prototype members',
+    validator: object({ constructor: string(), toString: array(string()) }),
+    input: { toString: [null] },
+    field: 'form',
+    failure: properties('form', {
+      constructor: failed('required', 'form.constructor'),
+      toString: items('form.toString', [
+        failed('required', 'form.toString[0]'),
+      ]),
+    }),
+    issues: [
+      {
+        message: 'required',
+        code: 'required',
+        params: {},
+        path: ['constructor'],
+      },
+      {
+        message: 'required',
+        code: 'required',
+        params: {},
+        path: ['toString', 0],
+      },
+    ],
+    messages: { constructor: 'required', toString: ['required'] },
+  },
+  {
     label: 'a custom failure with its own errors, a leaf',
     validator: object({ hello }),
     input: { hello: 'hi' },
