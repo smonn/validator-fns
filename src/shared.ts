@@ -170,6 +170,7 @@ export type BuiltInCode =
   | 'uuid'
   | 'required'
   | 'type'
+  | 'unknownKeys'
   | 'items'
   | 'properties';
 
