@@ -290,6 +290,10 @@ test.each([
   ['nested `,{`', `Error(a${',{'.repeat(1e6)}`],
   ['unclosed quotes', `Error(a,'${'b'.repeat(299)}`.repeat(7000)],
   ['quotes of every kind', `Error(a${',\'"`'.repeat(5e5)}`],
+  [
+    'dense calls among open quotes',
+    `Error('"\`${'Error('.repeat(10)}`.repeat(15_000),
+  ],
 ])('scans Error options with %s in linear time', (_, code) => {
   const started = performance.now();
   const result = run({ 'index.js': code });
