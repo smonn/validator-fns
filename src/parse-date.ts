@@ -50,8 +50,8 @@ const dateParts = [
   (part = '0') => Number.parseInt(part, BASE),
   // Second
   (part = '0') => Number.parseInt(part, BASE),
-  // Millisecond
-  (part = '0') => Number.parseFloat(part) * 1e3,
+  // Millisecond, from the first 3 digits only: 17 or more nines parse as 1
+  (part = '0') => Number.parseFloat(part.slice(0, 4)) * 1e3,
 ];
 
 /**
