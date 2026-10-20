@@ -5,7 +5,16 @@ import type {
   ValidatorMessageParameters,
   Validator,
 } from './shared.js';
+import { isDate, timeOf } from './date-check.js';
 import { parseDate } from './parse-date.js';
+
+/**
+ * The time of a parsed date. A custom parser may return a non-date with its
+ * own `getTime`, which 2.x reads.
+ */
+function readTime(parsed: { getTime(): number }): number {
+  return isDate(parsed) ? timeOf(parsed) : parsed.getTime();
+}
 
 /**
  * Applies a configuration to the date value.
@@ -23,7 +32,7 @@ export function applyDateConfig(
     config.default !== undefined &&
     (parsedValue === undefined ||
       parsedValue === null ||
-      Number.isNaN(parsedValue.getTime()))
+      Number.isNaN(readTime(parsedValue)))
   ) {
     parsedValue = config.default;
   }
@@ -78,8 +87,10 @@ export function minDate(
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (value instanceof Date &&
-          (exclusive ? value > parsedDate : value >= parsedDate))),
+        (isDate(value) &&
+          (exclusive
+            ? timeOf(value) > timeOf(parsedDate)
+            : timeOf(value) >= timeOf(parsedDate)))),
     message,
     () => ({
       min: parsedDate,
@@ -133,8 +144,10 @@ export function maxDate(
       parsedDate !== undefined &&
       (value === null ||
         value === undefined ||
-        (value instanceof Date &&
-          (exclusive ? value < parsedDate : value <= parsedDate))),
+        (isDate(value) &&
+          (exclusive
+            ? timeOf(value) < timeOf(parsedDate)
+            : timeOf(value) <= timeOf(parsedDate)))),
     message,
     () => ({
       max: parsedDate,

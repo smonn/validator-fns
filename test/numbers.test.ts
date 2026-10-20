@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   integer,
@@ -343,4 +344,15 @@ test('number coerces non-primitive input through its string form', async () => {
     message: 'Cannot convert object to primitive value',
     errors: undefined,
   });
+});
+
+test('should read the time when number() gets a date from another realm', async () => {
+  assert.equal((await number()(runInNewContext('new Date(5)'))).value, 5);
+});
+
+test('should read the time when number() gets a date with its own getTime and valueOf', async () => {
+  const date = new Date(5);
+  Object.defineProperty(date, 'getTime', { value: () => 1000 });
+  Object.defineProperty(date, 'valueOf', { value: () => 1000 });
+  assert.equal((await number()(date)).value, 5);
 });

@@ -1,3 +1,5 @@
+import { isDate } from './date-check.js';
+
 /**
  * Badly formatted date for internal use.
  * @deprecated v3 removes this, with no replacement.
@@ -65,15 +67,15 @@ export function parseDate(value: unknown): Date | null | undefined {
     return value;
   }
 
-  if (value instanceof Date) {
-    return value;
-  }
-
   if (typeof value === 'number') {
     return new Date(value);
   }
 
-  return typeof value === 'string' ? parseIsoDate(value) : invalidDate;
+  if (typeof value === 'string') {
+    return parseIsoDate(value);
+  }
+
+  return isDate(value) ? value : invalidDate;
 }
 
 /**

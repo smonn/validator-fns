@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { assert, test } from 'vitest';
 import {
   date,
@@ -102,6 +103,133 @@ test.each(malformedZoneTexts)(
     assert.isNaN(parseDate(text)?.getTime());
   },
 );
+
+test('should return the date when parseDate gets a date from another realm', () => {
+  const foreign: Date = runInNewContext('new Date(0)');
+  assert.strictEqual(parseDate(foreign), foreign);
+});
+
+test('should return the date when parseDate gets a date from another realm with another toStringTag', () => {
+  const foreign: Date = runInNewContext(
+    'Object.defineProperty(new Date(0), Symbol.toStringTag, { value: "Other" })',
+  );
+  assert.strictEqual(parseDate(foreign), foreign);
+});
+
+test('should give an invalid date when parseDate gets an object that only looks like a date', () => {
+  const throwingTag = {
+    get [Symbol.toStringTag]() {
+      throw new Error('tag');
+    },
+  };
+  const { proxy: revoked, revoke } = Proxy.revocable({}, {});
+  revoke();
+  for (const value of [
+    Object.create(Date.prototype),
+    { [Symbol.toStringTag]: 'Date' },
+    throwingTag,
+    revoked,
+    new Proxy(new Date(0), {}),
+  ]) {
+    assert.strictEqual(parseDate(value), invalidDate);
+  }
+});
+
+test('should give an invalid date when a date has a plain object prototype', () => {
+  const reprototyped = Object.setPrototypeOf(new Date(0), Object.prototype);
+  assert.strictEqual(parseDate(reprototyped), invalidDate);
+});
+
+test('should pass the date through when date() gets a date from another realm', async () => {
+  const foreign: Date = runInNewContext('new Date(0)');
+  assert.strictEqual((await date()(foreign)).value, foreign);
+});
+
+test('should use the default when date() gets an invalid date with its own getTime', async () => {
+  const invalid = new Date(Number.NaN);
+  Object.defineProperty(invalid, 'getTime', { value: () => 0 });
+  const fallback = new Date(1);
+  assert.strictEqual(
+    (await date({ default: fallback })(invalid)).value,
+    fallback,
+  );
+});
+
+test('should compare against the limit when minDate gets a date from another realm', async () => {
+  const validate = minDate(runInNewContext('new Date(1000)'), 'min');
+  assert.equal((await validate(new Date(1000))).state, 'valid');
+  assert.equal((await validate(new Date(999))).state, 'invalid');
+});
+
+test('should compare against the limit when maxDate gets a date from another realm', async () => {
+  const validate = maxDate(runInNewContext('new Date(1000)'), 'max');
+  assert.equal((await validate(new Date(1000))).state, 'valid');
+  assert.equal((await validate(new Date(1001))).state, 'invalid');
+});
+
+test('should compare the value when minDate and maxDate get a value from another realm', async () => {
+  const validate = date(
+    minDate(new Date(1000), 'min'),
+    maxDate(new Date(2000), 'max', true),
+  );
+  assert.equal(
+    (await validate(runInNewContext('new Date(1500)'))).state,
+    'valid',
+  );
+  assert.equal(
+    (await validate(runInNewContext('new Date(999)'))).state,
+    'invalid',
+  );
+  assert.equal(
+    (await validate(runInNewContext('new Date(2000)'))).state,
+    'invalid',
+  );
+});
+
+test('should compare the time when minDate and maxDate get a date with its own valueOf', async () => {
+  const early = new Date(500);
+  Object.defineProperty(early, 'valueOf', { value: () => 5000 });
+  const late = new Date(5000);
+  Object.defineProperty(late, 'valueOf', { value: () => 500 });
+  assert.equal((await minDate(new Date(1000), 'min')(early)).state, 'invalid');
+  assert.equal((await maxDate(new Date(1000), 'max')(late)).state, 'invalid');
+});
+
+test('should fail when minDate gets a value that is not a date', async () => {
+  const validate = minDate(new Date(0), 'min');
+  assert.equal((await validate({})).state, 'invalid');
+  assert.equal((await validate('2020-01-01')).state, 'invalid');
+});
+
+test('should keep the parsed value when a custom parser returns a non-date with getTime', async () => {
+  const parsed: Date = Object.create(Date.prototype);
+  Object.defineProperty(parsed, 'getTime', { value: () => 1000 });
+  const validate = date({ parser: () => parsed, default: new Date(0) });
+  const result = await validate(1);
+  assert.equal(result.state, 'valid');
+  assert.strictEqual(result.value, parsed);
+});
+
+test('should stay valid when date() gets text it cannot read', async () => {
+  assert.equal((await date()('garbage')).state, 'valid');
+});
+
+test('should fail when minDate gets a value that only looks like a date', async () => {
+  const validate = minDate(new Date(0), 'min');
+  const { proxy: revoked, revoke } = Proxy.revocable({}, {});
+  revoke();
+  for (const value of [
+    Object.create(Date.prototype),
+    new Proxy(new Date(5), {}),
+    revoked,
+  ]) {
+    assert.equal((await validate(value)).state, 'invalid');
+  }
+  const relabeled: Date = runInNewContext(
+    'Object.defineProperty(new Date(5), Symbol.toStringTag, { value: "Other" })',
+  );
+  assert.equal((await validate(relabeled)).state, 'valid');
+});
 
 test('minDate', async () => {
   const now = new Date();

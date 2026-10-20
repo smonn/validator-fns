@@ -1,3 +1,4 @@
+import { isDate, timeOf } from './date-check.js';
 import { createValidatorTest } from './factories.js';
 import type {
   ValidatorMessage,
@@ -24,7 +25,7 @@ export function required<T, P extends ValidatorMessageParameters<T>>(
         value !== undefined &&
         !(typeof value === 'string' && value === '') &&
         !(typeof value === 'number' && Number.isNaN(value)) &&
-        !(value instanceof Date && Number.isNaN(value.valueOf()))),
+        !(isDate(value) && Number.isNaN(timeOf(value)))),
     message,
   );
 }
@@ -50,8 +51,10 @@ export function oneOf<T extends string | number | boolean | Date>(
       value === undefined ||
       value === null ||
       values.includes(value as T) ||
-      (value instanceof Date &&
-        values.some((x) => x.valueOf() === value.valueOf())),
+      (isDate(value) &&
+        values.some(
+          (x) => (isDate(x) ? timeOf(x) : x.valueOf()) === timeOf(value),
+        )),
     message,
     () => ({ values }),
   );
