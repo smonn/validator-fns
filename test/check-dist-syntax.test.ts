@@ -14,20 +14,38 @@ const repoRoot = path.join(import.meta.dirname, '..');
 const script = path.join(repoRoot, 'scripts/check-dist-syntax.mjs');
 const tsdown = path.join(repoRoot, 'node_modules/tsdown/dist/run.mjs');
 
+/** A README whose polyfill list names each of `apis`. */
+function readmeListing(...apis: string[]) {
+  return [
+    '## Supported environments',
+    '',
+    'To support older environments, transpile or polyfill these:',
+    '',
+    ...apis.map((api) => `- \`${api}\``),
+    '- `Promise`, `URL`, and the rest of ES2015',
+    '',
+  ].join('\n');
+}
+
 /**
- * Runs a copy of the script next to a dist folder holding `files`, so it
- * scans them the way it scans the real dist.
+ * Runs a copy of the script next to a dist folder holding `files` and a
+ * README, so it scans them the way it scans the real dist.
  */
-function run(files: Record<string, string>) {
+function run(files: Record<string, string>, readme = readmeListing()) {
   const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-'));
   mkdirSync(path.join(root, 'scripts'));
   mkdirSync(path.join(root, 'dist'));
   const copy = path.join(root, 'scripts', path.basename(script));
   copyFileSync(script, copy);
+  writeFileSync(path.join(root, 'README.md'), readme);
   for (const [name, code] of Object.entries(files)) {
     writeFileSync(path.join(root, 'dist', name), code);
   }
-  return spawnSync(process.execPath, [copy], { encoding: 'utf8' });
+  // A timeout, so a regex that backtracks fails the test instead of hanging.
+  return spawnSync(process.execPath, [copy], {
+    encoding: 'utf8',
+    timeout: 10_000,
+  });
 }
 
 test.each([
@@ -112,30 +130,218 @@ test('finds syntax after a regex that follows a block', () => {
   assert.include(result.stderr, 'logical assignment');
 });
 
+/**
+ * Builds `source` with tsdown.config.ts, the way `pnpm build` builds dist,
+ * and returns the ESM and CJS output as dist files.
+ */
+function build(source: string) {
+  const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-build-'));
+  const entry = path.join(root, 'entry.ts');
+  const outDir = path.join(root, 'out');
+  writeFileSync(entry, source);
+  const built = spawnSync(
+    process.execPath,
+    [tsdown, entry, '-d', outDir, '--no-dts', '--no-sourcemap'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.strictEqual(built.status, 0, built.stderr);
+  return {
+    'index.js': readFileSync(path.join(outDir, 'entry.js'), 'utf8'),
+    'index.cjs': readFileSync(path.join(outDir, 'entry.cjs'), 'utf8'),
+  };
+}
+
 test.each(['/a,b/s', '/a(b)./s'])(
   'finds the flags of %s in the build output',
   (regex) => {
-    // Builds with tsdown.config.ts, so its target turns the regex into a
-    // RegExp call.
-    const root = mkdtempSync(path.join(tmpdir(), 'dist-syntax-build-'));
-    const entry = path.join(root, 'entry.ts');
-    const outDir = path.join(root, 'out');
-    writeFileSync(entry, `export const pattern = ${regex};\n`);
-    const built = spawnSync(
-      process.execPath,
-      [tsdown, entry, '-d', outDir, '--no-dts', '--no-sourcemap'],
-      { cwd: repoRoot, encoding: 'utf8' },
-    );
-    assert.strictEqual(built.status, 0, built.stderr);
-    const esm = readFileSync(path.join(outDir, 'entry.js'), 'utf8');
-    assert.include(esm, 'RegExp(');
-    const result = run({
-      'index.js': esm,
-      'index.cjs': readFileSync(path.join(outDir, 'entry.cjs'), 'utf8'),
-    });
+    // The target turns the regex into a RegExp call.
+    const files = build(`export const pattern = ${regex};\n`);
+    assert.include(files['index.js'], 'RegExp(');
+    const result = run(files);
     assert.strictEqual(result.status, 1);
     assert.include(result.stderr, 'index.js:1:');
     assert.include(result.stderr, 'index.cjs:1:');
     assert.include(result.stderr, 'regex flag d, s or v');
   },
 );
+
+test.each([
+  ['Intl.Segmenter', 'export const a = new Intl.Segmenter();'],
+  [
+    'Intl.RelativeTimeFormat',
+    'export const a = new Intl.RelativeTimeFormat();',
+  ],
+  ['Intl.Segmenter', 'export const a = new globalThis.Intl.Segmenter();'],
+  ['WeakRef', 'export const a = new WeakRef();'],
+  ['WeakRef', 'export const a = new globalThis.WeakRef();'],
+  ['DisposableStack', 'export const a = new globalThis.DisposableStack();'],
+  [
+    'AggregateError',
+    'export const a = (b: unknown) => b instanceof globalThis.AggregateError;',
+  ],
+  [
+    'AggregateError',
+    'export const a = (b: unknown) => b instanceof self.AggregateError;',
+  ],
+])('finds %s built from %s', (api, source) => {
+  // The minifier drops a constructor's empty parentheses.
+  const files = build(source);
+  assert.notInclude(files['index.js'], '()');
+  const result = run(files);
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, `\`${api}\``);
+});
+
+test.each([
+  [['BigInt'], 'let a=BigInt(b);'],
+  [['BigInt'], 'let a=BigInt.asIntN(64,b);'],
+  [['WeakRef'], 'let a=new WeakRef(b);'],
+  [['FinalizationRegistry'], 'let a=new FinalizationRegistry(b);'],
+  [['AggregateError'], 'let a=b instanceof AggregateError;'],
+  [['structuredClone'], 'let a=structuredClone(b);'],
+  [['structuredClone'], 'let a=globalThis.structuredClone(b);'],
+  [['Object.hasOwn'], 'let a=Object.hasOwn(b,c);'],
+  [['Object.hasOwn'], 'let a=Object.hasOwn.call(void 0,b,c);'],
+  [['Promise.any'], 'let a=Promise.any(b);'],
+  [['Intl.ListFormat'], 'let a=new Intl.ListFormat(`en`);'],
+  [['URL.canParse'], 'let a=URL.canParse(b);'],
+  [['Array.prototype.at', 'String.prototype.at'], 'let a=b.at(-1);'],
+  [
+    ['Array.prototype.at', 'String.prototype.at'],
+    'let a=Array.prototype.at.call(b,-1);',
+  ],
+  [['Array.prototype.at', 'String.prototype.at'], 'let a=b.at?.(-1);'],
+  [
+    ['Array.prototype.at', 'String.prototype.at'],
+    'let a=(t=b.at)==null?void 0:t.call(b,-1);',
+  ],
+  [['Array.prototype.findLast'], 'let a=b.findLast(c);'],
+  [['Array.prototype.findLastIndex'], 'let a=b.findLastIndex(c);'],
+  [['String.prototype.replaceAll'], 'let a=b.replaceAll(c,d);'],
+  [['Error.cause'], 'throw new Error(`a`,{cause:b});'],
+  [['Error.cause'], 'throw TypeError(`a${String(b)}`,{cause:b});'],
+  [
+    ['Error.cause'],
+    'throw Error(`a${b.map((c)=>JSON.stringify(c))}`,{cause:b});',
+  ],
+  [['Error.cause'], 'throw Error(a,{b:{c:1},cause:d});'],
+  [['Error.cause'], "throw Error('a;b',{cause:c});"],
+  [['Error.cause'], 'throw Error("a\\";b",{cause:c});'],
+  [['Error.cause'], 'throw Error(`a\\`;b`,{cause:c});'],
+  [
+    ['Error.cause'],
+    'class A extends Error{constructor(a,b){super(a,{cause:b})}}',
+  ],
+])('flags %j: fails unless the README lists it', (apis, code) => {
+  const unlisted = run({ 'index.js': code });
+  assert.strictEqual(unlisted.status, 1);
+  for (const api of apis) {
+    assert.include(unlisted.stderr, api);
+  }
+  const listed = run({ 'index.js': code }, readmeListing(...apis));
+  assert.strictEqual(listed.status, 0, listed.stderr);
+});
+
+test('needs every API a method name could be', () => {
+  const result = run(
+    { 'index.js': 'let a=b.at(-1);' },
+    readmeListing('Array.prototype.at'),
+  );
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'String.prototype.at');
+});
+
+test.each([
+  ['an identifier in a string', 'let a=`Expected a BigInt or WeakRef`;'],
+  ['an identifier in a string', 'let a="Use Object.hasOwn, at least";'],
+  ['an identifier in a string', "let a='a cause of failure';"],
+  ['a longer name', 'let a=b.atom(c)+b.attach(c)+b.withdraw(c);'],
+  ['a property of the same name', 'let a=b.BigInt(c)+b.structuredClone(c);'],
+  [
+    'a method of another object',
+    'let a=b.hasOwn(c)+Reflect.any(c)+myObject.hasOwn(c);',
+  ],
+  ['a property named cause', 'let a={cause:b};'],
+  ['a cause passed to another call', 'let a=f(`a`,{cause:b});'],
+  ['an Error option named like cause', 'throw Error(`a`,{causes:b});'],
+  ['a function named like an Error', 'let a=formatError(b,{cause:c});'],
+])('passes %s', (_, code) => {
+  const result = run({ 'index.js': code });
+  assert.strictEqual(result.status, 0, result.stderr);
+});
+
+test('fails on a cause key soon after an Error statement ends', () => {
+  const result = run({ 'index.js': 'throw Error(a);let b={cause:c};' });
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, '`Error.cause`');
+});
+
+test('fails on code quoted in a string', () => {
+  const result = run({ 'index.js': 'let a=`Call b.at(-1)`;' });
+  assert.strictEqual(result.status, 1);
+});
+
+test.each([
+  [
+    "throw new Error('Could not validate; parser rejected input', { cause: e });",
+    'validate; parser',
+  ],
+  // Review thread 4307364497: a nested template's `;`.
+  [
+    'throw new Error(`Could not validate ${flag ? `nested; ${e}` : `other`}`, { cause: e });',
+    '`nested; ${',
+  ],
+])(
+  'finds a cause after a semicolon in the built message of %s',
+  (statement, kept) => {
+    const files = build(
+      `export const fail = (flag: boolean, e: unknown) => {\n  ${statement}\n};\n`,
+    );
+    assert.include(files['index.js'], kept);
+    const result = run(files);
+    assert.strictEqual(result.status, 1);
+    assert.include(result.stderr, '`Error.cause`');
+  },
+);
+
+test.each([
+  ['nested `,{`', `Error(a${',{'.repeat(1e6)}`],
+  ['unclosed quotes', `Error(a,'${'b'.repeat(299)}`.repeat(7000)],
+  ['quotes of every kind', `Error(a${',\'"`'.repeat(5e5)}`],
+  [
+    'dense calls among open quotes',
+    `Error('"\`${'Error('.repeat(10)}`.repeat(15_000),
+  ],
+  ['many calls with commas', 'Error(a,'.repeat(250_000)],
+])('scans Error options with %s in linear time', (_, code) => {
+  const started = performance.now();
+  const result = run({ 'index.js': code });
+  assert.strictEqual(result.status, 0, result.stderr);
+  assert.isBelow(performance.now() - started, 5000);
+});
+
+test('names the API, line and column', () => {
+  const result = run({ 'index.js': 'let a;\nlet b=Object.hasOwn(c,d);' });
+  assert.include(result.stderr, 'index.js:2:7 `Object.hasOwn`');
+});
+
+test('counts only the polyfill list', () => {
+  const readme = `${readmeListing()}\n## API\n\nUses \`Object.hasOwn\`.\n`;
+  const result = run({ 'index.js': 'let a=Object.hasOwn(b,c);' }, readme);
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'Object.hasOwn');
+});
+
+test('fails when the README has no polyfill list', () => {
+  const result = run({ 'index.js': 'let a=1;' }, '# validator-fns\n');
+  assert.strictEqual(result.status, 1);
+  assert.include(result.stderr, 'polyfill list');
+});
+
+test("passes the README's own polyfill list", () => {
+  const result = run(
+    { 'index.js': 'let a=b.replaceAll(c,d);' },
+    readFileSync(path.join(repoRoot, 'README.md'), 'utf8'),
+  );
+  assert.strictEqual(result.status, 0, result.stderr);
+});
