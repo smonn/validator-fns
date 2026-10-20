@@ -1,5 +1,16 @@
 # validator-fns
 
+## 2.3.0
+
+### Minor Changes
+
+- 9abb32c: New `Result`, `Valid`, `Failure` and `Validator` types are the v3 names for `ValidatorResult`, `ValidResult`, `InvalidResult` and `ValidatorTest`. Everything v3 removes is now deprecated, and each deprecation names its replacement: the helper exports, `required()`, `standard()`, the `parser`, `round` and `trim` options, the `exclusive` argument, the `limit` message parameter and the old type names. Nothing changes at runtime. The README's new Deprecations section lists them all.
+- 40d27e7: `parseDate()`, `minDate()` and `maxDate()` now read ISO text with a timezone after the minutes, such as `2026-10-17T08:30Z` or `2026-10-17T08:30+02:00`, as that instant. They used to give an invalid date unless the text had seconds.
+
+### Patch Changes
+
+- d70b71e: Fix `parseDate()`, `minDate()` and `maxDate()` reading ISO text with a UTC offset, such as `2026-10-17T08:30:00+02:00`, as the wrong instant. They added the offset instead of subtracting it, so the result was off by twice the offset. Text with `Z` or without a timezone was read correctly.
+
 ## 2.2.0
 
 ### Minor Changes
